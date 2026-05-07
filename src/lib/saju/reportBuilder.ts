@@ -765,6 +765,18 @@ function getElementLoveSignature(element: FiveElement) {
       fitPoint: string;
       tensionPoint: string;
       marriagePoint: string;
+      drawnTo: string;
+      longTermType: string;
+      failingPattern: string;
+      perceivedStyle: string;
+      contactStyle: string;
+      hiddenNeed: string;
+      breakupTrigger: string;
+      loveStamina: string;
+      spouseFace: string;
+      marriedLife: string;
+      dontMiss: string;
+      avoidPeople: string;
     }
   > = {
     목: {
@@ -774,7 +786,19 @@ function getElementLoveSignature(element: FiveElement) {
       meetingRoute: '강의, 스터디, 세미나, 책/콘텐츠 기반 모임, 지인 소개, 일과 배움이 겹치는 자리에서 인연이 열리기 쉽습니다.',
       fitPoint: '서로를 고치려 하기보다 성장시키는 대화가 잘 맞습니다. 작은 목표를 함께 세우고 응원하는 관계가 오래 갑니다.',
       tensionPoint: '상대가 느리거나 애매하게 말하면 혼자 결론을 내리기 쉬우니, 기대치를 말로 확인하는 과정이 필요합니다.',
-      marriagePoint: '결혼은 함께 배우고 생활을 개선하는 프로젝트처럼 운영할 때 안정됩니다. 집, 돈, 커리어 계획을 같이 업데이트하는 사람이 잘 맞습니다.'
+      marriagePoint: '결혼은 함께 배우고 생활을 개선하는 프로젝트처럼 운영할 때 안정됩니다. 집, 돈, 커리어 계획을 같이 업데이트하는 사람이 잘 맞습니다.',
+      drawnTo: '말이 통하고 배울 점이 있는 사람에게 마음이 먼저 열립니다. 외모보다 대화의 결, 자기관리, 성장하려는 태도에 끌리기 쉽습니다.',
+      longTermType: '오래 가는 사람은 속도가 빠른 사람이 아니라, 약속한 것을 작게라도 꾸준히 바꾸는 사람입니다. 함께 계획을 세우고 업데이트하는 관계가 가장 안정적입니다.',
+      failingPattern: '처음엔 이해하려고 많이 참다가, 상대가 계속 애매하면 어느 순간 마음속에서 관계를 정리해버리는 패턴이 생기기 쉽습니다.',
+      perceivedStyle: '상대는 처음에 당신을 신중하고 쉽게 열리지 않는 사람으로 느낄 수 있습니다. 가까워지면 조언을 아끼지 않고 관계를 더 나은 방향으로 끌고 가려는 사람으로 보입니다.',
+      contactStyle: '연락은 빈도보다 대화의 질이 중요합니다. 의미 없는 연락이 길어지면 지치고, 서로의 하루를 이해하는 대화가 쌓이면 마음이 안정됩니다.',
+      hiddenNeed: '사랑 안에서 가장 원하는 것은 “나를 성장하게 해주는 안정감”입니다. 무조건적인 칭찬보다 내 방향을 존중해주는 태도에 깊이 안심합니다.',
+      breakupTrigger: '반복되는 무성의함, 배움 없는 태도, 약속을 말로만 하는 모습이 누적되면 감정이 급격히 식을 수 있습니다.',
+      loveStamina: '감정 체력은 긴 편이지만, 관계가 제자리걸음이라고 느끼면 혼자 많은 생각을 하다가 지칩니다. 중간 점검 대화가 꼭 필요합니다.',
+      spouseFace: '얼굴 인상은 선이 부드럽고 깨끗한 분위기, 자연스러운 미소, 단정한 헤어와 옷차림이 먼저 떠오릅니다. 화려한 압도감보다 편안하고 지적인 느낌이 강합니다.',
+      marriedLife: '결혼 후에는 함께 배우고 생활을 개선하는 부부상에 가깝습니다. 집, 돈, 커리어 계획을 주기적으로 맞추면 친구 같은 안정감이 커집니다.',
+      dontMiss: '말보다 실천이 느리더라도 꾸준히 배우고 고치려는 사람은 놓치지 않는 편이 좋습니다.',
+      avoidPeople: '성장 의지는 말뿐이고 매번 같은 문제를 반복하는 사람, 당신의 계획을 가볍게 보는 사람은 피해야 합니다.'
     },
     화: {
       archetype: '표현형 파트너',
@@ -783,7 +807,19 @@ function getElementLoveSignature(element: FiveElement) {
       meetingRoute: '모임, 행사, 공연, 소개팅, SNS, 취미 클래스, 친구가 함께 있는 열린 자리에서 인연의 불씨가 붙기 쉽습니다.',
       fitPoint: '감정을 숨기지 않고 따뜻하게 표현해주는 사람이 잘 맞습니다. 함께 웃는 시간이 많을수록 관계가 빨리 가까워집니다.',
       tensionPoint: '감정의 온도가 빠르게 올라가면 확인보다 확신이 앞설 수 있습니다. 서두른 약속, 과한 기대, 즉흥적인 결정을 조심해야 합니다.',
-      marriagePoint: '결혼은 애정 표현과 현실 계획이 균형을 이룰 때 좋습니다. 사랑은 뜨겁게, 생활은 차분하게 나눌 수 있는 사람이 안정적입니다.'
+      marriagePoint: '결혼은 애정 표현과 현실 계획이 균형을 이룰 때 좋습니다. 사랑은 뜨겁게, 생활은 차분하게 나눌 수 있는 사람이 안정적입니다.',
+      drawnTo: '표현이 분명하고 나를 특별하게 대한다는 느낌을 주는 사람에게 끌립니다. 분위기, 센스, 말투, 눈빛처럼 감정이 살아 있는 신호에 약합니다.',
+      longTermType: '오래 가는 사람은 설렘을 주면서도 생활 약속을 놓치지 않는 사람입니다. 이벤트보다 평소의 다정함이 일정한 사람이 더 잘 맞습니다.',
+      failingPattern: '초반에 마음이 뜨거워질수록 상대의 현실 조건을 늦게 확인할 수 있습니다. 기대가 커진 뒤 실망하면 감정의 낙폭도 커집니다.',
+      perceivedStyle: '상대는 당신을 매력은 있지만 기준이 높은 사람으로 느낄 수 있습니다. 가까워지면 애정 표현을 원하면서도 자존심 때문에 먼저 말하지 않는 면이 보입니다.',
+      contactStyle: '연락은 온도 확인의 의미가 큽니다. 답장 속도보다 말의 따뜻함, 바쁜 중에도 나를 기억하는 짧은 신호가 중요합니다.',
+      hiddenNeed: '가장 원하는 것은 “나를 선택했다는 확실한 표현”입니다. 마음을 알면서도 표현을 아끼는 사람에게는 불안이 커질 수 있습니다.',
+      breakupTrigger: '말과 행동의 온도 차이, 반복되는 무관심, 중요한 순간에 나를 우선순위 밖으로 두는 태도가 쌓이면 관계가 꺼질 수 있습니다.',
+      loveStamina: '연애 에너지는 강하게 붙지만, 감정 기복이 큰 관계에서는 빨리 소진됩니다. 설렘과 휴식의 균형이 필요합니다.',
+      spouseFace: '얼굴 인상은 눈빛이 선명하고 표정이 밝은 편, 스타일에 감각이 있는 사람이 떠오릅니다. 웃을 때 분위기가 확 살아나는 사람이 인연상에 가깝습니다.',
+      marriedLife: '결혼 후에는 애정 표현과 현실 계획을 함께 챙기는 부부상이 좋습니다. 기념일과 일상 루틴을 모두 관리할 때 만족도가 높습니다.',
+      dontMiss: '바쁜 중에도 마음을 표현하고, 작은 약속을 이벤트처럼 소중히 여기는 사람은 놓치지 않는 편이 좋습니다.',
+      avoidPeople: '초반 감정만 크게 흔들고 책임 있는 행동은 늦는 사람, 말은 달콤하지만 생활 기준이 없는 사람은 피해야 합니다.'
     },
     토: {
       archetype: '안정형 파트너',
@@ -792,7 +828,19 @@ function getElementLoveSignature(element: FiveElement) {
       meetingRoute: '지인 소개, 가족/동료 연결, 동네 생활권, 직장 근처, 반복적으로 마주치는 안정적인 공간에서 관계가 천천히 열릴 가능성이 큽니다.',
       fitPoint: '생활 기준, 돈 관리, 약속 이행이 맞으면 관계가 깊게 안정됩니다. 말보다 반복 행동을 보는 방식이 잘 맞습니다.',
       tensionPoint: '관계가 답답하게 느껴질 때 바로 밀어붙이면 상대가 닫힐 수 있습니다. 속도보다 신뢰 축적이 먼저입니다.',
-      marriagePoint: '결혼은 감정보다 생활 기반이 먼저 맞아야 합니다. 주거, 저축, 가족과의 거리, 역할 분담을 구체적으로 맞추면 오래 갑니다.'
+      marriagePoint: '결혼은 감정보다 생활 기반이 먼저 맞아야 합니다. 주거, 저축, 가족과의 거리, 역할 분담을 구체적으로 맞추면 오래 갑니다.',
+      drawnTo: '믿음직하고 생활이 단단한 사람에게 끌립니다. 말이 많지 않아도 책임감, 안정감, 경제관념이 보이면 마음이 깊어집니다.',
+      longTermType: '오래 가는 사람은 연락을 화려하게 잘하는 사람이 아니라, 매일의 태도가 변하지 않는 사람입니다. 돈과 시간 약속을 가볍게 보지 않는 사람이 가장 잘 맞습니다.',
+      failingPattern: '처음엔 참고 기다리지만, 상대가 책임을 미루거나 생활이 흐트러지면 정이 식기 쉽습니다. 실망을 오래 품다가 한 번에 선을 긋는 패턴을 조심해야 합니다.',
+      perceivedStyle: '상대는 당신을 쉽게 흔들리지 않는 사람으로 느낍니다. 다만 감정을 바로 드러내지 않아 “마음이 없는 건가”라는 오해를 받을 수 있습니다.',
+      contactStyle: '연락은 꾸준함이 핵심입니다. 긴 메시지보다 정해진 시간의 짧은 확인, 바쁜 날에도 끊기지 않는 루틴이 마음을 안정시킵니다.',
+      hiddenNeed: '가장 원하는 것은 “내가 기대어도 무너지지 않는 관계”입니다. 무조건적인 설렘보다 같이 살아도 안전하겠다는 감각이 중요합니다.',
+      breakupTrigger: '책임 회피, 돈 문제, 가족 문제의 경계 없음, 반복되는 약속 파기가 결정적인 이별 사유가 될 수 있습니다.',
+      loveStamina: '연애를 가볍게 소비하기보다 오래 책임지는 타입입니다. 다만 관계가 계속 불안하면 회복 시간이 길어지니 초반 기준 확인이 중요합니다.',
+      spouseFace: '얼굴 인상은 차분하고 단정한 분위기, 선이 안정적이고 눈매가 편안한 사람이 떠오릅니다. 첫눈에 강렬하기보다 볼수록 신뢰가 쌓이는 인상입니다.',
+      marriedLife: '결혼 후에는 역할 분담형, 생활 안정형 부부상이 좋습니다. 집안일, 돈관리, 가족과의 거리까지 현실 기준을 맞출수록 오래 갑니다.',
+      dontMiss: '느리지만 책임을 미루지 않고, 말보다 행동으로 생활을 맞춰오는 사람은 놓치지 않는 편이 좋습니다.',
+      avoidPeople: '돈 개념이 불안정한 사람, 감정은 뜨겁지만 일상 책임을 피하는 사람, 가족과의 경계가 흐린 사람은 피해야 합니다.'
     },
     금: {
       archetype: '기준형 파트너',
@@ -801,7 +849,19 @@ function getElementLoveSignature(element: FiveElement) {
       meetingRoute: '일, 프로젝트, 계약, 협업, 전문 모임, 소개를 통한 공식적인 만남에서 관계가 시작될 가능성이 큽니다.',
       fitPoint: '서로의 기준과 영역을 존중할 때 잘 맞습니다. 감정 과잉보다 약속, 책임, 실력으로 신뢰를 쌓는 관계가 안정적입니다.',
       tensionPoint: '표현이 적다고 마음이 없는 것으로 단정하면 오해가 커질 수 있습니다. 말투보다 행동의 일관성을 봐야 합니다.',
-      marriagePoint: '결혼은 서로의 역할과 책임이 명확할수록 좋습니다. 돈, 시간, 가족 문제를 문서처럼 분명하게 정리하는 사람이 잘 맞습니다.'
+      marriagePoint: '결혼은 서로의 역할과 책임이 명확할수록 좋습니다. 돈, 시간, 가족 문제를 문서처럼 분명하게 정리하는 사람이 잘 맞습니다.',
+      drawnTo: '능력 있고 자기 기준이 분명한 사람에게 끌립니다. 흐릿한 다정함보다 일 잘하는 태도, 깔끔한 매너, 선을 지키는 품격에 마음이 움직입니다.',
+      longTermType: '오래 가는 사람은 감정 표현이 과한 사람이 아니라, 약속과 책임을 정확히 지키는 사람입니다. 서로의 영역을 존중하는 관계가 안정적입니다.',
+      failingPattern: '상대를 오래 검증하다가 표현 타이밍을 놓칠 수 있습니다. 마음은 있는데 차갑게 보여 상대가 먼저 물러나는 흐름을 조심해야 합니다.',
+      perceivedStyle: '상대는 당신을 단정하고 기준이 높은 사람으로 느낍니다. 가까워지기 전에는 벽이 있어 보이지만, 신뢰가 생기면 책임감이 강한 사람으로 보입니다.',
+      contactStyle: '연락은 간결하고 목적이 분명한 편이 잘 맞습니다. 다만 너무 업무처럼 대하면 정서적 온도가 낮아질 수 있어 짧은 애정 표현을 의식적으로 섞는 편이 좋습니다.',
+      hiddenNeed: '가장 원하는 것은 “존중받는 관계”입니다. 사생활, 일, 돈, 가족 문제에서 내 기준을 함부로 넘지 않는 사람에게 깊이 안심합니다.',
+      breakupTrigger: '무례함, 약속 불이행, 경계 침범, 말과 행동의 불일치가 누적되면 감정 회복이 어렵습니다.',
+      loveStamina: '관계 유지력은 강하지만, 신뢰가 깨지면 다시 여는 데 시간이 오래 걸립니다. 작은 불만을 너무 늦게 말하지 않는 것이 중요합니다.',
+      spouseFace: '얼굴 인상은 선이 정돈되고 깔끔한 스타일, 단정한 옷차림과 차분한 눈빛이 먼저 떠오릅니다. 말보다 태도에서 신뢰가 느껴지는 사람입니다.',
+      marriedLife: '결혼 후에는 역할과 책임이 명확한 파트너십이 좋습니다. 돈, 시간, 가족 문제를 감정싸움이 아니라 합의표처럼 정리할 때 안정됩니다.',
+      dontMiss: '표현은 담백해도 약속을 정확히 지키고, 당신의 영역을 존중하는 사람은 놓치지 않는 편이 좋습니다.',
+      avoidPeople: '말을 바꾸는 사람, 선을 넘는 사람, 감정으로 책임을 흐리는 사람, 기준 없이 즉흥적으로 움직이는 사람은 피해야 합니다.'
     },
     수: {
       archetype: '지성형 파트너',
@@ -810,7 +870,19 @@ function getElementLoveSignature(element: FiveElement) {
       meetingRoute: '온라인, 이동 중 연결, 스터디, 커뮤니티, 글/콘텐츠를 통한 접점, 늦은 시간의 대화처럼 말과 정보가 먼저 이어지는 장면에서 열리기 쉽습니다.',
       fitPoint: '깊은 대화, 사적인 고민 공유, 서로의 고독을 존중하는 방식이 잘 맞습니다. 가벼운 표현보다 진심 어린 대화가 관계를 움직입니다.',
       tensionPoint: '생각이 많아질수록 관계를 혼자 해석하기 쉽습니다. 불안할 때는 추측보다 짧고 명확한 확인이 필요합니다.',
-      marriagePoint: '결혼은 정서적 안전감과 대화의 깊이가 핵심입니다. 각자의 시간을 존중하면서도 중요한 결정을 함께 공유하는 사람이 안정적입니다.'
+      marriagePoint: '결혼은 정서적 안전감과 대화의 깊이가 핵심입니다. 각자의 시간을 존중하면서도 중요한 결정을 함께 공유하는 사람이 안정적입니다.',
+      drawnTo: '겉으로 요란하지 않아도 대화가 깊고 생각이 섬세한 사람에게 끌립니다. 쉽게 다가오는 사람보다 천천히 마음을 열게 만드는 사람에게 약합니다.',
+      longTermType: '오래 가는 사람은 감정을 몰아붙이지 않고, 혼자만의 시간과 깊은 대화를 모두 존중해주는 사람입니다. 말의 결이 편안해야 관계가 안정됩니다.',
+      failingPattern: '불안할 때 상대의 말과 행동을 오래 해석하다가 혼자 결론을 내릴 수 있습니다. 확인하지 않은 추측이 관계를 지치게 만들 수 있습니다.',
+      perceivedStyle: '상대는 당신을 조용하지만 속이 깊은 사람으로 느낍니다. 다만 감정을 숨길 때는 거리를 두는 사람처럼 보여 상대가 다가올 타이밍을 놓칠 수 있습니다.',
+      contactStyle: '연락은 깊은 대화가 중요합니다. 짧아도 진심이 담긴 메시지, 하루의 감정이나 생각을 나누는 연락이 관계를 안정시킵니다.',
+      hiddenNeed: '가장 원하는 것은 “내 복잡한 마음을 안전하게 꺼낼 수 있는 사람”입니다. 판단보다 경청, 조언보다 이해가 먼저일 때 마음이 열립니다.',
+      breakupTrigger: '정서적 방치, 애매한 태도, 긴 침묵, 중요한 이야기를 피하는 흐름이 반복되면 관계를 혼자 놓아버릴 수 있습니다.',
+      loveStamina: '감정은 깊지만 소모도 깊습니다. 오래 가려면 혼자 회복하는 시간과 둘이 확인하는 시간이 균형을 이뤄야 합니다.',
+      spouseFace: '얼굴 인상은 차분하고 눈빛이 깊은 편, 말수가 많지 않아도 묘하게 시선이 가는 분위기가 떠오릅니다. 조용한 매력과 지적인 인상이 강합니다.',
+      marriedLife: '결혼 후에는 서로의 고독과 대화를 모두 존중하는 부부상이 좋습니다. 각자의 시간을 지켜주면서도 중요한 선택은 함께 공유해야 안정됩니다.',
+      dontMiss: '말을 재촉하지 않고 당신의 생각을 끝까지 들어주는 사람, 조용하지만 정서적으로 꾸준한 사람은 놓치지 않는 편이 좋습니다.',
+      avoidPeople: '애매한 침묵으로 불안을 키우는 사람, 중요한 대화를 계속 피하는 사람, 감정 공백을 외부 자극으로 메우는 사람은 피해야 합니다.'
     }
   };
 
@@ -847,6 +919,14 @@ function buildLoveProfile(
   const cautionSignature = getElementLoveSignature((cautious[0] || dayElement) as FiveElement);
   const dominantTenGods = basis.dominantTenGods.slice(0, 3).join(', ');
   const stageGuide = getRelationshipStageGuide(formData, relationshipLabel);
+  const statusPrefix =
+    formData.relationshipStatus === 'dating'
+      ? '현재 관계에서는'
+      : formData.relationshipStatus === 'married'
+        ? '현재 부부 흐름에서는'
+        : formData.relationshipStatus === 'single'
+          ? '새 인연을 볼 때는'
+          : '이번 관계운에서는';
   const marriageWindow = basis.seun
     .slice(0, 5)
     .map((item) => item.year)
@@ -855,11 +935,23 @@ function buildLoveProfile(
   return {
     archetype: partnerSignature.archetype,
     image: partnerSignature.image,
+    spouseFace: partnerSignature.spouseFace,
     jobField: partnerSignature.jobField,
     meetingRoute: meetingSignature.meetingRoute,
     fitPoint: partnerSignature.fitPoint,
     tensionPoint: cautionSignature.tensionPoint,
     marriagePoint: partnerSignature.marriagePoint,
+    drawnTo: partnerSignature.drawnTo,
+    longTermType: partnerSignature.longTermType,
+    failingPattern: `${statusPrefix} ${partnerSignature.failingPattern}`,
+    perceivedStyle: partnerSignature.perceivedStyle,
+    contactStyle: partnerSignature.contactStyle,
+    hiddenNeed: partnerSignature.hiddenNeed,
+    breakupTrigger: cautionSignature.breakupTrigger,
+    loveStamina: partnerSignature.loveStamina,
+    marriedLife: partnerSignature.marriedLife,
+    dontMiss: partnerSignature.dontMiss,
+    avoidPeople: cautionSignature.avoidPeople,
     stageGuide,
     dominantTenGods,
     marriageWindow,
@@ -1084,96 +1176,118 @@ function buildSections(
     },
     {
       id: 'love',
-      title: '결정사급 연애와 결혼 인연 분석',
-      subtitle: '만나게 될 사람의 분위기, 직업군, 만남 경로, 결혼 현실성을 함께 읽는 핵심 영역',
+      title: '초정밀 연애운과 결혼 인연 리포트',
+      subtitle: '내가 끌리는 사람, 오래 가는 사람, 망하는 패턴, 배우자상과 만남 루트를 현실적으로 읽는 구간',
       callout: {
-        title: `${loveProfile.archetype} 인연 프로파일`,
-        body: `이 리포트는 외모나 직업을 단정하지 않고, 원국의 일간·오행·십성·현재 ${loveProfile.currentDayunName} 대운을 겹쳐 “어떤 분위기의 사람과 오래 맞는가”를 결정사 프로파일처럼 정리합니다.`
+        title: `${loveProfile.archetype} · ${basis.dayMaster.stem} 일간의 관계 시그니처`,
+        body: `연애운은 “좋은 사람을 만난다”로 끝내면 체감이 약합니다. 이번 파트는 ${basis.pillars.day} 일주, ${basis.pillars.month} 월령, ${loveProfile.currentDayunName} 대운, ${loveProfile.dominantTenGods} 성향을 함께 보며 내가 왜 특정 타입에게 끌리고, 어떤 사람과 오래 가는지까지 현실 언어로 풀어냅니다.`
       },
       paragraphs: [
-        `${getRelationshipContextSentence(relationshipLabel)} 이 정보는 연애/결혼 해석에서 감정의 속도, 현실 조율 방식, 관계의 책임 분배를 읽는 기본 맥락으로 반영됩니다.`,
+        `${getRelationshipContextSentence(relationshipLabel)} 이 맥락은 단순한 상태 표시가 아니라 감정 속도, 연락 리듬, 결혼 현실성, 상대를 검증하는 방식에 직접 반영됩니다.`,
         loveProfile.stageGuide,
-        `관계운은 ${basis.dominantTenGods.slice(0, 3).join(', ')} 성향과 ${helpful.join(', ')} 보완 흐름을 함께 봐야 정확합니다. 좋아하는 마음이 있어도 생활 리듬, 돈의 감각, 약속을 지키는 방식이 맞아야 오래 갑니다.`,
-        `앞으로 ${loveProfile.marriageWindow}년 흐름에서는 “누가 나를 설레게 하는가”보다 “누가 내 삶을 함께 운영할 수 있는가”가 더 중요한 질문입니다.`
+        `이 사주의 연애는 감정의 크기보다 “생활에서 신뢰가 반복되는가”가 중요합니다. 좋아하는 마음이 있어도 연락, 돈, 시간, 가족과의 거리, 갈등 후 회복 방식이 맞지 않으면 오래 끌고 가기 어렵습니다.`,
+        `앞으로 ${loveProfile.marriageWindow}년 흐름에서는 설렘만 보는 연애보다, 함께 일상을 운영할 수 있는 사람을 고르는 눈이 훨씬 중요해집니다.`
       ],
-      bullets: [
-        `인연상: ${loveProfile.image}`,
-        `직업/환경: ${loveProfile.jobField}`,
-        `만남 경로: ${loveProfile.meetingRoute}`,
-        `잘 맞는 지점: ${loveProfile.fitPoint}`
-      ],
-      table: {
-        headers: ['항목', '결정사급 해석'],
-        rows: [
-          ['미래 인연상', loveProfile.image],
-          ['가능성 높은 직업군', loveProfile.jobField],
-          ['만남이 열리는 장소', loveProfile.meetingRoute],
-          ['궁합이 맞는 이유', loveProfile.fitPoint],
-          ['부딪히는 패턴', loveProfile.tensionPoint],
-          ['결혼 현실성', loveProfile.marriagePoint]
-        ]
-      },
       cards: [
         {
-          title: '만나게 될 사람의 분위기',
-          body: loveProfile.image,
+          title: '내가 끌리는 사람',
+          body: loveProfile.drawnTo,
           tone: 'good',
-          badge: 'PARTNER'
+          badge: 'ATTRACTION'
         },
         {
-          title: '직업과 생활 환경',
+          title: '실제로 오래 가는 사람',
+          body: loveProfile.longTermType,
+          tone: 'good',
+          badge: 'LONG-TERM'
+        },
+        {
+          title: '상대가 느끼는 나',
+          body: loveProfile.perceivedStyle,
+          badge: 'MIRROR'
+        },
+        {
+          title: '연애가 흔들리는 패턴',
+          body: loveProfile.failingPattern,
+          tone: 'warn',
+          badge: 'PATTERN'
+        },
+        {
+          title: '만나게 될 사람의 얼굴 분위기',
+          body: loveProfile.spouseFace,
+          badge: 'FACE MOOD'
+        },
+        {
+          title: '인연이 닿기 쉬운 직업군',
           body: loveProfile.jobField,
           badge: 'CAREER'
         },
         {
-          title: '어디서 만나기 쉬운가',
+          title: '만남이 열리는 루트',
           body: loveProfile.meetingRoute,
           badge: 'ROUTE'
         },
         {
-          title: '왜 잘 맞는가',
-          body: loveProfile.fitPoint,
-          tone: 'good'
+          title: '연락 스타일',
+          body: loveProfile.contactStyle,
+          badge: 'CONTACT'
         },
         {
-          title: '결혼 전 확인할 조건',
-          body: loveProfile.marriagePoint
+          title: '숨겨진 연애 욕구',
+          body: loveProfile.hiddenNeed,
+          badge: 'NEED'
         },
         {
-          title: '피해야 할 관계 신호',
-          body: loveProfile.tensionPoint,
+          title: '결혼 후 모습',
+          body: loveProfile.marriedLife,
+          tone: 'good',
+          badge: 'MARRIAGE'
+        },
+        {
+          title: '놓치면 안 되는 사람',
+          body: loveProfile.dontMiss,
+          tone: 'good',
+          badge: 'KEEP'
+        },
+        {
+          title: '피해야 할 사람',
+          body: loveProfile.avoidPeople,
           tone: 'warn'
         }
       ],
       details: [
         {
-          summary: '미래 배우자 프로파일',
-          content: `${loveProfile.archetype} 흐름이 강합니다. ${loveProfile.image}\n\n이 사람은 첫인상만으로 강하게 밀고 들어오기보다, 반복되는 태도와 생활의 결에서 신뢰가 드러나는 타입으로 보는 편이 정확합니다. 상대가 어떤 말을 하느냐보다 시간 약속, 돈의 쓰임, 갈등 후 회복 방식이 일정한지를 확인하세요.`,
+          summary: '내가 왜 이런 사람에게 끌리는지',
+          content: `${loveProfile.drawnTo}\n\n여기서 중요한 건 끌림이 곧 안정이라는 뜻은 아니라는 점입니다. ${basis.dayMaster.stem} 일간의 관계 방식은 처음의 설렘보다 “내 기준이 존중받는가”에서 마음이 깊어집니다. 그래서 초반에 강하게 끌려도 상대의 생활 리듬과 책임 방식이 맞지 않으면 시간이 지날수록 피로가 커질 수 있습니다.`,
           open: true
         },
         {
-          summary: '직업군과 사회적 배경',
-          content: `${loveProfile.jobField}\n\n직업을 하나로 단정하는 방식은 위험합니다. 대신 이 사주에서는 상대가 어떤 환경에서 안정감을 느끼고, 어떤 방식으로 책임을 지는지가 더 중요합니다. 전문성, 생활 기준, 약속 이행이 분명한 사람일수록 관계가 오래 갑니다.`
+          summary: '오래 가는 사람과 빨리 식는 사람의 차이',
+          content: `${loveProfile.longTermType}\n\n반대로 ${loveProfile.avoidPeople} 초반에는 묘하게 신경 쓰이고 끌릴 수 있지만, 시간이 지날수록 관계의 에너지를 많이 쓰게 만듭니다. 이 사주에서는 “나를 얼마나 설레게 하는가”보다 “나를 불안하게 만들지 않는가”가 장기 궁합의 핵심입니다.`
         },
         {
-          summary: '만남 경로와 접점',
-          content: `${loveProfile.meetingRoute}\n\n완전히 우연한 만남보다 목적이 있는 자리, 반복적으로 마주치는 공간, 지인이나 일의 신뢰가 깔린 연결에서 관계가 열릴 가능성이 큽니다. 소개를 받더라도 “조건이 좋은 사람”보다 내 생활 리듬 안으로 자연스럽게 들어오는 사람을 우선 보세요.`
+          summary: '상대가 보는 나의 연애 스타일',
+          content: `${loveProfile.perceivedStyle}\n\n그래서 이 사주는 마음이 있어도 표현이 늦거나, 상대를 더 지켜본 뒤 확신하려는 흐름이 생길 수 있습니다. 이 자체가 나쁜 것은 아니지만, 상대 입장에서는 “좋아하는 건지 아닌지 모르겠다”는 신호로 읽힐 수 있으니 중요한 순간에는 짧게라도 마음을 말해주는 편이 좋습니다.`
         },
         {
-          summary: '잘 맞는 점과 궁합 포인트',
-          content: `${loveProfile.fitPoint}\n\n궁합은 감정이 뜨거운지보다 갈등 후 다시 맞춰지는 속도에서 드러납니다. 이 흐름에서는 연락 빈도보다 약속의 일관성, 표현의 크기보다 책임의 선명함, 설렘보다 생활의 안정감을 보는 편이 더 정확합니다.`
+          summary: '미래 인연의 인상과 직업 환경',
+          content: `${loveProfile.spouseFace}\n\n${loveProfile.jobField}\n\n직업이나 얼굴을 한 가지로 단정하면 리포트가 가벼워집니다. 대신 이 사주에서는 상대가 풍기는 분위기, 돈과 시간에 대한 태도, 사회적 책임감이 더 중요한 신호입니다. 인연상은 “조건표”보다 “생활 태도”에서 더 선명하게 드러납니다.`
         },
         {
-          summary: '결혼 전 반드시 확인할 조건',
-          content: `${loveProfile.marriagePoint}\n\n결혼으로 이어지려면 세 가지를 확인해야 합니다. 첫째, 돈을 쓰고 모으는 기준이 크게 충돌하지 않는가. 둘째, 가족과 일의 경계를 서로 존중할 수 있는가. 셋째, 갈등이 생겼을 때 침묵이나 회피가 아니라 조율로 돌아올 수 있는가입니다.`
+          summary: '만남 루트와 소개팅 전략',
+          content: `${loveProfile.meetingRoute}\n\n완전히 우연한 만남보다 목적이 있는 자리, 반복적으로 마주치는 공간, 지인이나 일의 신뢰가 깔린 연결에서 관계가 열릴 가능성이 큽니다. 소개를 받는다면 “조건이 좋은 사람”보다 내 생활 리듬 안으로 자연스럽게 들어오는 사람을 우선 보세요. 첫 만남에서는 직업보다 시간 약속, 대화의 균형, 돈 쓰는 태도를 보는 편이 더 정확합니다.`
         },
         {
-          summary: '피해야 할 상대 패턴',
-          content: `${loveProfile.avoidList.join('\n\n')}\n\n이 네 가지가 반복되면 초반 설렘이 강해도 장기 관계에서는 피로가 커질 수 있습니다. 특히 ${cautious.join(', ')} 기운이 강해지는 시기에는 외로움이나 불안 때문에 맞지 않는 관계를 오래 붙잡지 않도록 주의해야 합니다.`
+          summary: '결혼 현실성과 결혼 후 모습',
+          content: `${loveProfile.marriagePoint}\n\n${loveProfile.marriedLife}\n\n결혼으로 이어지려면 세 가지를 확인해야 합니다. 첫째, 돈을 쓰고 모으는 기준이 크게 충돌하지 않는가. 둘째, 가족과 일의 경계를 서로 존중할 수 있는가. 셋째, 갈등이 생겼을 때 침묵이나 회피가 아니라 조율로 돌아올 수 있는가입니다.`
         },
         {
-          summary: '30일 인연 행동 미션',
-          content: `${loveProfile.checklist.join('\n\n')}\n\n지금 당장 해야 할 일은 더 많은 사람을 무작정 만나는 것이 아니라, 내 기준표를 만드는 것입니다. “나는 어떤 사람에게 편안한가, 어떤 사람에게 불안해지는가, 어떤 생활 기준은 절대 양보하기 어려운가”를 적어두면 만남의 질이 달라집니다.`
+          summary: '헤어지는 결정적 이유와 연애 체력',
+          content: `${loveProfile.breakupTrigger}\n\n${loveProfile.loveStamina}\n\n이별운을 자극적으로 볼 필요는 없습니다. 이 사주에서는 작은 실망이 반복될 때 마음속에서 이미 관계를 정리해버리는 흐름이 더 중요합니다. 그러니 서운함을 끝까지 참는 것보다, 작을 때 정확히 말하는 습관이 관계를 지키는 힘이 됩니다.`
+        },
+        {
+          summary: '30일 연애 행동 미션',
+          content: `${loveProfile.checklist.join('\n\n')}\n\n지금 당장 해야 할 일은 더 많은 사람을 무작정 만나는 것이 아니라, 내 기준표를 만드는 것입니다. “나는 어떤 사람에게 편안한가, 어떤 사람에게 불안해지는가, 어떤 생활 기준은 절대 양보하기 어려운가”를 적어두면 만남의 질이 달라집니다. 특히 ${helpful.join(', ')} 기운을 살리는 장소와 루틴 안에서 만남을 만들 때 관계의 안정감이 높아집니다.`
         }
       ]
     },

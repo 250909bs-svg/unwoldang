@@ -11636,6 +11636,132 @@ body {
   font-weight: 800;
 }
 
+.premium-love-section {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 135, 170, 0.16), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(197, 155, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, #fff8f8 0%, #fffdf8 42%, #fffaf2 100%) !important;
+}
+
+.premium-love-section .premium-section-index {
+  background: linear-gradient(135deg, #ff678e 0%, #a970ff 100%);
+  box-shadow: 0 10px 22px rgba(226, 84, 137, 0.22);
+}
+
+.premium-love-section .premium-callout {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(222, 103, 146, 0.15);
+  background:
+    linear-gradient(135deg, rgba(255, 244, 249, 0.98), rgba(247, 239, 255, 0.95)),
+    #fff;
+}
+
+.premium-love-section .premium-callout::after {
+  content: '';
+  position: absolute;
+  right: -42px;
+  top: -52px;
+  width: 130px;
+  height: 130px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 112, 151, 0.2), transparent 68%);
+  pointer-events: none;
+}
+
+.premium-love-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.premium-love-card {
+  position: relative;
+  min-height: 190px;
+  padding: 18px 16px 16px;
+  overflow: hidden;
+  border: 1px solid rgba(218, 116, 148, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 250, 0.96)),
+    #fff;
+  box-shadow:
+    0 14px 28px rgba(87, 54, 70, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.76);
+}
+
+.premium-love-card::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, #ff6d9b, #b987ff);
+}
+
+.premium-love-card::after {
+  content: '';
+  position: absolute;
+  right: -34px;
+  bottom: -42px;
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 221, 235, 0.9), rgba(198, 164, 255, 0.18) 52%, transparent 70%);
+  pointer-events: none;
+}
+
+.premium-love-card h3 {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: #2b2430;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.premium-love-card h3::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff6d9b, #a970ff);
+  box-shadow: 0 0 0 5px rgba(255, 109, 155, 0.1);
+}
+
+.premium-love-card p {
+  position: relative;
+  z-index: 1;
+  color: #4a3e49;
+  font-size: 13.5px;
+  line-height: 1.72;
+}
+
+.premium-love-card .premium-mini-badge {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  background: rgba(255, 237, 245, 0.9);
+  color: #a13f67;
+  border-color: rgba(220, 95, 139, 0.16);
+}
+
+.premium-love-section .premium-accordion {
+  border-color: rgba(218, 116, 148, 0.14);
+}
+
+.premium-love-section .premium-accordion summary {
+  background: linear-gradient(90deg, #fff 0%, #fff7fb 100%);
+}
+
 .premium-report-character {
   position: relative;
   width: 100%;
@@ -12266,6 +12392,16 @@ body {
 
   .premium-report-section h2 {
     font-size: 22px;
+  }
+
+  .premium-love-card-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .premium-love-card {
+    min-height: 0;
+    padding: 16px 15px 15px;
   }
 
   .premium-card p,

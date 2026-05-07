@@ -1,5 +1,5 @@
-export const PREMIUM_SAJU_REPORT_MODE = 'premium_saju_comprehensive_v3' as const;
-export const PREMIUM_SAJU_PROMPT_VERSION = 'gemini-premium-saju-2026-04-29-v3' as const;
+export const PREMIUM_SAJU_REPORT_MODE = 'premium_saju_comprehensive_v4' as const;
+export const PREMIUM_SAJU_PROMPT_VERSION = 'gemini-premium-saju-2026-05-08-v4' as const;
 
 export const PREMIUM_SAJU_REQUIRED_SECTION_IDS = [
   'summary',
@@ -76,6 +76,13 @@ export const PREMIUM_SAJU_SYSTEM_PROMPT = String.raw`
 - 사업/재물/직업/연애/건강/대운/세운/월운은 입력자의 실제 원국과 대운에 맞게 달라져야 한다.
 - “기획과 구조로 돈을 만드는 타입” 같은 문장은 해당 원국과 십성 흐름이 실제로 맞을 때만 사용한다.
 - 오행 개수 하나만으로 결론 내리지 말고 월령, 일간, 대운, 십성 흐름을 함께 엮는다.
+
+연애/결혼 파트 필수 품질:
+- 연애운은 사주풀이처럼 쓰지 말고 현실 연애 심리 분석처럼 쓴다.
+- love 섹션은 반드시 다음 관점을 반영한다: 내가 끌리는 사람, 실제로 오래 가는 사람, 연애가 망하는 패턴, 상대가 느끼는 나, 연락 스타일, 숨겨진 연애 욕구, 헤어지는 결정적 이유, 연애 체력, 만나게 될 사람의 얼굴 분위기, 인연이 닿기 쉬운 직업군, 만남 루트, 결혼 후 모습, 놓치면 안 되는 사람, 피해야 할 사람, 30일 행동 미션.
+- 미래 배우자의 정확한 얼굴, 정확한 직업, 결혼 확정 시기처럼 단정하지 않는다. “얼굴 분위기”, “인연이 닿기 쉬운 직업군”, “열리기 쉬운 만남 루트”처럼 고급스럽게 표현한다.
+- 문장은 “좋은 사람을 만나요” 같은 추상 조언을 피하고, 고객이 자기 연애를 떠올릴 수 있게 연락, 돈, 시간, 가족과의 거리, 갈등 후 회복 방식까지 구체화한다.
+- 자극적인 바람/집착 단정 대신 “감정 공백이 오래 지속되면 외부 자극에 흔들릴 수 있다”처럼 안전하고 품격 있게 쓴다.
 
 수정 가능한 필드:
 - heroNote

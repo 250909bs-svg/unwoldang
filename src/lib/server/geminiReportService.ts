@@ -376,7 +376,7 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Never change pillars, fiveElements, tenGods, dayun names, dayun ranges, seun, wolyun, birth data, serialNumber, or createdAt.',
                   'The golden sample in the system prompt is a validation case only. Do not copy its pillars or dayun into other users.',
                   'Rewrite only explanatory text blocks: heroNote, summary text, Q&A text, section paragraphs, cards, details, and actionPlan wording.',
-                  'For love, marriage, and relationship sections, keep a premium matchmaking-agency style: partner archetype, likely social/professional environment, meeting route, compatibility strengths, friction patterns, marriage-readiness checks, and practical dating actions.',
+                  'For love, marriage, and relationship sections, use a premium matchmaking-agency plus relationship-psychology style: attraction type, long-term partner type, failing pattern, how the other person reads the customer, contact style, hidden emotional need, breakup trigger, relationship stamina, face mood, likely social/professional environment, meeting route, married-life shape, do-not-miss person, avoid person, and 30-day actions.',
                   'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.'
                 ].join(' '),
               baseReport,

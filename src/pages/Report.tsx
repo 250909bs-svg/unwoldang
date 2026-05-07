@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { clearPendingPayment } from '../lib/auth';
@@ -289,9 +289,17 @@ function SectionBlock({
       ? section.details?.filter((detail) => detail.summary !== '오행 강약 보기')
       : section.details;
   const visibleTable = section.id === 'saju' ? null : section.table;
+  const sectionClassName =
+    section.id === 'love' ? 'premium-report-section premium-love-section' : 'premium-report-section';
+  const cardGridClassName =
+    section.id === 'love'
+      ? 'premium-love-card-grid'
+      : section.cards?.length && section.cards.length >= 3
+        ? 'premium-grid3'
+        : 'premium-grid2';
 
   return (
-    <section className="premium-report-section" id={section.id}>
+    <section className={sectionClassName} id={section.id}>
       <div className="premium-section-heading">
         <div className="premium-section-title-wrap">
           <span className="premium-section-index">{number}</span>
@@ -353,9 +361,17 @@ function SectionBlock({
       ) : null}
 
       {section.cards?.length ? (
-        <div className={section.cards.length >= 3 ? 'premium-grid3' : 'premium-grid2'}>
-          {section.cards.map((card) => (
-            <article key={`${section.id}-${card.title}`} className={`premium-card ${card.tone ? `tone-${card.tone}` : ''}`}>
+        <div className={cardGridClassName}>
+          {section.cards.map((card, cardIndex) => (
+            <article
+              key={`${section.id}-${card.title}`}
+              className={`premium-card ${section.id === 'love' ? 'premium-love-card' : ''} ${card.tone ? `tone-${card.tone}` : ''}`}
+              style={
+                section.id === 'love'
+                  ? ({ '--love-card-index': cardIndex + 1 } as CSSProperties & Record<'--love-card-index', number>)
+                  : undefined
+              }
+            >
               <h3>{card.title}</h3>
               <p>{card.body}</p>
               {card.badge ? <span className="premium-mini-badge">{card.badge}</span> : null}
