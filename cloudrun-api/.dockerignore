@@ -1,0 +1,14 @@
+node_modules
+dist
+.env
+.env.local
+npm-debug.log*
+kasi-key.txt
+kasi-key.txt.txt
+음양력 톡일.txt
+gemini-key.txt
+gemini-key.txt.txt
+service-account*.json
+*service-account*.json
+*secret*.json
+*private*.json

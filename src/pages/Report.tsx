@@ -1,0 +1,802 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { findServiceById, type IntakeFormData } from '../api/mockData';
+import { clearPendingPayment } from '../lib/auth';
+import { saveReportArchiveEntry } from '../lib/reportArchive';
+import { buildSajuReport } from '../lib/saju/reportBuilder';
+import type { ReportSection, SajuReportData } from '../lib/saju/report';
+
+type ReportLocationState = {
+  formData?: Partial<IntakeFormData>;
+  paymentMethod?: string;
+  orderId?: string;
+  reportData?: SajuReportData;
+};
+
+const PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
+  name: '운월당',
+  gender: 'female',
+  calendar: 'solar',
+  isLeapMonth: false,
+  birthDate: '1992-09-09',
+  birthTime: '10:24',
+  isUnknownTime: false,
+  relationshipStatus: 'single',
+  relationshipDuration: 'under3',
+  q1: '지금 가장 조심해야 할 선택은 무엇인가요?',
+  q2: '올해 흐름에서 가장 강하게 잡아야 할 기회는 무엇인가요?'
+};
+
+const PILLAR_LABELS = [
+  { key: 'year', label: '연주', hanja: '年', note: '배경과 성장 환경' },
+  { key: 'month', label: '월주', hanja: '月', note: '월령과 사회적 흐름' },
+  { key: 'day', label: '일주', hanja: '日', note: '나의 중심축' },
+  { key: 'hour', label: '시주', hanja: '時', note: '생활 리듬과 습관' }
+] as const;
+
+const STEM_HANJA: Record<string, string> = {
+  갑: '甲',
+  을: '乙',
+  병: '丙',
+  정: '丁',
+  무: '戊',
+  기: '己',
+  경: '庚',
+  신: '辛',
+  임: '壬',
+  계: '癸'
+};
+
+const BRANCH_HANJA: Record<string, string> = {
+  자: '子',
+  축: '丑',
+  인: '寅',
+  묘: '卯',
+  진: '辰',
+  사: '巳',
+  오: '午',
+  미: '未',
+  신: '申',
+  유: '酉',
+  술: '戌',
+  해: '亥'
+};
+
+const STEM_ELEMENT: Record<string, string> = {
+  갑: '목',
+  을: '목',
+  병: '화',
+  정: '화',
+  무: '토',
+  기: '토',
+  경: '금',
+  신: '금',
+  임: '수',
+  계: '수'
+};
+
+const BRANCH_ELEMENT: Record<string, string> = {
+  인: '목',
+  묘: '목',
+  사: '화',
+  오: '화',
+  진: '토',
+  술: '토',
+  축: '토',
+  미: '토',
+  신: '금',
+  유: '금',
+  자: '수',
+  해: '수'
+};
+
+function parsePillar(pillar: string | null) {
+  if (!pillar || pillar === '미상') {
+    return null;
+  }
+
+  const [stem, branch] = [...pillar];
+
+  return {
+    stem,
+    branch,
+    stemHanja: STEM_HANJA[stem] || stem,
+    branchHanja: BRANCH_HANJA[branch] || branch,
+    stemElement: STEM_ELEMENT[stem] || '',
+    branchElement: BRANCH_ELEMENT[branch] || ''
+  };
+}
+
+function SajuWonGukBoard({ report }: { report: SajuReportData }) {
+  return (
+    <article className="premium-wonguk-board">
+      <div className="premium-wonguk-frame">
+        <div className="premium-wonguk-columns">
+          {PILLAR_LABELS.map((pillar) => {
+            const value = report.pillars[pillar.key];
+            const parsed = parsePillar(value);
+            const isMissingHour = pillar.key === 'hour' && !value;
+
+            return (
+              <section key={pillar.key} className="premium-wonguk-column">
+                <div className="premium-wonguk-head">
+                  <strong>{pillar.hanja}</strong>
+                  <span>{pillar.label}</span>
+                </div>
+
+                {parsed ? (
+                  <>
+                    <div className="premium-wonguk-chip" data-element={parsed.stemElement}>
+                      <span>천간</span>
+                      <strong>{parsed.stemHanja}</strong>
+                      <em>
+                        {parsed.stem} · {parsed.stemElement}
+                      </em>
+                    </div>
+                    <div className="premium-wonguk-chip" data-element={parsed.branchElement}>
+                      <span>지지</span>
+                      <strong>{parsed.branchHanja}</strong>
+                      <em>
+                        {parsed.branch} · {parsed.branchElement}
+                      </em>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="premium-wonguk-chip empty">
+                      <span>천간</span>
+                      <strong>?</strong>
+                      <em>미상</em>
+                    </div>
+                    <div className="premium-wonguk-chip empty">
+                      <span>지지</span>
+                      <strong>?</strong>
+                      <em>미상</em>
+                    </div>
+                  </>
+                )}
+
+                <p>{isMissingHour ? '시간 미상 기준' : pillar.note}</p>
+              </section>
+            );
+          })}
+        </div>
+      </div>
+
+    </article>
+  );
+}
+
+function ElementDistributionBoard({ report }: { report: SajuReportData }) {
+  const maxValue = Math.max(...report.fiveElements.map((item) => item.value), 1);
+
+  return (
+    <article className="premium-distribution-card">
+      <div className="premium-distribution-head">
+        <span>五行</span>
+        <h3>오행 분포</h3>
+      </div>
+      <div className="premium-element-medallions">
+        {report.fiveElements.map((item) => (
+          <div
+            key={item.label}
+            className={item.value === 0 ? 'premium-element-medallion empty' : 'premium-element-medallion'}
+            style={{ '--element-color': item.color, '--element-level': `${Math.max(14, (item.value / maxValue) * 100)}%` } as React.CSSProperties}
+          >
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+            <em />
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function TenGodDistributionBoard({ report }: { report: SajuReportData }) {
+  const tenGods = report.tenGods.slice(0, 6);
+  const maxValue = Math.max(...tenGods.map((item) => item.value), 1);
+
+  return (
+    <article className="premium-distribution-card ten">
+      <div className="premium-distribution-head">
+        <span>十星</span>
+        <h3>십성 분포</h3>
+      </div>
+      <div className="premium-tengod-seals">
+        {tenGods.map((item, index) => (
+          <div
+            key={item.label}
+            className="premium-tengod-seal"
+            style={{ '--seal-level': `${Math.max(16, (item.value / maxValue) * 100)}%` } as React.CSSProperties}
+          >
+            <small>{String(index + 1).padStart(2, '0')}</small>
+            <strong>{item.label}</strong>
+            <span>{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function DayunCards({ report }: { report: SajuReportData }) {
+  return (
+    <div className="premium-dayun-grid">
+      <article className="premium-dayun-card current">
+        <span>현재 대운</span>
+        <strong>
+          {report.currentDayun.name} · {report.currentDayun.range}
+        </strong>
+        <p>{report.currentDayun.summary}</p>
+      </article>
+      <article className="premium-dayun-card">
+        <span>다음 대운</span>
+        <strong>
+          {report.nextDayun.name} · {report.nextDayun.range}
+        </strong>
+        <p>{report.nextDayun.summary}</p>
+      </article>
+    </div>
+  );
+}
+
+function FortuneTimeline({ report }: { report: SajuReportData }) {
+  return (
+    <div className="premium-fortune-timeline">
+      {report.yearLuck.slice(0, 5).map((item, index) => (
+        <article key={item.year} className={index === 0 ? 'active' : ''}>
+          <span>{item.year}</span>
+          <strong>
+            {item.ganzhi} · {item.score}점
+          </strong>
+          <p>{item.headline}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function MonthRibbon({ report }: { report: SajuReportData }) {
+  return (
+    <div className="premium-month-ribbon">
+      {report.monthLuck.slice(0, 6).map((item) => (
+        <article key={`${item.year}-${item.month}`}>
+          <span>
+            {item.year}.{String(item.month).padStart(2, '0')}
+          </span>
+          <div className="premium-month-meter">
+            <em style={{ width: `${item.score}%` }} />
+          </div>
+          <strong>{item.score}</strong>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function SectionBlock({
+  section,
+  number,
+  report
+}: {
+  section: ReportSection;
+  number: string;
+  report: SajuReportData;
+}) {
+  const visibleDetails =
+    section.id === 'element'
+      ? section.details?.filter((detail) => detail.summary !== '오행 강약 보기')
+      : section.details;
+  const visibleTable = section.id === 'saju' ? null : section.table;
+
+  return (
+    <section className="premium-report-section" id={section.id}>
+      <div className="premium-section-heading">
+        <div className="premium-section-title-wrap">
+          <span className="premium-section-index">{number}</span>
+          <div>
+            <h2>{section.title}</h2>
+            {section.subtitle ? <p className="premium-muted">{section.subtitle}</p> : null}
+          </div>
+        </div>
+      </div>
+
+      {section.id === 'fortune' ? <DayunCards report={report} /> : null}
+      {section.id === 'year' ? <FortuneTimeline report={report} /> : null}
+      {section.id === 'month' ? <MonthRibbon report={report} /> : null}
+
+      {section.callout ? (
+        <div className="premium-callout">
+          {section.callout.title ? <h3>{section.callout.title}</h3> : null}
+          <p>{section.callout.body}</p>
+        </div>
+      ) : null}
+
+      {section.paragraphs?.length ? (
+        <div className="premium-prose">
+          {section.paragraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      ) : null}
+
+      {section.bullets?.length ? (
+        <ul className="premium-list">
+          {section.bullets.map((bullet) => (
+            <li key={bullet}>{bullet}</li>
+          ))}
+        </ul>
+      ) : null}
+
+      {visibleTable ? (
+        <div className="premium-table-wrap">
+          <table className="premium-table">
+            <thead>
+              <tr>
+                {visibleTable.headers.map((header) => (
+                  <th key={header}>{header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleTable.rows.map((row, rowIndex) => (
+                <tr key={`${section.id}-row-${rowIndex}`}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${section.id}-cell-${rowIndex}-${cellIndex}`}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {section.cards?.length ? (
+        <div className={section.cards.length >= 3 ? 'premium-grid3' : 'premium-grid2'}>
+          {section.cards.map((card) => (
+            <article key={`${section.id}-${card.title}`} className={`premium-card ${card.tone ? `tone-${card.tone}` : ''}`}>
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+              {card.badge ? <span className="premium-mini-badge">{card.badge}</span> : null}
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      {visibleDetails?.length ? (
+        <div className="premium-accordion-group">
+          {visibleDetails.map((detail) => (
+            <details key={`${section.id}-${detail.summary}`} className="premium-accordion" open={detail.open}>
+              <summary>
+                <span>{detail.summary}</span>
+                <span className="premium-details-hint">열기/닫기</span>
+              </summary>
+              <div className="premium-accordion-body">
+                {detail.content.split('\n\n').map((paragraph, index) => (
+                  <p key={`${section.id}-${detail.summary}-${index}`}>{paragraph}</p>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+export default function Report() {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { formData, paymentMethod, orderId, reportData } = (location.state as ReportLocationState) || {};
+  const service = findServiceById(id);
+  const hasReportSource = Boolean(reportData || formData?.birthDate);
+  const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
+  const shouldBlockPreview = isLiveHost && !hasReportSource;
+  const reportInput = formData?.birthDate ? formData : PREVIEW_FORM_DATA;
+  const reportCharacterVideo = reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
+  const report = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
+  const isYearlyShowcase = report.serviceId === 'life-flow';
+  const yearlyLead = report.yearLuck[0];
+  const yearlyMomentum = report.yearLuck.slice(0, 3);
+  const monthlyHotMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
+  const [isTocOpen, setIsTocOpen] = useState(false);
+
+  useEffect(() => {
+    if (shouldBlockPreview) {
+      navigate(`/form/${service.id}`, { replace: true });
+    }
+  }, [navigate, service.id, shouldBlockPreview]);
+
+  useEffect(() => {
+    if (shouldBlockPreview) {
+      return;
+    }
+
+    saveReportArchiveEntry({
+      id: `${report.serviceId}:${orderId || report.serialNumber}`,
+      orderId: orderId || report.serialNumber,
+      productId: report.serviceId,
+      customerName: report.customerName,
+      title: report.title,
+      subtitle: report.subtitle,
+      createdAt: report.createdAt,
+      paymentMethod,
+      formData,
+      reportData: report
+    });
+    clearPendingPayment();
+  }, [formData, orderId, paymentMethod, report, shouldBlockPreview]);
+
+  if (shouldBlockPreview) {
+    return (
+      <main className="mobile-page-shell">
+        <div className="mobile-page-card">
+          <section className="mobile-page-content centered">
+            <div className="mobile-loading-card">
+              <span className="mobile-chip">REPORT LOCKED</span>
+              <h1>입력과 결제 정보를 확인한 뒤 리포트를 열어드릴게요.</h1>
+              <p>실서비스에서는 미리보기 리포트를 직접 열 수 없도록 보호하고 있습니다.</p>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  const tocItems = [
+    { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
+    { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
+    { id: 'glance', label: '핵심 지표 요약', number: '02' },
+    ...report.sections.map((section, index) => ({
+      id: section.id,
+      label: section.title,
+      number: String(index + 3).padStart(2, '0')
+    })),
+    { id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') },
+    { id: 'legal', label: '안전 안내', number: String(report.sections.length + 4).padStart(2, '0') }
+  ];
+
+  const scrollToSection = (targetId: string) => {
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <main className={isYearlyShowcase ? 'premium-report-page yearly-premium-page' : 'premium-report-page'}>
+      <header className="premium-report-topbar">
+        <div className="premium-report-topbar-inner">
+          <div className="premium-report-brand">
+            <span className="premium-report-dot" aria-hidden="true" />
+            <span>운월당 프리미엄 리포트</span>
+          </div>
+
+          <div className="premium-report-top-actions">
+            <button type="button" className="premium-pill-button" onClick={() => scrollToSection('toc')}>
+              목차
+            </button>
+            <button type="button" className="premium-pill-button" onClick={() => scrollToSection('qa')}>
+              Q&A
+            </button>
+            <Link to="/menu" className="premium-pill-button">
+              목록
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className={isYearlyShowcase ? 'premium-report-shell yearly-report-shell' : 'premium-report-shell'}>
+        <article className={isYearlyShowcase ? 'premium-report-paper yearly-report-paper' : 'premium-report-paper'}>
+          <section className={isYearlyShowcase ? 'premium-report-cover yearly-report-cover' : 'premium-report-cover'}>
+            <h1>
+              {report.customerName} {report.title.replace('프리미엄 ', '')}
+            </h1>
+            <p className="premium-report-subtitle">입력한 사주 정보와 질문을 기준으로 정리한 운월당 개인 감정서입니다.</p>
+
+            {isYearlyShowcase && yearlyLead ? (
+              <div className="yearly-report-orbit">
+                <article className="yearly-report-orbit-lead">
+                  <span className="yearly-report-kicker">2026 YEAR COMPASS</span>
+                  <strong>{yearlyLead.headline}</strong>
+                  <p>{yearlyLead.summary}</p>
+                </article>
+
+                <div className="yearly-report-orbit-grid">
+                  {yearlyMomentum.map((item) => (
+                    <article key={item.year} className="yearly-report-orbit-card">
+                      <span>{item.year}</span>
+                      <strong>{item.headline}</strong>
+                      <p>{item.focus}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+          </section>
+
+          <div className="premium-divider" />
+
+          {isYearlyShowcase ? (
+            <>
+              <section className="premium-report-section yearly-focus-section" id="yearly-focus">
+                <div className="premium-section-heading">
+                  <div>
+                    <h2>2026 흐름 보드</h2>
+                    <p className="premium-muted">현재 대운, 세운, 월운 하이라이트를 한 번에 읽어보는 프리뷰 보드입니다.</p>
+                  </div>
+                </div>
+
+                <div className="yearly-focus-grid">
+                  <article className="premium-card yearly-focus-card emphasis">
+                    <span className="yearly-focus-label">CURRENT FLOW</span>
+                    <strong>
+                      {report.currentDayun.name} 대운 · {report.currentDayun.range}
+                    </strong>
+                    <p>{report.currentDayun.summary}</p>
+                  </article>
+
+                  <article className="premium-card yearly-focus-card">
+                    <span className="yearly-focus-label">BEST MONTHS</span>
+                    <div className="yearly-focus-list">
+                      {monthlyHotMonths.map((item) => (
+                        <div key={`${item.year}-${item.month}-best`} className="yearly-focus-list-item">
+                          <strong>
+                            {item.year}.{String(item.month).padStart(2, '0')}
+                          </strong>
+                          <span>{item.score}점</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p>
+                      {monthlyHotMonths[0]
+                        ? `${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')} 흐름이 가장 강하게 붙는 구간으로 보입니다.`
+                        : '월운 하이라이트를 구성 중입니다.'}
+                    </p>
+                  </article>
+
+                  <article className="premium-card yearly-focus-card">
+                    <span className="yearly-focus-label">THIS YEAR</span>
+                    <strong>{yearlyLead?.headline}</strong>
+                    <p>{yearlyLead?.focus}</p>
+                  </article>
+                </div>
+
+                <MonthRibbon report={report} />
+              </section>
+
+              <div className="premium-divider" />
+            </>
+          ) : null}
+
+          {report.serviceId === 'general-signature' ? (
+            <section className="premium-report-character" aria-label="운월당 종합사주 캐릭터">
+              <video className="premium-report-character-video" src={reportCharacterVideo} autoPlay muted loop playsInline preload="metadata" />
+              <div className="premium-report-character-glow" aria-hidden="true" />
+            </section>
+          ) : null}
+
+          <section className="premium-report-section" id="toc">
+            <button
+              type="button"
+              className={isTocOpen ? 'premium-toc-header open' : 'premium-toc-header'}
+              aria-expanded={isTocOpen}
+              onClick={() => setIsTocOpen((value) => !value)}
+            >
+              <div>
+                <span>목차</span>
+                <strong>리포트 전체 흐름 보기</strong>
+                <em>필요한 부분만 빠르게 이동할 수 있습니다.</em>
+              </div>
+              <span className="premium-toc-arrow" aria-hidden="true">
+                &gt;
+              </span>
+            </button>
+
+            {isTocOpen ? (
+              <div className="premium-toc">
+                {tocItems.map((item) => (
+                  <button key={item.id} type="button" className="premium-toc-item" onClick={() => scrollToSection(item.id)}>
+                    <span className="premium-toc-label">{item.label}</span>
+                    <span className="premium-toc-number">{item.number}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </section>
+
+          <div className="premium-divider" />
+
+          <section className="premium-report-section" id="summary">
+            <div className="premium-section-heading">
+              <div>
+                <h2>{report.summary.title}</h2>
+                <p className="premium-muted">이번 사주의 핵심과 지금 가장 중요한 포인트를 먼저 정리했습니다.</p>
+              </div>
+            </div>
+
+            <div className="premium-callout">
+              {report.summary.analysis.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+
+            <div className="premium-grid3">
+              {report.keyTakeaways.map((item) => (
+                <article key={item.title} className={`premium-card premium-key-card ${item.tone ? `tone-${item.tone}` : ''}`}>
+                  <span className="premium-key-label">{item.title}</span>
+                  <p>{item.body}</p>
+                </article>
+              ))}
+            </div>
+
+            <details className="premium-accordion" open>
+              <summary>
+                <span>실천 과제</span>
+                <span className="premium-details-hint">열기/닫기</span>
+              </summary>
+              <div className="premium-accordion-body">
+                <ul className="premium-list">
+                  {report.summary.advice.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </details>
+          </section>
+
+          <div className="premium-divider" />
+
+          <section className="premium-report-section" id="qa">
+            <div className="premium-section-heading">
+              <div>
+                <h2>궁금증에 대한 명확한 해답</h2>
+                <p className="premium-muted">고객 질문 맞춤 분석</p>
+              </div>
+            </div>
+
+            {report.questionAnswers.length ? (
+              report.questionAnswers.map((qa, index) => (
+                <div key={`${qa.question}-${index}`} className="premium-qa-block">
+                  <div className="premium-card premium-question-card">
+                    <h3>Q. {qa.question}</h3>
+                  </div>
+                  <div className="premium-card premium-answer-card">
+                    <h3>{qa.title}</h3>
+                    <p>{qa.analysis}</p>
+                    <ul className="premium-list">
+                      {qa.advice.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="premium-card">
+                <p>고객 질문이 아직 입력되지 않아 원국 중심 분석으로 먼저 정리했습니다.</p>
+              </div>
+            )}
+          </section>
+
+          <div className="premium-divider" />
+
+          <section className="premium-report-section" id="glance">
+            <div className="premium-section-heading">
+              <div>
+                <h2>핵심 지표 요약</h2>
+              </div>
+            </div>
+
+            <SajuWonGukBoard report={report} />
+
+            <div className="premium-grid2 premium-glance-chart-grid">
+              <ElementDistributionBoard report={report} />
+              <TenGodDistributionBoard report={report} />
+            </div>
+          </section>
+
+          {report.sections.map((section, index) => (
+            <div key={section.id}>
+              <div className="premium-divider" />
+              <SectionBlock section={section} number={String(index + 3).padStart(2, '0')} report={report} />
+            </div>
+          ))}
+
+          <div className="premium-divider" />
+
+          <section className="premium-report-section" id="plan">
+            <div className="premium-section-heading">
+              <div>
+                <h2>{report.actionPlan.title}</h2>
+                <p className="premium-muted">지금 바로 실행할 우선순위를 정리했습니다.</p>
+              </div>
+            </div>
+
+            <details className="premium-accordion" open>
+              <summary>
+                <span>우선순위 3가지</span>
+                <span className="premium-details-hint">열기/닫기</span>
+              </summary>
+              <div className="premium-accordion-body">
+                <ul className="premium-list">
+                  {report.actionPlan.priorities.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </details>
+
+            <div className="premium-grid2">
+              <article className="premium-card tone-good">
+                <h3>DO</h3>
+                <ul className="premium-list">
+                  {report.actionPlan.dos.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+
+              <article className="premium-card tone-warn">
+                <h3>AVOID</h3>
+                <ul className="premium-list">
+                  {report.actionPlan.avoids.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            </div>
+
+            <div className="premium-grid2 premium-plan-days">
+              <article className="premium-card">
+                <h3>행운일</h3>
+                <ul className="premium-list">
+                  {report.actionPlan.luckyDays.map((item) => (
+                    <li key={`lucky-${item.day}`}>
+                      {item.day}일: {item.reason}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <article className="premium-card">
+                <h3>주의일</h3>
+                <ul className="premium-list">
+                  {report.actionPlan.unluckyDays.map((item) => (
+                    <li key={`unlucky-${item.day}`}>
+                      {item.day}일: {item.reason}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            </div>
+          </section>
+
+          <div className="premium-divider" />
+
+          <section className="premium-report-section" id="legal">
+            <div className="premium-section-heading">
+              <div>
+                <h2>안전 안내</h2>
+                <p className="premium-muted">리포트 이용 전 함께 확인해야 할 안내입니다.</p>
+              </div>
+            </div>
+
+            <div className="premium-grid3">
+              {report.legalNotice.map((item) => (
+                <article key={item} className="premium-card premium-legal-card">
+                  <p>{item}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <footer className="premium-report-footer">
+            운월당 리포트는 입력한 생년월일시와 질문을 기준으로 작성된 개인 감정서입니다. 실제 선택은 현재의 상황과 함께
+            종합해 판단해 주세요.
+          </footer>
+        </article>
+      </div>
+    </main>
+  );
+}

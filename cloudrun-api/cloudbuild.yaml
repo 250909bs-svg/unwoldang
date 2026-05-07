@@ -1,0 +1,12 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - cloudrun-api/Dockerfile
+      - -t
+      - asia-northeast3-docker.pkg.dev/$PROJECT_ID/unwoldang/unwoldang-cloudrun
+      - .
+
+images:
+  - asia-northeast3-docker.pkg.dev/$PROJECT_ID/unwoldang/unwoldang-cloudrun

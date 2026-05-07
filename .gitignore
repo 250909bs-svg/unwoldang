@@ -1,0 +1,23 @@
+node_modules/
+dist/
+cloudrun-api/dist/
+.zip_inspect/
+
+.env
+.env.*
+!.env.example
+
+*.log
+*.local
+gemini-key.txt
+gemini-key.txt.txt
+kasi-key.txt
+kasi-key.txt.txt
+cloudrun-api/음양력 톡일.txt
+service-account*.json
+*service-account*.json
+*secret*.json
+*private*.json
+
+tsconfig.tsbuildinfo
+tsconfig.node.tsbuildinfo

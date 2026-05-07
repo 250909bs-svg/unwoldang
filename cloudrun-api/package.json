@@ -1,0 +1,9 @@
+{
+  "name": "unwoldang-cloudrun-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../node_modules/esbuild/bin/esbuild ./src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=./dist/index.js",
+    "start": "node dist/index.js"
+  }
+}
