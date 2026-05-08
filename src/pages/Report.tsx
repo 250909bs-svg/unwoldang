@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { User } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { clearPendingPayment } from '../lib/auth';
@@ -482,20 +483,13 @@ export default function Report() {
     <main className={isYearlyShowcase ? 'premium-report-page yearly-premium-page' : 'premium-report-page'}>
       <header className="premium-report-topbar">
         <div className="premium-report-topbar-inner">
-          <div className="premium-report-brand">
-            <span className="premium-report-dot" aria-hidden="true" />
-            <span>운월당 프리미엄 리포트</span>
-          </div>
+          <Link to="/" className="premium-report-brand" aria-label="운월당 홈">
+            운월당
+          </Link>
 
           <div className="premium-report-top-actions">
-            <button type="button" className="premium-pill-button" onClick={() => scrollToSection('toc')}>
-              목차
-            </button>
-            <button type="button" className="premium-pill-button" onClick={() => scrollToSection('qa')}>
-              Q&A
-            </button>
-            <Link to="/menu" className="premium-pill-button">
-              목록
+            <Link to="/my" className="app-profile-button" aria-label="마이페이지">
+              <User size={17} strokeWidth={2.2} />
             </Link>
           </div>
         </div>

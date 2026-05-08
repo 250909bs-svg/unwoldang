@@ -5,8 +5,8 @@ import {
   BriefcaseBusiness,
   PiggyBank,
   ScrollText,
-  Search,
   Sparkles,
+  User,
   WalletCards
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -244,21 +244,13 @@ export default function Home() {
     <main className="app-home-shell">
       <div className="app-mobile-shell">
         <header className="app-home-header">
-          <div className="app-weather-row">
-            <span>오늘의 운세</span>
-            <span className="app-weather-pill">오늘</span>
-          </div>
+          <Link to="/" className="mobile-topbar-brand" aria-label="운월당 홈">
+            운월당
+          </Link>
 
           <div className="app-header-actions">
-            <button type="button" className="app-luck-chip">
-              <Sparkles size={13} />
-              <span>50</span>
-            </button>
-            <button type="button" className="app-icon-button" aria-label="검색">
-              <Search size={16} />
-            </button>
-            <Link to="/my" className="app-profile-button" aria-label="마이 페이지">
-              나
+            <Link to="/my" className="app-profile-button" aria-label="마이페이지">
+              <User size={17} strokeWidth={2.2} />
             </Link>
           </div>
         </header>

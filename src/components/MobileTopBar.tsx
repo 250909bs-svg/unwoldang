@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 type MobileTopBarProps = {
@@ -10,23 +10,22 @@ type MobileTopBarProps = {
   rightSlot?: ReactNode;
 };
 
-export default function MobileTopBar({
-  title,
-  backTo = '/',
-  backLabel = '뒤로',
-  backState,
-  rightSlot
-}: MobileTopBarProps) {
+export default function MobileTopBar({ rightSlot }: MobileTopBarProps) {
   return (
     <header className="mobile-topbar">
-      <Link to={backTo} state={backState} className="mobile-topbar-back">
-        <ChevronLeft size={18} />
-        <span>{backLabel}</span>
+      <Link to="/" className="mobile-topbar-brand" aria-label="운월당 홈">
+        운월당
       </Link>
 
-      <strong>{title}</strong>
+      <div className="mobile-topbar-spacer" />
 
-      <div className="mobile-topbar-right">{rightSlot}</div>
+      <div className="mobile-topbar-right">
+        {rightSlot || (
+          <Link to="/my" className="app-profile-button" aria-label="마이페이지">
+            <User size={17} strokeWidth={2.2} />
+          </Link>
+        )}
+      </div>
     </header>
   );
 }

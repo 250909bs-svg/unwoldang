@@ -341,12 +341,9 @@ export default function Form() {
 
       <div className="intake-story-frame">
         <header className="intake-story-topbar">
-          <Link to={tabOrigin} className="intake-story-brand">
-            <span className="intake-story-brand-mark">운</span>
+          <Link to="/" className="intake-story-brand">
             <strong>운월당</strong>
           </Link>
-
-          <span className="intake-story-progress">{step}/3</span>
 
           <Link to="/my" className="intake-story-icon" aria-label="마이 페이지">
             <UserRound size={16} />

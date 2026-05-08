@@ -1880,7 +1880,7 @@ body {
 .app-home-header {
   justify-content: space-between;
   gap: 12px;
-  padding: 2px 6px 12px;
+  padding: 12px 14px 10px;
 }
 
 .app-weather-row {
@@ -1935,8 +1935,9 @@ body {
 .app-profile-button {
   background: #111827;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 0;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .report-tab-row {
@@ -2704,6 +2705,19 @@ body {
   border-bottom: 1px solid #eef1f4;
 }
 
+.mobile-topbar-brand {
+  color: #111827;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mobile-topbar-spacer {
+  min-width: 0;
+}
+
 .mobile-topbar-back {
   display: inline-flex;
   align-items: center;
@@ -3127,9 +3141,10 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: 14px;
-  font-weight: 700;
+  color: #111827;
+  font-size: 19px;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .premium-report-dot {
@@ -3144,7 +3159,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .premium-pill-button {
@@ -9782,9 +9797,11 @@ body {
 
 .intake-story-brand {
   gap: 8px;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-decoration: none;
 }
 
 .intake-story-brand-mark,
@@ -9805,7 +9822,7 @@ body {
 .intake-story-progress,
 .intake-story-icon {
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(11, 15, 26, 0.36);
+  background: #111827;
   backdrop-filter: blur(10px);
 }
 
@@ -12358,6 +12375,14 @@ body {
   color: #7a828e;
   text-align: left;
   background: #fffdf8;
+}
+
+.intake-story-topbar .intake-story-icon,
+.yearly-flow-page .intake-story-icon,
+.signature-video-flow-page .intake-story-icon,
+.love-reading-video-flow-page .intake-story-icon {
+  border-color: transparent;
+  background: #111827;
 }
 
 @media (min-width: 860px) {
