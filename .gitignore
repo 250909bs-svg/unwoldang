@@ -2,6 +2,7 @@ node_modules/
 dist/
 cloudrun-api/dist/
 .zip_inspect/
+.tools/
 
 .env
 .env.*

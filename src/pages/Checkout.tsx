@@ -103,6 +103,7 @@ export default function Checkout() {
   const canUseTossRuntime = Boolean(tossClientKey && confirmEndpoint && !isDemoPayment);
   const hasRequiredBirthInfo = Boolean(formData?.name && formData?.birthDate && (formData?.birthTime || formData?.isUnknownTime));
   const hasTwoQuestions = analysisPayload.questions.length === 2;
+  const reportReady = isDemoPayment || hasAiEndpoint;
   const paymentReady = !isLiveMisconfigured && (isDemoPayment || canUseTossRuntime);
   const canSubmit = Boolean(
     agreeService &&
@@ -112,7 +113,7 @@ export default function Checkout() {
       amount > 0 &&
       hasRequiredBirthInfo &&
       hasTwoQuestions &&
-      hasAiEndpoint &&
+      reportReady &&
       paymentReady
   );
   const activeOption = paymentOptions.find((option) => option.id === paymentMethod) ?? paymentOptions[0];
@@ -123,7 +124,7 @@ export default function Checkout() {
       done: hasRequiredBirthInfo
     },
     { label: '질문 2개 입력 완료', done: hasTwoQuestions },
-    { label: 'AI 결과 API 준비', done: hasAiEndpoint },
+    { label: isDemoPayment ? '데모 리포트 생성 준비' : 'AI 결과 API 준비', done: reportReady },
     {
       label: isLiveMisconfigured ? '실서비스 결제 설정 필요' : isDemoPayment ? '결제 데모 모드' : '토스 실결제 설정',
       done: paymentReady
@@ -144,7 +145,7 @@ export default function Checkout() {
             ? '이름, 생년월일, 태어난 시간을 먼저 입력해 주세요.'
             : !hasTwoQuestions
               ? '질문 2개를 모두 입력해야 프리미엄 리포트를 생성할 수 있습니다.'
-              : !hasAiEndpoint
+              : !reportReady
                 ? 'AI 결과 API가 연결되지 않았습니다. 운영 설정을 먼저 확인해 주세요.'
                 : !paymentReady
                   ? '토스 결제 설정이 아직 완성되지 않았습니다. 클라이언트 키와 승인 API를 연결해 주세요.'
@@ -228,7 +229,7 @@ export default function Checkout() {
             <div className="checkout-hero-chips">
               <span>주문번호 자동 생성</span>
               <span>질문 2개 반영</span>
-              <span>{hasAiEndpoint ? 'AI 분석 API 연결' : 'AI API 연결 대기'}</span>
+              <span>{hasAiEndpoint ? 'AI 분석 API 연결' : isDemoPayment ? '데모 리포트 생성' : 'AI API 연결 대기'}</span>
             </div>
           </div>
 
@@ -351,7 +352,7 @@ export default function Checkout() {
             <div className="intake-preview-pills">
               <span className="intake-preview-pill">주문 상태 저장</span>
               <span className="intake-preview-pill">토스 성공/실패 콜백</span>
-              <span className="intake-preview-pill">{hasAiEndpoint ? 'AI 결과 생성 준비' : 'AI API 연결 필요'}</span>
+              <span className="intake-preview-pill">{hasAiEndpoint ? 'AI 결과 생성 준비' : isDemoPayment ? '데모 결과 생성 준비' : 'AI API 연결 필요'}</span>
             </div>
           </div>
 
