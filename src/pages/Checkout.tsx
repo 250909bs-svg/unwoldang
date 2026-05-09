@@ -1,4 +1,4 @@
-import { CreditCard, Landmark, WalletCards } from 'lucide-react';
+import { Check, CreditCard, Landmark, WalletCards, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { type IntakeFormData, findServiceById } from '../api/mockData';
@@ -107,6 +107,11 @@ export default function Checkout() {
       paymentReady
   );
   const activeOption = paymentOptions.find((option) => option.id === paymentMethod) ?? paymentOptions[0];
+  const formattedAmount = amount.toLocaleString('ko-KR');
+  const selectedTime = formData?.isUnknownTime ? '시간 미상' : formData?.birthTime || '시간 미입력';
+  const birthSummary = `${formData?.birthDate || '생년월일 미입력'} · ${selectedTime}`;
+  const calendarSummary =
+    formData?.calendar === 'lunar' ? (formData?.isLeapMonth ? '음력 윤달' : '음력') : '양력';
 
   const handlePayment = async () => {
     if (!service) {
@@ -190,80 +195,130 @@ export default function Checkout() {
   }
 
   return (
-    <main className="mobile-page-shell">
-      <div className="mobile-page-card">
-        <MobileTopBar title="결제" backTo={`/form/${service.id}`} backLabel="이전" backState={{ tabOrigin }} />
+    <main className="mobile-page-shell checkout-luxe-page">
+      <div className="mobile-page-card checkout-luxe-card">
+        <MobileTopBar title="운월당" backTo={`/form/${service.id}`} backLabel="이전" backState={{ tabOrigin }} />
 
-        <section className="mobile-page-content with-floating-actions">
-          <div className="mobile-hero-card intake-hero-card">
-            <span className="mobile-chip">CHECKOUT</span>
-            <h1>{service.label}</h1>
+        <section className="checkout-luxe-stage" aria-label="결제 상품 미리보기">
+          <div className="checkout-luxe-copy">
+            <span>잠들어 있던 내 운의 흐름</span>
+            <strong>{formData?.name || '고객'}님의 사주 리포트</strong>
+          </div>
+          <div className="checkout-luxe-preview-row">
+            <article className="checkout-luxe-preview-card slim">
+              <img src="/intake-beauty-red.png" alt="" />
+              <div>
+                <span>질문 2개</span>
+                <strong>맞춤 분석</strong>
+              </div>
+            </article>
+            <article className="checkout-luxe-preview-card featured">
+              <img src="/intake-night-blue.png" alt="" />
+              <div>
+                <span>운월당</span>
+                <strong>{service.label}</strong>
+                <p>내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="checkout-luxe-sheet" aria-label="결제 안내">
+          <div className="checkout-luxe-sheet-head">
+            <div>
+              <h1>{service.label} 결제 안내</h1>
+              <p>{birthSummary} · {calendarSummary}</p>
+            </div>
+            <Link to={`/form/${service.id}`} state={{ formData, tabOrigin }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
+              <X size={18} />
+            </Link>
           </div>
 
-          <div className="mobile-section-card mobile-order-summary">
-            <article>
-              <span>상품</span>
-              <strong>{service.label}</strong>
+          <div className="checkout-luxe-benefit-pill">
+            <span>혜택 적용</span>
+            <strong>결제 후 결과를 바로 확인할 수 있어요</strong>
+          </div>
+
+          <div className="checkout-luxe-package-stack">
+            <span className="checkout-luxe-label">선택 상품</span>
+            <article className="checkout-luxe-package active">
+              <span className="checkout-luxe-radio">
+                <Check size={13} />
+              </span>
+              <div>
+                <strong>{service.label}</strong>
+                <p>성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석</p>
+              </div>
+              <b>{service.price}</b>
             </article>
-            <article>
-              <span>결제금액</span>
+            <article className="checkout-luxe-package disabled">
+              <span className="checkout-luxe-radio" />
+              <div>
+                <strong>운월당 보관 패키지</strong>
+                <p>결과 보관, 다시보기, 추가 질문 확장 기능 준비 중</p>
+              </div>
+              <b>준비중</b>
+            </article>
+          </div>
+
+          <div className="checkout-luxe-price-box">
+            <div>
+              <span>상품 판매가</span>
               <strong>{service.price}</strong>
-            </article>
-          </div>
-
-          <div className="mobile-section-card">
-            <strong className="mobile-section-title">결제수단</strong>
-            <div className="mobile-option-list">
-              {paymentOptions.map((option) => {
-                const Icon = option.icon;
-
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={paymentMethod === option.id ? 'mobile-option-card active' : 'mobile-option-card'}
-                    onClick={() => setPaymentMethod(option.id)}
-                  >
-                    <span className="mobile-option-icon">
-                      <Icon size={16} />
-                    </span>
-                    <div>
-                      <strong>{option.label}</strong>
-                    </div>
-                  </button>
-                );
-              })}
+            </div>
+            <div>
+              <span>질문 맞춤 분석</span>
+              <strong>포함</strong>
+            </div>
+            <div className="total">
+              <span>최종 구매가</span>
+              <strong>{formattedAmount}원</strong>
             </div>
           </div>
 
-          <label className="mobile-check-row">
+          <div className="checkout-luxe-payments">
+            <span className="checkout-luxe-label">결제수단</span>
+            {paymentOptions.map((option) => {
+              const Icon = option.icon;
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={paymentMethod === option.id ? 'checkout-luxe-payment active' : 'checkout-luxe-payment'}
+                  onClick={() => setPaymentMethod(option.id)}
+                >
+                  <Icon size={16} />
+                  <strong>{option.label}</strong>
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="checkout-luxe-check">
             <input type="checkbox" checked={agreeService} onChange={(event) => setAgreeService(event.target.checked)} />
             <span>
-              <Link to="/terms" className="inline-text-link">
-                이용약관
-              </Link>
-              에 동의합니다.
+              <Link to="/terms">이용약관</Link>에 동의합니다.
             </span>
           </label>
 
-          <label className="mobile-check-row">
+          <label className="checkout-luxe-check">
             <input type="checkbox" checked={agreePrivacy} onChange={(event) => setAgreePrivacy(event.target.checked)} />
             <span>
-              <Link to="/privacy" className="inline-text-link">
-                개인정보처리방침
-              </Link>
-              에 동의합니다.
+              <Link to="/privacy">개인정보처리방침</Link>에 동의합니다.
             </span>
           </label>
 
-          {error ? <div className="mobile-notice-box">{error}</div> : null}
-        </section>
+          {error ? <div className="checkout-luxe-error">{error}</div> : null}
 
-        <footer className="mobile-bottom-actions">
-          <button type="button" className="app-black-button" onClick={handlePayment} disabled={!canSubmit}>
-            {isSubmitting ? '처리 중' : isDemoPayment ? '결제하기' : '결제하기'}
+          <button type="button" className="checkout-luxe-submit" onClick={handlePayment} disabled={!canSubmit}>
+            {isSubmitting ? '처리 중' : `${activeOption.label} 결제`}
           </button>
-        </footer>
+
+          <p className="checkout-luxe-safe-copy">
+            결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.
+          </p>
+        </section>
       </div>
     </main>
   );
