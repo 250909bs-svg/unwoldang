@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { type IntakeFormData, findServiceById } from '../api/mockData';
 import MobileTopBar from '../components/MobileTopBar';
+import { legalPages, type LegalPageKey } from '../content/legal';
 import { useAuth } from '../context/AuthContext';
 import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
@@ -35,6 +36,7 @@ export default function Checkout() {
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
+  const [legalModal, setLegalModal] = useState<Extract<LegalPageKey, 'terms' | 'privacy'> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -84,6 +86,9 @@ export default function Checkout() {
   const birthSummary = `${formData?.birthDate || '생년월일 미입력'} · ${selectedTime}`;
   const calendarSummary =
     formData?.calendar === 'lunar' ? (formData?.isLeapMonth ? '음력 윤달' : '음력') : '양력';
+  const activeLegalContent = legalModal ? legalPages[legalModal] : null;
+  const activeLegalTitle =
+    legalModal === 'terms' ? '운월당 서비스 이용약관' : legalModal === 'privacy' ? '운월당 개인정보처리방침' : '';
 
   const handleEasyPayPreview = (label: string) => {
     setError(`${label}는 토스페이먼츠 심사 후 연결 예정입니다. 지금은 아래 일반 결제로 진행해 주세요.`);
@@ -272,14 +277,36 @@ export default function Checkout() {
           <label className="checkout-luxe-check">
             <input type="checkbox" checked={agreeService} onChange={(event) => setAgreeService(event.target.checked)} />
             <span>
-              <Link to="/terms">이용약관</Link>에 동의합니다.
+              <button
+                type="button"
+                className="checkout-luxe-text-link"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setLegalModal('terms');
+                }}
+              >
+                이용약관
+              </button>
+              에 동의합니다.
             </span>
           </label>
 
           <label className="checkout-luxe-check">
             <input type="checkbox" checked={agreePrivacy} onChange={(event) => setAgreePrivacy(event.target.checked)} />
             <span>
-              <Link to="/privacy">개인정보처리방침</Link>에 동의합니다.
+              <button
+                type="button"
+                className="checkout-luxe-text-link"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setLegalModal('privacy');
+                }}
+              >
+                개인정보처리방침
+              </button>
+              에 동의합니다.
             </span>
           </label>
 
@@ -294,6 +321,45 @@ export default function Checkout() {
             결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.
           </p>
         </section>
+
+        {activeLegalContent ? (
+          <div className="checkout-legal-backdrop" role="presentation" onMouseDown={() => setLegalModal(null)}>
+            <section
+              className="checkout-legal-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="checkout-legal-title"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <header className="checkout-legal-head">
+                <div>
+                  <h2 id="checkout-legal-title">{activeLegalTitle}</h2>
+                  <p>{activeLegalContent.subtitle}</p>
+                </div>
+                <button type="button" className="checkout-legal-close" aria-label="닫기" onClick={() => setLegalModal(null)}>
+                  <X size={18} />
+                </button>
+              </header>
+
+              <div className="checkout-legal-body">
+                {activeLegalContent.sections.map((section) => (
+                  <article key={section.title} className="checkout-legal-section">
+                    <h3>{section.title}</h3>
+                    {section.paragraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </article>
+                ))}
+              </div>
+
+              <footer className="checkout-legal-actions">
+                <button type="button" onClick={() => setLegalModal(null)}>
+                  확인
+                </button>
+              </footer>
+            </section>
+          </div>
+        ) : null}
       </div>
     </main>
   );

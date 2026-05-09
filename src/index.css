@@ -3421,11 +3421,21 @@ body {
   accent-color: #ff2a7f;
 }
 
-.checkout-luxe-check a {
+.checkout-luxe-check a,
+.checkout-luxe-text-link {
   color: #ffffff;
   font-weight: 900;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.checkout-luxe-text-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
 }
 
 .checkout-luxe-check-muted {
@@ -3466,6 +3476,130 @@ body {
   font-size: 10.5px;
   line-height: 1.5;
   text-align: center;
+}
+
+.checkout-legal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(2px);
+}
+
+.checkout-legal-modal {
+  width: min(512px, 100%);
+  max-height: min(84dvh, 760px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eeeeee;
+  color: #1f2228;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+}
+
+.checkout-legal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 25px 25px 14px;
+  background: #eeeeee;
+}
+
+.checkout-legal-head h2 {
+  margin: 0;
+  color: #15171b;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.checkout-legal-head p {
+  margin: 7px 0 0;
+  color: #7e8794;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.checkout-legal-close {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: -4px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #4b4f57;
+  cursor: pointer;
+}
+
+.checkout-legal-body {
+  overflow-y: auto;
+  padding: 0 25px 12px;
+  scrollbar-color: #9d9d9d transparent;
+  scrollbar-width: thin;
+}
+
+.checkout-legal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.checkout-legal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.checkout-legal-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #9d9d9d;
+}
+
+.checkout-legal-section {
+  padding: 18px 0 4px;
+}
+
+.checkout-legal-section + .checkout-legal-section {
+  border-top: 1px solid rgba(20, 24, 31, 0.06);
+}
+
+.checkout-legal-section h3 {
+  margin: 0 0 13px;
+  color: #8793a8;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.checkout-legal-section p {
+  margin: 0 0 10px;
+  color: #25282e;
+  font-size: 13px;
+  line-height: 1.85;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+}
+
+.checkout-legal-actions {
+  padding: 10px 25px 24px;
+  background: linear-gradient(180deg, rgba(238, 238, 238, 0.86), #eeeeee 30%);
+}
+
+.checkout-legal-actions button {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: #242424;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 .mobile-meta-pill {
