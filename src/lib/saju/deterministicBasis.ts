@@ -45,11 +45,18 @@ function normalizeBirthTime(formData: Partial<IntakeFormData>) {
     return { hour: null, minute: null };
   }
 
-  const [hourText, minuteText] = formData.birthTime.split(':');
+  const timeText = formData.birthTime.trim();
+  const timeMatch = timeText.match(/(\d{1,2}):(\d{2})/);
+
+  if (!timeMatch) {
+    return { hour: null, minute: null };
+  }
+
+  const [, hourText, minuteText] = timeMatch;
   const hour = Number(hourText);
   const minute = Number(minuteText);
 
-  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+  if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
     return { hour: null, minute: null };
   }
 

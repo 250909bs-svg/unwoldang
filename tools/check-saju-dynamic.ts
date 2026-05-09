@@ -70,6 +70,19 @@ const cases: CheckCase[] = [
 
 const results = cases.map(compactReport);
 const golden = results[0];
+const goldenFromTimeRange = compactReport({
+  label: 'golden-cha-minho-time-range-label',
+  serviceId: 'general-signature',
+  formData: {
+    name: '차민호',
+    gender: 'male',
+    calendar: 'solar',
+    birthDate: '1992-09-09',
+    birthTime: '사/巳 (09:30-11:29)',
+    q1: '지금 가장 조심해야 할 선택은 무엇인가요?',
+    q2: '2026년에 커리어를 어떻게 확장하는 게 좋을까요?'
+  }
+});
 
 assert(golden.pillars.year === '임신', 'Golden year pillar should be 임신');
 assert(golden.pillars.month === '기유', 'Golden month pillar should be 기유');
@@ -77,6 +90,7 @@ assert(golden.pillars.day === '무자', 'Golden day pillar should be 무자');
 assert(golden.pillars.hour === '정사', 'Golden hour pillar should be 정사');
 assert(golden.currentDayun.name === '임자', 'Golden current dayun should be 임자');
 assert(golden.nextDayun.name === '계축', 'Golden next dayun should be 계축');
+assert(goldenFromTimeRange.pillars.hour === '정사', 'Time range label should calculate hour pillar 정사');
 
 const signatures = new Set(
   results.map((result) =>
@@ -94,4 +108,4 @@ const signatures = new Set(
 
 assert(signatures.size === results.length, 'Saju reports must differ for different birth inputs');
 
-console.log(JSON.stringify(results, null, 2));
+console.log(JSON.stringify([...results, goldenFromTimeRange], null, 2));

@@ -220,6 +220,16 @@ export default function Form() {
     updateField('birthTime', selected.birthTime);
   };
 
+  const toggleLeapMonth = () => {
+    setFormData((prev) => {
+      if (prev.calendar !== 'lunar') {
+        return { ...prev, calendar: 'lunar', isLeapMonth: true };
+      }
+
+      return { ...prev, isLeapMonth: !prev.isLeapMonth };
+    });
+  };
+
   const birthDateReady = Boolean(formData.birthDate);
   const birthTimeReady = Boolean(formData.birthTime) || formData.isUnknownTime;
   const step1Ready =
@@ -393,18 +403,17 @@ export default function Form() {
               <div className="intake-story-field">
                 <div className="intake-story-field-head">
                   <span>나의 생년월일</span>
-                  <label className="intake-story-mini-check">
-                    <input
-                      type="checkbox"
-                      checked={formData.isLeapMonth}
-                      disabled={formData.calendar !== 'lunar'}
-                      onChange={(event) => updateField('isLeapMonth', event.target.checked)}
-                    />
+                  <button
+                    type="button"
+                    className="intake-story-mini-check"
+                    aria-pressed={formData.calendar === 'lunar' && formData.isLeapMonth}
+                    onClick={toggleLeapMonth}
+                  >
                     <span className={formData.isLeapMonth ? 'intake-story-mini-box checked' : 'intake-story-mini-box'}>
                       <Check size={11} />
                     </span>
                     <small>윤달</small>
-                  </label>
+                  </button>
                 </div>
 
                 <div className="intake-story-pill-row">
