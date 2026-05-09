@@ -3334,6 +3334,77 @@ body {
   color: #08150d;
 }
 
+.checkout-luxe-pay-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.checkout-luxe-easy-pay,
+.checkout-luxe-general-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 56px;
+  border: 0;
+  border-radius: 13px;
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.checkout-luxe-easy-pay:hover,
+.checkout-luxe-general-pay:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.checkout-luxe-easy-pay.kakao {
+  background: #ffe812;
+  color: #121212;
+  box-shadow: 0 12px 22px rgba(255, 232, 18, 0.18);
+}
+
+.checkout-luxe-easy-pay.naver {
+  background: #15d66f;
+  color: #06140b;
+  box-shadow: 0 12px 22px rgba(21, 214, 111, 0.18);
+}
+
+.checkout-luxe-easy-pay.naver span {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #06140b;
+  color: #15d66f;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.checkout-luxe-general-pay {
+  width: 100%;
+  background: #38383c;
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.checkout-luxe-general-pay:disabled {
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  color: rgba(255, 255, 255, 0.4);
+  background: #2f2f33;
+}
+
 .checkout-luxe-check {
   display: flex;
   align-items: flex-start;
@@ -3355,6 +3426,10 @@ body {
   font-weight: 900;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.checkout-luxe-check-muted {
+  color: rgba(255, 255, 255, 0.48);
 }
 
 .checkout-luxe-error {

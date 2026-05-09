@@ -1,4 +1,4 @@
-import { Check, CreditCard, Landmark, WalletCards, X } from 'lucide-react';
+import { Check, MessageCircle, WalletCards, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { type IntakeFormData, findServiceById } from '../api/mockData';
@@ -12,42 +12,15 @@ import {
   createOrderId,
   getPriceValue,
   readPendingPayment,
-  savePendingPayment,
-  type PaymentMethodType
+  savePendingPayment
 } from '../lib/auth';
-import { requestTossPayment, type TossPaymentMethod } from '../lib/tossPayments';
+import { requestTossPayment } from '../lib/tossPayments';
 
 type CheckoutState = {
   product?: string;
   formData?: Partial<IntakeFormData>;
   tabOrigin?: string;
 };
-
-const paymentOptions: Array<{
-  id: PaymentMethodType;
-  label: string;
-  icon: typeof WalletCards;
-  tossMethod: TossPaymentMethod;
-}> = [
-  {
-    id: 'toss',
-    label: '토스페이먼츠',
-    icon: WalletCards,
-    tossMethod: 'CARD'
-  },
-  {
-    id: 'card',
-    label: '카드 결제',
-    icon: CreditCard,
-    tossMethod: 'CARD'
-  },
-  {
-    id: 'bank',
-    label: '계좌이체',
-    icon: Landmark,
-    tossMethod: 'TRANSFER'
-  }
-];
 
 export default function Checkout() {
   const location = useLocation();
@@ -59,9 +32,9 @@ export default function Checkout() {
   const formData = locationState?.formData || restoredPayment?.formData;
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
   const service = findServiceById(product);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('toss');
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -106,12 +79,15 @@ export default function Checkout() {
       reportReady &&
       paymentReady
   );
-  const activeOption = paymentOptions.find((option) => option.id === paymentMethod) ?? paymentOptions[0];
   const formattedAmount = amount.toLocaleString('ko-KR');
   const selectedTime = formData?.isUnknownTime ? '시간 미상' : formData?.birthTime || '시간 미입력';
   const birthSummary = `${formData?.birthDate || '생년월일 미입력'} · ${selectedTime}`;
   const calendarSummary =
     formData?.calendar === 'lunar' ? (formData?.isLeapMonth ? '음력 윤달' : '음력') : '양력';
+
+  const handleEasyPayPreview = (label: string) => {
+    setError(`${label}는 토스페이먼츠 심사 후 연결 예정입니다. 지금은 아래 일반 결제로 진행해 주세요.`);
+  };
 
   const handlePayment = async () => {
     if (!service) {
@@ -139,7 +115,7 @@ export default function Checkout() {
     const pendingPayment = {
       orderId,
       productId: service.id,
-      paymentMethod,
+      paymentMethod: 'toss',
       amount,
       customerKey,
       formData,
@@ -171,7 +147,7 @@ export default function Checkout() {
       await requestTossPayment({
         clientKey: tossClientKey,
         customerKey,
-        method: activeOption.tossMethod,
+        method: 'CARD',
         orderId,
         orderName: service.label,
         amount,
@@ -181,7 +157,7 @@ export default function Checkout() {
         customerEmail: user?.email,
         metadata: {
           productId: service.id,
-          paymentMethod
+          paymentMethod: 'toss'
         }
       });
     } catch (caughtError) {
@@ -277,22 +253,20 @@ export default function Checkout() {
           </div>
 
           <div className="checkout-luxe-payments">
-            <span className="checkout-luxe-label">결제수단</span>
-            {paymentOptions.map((option) => {
-              const Icon = option.icon;
-
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={paymentMethod === option.id ? 'checkout-luxe-payment active' : 'checkout-luxe-payment'}
-                  onClick={() => setPaymentMethod(option.id)}
-                >
-                  <Icon size={16} />
-                  <strong>{option.label}</strong>
-                </button>
-              );
-            })}
+            <div className="checkout-luxe-pay-row">
+              <button type="button" className="checkout-luxe-easy-pay kakao" onClick={() => handleEasyPayPreview('카카오페이')}>
+                <MessageCircle size={16} fill="currentColor" />
+                <strong>pay 결제</strong>
+              </button>
+              <button type="button" className="checkout-luxe-easy-pay naver" onClick={() => handleEasyPayPreview('네이버페이')}>
+                <span>N</span>
+                <strong>pay 결제</strong>
+              </button>
+            </div>
+            <button type="button" className="checkout-luxe-general-pay" onClick={handlePayment} disabled={!canSubmit}>
+              <WalletCards size={17} />
+              <strong>{isSubmitting ? '처리 중' : '일반 결제'}</strong>
+            </button>
           </div>
 
           <label className="checkout-luxe-check">
@@ -309,11 +283,12 @@ export default function Checkout() {
             </span>
           </label>
 
-          {error ? <div className="checkout-luxe-error">{error}</div> : null}
+          <label className="checkout-luxe-check checkout-luxe-check-muted">
+            <input type="checkbox" checked={agreeMarketing} onChange={(event) => setAgreeMarketing(event.target.checked)} />
+            <span>마케팅 수신 동의 (선택)</span>
+          </label>
 
-          <button type="button" className="checkout-luxe-submit" onClick={handlePayment} disabled={!canSubmit}>
-            {isSubmitting ? '처리 중' : `${activeOption.label} 결제`}
-          </button>
+          {error ? <div className="checkout-luxe-error">{error}</div> : null}
 
           <p className="checkout-luxe-safe-copy">
             결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.
