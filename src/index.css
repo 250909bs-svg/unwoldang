@@ -6197,11 +6197,24 @@ body {
 
 .test-lab-banner {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
   gap: 14px;
-  background: linear-gradient(180deg, #fbfbfd 0%, #ffffff 100%);
+  min-height: 188px;
+  background:
+    radial-gradient(circle at 86% 22%, rgba(216, 180, 254, 0.36), transparent 34%),
+    linear-gradient(180deg, #fbfbfd 0%, #ffffff 100%);
   position: relative;
   overflow: hidden;
+}
+
+.test-lab-hero-character {
+  width: 112px;
+  height: 144px;
+  align-self: end;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 22px rgba(124, 58, 237, 0.16));
+  animation: appFloatSoft 4.2s ease-in-out infinite;
 }
 
 .test-lab-brand-mark {
@@ -6322,8 +6335,8 @@ body {
 .test-lab-card {
   position: relative;
   display: grid;
-  gap: 10px;
-  padding: 18px 14px;
+  gap: 9px;
+  padding: 0 12px 15px;
   border-radius: 22px;
   background: #fff;
   border: 1px solid #eef0f4;
@@ -6377,8 +6390,9 @@ body {
 
 .test-lab-card-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
   padding: 5px 8px;
   border-radius: 999px;
   background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
@@ -6395,16 +6409,52 @@ body {
 }
 
 .test-lab-card-icon {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto;
-  border-radius: 20px;
+  width: 42px;
+  height: 42px;
+  margin: -30px auto 2px;
+  border-radius: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #fff;
+  position: relative;
+  z-index: 2;
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.1);
   animation: appFloatSoft 3.8s ease-in-out infinite;
+}
+
+.test-lab-card-image {
+  position: relative;
+  display: block;
+  width: calc(100% + 24px);
+  height: 116px;
+  margin: 0 -12px;
+  overflow: hidden;
+  border-radius: 22px 22px 18px 18px;
+  background: #f5f3ff;
+}
+
+.test-lab-card-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.82) 100%),
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.22), transparent 42%);
+}
+
+.test-lab-card-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center 22%;
+  transform: scale(1.02);
+  transition: transform 0.35s ease;
+}
+
+.test-lab-card:not(.disabled):hover .test-lab-card-image img {
+  transform: scale(1.08);
 }
 
 .test-lab-card-icon.violet {

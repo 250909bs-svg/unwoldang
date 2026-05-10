@@ -12,6 +12,7 @@ type TestItem = {
   comingSoon?: boolean;
   accentClass: string;
   icon: typeof Scan;
+  image: string;
   path: string;
 };
 
@@ -24,6 +25,7 @@ const testItems: TestItem[] = [
     isNew: true,
     accentClass: 'violet',
     icon: Scan,
+    image: '/test-crystal.png',
     path: '/test/face-ai'
   },
   {
@@ -34,6 +36,7 @@ const testItems: TestItem[] = [
     isNew: true,
     accentClass: 'sky',
     icon: Hand,
+    image: '/test-meditation.png',
     path: '/test/palm-ai',
     comingSoon: true
   },
@@ -43,6 +46,7 @@ const testItems: TestItem[] = [
     subtitle: '진짜 나의 MBTI는?',
     accentClass: 'cyan',
     icon: Brain,
+    image: '/test-thinking.png',
     path: '/test/mbti',
     comingSoon: true
   },
@@ -52,6 +56,7 @@ const testItems: TestItem[] = [
     subtitle: '나의 연애 스타일',
     accentClass: 'rose',
     icon: Heart,
+    image: '/test-dreamy-stars.png',
     path: '/test/love',
     comingSoon: true
   },
@@ -61,6 +66,7 @@ const testItems: TestItem[] = [
     subtitle: '나의 오라 색깔은?',
     accentClass: 'amber',
     icon: Sparkles,
+    image: '/test-book.png',
     path: '/test/aura',
     comingSoon: true
   },
@@ -70,6 +76,7 @@ const testItems: TestItem[] = [
     subtitle: '우리 얼마나 맞을까?',
     accentClass: 'emerald',
     icon: Users,
+    image: '/test-moon-dance.png',
     path: '/test/compatibility',
     comingSoon: true
   },
@@ -79,6 +86,7 @@ const testItems: TestItem[] = [
     subtitle: '오늘의 럭키 포인트',
     accentClass: 'yellow',
     icon: Star,
+    image: '/test-star-character.png',
     path: '/test/luck',
     comingSoon: true
   },
@@ -88,6 +96,7 @@ const testItems: TestItem[] = [
     subtitle: '나의 에너지 타입',
     accentClass: 'indigo',
     icon: Zap,
+    image: '/test-crystal.png',
     path: '/test/energy',
     comingSoon: true
   }
@@ -117,6 +126,7 @@ export default function Test() {
               </h1>
               <p>얼굴, 손금, 심리까지 실제 운월당 테스트 화면처럼 가볍게 들어와 바로 체험할 수 있게 정리했습니다.</p>
             </div>
+            <img src="/test-star-character.png" alt="" className="test-lab-hero-character" />
           </section>
 
           <section className="test-lab-marquee" aria-label="추천 테스트 키워드">
@@ -149,6 +159,9 @@ export default function Test() {
                     >
                       <span className="test-lab-card-shine" />
                       {badgeLabel ? <span className="test-lab-card-badge muted">{badgeLabel}</span> : null}
+                      <span className="test-lab-card-image">
+                        <img src={item.image} alt="" />
+                      </span>
                       <span className={`test-lab-card-icon ${item.accentClass}`}>
                         <Icon size={24} />
                       </span>
@@ -167,6 +180,9 @@ export default function Test() {
                   >
                     <span className="test-lab-card-shine" />
                     {badgeLabel ? <span className="test-lab-card-badge">{badgeLabel}</span> : null}
+                    <span className="test-lab-card-image">
+                      <img src={item.image} alt="" />
+                    </span>
                     <span className={`test-lab-card-icon ${item.accentClass}`}>
                       <Icon size={24} />
                     </span>
