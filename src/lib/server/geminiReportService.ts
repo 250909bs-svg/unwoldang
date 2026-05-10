@@ -57,6 +57,8 @@ type GeminiDraft = {
   actionPlan?: Partial<ActionPlan>;
 };
 
+const DEFAULT_GEMINI_REQUEST_TIMEOUT_MS = 35000;
+
 export type ReportResponsePayload = {
   provider: 'gemini';
   reportMode: string;
@@ -77,6 +79,20 @@ function getEnv() {
   };
 
   return maybeProcess.process?.env ?? {};
+}
+
+function getGeminiRequestTimeoutMs(env: EnvRecord) {
+  const configured = Number(env.GEMINI_REQUEST_TIMEOUT_MS);
+
+  if (Number.isFinite(configured) && configured >= 10000) {
+    return configured;
+  }
+
+  return DEFAULT_GEMINI_REQUEST_TIMEOUT_MS;
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 export class ReportRequestError extends Error {
@@ -405,13 +421,28 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
   }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(buildGeminiRequestPayload(baseReport, deterministicBasis))
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), getGeminiRequestTimeoutMs(env));
+  let response: Response;
+
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      signal: controller.signal,
+      body: JSON.stringify(buildGeminiRequestPayload(baseReport, deterministicBasis))
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw new Error('Gemini response timed out. Returning deterministic fallback report.');
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const parsed = (await response.json()) as {
     error?: { message?: string };

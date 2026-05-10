@@ -34,6 +34,7 @@ export type KasiCalendarVerification = {
 
 const LRSR_ENDPOINT = 'https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService';
 const SPCDE_ENDPOINT = 'https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService';
+const DEFAULT_KASI_REQUEST_TIMEOUT_MS = 8000;
 
 function getEnv() {
   const maybeProcess = globalThis as {
@@ -48,6 +49,21 @@ function getEnv() {
 function getKasiServiceKey() {
   const env = getEnv();
   return env.KASI_SERVICE_KEY || env.DATA_GO_KR_SERVICE_KEY || env.PUBLIC_DATA_SERVICE_KEY || '';
+}
+
+function getKasiRequestTimeoutMs() {
+  const env = getEnv();
+  const configured = Number(env.KASI_REQUEST_TIMEOUT_MS);
+
+  if (Number.isFinite(configured) && configured >= 3000) {
+    return configured;
+  }
+
+  return DEFAULT_KASI_REQUEST_TIMEOUT_MS;
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 function parseBirthDate(value?: string) {
@@ -126,11 +142,27 @@ function itemList(value: unknown): KasiApiItem[] {
 
 async function requestKasiItems(endpoint: string, method: string, serviceKey: string, params: Record<string, string | number>) {
   const url = buildKasiUrl(endpoint, method, serviceKey, params);
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/json'
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), getKasiRequestTimeoutMs());
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      headers: {
+        Accept: 'application/json'
+      },
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw new Error('KASI API request timed out. Internal saju calendar engine was used.');
     }
-  });
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   const text = await response.text();
 
   if (!response.ok) {

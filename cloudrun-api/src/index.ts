@@ -27,6 +27,10 @@ function getAllowedOrigins() {
     .filter(Boolean);
 }
 
+function isLocalDevelopmentOrigin(origin: string) {
+  return /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(origin);
+}
+
 function applyCors(req: any, res: any) {
   const origin = req.headers.origin;
   const allowedOrigins = getAllowedOrigins();
@@ -37,7 +41,7 @@ function applyCors(req: any, res: any) {
 
   if (!allowedOrigins.length) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (allowedOrigins.includes(origin)) {
+  } else if (allowedOrigins.includes(origin) || isLocalDevelopmentOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
 

@@ -3686,6 +3686,16 @@ body {
   font-size: 28px;
 }
 
+.mobile-loading-notice {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #475467 !important;
+  border: 1px solid #e4e7ec;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 @media (max-width: 520px) {
   .app-container {
     max-width: 100%;

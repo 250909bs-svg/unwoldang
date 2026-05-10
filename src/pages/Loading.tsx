@@ -15,6 +15,8 @@ type LoadingLocationState = {
   reportData?: SajuReportData;
 };
 
+const LOADING_FALLBACK_TIMEOUT_MS = 65000;
+
 export default function Loading() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +32,7 @@ export default function Loading() {
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
   const [analysisFinished, setAnalysisFinished] = useState(false);
+  const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
   const hasAiEndpoint = Boolean(getAiReportEndpoint());
 
   const messages = useMemo(
@@ -68,6 +71,11 @@ export default function Loading() {
       } catch (error) {
         if (!cancelled) {
           console.error('AI report request failed:', error);
+          setAnalysisNotice(
+            error instanceof Error
+              ? error.message
+              : 'AI 분석 응답이 지연되어 내부 리포트로 먼저 전환합니다.'
+          );
         }
       } finally {
         if (!cancelled) {
@@ -82,6 +90,21 @@ export default function Loading() {
       cancelled = true;
     };
   }, [formData, locationState?.reportData, product]);
+
+  useEffect(() => {
+    if (analysisFinished) {
+      return;
+    }
+
+    const fallbackTimer = window.setTimeout(() => {
+      setAnalysisNotice('AI 분석 응답이 예상보다 길어져 내부 리포트로 먼저 이동합니다.');
+      setAnalysisFinished(true);
+    }, LOADING_FALLBACK_TIMEOUT_MS);
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+    };
+  }, [analysisFinished]);
 
   useEffect(() => {
     const progressTimer = window.setInterval(() => {
@@ -147,6 +170,7 @@ export default function Loading() {
                 ? ' 연결된 AI 결과 API로 프리미엄 분석 요청을 보내는 중입니다.'
                 : ' 아직 AI API가 연결되지 않아 내부 생성 로직으로 먼저 처리합니다.'}
             </p>
+            {analysisNotice ? <p className="mobile-loading-notice">{analysisNotice}</p> : null}
             <div className="progress-track">
               <span style={{ width: `${progress}%` }} />
             </div>
