@@ -12842,10 +12842,11 @@ body {
 .premium-wonguk-column p {
   margin: 2px 0 0;
   color: #665f54;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.45;
   font-weight: 700;
   letter-spacing: -0.035em;
+  white-space: nowrap;
 }
 
 .premium-wonguk-element-strip {
