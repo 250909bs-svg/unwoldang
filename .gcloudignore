@@ -5,6 +5,8 @@
 node_modules/
 dist/
 cloudrun-api/dist/
+.tools/
+report-result-canvas.html
 
 .env
 .env.*
