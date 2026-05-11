@@ -392,6 +392,9 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Never change pillars, fiveElements, tenGods, dayun names, dayun ranges, seun, wolyun, birth data, serialNumber, or createdAt.',
                   'The golden sample in the system prompt is a validation case only. Do not copy its pillars or dayun into other users.',
                   'Rewrite only explanatory text blocks: heroNote, summary text, Q&A text, section paragraphs, cards, details, and actionPlan wording.',
+                  'Avoid repetitive wording in the first summary. Do not keep repeating the same Korean nouns such as 기준, 구조, 문서화, 정교하게, 확장. Rotate concrete real-life expressions such as 운영 체계, 정산 기준, 역할 분리, 가격 기준, 생활 리듬, 책임 범위, 계약 습관, 일정 통제, 에너지 배분, 관계 장면, 회복 방식.',
+                  'The opening summary must feel like a senior human consultant wrote it: compress repeated abstract logic, add concrete scenes, emotional pattern reasons, relationship behavior, money/work operations, and immediately actionable behaviors.',
+                  'Make the summary commercially satisfying without simply making it longer. Prefer specific diagnosis and practical examples over generic fortune-telling filler.',
                   'For love, marriage, and relationship sections, use a premium matchmaking-agency plus relationship-psychology style: attraction type, long-term partner type, failing pattern, how the other person reads the customer, contact style, hidden emotional need, breakup trigger, relationship stamina, face mood, likely social/professional environment, meeting route, married-life shape, do-not-miss person, avoid person, and 30-day actions.',
                   'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.'
                 ].join(' '),

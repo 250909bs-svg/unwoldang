@@ -419,62 +419,62 @@ function buildExpandedCoreReport(report: SajuReportData): SajuReportData {
       ...report.summary,
       title: `${report.customerName}님의 핵심 요약`,
       analysis: [
-        `${report.customerName}님의 명식에서 가장 먼저 봐야 할 축은 일간 ${report.dayMaster}와 ${report.strengthLabel}, 그리고 ${report.currentDayun.name} 대운이 만나는 지점입니다. 이 조합은 단순히 성향을 설명하는 것이 아니라 지금 어떤 방식으로 일, 돈, 관계를 정리해야 결과가 남는지를 보여줍니다.`,
-        `오행에서는 ${strongestElement?.label || report.helpfulElements[0]} 기운이 가장 크게 드러나고, ${weakestElement?.label || report.cautiousElements[0]} 기운은 보완 포인트로 읽힙니다. 강한 기운은 장점이지만 과하면 고집, 속도 조절 실패, 피로 누적으로 바뀔 수 있습니다. 약한 기운은 부족함이라기보다 의식적으로 루틴과 환경을 만들어야 하는 영역입니다.`,
-        `십성 흐름에서는 ${dominantTenGod?.label || '주요 십성'} 기운이 앞에 서기 때문에, 올해의 핵심은 감으로 밀어붙이는 선택보다 역할, 책임, 계약, 수익 구조를 분명히 하는 데 있습니다. 특히 말로만 정한 약속보다 문서, 가격표, 일정표처럼 확인 가능한 기준을 세울수록 운이 안정됩니다.`,
-        `현재 대운인 ${report.currentDayun.name}은 "${report.currentDayun.focus}" 쪽으로 흐름을 모으라고 말합니다. 반대로 주의할 점은 ${report.currentDayun.caution}입니다. 즉 기회가 없는 사주가 아니라, 기회를 어떤 순서로 현실화할지 정하지 않으면 좋은 흐름도 흩어질 수 있는 사주입니다.`,
+        `${report.customerName}님의 명식은 일간 ${report.dayMaster}, ${report.strengthLabel}, 그리고 ${report.currentDayun.name} 대운을 함께 봐야 정확합니다. 겉으로는 선택지가 많아 보여도 실제 성패는 “어디까지 맡고, 얼마를 받고, 언제 마무리할지”를 정하는 운영 감각에서 갈립니다.`,
+        `오행에서는 ${strongestElement?.label || report.helpfulElements[0]} 쪽 힘이 눈에 띄고, ${weakestElement?.label || report.cautiousElements[0]} 영역은 의식적으로 보완해야 합니다. 강한 기운은 추진력과 판단력으로 쓰이면 좋지만, 피곤할 때는 고집, 과속, 말의 단정으로 튀어나올 수 있습니다. 약한 기운은 결핍이라기보다 생활 리듬과 주변 환경으로 채워야 하는 자리입니다.`,
+        `십성 흐름에서는 ${dominantTenGod?.label || '주요 십성'}의 색이 앞에 섭니다. 그래서 올해는 감으로 밀어붙이는 해가 아니라, 역할 분리, 정산 기준, 가격 기준, 일정 통제를 선명하게 잡을수록 결과가 남습니다. 구두 약속보다 계약 습관을 들이고, “좋은 제안”도 내 체력과 책임 범위 안에 들어오는지 먼저 봐야 합니다.`,
+        `현재 대운인 ${report.currentDayun.name}은 "${report.currentDayun.focus}" 쪽으로 힘을 모으게 합니다. 다만 ${report.currentDayun.caution}가 같이 따라오기 때문에, 무작정 기회를 늘리는 방식은 오히려 피로와 누수를 만들 수 있습니다. 이 사주는 기회가 부족한 타입이 아니라, 들어온 흐름을 정리해서 내 몫으로 남기는 힘이 관건입니다.`,
         currentYear
-          ? `${currentYear.year}년의 포인트는 "${currentYear.headline}"입니다. 집중해야 할 것은 ${currentYear.focus}이고, 조심해야 할 것은 ${currentYear.warning}입니다. 올해는 큰 결정을 빨리 내리는 것보다, 선택 이후 감당해야 할 돈, 시간, 책임을 먼저 계산하는 쪽이 더 맞습니다.`
+          ? `${currentYear.year}년의 포인트는 "${currentYear.headline}"입니다. 집중해야 할 것은 ${currentYear.focus}이고, 조심해야 할 것은 ${currentYear.warning}입니다. 큰 결정을 빨리 내리는 것보다, 선택 이후 생길 지출, 회의, 마감, 사람 관리까지 감당 가능한지 먼저 계산하는 편이 맞습니다.`
           : originalAnalysis[0] || report.heroNote,
         bestMonth && watchMonth
-          ? `가까운 월운에서는 ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 흐름이 비교적 강하고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')} 구간은 무리한 확장보다 정비가 필요합니다. 좋은 달에는 제안과 실행을, 약한 달에는 정산과 수정, 관계 정리를 우선하는 식으로 리듬을 나누는 것이 좋습니다.`
+          ? `가까운 월운에서는 ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 흐름이 비교적 좋고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')} 구간은 속도를 줄여야 합니다. 강한 달에는 제안, 공개, 실행을 걸고 약한 달에는 정산, 수정, 관계 정리, 체력 회복에 쓰면 손실이 줄어듭니다.`
           : originalAnalysis[1] || report.heroNote,
         firstQuestion
-          ? `첫 번째 질문에 대해서는 "${firstQuestion.title}"이 핵심 답입니다. ${firstQuestion.analysis}`
+          ? `첫 번째 질문의 답은 "${firstQuestion.title}" 쪽에 가깝습니다. ${firstQuestion.analysis} 여기서 중요한 장면은 누군가 좋은 말을 해주는 순간이 아니라, 실제로 일정이 잡히고 돈의 흐름이 생기며 책임자가 분명해지는 순간입니다.`
           : '첫 번째 질문은 아직 구체화되지 않았지만, 현재 명식에서는 일과 돈의 기준을 먼저 세우는 것이 전체 운의 중심입니다.',
         secondQuestion
-          ? `두 번째 질문에 대해서는 "${secondQuestion.title}"이 핵심 답입니다. ${secondQuestion.analysis}`
-          : '두 번째 질문이 비어 있다면, 올해는 관계보다 일의 구조와 체력 리듬을 먼저 안정시키는 쪽이 우선입니다.'
+          ? `두 번째 질문의 핵심은 "${secondQuestion.title}"입니다. ${secondQuestion.analysis} 감정적으로는 더 큰 판을 원해도, 현실에서는 에너지 배분과 우선순위를 잘라내는 능력이 만족도를 만듭니다.`
+          : '두 번째 질문이 비어 있다면, 올해는 관계보다 일의 운영 체계와 체력 리듬을 먼저 안정시키는 쪽이 우선입니다.'
       ],
       advice: [
-        `${report.helpfulElements.join(', ')} 기운을 살리는 루틴을 하나 정하고 매일 반복하세요. 이 사주는 즉흥적인 결심보다 반복 가능한 구조에서 운이 살아납니다.`,
-        `돈과 일은 따로 보지 말고, 가격표, 제공 범위, 마감일, 책임 범위를 한 장으로 정리하세요. 이 문서화가 올해 가장 중요한 개운 포인트입니다.`,
-        `좋은 제안이 들어와도 바로 넓히지 말고, 지금 대운의 주제인 "${report.currentDayun.focus}"와 맞는지 먼저 확인하세요.`,
+        `${report.helpfulElements.join(', ')} 흐름을 살리는 생활 리듬을 하나 정하세요. 수면, 운동, 업무 시작 시간처럼 몸이 따라오는 루틴이어야 합니다.`,
+        `일과 돈은 한 장짜리 운영표로 관리하세요. 가격 기준, 제공 범위, 마감일, 수정 횟수, 책임자를 적어두는 것만으로도 운의 누수가 줄어듭니다.`,
+        `좋은 제안이 들어와도 바로 받지 말고, 지금 대운의 주제인 "${report.currentDayun.focus}"와 맞는지 확인하세요. 맞지 않는 제안은 기회처럼 보여도 체력을 먼저 씁니다.`,
         bestMonth
-          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}처럼 점수가 높은 구간에는 실행과 제안을, 점수가 낮은 구간에는 정산과 수정에 힘을 쓰세요.`
+          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}처럼 점수가 높은 구간에는 제안과 실행을, 흐름이 약한 달에는 정산과 수정에 힘을 쓰세요.`
           : '운이 강한 구간에는 실행을, 약한 구간에는 정비를 우선하세요.',
-        `관계는 감정만 보지 말고 상대의 시간 약속, 돈 쓰는 방식, 책임감, 갈등 후 회복 방식을 함께 보세요.`
+        `관계는 설렘보다 장면을 보세요. 약속 시간, 돈 쓰는 태도, 갈등 후 말투, 바쁠 때의 배려가 오래 갈 인연인지 알려줍니다.`
       ]
     },
     keyTakeaways: [
       {
         title: '핵심',
-        body: `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운이 만나는 지금은 감보다 기준, 확장보다 구조가 먼저입니다.`,
+        body: `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운이 만나는 지금은 판을 키우기보다 운영 체계를 손봐야 할 때입니다.`,
         tone: 'good'
       },
       {
         title: '일',
-        body: `직업운은 역할과 결과물이 명확할수록 살아납니다. 제안, 계약, 서비스 범위를 말이 아니라 문서로 정리해야 합니다.`
+        body: `직업운은 역할 분리와 결과물 정의에서 살아납니다. “어디까지 해주는가”가 선명할수록 신뢰와 단가가 같이 올라갑니다.`
       },
       {
         title: '돈',
-        body: `재물운은 한 번 크게 버는 흐름보다 반복 매출, 가격표, 정산 기준에서 안정됩니다. 새 수익보다 남는 구조가 중요합니다.`,
+        body: `재물운은 큰 한 방보다 반복 매출, 정산 기준, 가격 조정에서 안정됩니다. 벌리는 돈보다 남기는 돈을 먼저 봐야 합니다.`,
         tone: 'good'
       },
       {
         title: '관계',
-        body: `관계운은 설렘보다 안정감, 책임감, 생활 리듬이 관건입니다. 오래 갈 사람은 말보다 행동의 반복에서 드러납니다.`
+        body: `관계운은 말보다 생활 장면에서 드러납니다. 시간 약속, 돈 감각, 갈등 후 회복 방식이 맞는 사람이 오래 갑니다.`
       },
       {
         title: '주의',
-        body: `${report.cautiousElements.join(', ')} 기운이 과해질 때 판단이 급해지거나 체력이 무너질 수 있습니다. 큰 결정 전에는 하루를 두고 다시 확인하세요.`,
+        body: `${report.cautiousElements.join(', ')} 흐름이 과열되면 판단이 빨라지고 체력 소모가 커질 수 있습니다. 큰 결정은 하루 묵힌 뒤 다시 보세요.`,
         tone: 'warn'
       },
       {
         title: '시기',
         body: bestMonth
-          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 전후는 실행에 좋고, 점수가 낮은 달은 정비와 조율에 쓰는 편이 좋습니다.`
-          : `올해는 흐름을 월별로 나누어 실행 구간과 정비 구간을 분리하는 것이 좋습니다.`
+          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 전후는 실행에 좋고, 약한 달은 조율, 회복, 재정비에 쓰는 편이 좋습니다.`
+          : `올해는 실행 구간과 회복 구간을 분리해야 성과가 오래 갑니다.`
       }
     ]
   };
