@@ -34,7 +34,7 @@ const YUNSEONG_MAP: Record<HeavenlyStem, { startBranch: number; forward: boolean
   을: { startBranch: 6, forward: false },
   병: { startBranch: 2, forward: true },
   정: { startBranch: 9, forward: false },
-  무: { startBranch: 8, forward: true },
+  무: { startBranch: 2, forward: true },
   기: { startBranch: 9, forward: false },
   경: { startBranch: 5, forward: true },
   신: { startBranch: 0, forward: false },

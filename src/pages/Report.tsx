@@ -170,9 +170,16 @@ function SajuWonGukBoard({ report }: { report: SajuReportData }) {
 
 function ElementDistributionBoard({ report }: { report: SajuReportData }) {
   const totalValue = Math.max(report.fiveElements.reduce((sum, item) => sum + item.value, 0), 1);
-  const strongest = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
-  const weakest = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
-  const balanceLabel = strongest && weakest ? `${strongest.label} 중심 · ${weakest.label} 보완` : '오행 균형';
+  const maxValue = Math.max(...report.fiveElements.map((item) => item.value));
+  const minValue = Math.min(...report.fiveElements.map((item) => item.value));
+  const strongestItems = report.fiveElements.filter((item) => item.value === maxValue);
+  const weakestItems = report.fiveElements.filter((item) => item.value === minValue);
+  const balanceLabel =
+    strongestItems.length > 1 && weakestItems.some((item) => item.value === 0)
+      ? `${weakestItems.map((item) => item.label).join(', ')} 결핍 · 나머지 균등`
+      : strongestItems.length > 1
+        ? `${strongestItems.map((item) => item.label).join(', ')} 균등 우세`
+        : `${strongestItems[0]?.label || '오행'} 중심 · ${weakestItems.map((item) => item.label).join(', ')} 보완`;
   const getElementReading = (value: number) => {
     const ratio = (value / totalValue) * 100;
 
@@ -447,6 +454,21 @@ function describeTenGodDepth(label: string, report: SajuReportData) {
   return `${label}은 이 명식에서 반복되는 행동 방식과 선택 습관을 보여주는 십성입니다. 점수보다 어떤 장면에서 켜지는지를 봐야 실제 해석이 깊어집니다.`;
 }
 
+function formatCautionElements(report: SajuReportData) {
+  const active = report.cautiousElements.filter((element) => (report.fiveElements.find((item) => item.label === element)?.value || 0) > 0);
+  const missing = report.cautiousElements.filter((element) => (report.fiveElements.find((item) => item.label === element)?.value || 0) === 0);
+
+  if (active.length > 0 && missing.length > 0) {
+    return `${active.join(', ')} 기운은 강해질 때 속도와 부담을 만들 수 있고, ${missing.join(', ')} 기운은 과다가 아니라 부족할 때 관계 방향과 성장감이 비기 쉬운 자리입니다.`;
+  }
+
+  if (missing.length > 0) {
+    return `${missing.join(', ')} 기운은 과다보다 결핍을 보완해야 하는 자리입니다. 관계의 방향, 다음 단계 제안, 성장 동선을 의식적으로 만들어야 합니다.`;
+  }
+
+  return `${active.join(', ')} 기운은 강해질 때 속도, 지출, 감정 반응이 같이 커질 수 있습니다.`;
+}
+
 function SectionBlock({
   section,
   number,
@@ -661,6 +683,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const watchMonth = [...report.monthLuck].sort((left, right) => left.score - right.score)[0];
   const helpfulText = report.helpfulElements.join(', ');
   const cautiousText = report.cautiousElements.join(', ');
+  const cautionGuidance = formatCautionElements(report);
   const strongestLabel = strongestElement?.label || report.helpfulElements[0];
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
@@ -702,7 +725,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     bestMonth && watchMonth
       ? `가까운 월운은 숫자 점수보다 단계로 보는 편이 안전합니다. ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}은 ${getLuckPhase(bestMonth.score)}라 ${getLuckAction(bestMonth.score)}이고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}은 ${getLuckPhase(watchMonth.score)}라 ${getLuckAction(watchMonth.score)}입니다.`
       : `월운은 좋고 나쁨의 점수보다 확장기, 조율기, 정비기처럼 역할을 나눠 읽어야 합니다. 그래야 고객이 “왜 그 달에 그런 일이 생기는지”를 납득할 수 있습니다.`,
-    `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${helpfulText}은 살리고 ${cautiousText}은 과하게 몰리지 않게 조절할 때, 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
+    `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${helpfulText}은 살리고, ${cautionGuidance} 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
   ];
 
   const expertQuestionAnswers = report.questionAnswers.map((qa, index) => ({
@@ -833,7 +856,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     },
     cards: lifeGraphYears.map((item) => ({
       title: `${item.year}년 · ${getLuckPhase(item.score)}`,
-      body: `${item.headline}. ${item.ganzhi} 세운이 ${report.currentDayun.name} 대운과 만나 ${item.focus} 쪽을 건드리기 쉽습니다. 이 구간은 ${getLuckAction(item.score)}이며, ${item.warning}는 미리 관리해야 합니다.`,
+      body: `${item.headline}. ${item.ganzhi} 세운이 ${report.currentDayun.name} 대운과 만나 ${item.focus} 흐름을 자극합니다. 이 구간은 ${getLuckAction(item.score)}이며, ${item.warning}`,
       tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
     })),
     details: [
@@ -901,7 +924,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       },
       {
         title: `${cautiousText} 과열 주의`,
-        body: `${cautiousText} 기운이 과해질 때는 머리로는 빨리 결론을 내렸다고 느끼지만 몸과 관계가 따라오지 못할 수 있습니다. 이때는 결정보다 검증, 확장보다 회복이 먼저입니다.`,
+        body: `${cautionGuidance} 이때는 결정보다 검증, 확장보다 회복이 먼저입니다.`,
         tone: 'warn'
       }
     ],
@@ -1036,7 +1059,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       advice: [
         `오늘 바로 할 일은 한 가지입니다. 지금 가장 중요한 선택을 “돈, 일정, 사람, 체력” 네 칸으로 나누어 적고, 빠진 칸이 있으면 아직 확정하지 마세요.`,
         `${helpfulText} 기운을 살리려면 생활 리듬을 먼저 고정하세요. 수면, 식사, 이동, 업무 시작 시간을 일정하게 잡는 것이 운을 받는 그릇이 됩니다.`,
-        `${cautiousText} 기운이 과열될 때는 말과 결정을 늦춰야 합니다. 중요한 답변은 하루 뒤 다시 읽고 보내는 편이 손실을 줄입니다.`,
+        `${cautionGuidance} 중요한 답변은 하루 뒤 다시 읽고 보내는 편이 손실을 줄입니다.`,
         `일과 돈은 감이 아니라 숫자로 보세요. 가격표, 반복 매출, 정산일, 제공 범위, 취소 조건을 정리하면 좋은 운이 실제 결과로 남습니다.`,
         `관계는 설렘보다 회복력을 보세요. 다툰 뒤 말투가 어떻게 돌아오는지, 약속을 어떻게 다시 맞추는지가 오래 갈 사람을 보여줍니다.`
       ]
@@ -1062,7 +1085,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       },
       {
         title: '주의',
-        body: `${cautiousText} 기운이 과하면 판단이 빨라지고 체력 소모가 커질 수 있습니다. 큰 결정은 하루 더 두고 보세요.`,
+        body: `${cautionGuidance} 큰 결정은 하루 더 두고 보세요.`,
         tone: 'warn'
       },
       {

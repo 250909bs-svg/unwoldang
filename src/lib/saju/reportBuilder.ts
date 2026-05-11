@@ -89,6 +89,21 @@ const PILLAR_LABELS = {
   hour: '시주'
 } as const;
 
+const BRANCH_HANJA: Record<EarthlyBranch, string> = {
+  자: '子',
+  축: '丑',
+  인: '寅',
+  묘: '卯',
+  진: '辰',
+  사: '巳',
+  오: '午',
+  미: '未',
+  신: '申',
+  유: '酉',
+  술: '戌',
+  해: '亥'
+};
+
 type PillarKey = keyof typeof PILLAR_LABELS;
 
 type PillarPiece = {
@@ -190,6 +205,26 @@ function formatPiece(piece: PillarPiece) {
   return `${piece.label} ${piece.pillar}`;
 }
 
+function formatBranchPiece(piece: PillarPiece) {
+  return `${piece.label.replace('주', '지')} ${BRANCH_HANJA[piece.branch] || piece.branch}`;
+}
+
+function formatElementGuidance(elements: FiveElement[], basis: DeterministicSajuBasis) {
+  const unique = Array.from(new Set(elements));
+  const active = unique.filter((element) => (basis.fiveElements.find((item) => item.label === element)?.value || 0) > 0);
+  const missing = unique.filter((element) => (basis.fiveElements.find((item) => item.label === element)?.value || 0) === 0);
+
+  if (active.length > 0 && missing.length > 0) {
+    return `${active.join(', ')} 기운은 강하게 들어올 때 속도와 부담을 만들 수 있고, ${missing.join(', ')} 기운은 과다가 아니라 부족할 때 방향성·관계 조율·성장감이 비기 쉬운 자리입니다.`;
+  }
+
+  if (missing.length > 0) {
+    return `${missing.join(', ')} 기운은 과다를 걱정할 자리가 아니라 부족할 때 생기는 공백을 보완해야 하는 자리입니다. 방향, 관계 조율, 다음 단계 제안이 늦어지지 않게 의식적으로 챙겨야 합니다.`;
+  }
+
+  return `${active.join(', ')} 기운이 강하게 들어올 때는 속도, 지출, 감정 반응이 함께 커질 수 있습니다. 큰 결정은 조건을 나눠 확인하는 편이 안전합니다.`;
+}
+
 function hasBatchim(value: string) {
   const chars = Array.from(value);
   const char = chars[chars.length - 1];
@@ -213,7 +248,7 @@ function buildBranchRelationDetails(basis: DeterministicSajuBasis) {
       for (const relation of BRANCH_PAIR_RELATIONS) {
         if (relation.pairs.some((pair) => isSamePair(left.branch, right.branch, pair))) {
           details.push(
-            `${withAndParticle(formatPiece(left))} ${formatPiece(right)} 사이에 ${relation.name} 관계가 보입니다. ${relation.tone}`
+            `${withAndParticle(formatBranchPiece(left))} ${formatBranchPiece(right)} 사이에 ${relation.name} 관계가 보입니다. ${relation.tone}`
           );
         }
       }
@@ -227,11 +262,11 @@ function buildBranchRelationDetails(basis: DeterministicSajuBasis) {
 
     if (matched.length === 3) {
       details.push(
-        `${matched.map(formatPiece).join(', ')}가 ${triad.name} 삼합을 이룹니다. ${triad.element} 기운이 한 방향으로 모이기 때문에 이 영역은 인생의 큰 동력으로 읽습니다.`
+        `${matched.map(formatBranchPiece).join(', ')}가 ${triad.name} 삼합을 이룹니다. ${triad.element} 기운이 한 방향으로 모이기 때문에 이 영역은 인생의 큰 동력으로 읽습니다.`
       );
     } else if (matched.length === 2) {
       details.push(
-        `${matched.map(formatPiece).join(', ')}가 ${triad.name}의 반합 흐름을 만듭니다. 아직 완전히 굳어진 흐름은 아니지만, 조건이 맞을 때 ${triad.element} 기운이 빠르게 살아납니다.`
+        `${matched.map(formatBranchPiece).join(', ')}가 ${triad.name}의 반합 흐름을 만듭니다. 아직 완전히 굳어진 흐름은 아니지만, 조건이 맞을 때 ${triad.element} 기운이 빠르게 살아납니다.`
       );
     }
   }
@@ -484,6 +519,8 @@ function buildYearLuck(
   helpful: FiveElement[],
   cautious: FiveElement[]
 ): YearLuckItem[] {
+  const cautionGuidance = formatElementGuidance(cautious, basis);
+
   return basis.seun.slice(0, 5).map((item) => {
     const [stem, branch] = [...item.ganzhi] as [string, string];
     const stemElement = ELEMENT[stem as keyof typeof ELEMENT] as FiveElement;
@@ -504,18 +541,20 @@ function buildYearLuck(
               : '속도보다 관리가 더 중요한 해',
       summary: `${item.year}년은 ${stemElement}·${branchElement} 흐름이 들어오면서 ${helpful.includes(stemElement) || helpful.includes(branchElement) ? '새로운 기회를 현실 성과로 연결하기 좋은 해' : '기존 구조를 점검하고 손실을 줄이는 감각이 중요한 해'}로 읽습니다.`,
       focus: `${helpful.join(', ')} 기운을 살리는 방향으로 문서화, 일정 관리, 관계 조정, 자원 배분을 정교하게 가져가세요. 특히 이 해에는 “무엇을 더 할까”보다 “무엇을 남길까”가 더 중요합니다.`,
-      warning: `${cautious.join(', ')} 기운이 과해질 때는 성급한 선택이나 감정 섞인 판단이 결과를 흔들 수 있습니다. 큰 결정은 하루 안에 끝내지 말고 조건표를 만들어 비교하는 편이 안전합니다.`
+      warning: `${cautionGuidance} 큰 결정은 하루 안에 끝내지 말고 조건표를 만들어 비교하는 편이 안전합니다.`
     };
   });
 }
 
 function buildMonthLuck(
   formData: Partial<IntakeFormData>,
+  basis: DeterministicSajuBasis,
   helpful: FiveElement[],
   cautious: FiveElement[]
 ): MonthLuckItem[] {
   const now = new Date();
   const gender = formData.gender === 'male' ? 'male' : 'female';
+  const cautionGuidance = formatElementGuidance(cautious, basis);
 
   return Array.from({ length: 12 }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() + index, 15, 12, 0, 0);
@@ -543,7 +582,7 @@ function buildMonthLuck(
       score,
       summary: `${date.getMonth() + 1}월은 ${stemElement}·${branchElement} 흐름이 강조되는 달입니다. 일과 관계 모두 ${score >= 70 ? '선택을 분명하게 가져갈수록' : '리듬을 정돈할수록'} 안정감이 높아집니다.`,
       focus: `${helpful.join(', ')} 기운과 맞는 생활 루틴, 문서화, 우선순위 정리에 집중하는 편이 좋습니다. 고객, 연인, 가족과의 약속도 말로만 두지 말고 기준을 남기면 흔들림이 줄어듭니다.`,
-      warning: `${cautious.join(', ')} 쪽으로 기운이 치우치면 체력 저하나 감정 과열이 함께 올 수 있어 일정 밀도를 조절해야 합니다. 무리해서 끌고 가는 달보다 덜어내서 선명해지는 달로 운영하세요.`
+      warning: `${cautionGuidance} 무리해서 끌고 가는 달보다 덜어내서 선명해지는 달로 운영하세요.`
     };
   });
 }
@@ -572,7 +611,7 @@ function buildQuestionResponse(
 ) {
   const dayMaster = basis.dayMaster.stem;
   const helpfulText = helpful.join(', ');
-  const cautiousText = cautious.join(', ');
+  const cautionGuidance = formatElementGuidance(cautious, basis);
   const context = getRelationshipContextSentence(relationshipLabel);
 
   if (category === 'relationship') {
@@ -587,7 +626,7 @@ function buildQuestionResponse(
         `잘 맞는 포인트는 ${relationshipProfile.fitPoint}`,
         '상대의 마음을 추측하기보다 반복되는 행동, 약속을 지키는 방식, 갈등 후 회복 속도를 먼저 보세요.',
         `${helpfulText} 기운이 살아날 때는 대화가 부드러워지고 관계의 기준을 다시 맞추기 쉽습니다. 중요한 이야기는 그 흐름에 맞춰 차분히 꺼내는 편이 좋습니다.`,
-        `${cautiousText} 기운이 강한 날에는 서운함을 바로 결론으로 바꾸지 마세요. 감정 표현은 짧게, 요구사항은 구체적으로 남기는 방식이 안전합니다.`
+        `${cautionGuidance} 서운함이 올라오는 날에는 바로 결론으로 바꾸지 말고, 감정 표현은 짧게 요구사항은 구체적으로 남기는 방식이 안전합니다.`
       ]
     };
   }
@@ -599,7 +638,7 @@ function buildQuestionResponse(
       advice: [
         '새로운 수익원을 늘리기 전에 가격표, 제공 범위, 환불 기준, 고객 안내 문구를 먼저 고정하세요.',
         `${helpfulText} 기운은 기록과 비교, 반복 매출 구조를 통해 안정됩니다. 감으로 팔기보다 상품명을 분명히 나누면 설득력이 올라갑니다.`,
-        `${cautiousText} 기운이 강할 때는 가까운 사람과의 돈 거래, 말로만 정한 동업, 즉흥 지출을 특히 조심하는 편이 좋습니다.`
+        `${cautionGuidance} 가까운 사람과의 돈 거래, 말로만 정한 동업, 즉흥 지출은 특히 조심하는 편이 좋습니다.`
       ]
     };
   }
@@ -611,7 +650,7 @@ function buildQuestionResponse(
       advice: [
         '가장 먼저 “내가 잘하는 일”이 아니라 “고객이 돈을 내고 맡기고 싶은 결과”로 문장을 바꿔 보세요.',
         `${helpfulText} 기운을 살리려면 하루 단위 실행보다 주간 단위 산출물을 정하는 방식이 더 잘 맞습니다.`,
-        `커리어 전환은 ${cautiousText} 기운이 강한 날 충동적으로 결정하지 말고, 수입 공백과 역할 변화를 숫자로 확인한 뒤 움직이는 편이 좋습니다.`
+        `커리어 전환은 ${cautionGuidance} 수입 공백과 역할 변화를 숫자로 확인한 뒤 움직이는 편이 좋습니다.`
       ]
     };
   }
@@ -623,7 +662,7 @@ function buildQuestionResponse(
       advice: [
         '지금 바로 넓히는 선택보다, 먼저 정리하고 공개하고 검증하는 3단계로 움직이면 실패 비용이 줄어듭니다.',
         `${helpfulText} 기운이 들어오는 달에는 출시, 제안, 관계 회복처럼 밖으로 꺼내는 행동이 좋습니다.`,
-        `${cautiousText} 기운이 강한 달에는 계약, 큰 지출, 관계 단절처럼 되돌리기 어려운 선택을 늦추는 편이 안전합니다.`
+        `${cautionGuidance} 계약, 큰 지출, 관계 단절처럼 되돌리기 어려운 선택은 한 박자 늦추는 편이 안전합니다.`
       ]
     };
   }
@@ -631,7 +670,7 @@ function buildQuestionResponse(
   if (category === 'caution') {
     return {
       label: '주의점 질문 직답',
-      analysis: `질문 "${question}"은 현재 흐름에서 무엇을 피해야 하는지에 초점이 있습니다. ${dayMaster} 일간은 기준이 서면 흔들림이 적지만, ${cautiousText} 기운이 과해질 때 판단을 빨리 끝내려는 압력이 생길 수 있습니다.`,
+      analysis: `질문 "${question}"은 현재 흐름에서 무엇을 피해야 하는지에 초점이 있습니다. ${dayMaster} 일간은 기준이 서면 흔들림이 적습니다. ${cautionGuidance}`,
       advice: [
         '지금 가장 조심할 것은 사람 자체보다 기준 없는 약속입니다. 역할, 돈, 일정이 흐릿한 관계는 반드시 문서나 메시지로 남기세요.',
         `${helpfulText} 기운을 살리면 감정이 정리되고, 선택지가 선명하게 좁혀집니다. 기록을 남기는 순간 운의 흐름도 관리 가능해집니다.`,
@@ -647,7 +686,7 @@ function buildQuestionResponse(
       advice: [
         '수면, 식사, 이동 시간을 먼저 고정하면 감정 기복과 판단 피로가 함께 줄어듭니다.',
         `${helpfulText} 기운은 정리된 공간과 반복 루틴에서 살아납니다. 하루 시작과 마감 의식을 작게라도 만들어 두세요.`,
-        `${cautiousText} 기운이 강한 날에는 무리한 약속, 늦은 밤 결정, 과도한 카페인처럼 리듬을 깨는 선택을 줄이는 편이 좋습니다.`
+        `${cautionGuidance} 무리한 약속, 늦은 밤 결정, 과도한 카페인처럼 리듬을 깨는 선택을 줄이는 편이 좋습니다.`
       ]
     };
   }
@@ -658,7 +697,7 @@ function buildQuestionResponse(
     advice: [
       '먼저 질문을 “선택지 A와 B 중 무엇이 더 현실적인가”로 나누면 답이 훨씬 선명해집니다.',
       `${helpfulText} 기운을 살리는 환경을 만들면 판단이 안정되고, 반복되는 고민의 핵심이 드러납니다.`,
-      `${cautiousText} 기운이 과한 날에는 말과 지출을 줄이고, 중요한 결정은 기록으로 남긴 뒤 다시 확인하세요.`
+      `${cautionGuidance} 말과 지출을 줄이고, 중요한 결정은 기록으로 남긴 뒤 다시 확인하세요.`
     ]
   };
 }
@@ -984,6 +1023,7 @@ function buildSections(
 ): ReportSection[] {
   const helpful = basis.helpfulElements;
   const cautious = basis.cautiousElements;
+  const cautionGuidance = formatElementGuidance(cautious as FiveElement[], basis);
   const relationshipLabel = getRelationshipLabel(formData);
   const loveProfile = buildLoveProfile(
     basis,
@@ -1021,7 +1061,7 @@ function buildSections(
         },
         {
           title: '특히 조심할 기운',
-          body: `${cautious.join(', ')} 기운이 과해질 때는 감정 과열, 판단 미스, 무리한 속도전이 함께 붙기 쉽습니다. 급한 결론보다 기준표를 만들고 한 번 더 비교하는 방식이 안전합니다.`,
+          body: `${cautionGuidance} 급한 결론보다 기준표를 만들고 한 번 더 비교하는 방식이 안전합니다.`,
           tone: 'warn',
           badge: 'CAUTION'
         }
@@ -1057,7 +1097,7 @@ function buildSections(
       subtitle: '가장 강한 기운과 보완해야 할 기운을 읽는 영역',
       paragraphs: [
         `${helpful[0]} 기운은 현재 삶의 추진력과 회복 탄력을 키우는 축으로 작동합니다. 루틴, 공간, 관계 정리를 이 방향과 맞추면 “내가 컨트롤하고 있다”는 감각이 살아납니다.`,
-        `${cautious[0]} 기운이 과해질 때는 일정, 피로, 소비 흐름이 함께 흔들릴 수 있습니다. 이때는 운을 더 쓰려 하기보다 에너지가 새는 구멍을 막는 쪽이 먼저입니다.`
+        `${cautionGuidance} 이때는 운을 더 쓰려 하기보다 에너지가 새는 구멍을 막는 쪽이 먼저입니다.`
       ],
       details: [
         {
@@ -1067,7 +1107,7 @@ function buildSections(
         },
         {
           summary: '이번 리포트에서 주목해야 할 균형 포인트',
-          content: `${helpful.join(', ')} 기운을 살리고 ${cautious.join(', ')} 기운이 과열되지 않도록 조절하는 것이 핵심입니다. 같은 일정이라도 공간, 시간, 사람의 배치를 바꾸면 체감 운이 크게 달라집니다.\n\n실제로는 거창한 개운법보다 수면 시간 고정, 지출 기록, 관계의 선 긋기, 업무 범위 명확화 같은 작은 기준이 더 강하게 작동합니다.`
+          content: `${helpful.join(', ')} 기운을 살리되, ${cautionGuidance} 같은 일정이라도 공간, 시간, 사람의 배치를 바꾸면 체감 운이 크게 달라집니다.\n\n실제로는 거창한 개운법보다 수면 시간 고정, 지출 기록, 관계의 선 긋기, 업무 범위 명확화 같은 작은 기준이 더 강하게 작동합니다.`
         }
       ]
     },
@@ -1083,7 +1123,7 @@ function buildSections(
         },
         {
           title: '실제 내면',
-          body: `내면에서는 ${basis.helpfulElements.join(', ')} 기운을 통해 방향을 잡고 싶어 하지만, ${basis.cautiousElements.join(', ')} 기운이 과해지면 “빨리 결론 내고 끝내고 싶다”는 조급함이 섞일 수 있습니다.`
+          body: `내면에서는 ${basis.helpfulElements.join(', ')} 기운을 통해 방향을 잡고 싶어 합니다. 다만 ${cautionGuidance}`
         },
         {
           title: '강점',
@@ -1129,7 +1169,7 @@ function buildSections(
       subtitle: '돈이 붙는 방식과 새는 방식을 함께 보는 영역',
       paragraphs: [
         `재물운은 ${helpful.join(', ')} 기운을 살릴 때 안정됩니다. 이 말은 운 좋게 돈이 들어온다는 뜻보다, 들어온 돈을 남기는 계산 구조가 분명해진다는 뜻에 가깝습니다.`,
-        `${cautious.join(', ')} 기운이 과해지는 시기에는 필요 이상으로 빨리 결정하거나, 관계 때문에 거절하지 못해 비용을 떠안는 패턴이 생길 수 있습니다.`
+        `${cautionGuidance} 필요 이상으로 빨리 결정하거나, 관계 때문에 거절하지 못해 비용을 떠안는 패턴을 조심해야 합니다.`
       ],
       cards: [
         {
@@ -1139,7 +1179,7 @@ function buildSections(
         },
         {
           title: '돈이 새는 방식',
-          body: `${cautious.join(', ')} 기운이 강할 때는 감정성 지출, 일정 과밀, 즉흥적 판단이 재무 구조를 흔들 수 있습니다. 특히 가까운 관계에서 생기는 비용은 “나중에 정리하자”가 가장 위험합니다.`,
+          body: `${cautionGuidance} 특히 가까운 관계에서 생기는 비용은 “나중에 정리하자”가 가장 위험합니다.`,
           tone: 'warn'
         },
         {
@@ -1297,12 +1337,12 @@ function buildSections(
       subtitle: '피로와 컨디션, 감정 체력의 흐름',
       paragraphs: [
         '건강운은 특정 질환을 예언하는 방식이 아니라, 생활 리듬과 감정 체력이 어디서 흔들리는지를 보는 방식으로 읽습니다.',
-        `이 명식에서는 ${cautious.join(', ')} 기운이 과해질 때 피로 누적, 집중력 저하, 감정 과열이 함께 오기 쉬우므로 쉬는 시간을 “남는 시간”이 아니라 “운을 지키는 시간”으로 잡아야 합니다.`
+        `이 명식에서는 ${cautionGuidance} 쉬는 시간을 “남는 시간”이 아니라 “운을 지키는 시간”으로 잡아야 합니다.`
       ],
       cards: [
         {
           title: '체력 관리 포인트',
-          body: `${cautious.join(', ')} 기운이 강해질 때는 피로와 과몰입이 함께 오기 쉬워 휴식 루틴이 더 중요합니다. 밤에 큰 결정을 내리는 습관은 줄이는 편이 좋습니다.`,
+          body: `${cautionGuidance} 밤에 큰 결정을 내리는 습관은 줄이는 편이 좋습니다.`,
           tone: 'warn'
         },
         {
@@ -1422,11 +1462,13 @@ function buildSections(
 }
 
 function buildYearlySummary(customerName: string, serviceLabel: string, basis: DeterministicSajuBasis, currentDayun: FortuneWindow) {
+  const cautionGuidance = formatElementGuidance(basis.cautiousElements as FiveElement[], basis);
+
   return {
     title: `${serviceLabel} 핵심 요약`,
     analysis: [
       `${customerName}님의 기본 흐름은 ${basis.helpfulElements.join(', ')} 기운을 중심으로 기준을 세울 때 가장 안정적으로 살아납니다. 이 기운은 생각만으로 쓰기보다 생활 루틴, 일의 구조, 관계 기준에 내려앉을 때 체감이 커집니다.`,
-      `${basis.dayMaster.stem} 일간 성향은 구조와 기준이 분명해질수록 장점이 선명해지고, ${basis.cautiousElements[0]} 기운이 과해질 때는 판단이 급해질 수 있습니다. 그래서 빠른 결론보다 검증 가능한 순서가 중요합니다.`,
+      `${basis.dayMaster.stem} 일간 성향은 구조와 기준이 분명해질수록 장점이 선명해집니다. ${cautionGuidance}`,
       `현재 대운은 ${currentDayun.name} 흐름으로 읽히며, 지금은 넓히는 것보다 방향과 가격, 역할, 책임을 정교하게 설계하는 편이 더 정확합니다.`,
       `이번 결과는 ${serviceLabel} 기준으로 원국, 대운, 관계 맥락, 질문 2개를 한 번에 정리한 프리미엄 상담형 버전입니다.`
     ],
@@ -1476,7 +1518,8 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     currentDayun
   );
   const yearLuck = buildYearLuck(basis, basis.helpfulElements as FiveElement[], basis.cautiousElements as FiveElement[]);
-  const monthLuck = buildMonthLuck(formData, basis.helpfulElements as FiveElement[], basis.cautiousElements as FiveElement[]);
+  const monthLuck = buildMonthLuck(formData, basis, basis.helpfulElements as FiveElement[], basis.cautiousElements as FiveElement[]);
+  const cautionGuidance = formatElementGuidance(basis.cautiousElements as FiveElement[], basis);
   const actionPlan = buildActionPlan(
     yearLuck,
     basis.helpfulElements as FiveElement[],
@@ -1529,7 +1572,7 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
       },
       {
         title: '건강',
-        body: `${basis.cautiousElements.join(', ')} 기운이 과해질 때는 과로와 리듬 붕괴를 조심해야 합니다.`,
+        body: `${cautionGuidance} 과로와 리듬 붕괴를 조심해야 합니다.`,
         tone: 'warn'
       },
       {
