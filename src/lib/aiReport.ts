@@ -7,7 +7,7 @@ type AiReportResponse = {
   report?: SajuReportData;
 };
 
-const DEFAULT_AI_REPORT_TIMEOUT_MS = 45000;
+const DEFAULT_AI_REPORT_TIMEOUT_MS = 18000;
 
 function isReportShape(value: unknown): value is SajuReportData {
   if (!value || typeof value !== 'object') {

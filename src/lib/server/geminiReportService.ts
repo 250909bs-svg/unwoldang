@@ -57,7 +57,7 @@ type GeminiDraft = {
   actionPlan?: Partial<ActionPlan>;
 };
 
-const DEFAULT_GEMINI_REQUEST_TIMEOUT_MS = 35000;
+const DEFAULT_GEMINI_REQUEST_TIMEOUT_MS = 22000;
 
 export type ReportResponsePayload = {
   provider: 'gemini';

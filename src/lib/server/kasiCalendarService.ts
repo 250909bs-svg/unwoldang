@@ -34,7 +34,7 @@ export type KasiCalendarVerification = {
 
 const LRSR_ENDPOINT = 'https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService';
 const SPCDE_ENDPOINT = 'https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService';
-const DEFAULT_KASI_REQUEST_TIMEOUT_MS = 8000;
+const DEFAULT_KASI_REQUEST_TIMEOUT_MS = 5000;
 
 function getEnv() {
   const maybeProcess = globalThis as {

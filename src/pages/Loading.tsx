@@ -15,7 +15,7 @@ type LoadingLocationState = {
   reportData?: SajuReportData;
 };
 
-const LOADING_FALLBACK_TIMEOUT_MS = 65000;
+const LOADING_FALLBACK_TIMEOUT_MS = 28000;
 
 export default function Loading() {
   const navigate = useNavigate();
