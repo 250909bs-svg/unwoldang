@@ -600,6 +600,29 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
   const secondLabel = secondTenGod?.label || '보조 십성';
+  const lifeGraphYears = report.yearLuck.slice(0, 5);
+  const highYears = lifeGraphYears.filter((item) => item.score >= 80);
+  const lowYears = lifeGraphYears.filter((item) => item.score < 55);
+  const firstHighYear = highYears[0] || lifeGraphYears[0];
+  const firstLowYear = lowYears[0] || lifeGraphYears[lifeGraphYears.length - 1];
+  const careerMode =
+    dominantLabel.includes('식') || dominantLabel.includes('상')
+      ? '콘텐츠형, 설명형, 상담형, 교육형 상품'
+      : dominantLabel.includes('재')
+        ? '매출형, 영업형, 거래형, 패키지 상품'
+        : dominantLabel.includes('관')
+          ? '전문직형, 관리형, 조직 신뢰형 서비스'
+          : '1인 브랜드형, 운영 설계형, 반복 관리형 서비스';
+  const customerType =
+    dominantLabel.includes('재')
+      ? '결과와 가격을 분명히 비교하는 실속형 고객'
+      : dominantLabel.includes('식') || dominantLabel.includes('상')
+        ? '설명을 충분히 듣고 납득한 뒤 구매하는 이해형 고객'
+        : '신뢰, 꾸준함, 책임감을 보고 오래 맡기는 안정형 고객';
+  const relationshipMoneyLink =
+    report.helpfulElements.includes('토') || report.helpfulElements.includes('화')
+      ? '약속을 지키고 반복적으로 만나는 관계, 소개와 추천으로 이어지는 관계'
+      : '정보를 나누고 기회를 연결해 주는 관계';
 
   const expertSummary = [
     `${report.customerName}님의 명식은 일간 ${report.dayMaster}, ${report.strengthLabel}, 현재 ${report.currentDayun.name} 대운을 함께 놓고 보아야 결론이 정확해집니다. 겉으로는 여러 선택지가 동시에 열리는 것처럼 보이지만, 실제 승부처는 더 많이 벌리는 것이 아니라 역할, 가격, 마감, 책임 범위를 선명하게 정리하는 데 있습니다.`,
@@ -681,6 +704,172 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       )
     };
   });
+
+  const lifeGraphSection: ReportSection = {
+    id: 'life-graph',
+    title: '인생 그래프',
+    subtitle: '연도별 흐름을 점수보다 실제 인생 장면 중심으로 읽었습니다.',
+    callout: {
+      title: '그래프 핵심',
+      body: `${report.customerName}님의 가까운 흐름은 ${firstHighYear?.year || '강한 해'} 전후에 실행감이 살아나고, ${firstLowYear?.year || '조율 구간'} 전후에는 속도보다 정리와 회복이 중요해지는 모양입니다. 좋은 해는 더 벌리는 해가 아니라, 준비한 것을 세상에 보여주고 반응을 확인하는 해로 써야 합니다.`
+    },
+    cards: lifeGraphYears.map((item) => ({
+      title: `${item.year}년 · ${item.score}점`,
+      body: `${item.headline}. 이 해의 이유는 ${item.ganzhi} 흐름이 ${report.currentDayun.name} 대운과 만나 ${item.focus} 쪽을 건드리기 때문입니다. 조심할 점은 ${item.warning}입니다.`,
+      tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
+    })),
+    details: [
+      {
+        summary: '그래프를 읽는 법',
+        content: `점수가 높은 해는 무조건 좋은 일만 생긴다는 뜻이 아닙니다. 준비한 일을 공개하고, 사람을 만나고, 결과물을 밖으로 꺼내기 좋은 해입니다.\n\n점수가 낮은 해는 실패의 해가 아니라 정리, 회복, 비용 점검, 관계 재편을 해야 손실이 줄어드는 해입니다. 이 리포트는 사건을 확정하기보다 어떤 종류의 장면이 열리기 쉬운지를 보여줍니다.`,
+        open: true
+      }
+    ]
+  };
+
+  const eventTimelineSection: ReportSection = {
+    id: 'event-timeline',
+    title: '사건 타임라인',
+    subtitle: '언제 무엇이 왜 움직일 수 있는지 시기별로 압축했습니다.',
+    cards: lifeGraphYears.map((item, index) => {
+      const eventTitle =
+        item.score >= 80
+          ? '성과 공개와 관계 확장 가능성'
+          : item.score < 55
+            ? '정리, 거리두기, 재정비 가능성'
+            : index <= 1
+              ? '방향 조정과 선택지 비교'
+              : '직업 방식과 돈의 흐름 재설계';
+
+      return {
+        title: `${item.year}년 · ${eventTitle}`,
+        body: `${item.ganzhi} 세운은 ${item.summary} 그래서 이 시기에는 ${item.focus}가 실제 사건의 중심이 되기 쉽습니다. 반대로 ${item.warning}를 무시하면 사람, 돈, 일정 중 하나에서 피로가 먼저 올라올 수 있습니다.`,
+        tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
+      };
+    }),
+    table: {
+      headers: ['시기', '발생 가능 장면', '왜 그런가', '대응'],
+      rows: lifeGraphYears.map((item) => [
+        `${item.year}년`,
+        item.score >= 80 ? '공개, 제안, 이동, 확장' : item.score < 55 ? '정리, 회복, 손실 방지' : '조율, 비교, 방향 수정',
+        `${item.ganzhi} 흐름과 ${report.currentDayun.name} 대운의 결합`,
+        item.score >= 80 ? '준비한 것을 밖으로 꺼내기' : item.score < 55 ? '큰 결정보다 조건 점검' : '작게 테스트하고 반응 보기'
+      ])
+    }
+  };
+
+  const yongsinSection: ReportSection = {
+    id: 'yongsin',
+    title: '용신·희신 분석',
+    subtitle: '왜 어떤 기운은 필요하고 어떤 기운은 과하면 흔들리는지 설명합니다.',
+    callout: {
+      title: `${helpfulText} 기운을 살리는 이유`,
+      body: `${report.customerName}님은 ${report.strengthLabel} 흐름으로 읽히기 때문에, ${helpfulText} 기운이 생활을 받쳐줄 때 판단과 체력이 안정됩니다. 용신·희신은 “행운의 색깔”이 아니라 명식이 무너지지 않게 잡아주는 실제 운영 원리로 보는 편이 정확합니다.`
+    },
+    cards: [
+      {
+        title: '용신 방향',
+        body: `${report.helpfulElements[0] || helpfulText} 기운은 중심을 잡고 결과를 남기는 힘으로 쓰입니다. 생활에서는 수면, 식사, 마감, 공간 정리, 가격표처럼 반복 가능한 질서로 나타날 때 가장 잘 살아납니다.`,
+        tone: 'good'
+      },
+      {
+        title: '희신 방향',
+        body: `${report.helpfulElements[1] || report.helpfulElements[0] || helpfulText} 기운은 용신이 움직이도록 불을 붙이는 보조 에너지입니다. 사람 앞에 나서기, 결과물을 보여주기, 따뜻한 설득, 꾸준한 홍보와 잘 맞습니다.`,
+        tone: 'good'
+      },
+      {
+        title: `${weakestLabel} 부족의 실제 체감`,
+        body: `${weakestLabel} 기운이 약하면 해당 영역은 처음부터 없는 것이 아니라 의식적으로 챙기지 않으면 놓치기 쉬운 부분입니다. 그래서 좋은 기회가 와도 준비물, 말의 순서, 관계의 온도 중 하나가 비어 보일 수 있습니다.`
+      },
+      {
+        title: `${cautiousText} 과열 주의`,
+        body: `${cautiousText} 기운이 과해질 때는 머리로는 빨리 결론을 내렸다고 느끼지만 몸과 관계가 따라오지 못할 수 있습니다. 이때는 결정보다 검증, 확장보다 회복이 먼저입니다.`,
+        tone: 'warn'
+      }
+    ],
+    details: [
+      {
+        summary: '용신·희신을 생활에서 쓰는 법',
+        content: `1. 중요한 결정은 밤늦게 하지 않고 다음 날 오전에 다시 봅니다.\n\n2. 돈이 걸린 일은 가격, 범위, 마감, 수정 횟수를 먼저 적습니다.\n\n3. 관계에서는 감정 설명보다 약속 가능한 날짜와 행동을 먼저 제안합니다.\n\n4. 몸이 무거운 시기에는 운이 없는 것이 아니라 그릇이 좁아진 상태로 보고, 회복을 일정에 넣어야 합니다.`,
+        open: true
+      }
+    ]
+  };
+
+  const careerDetailSection: ReportSection = {
+    id: 'career-detail',
+    title: '직업·사업 디테일',
+    subtitle: '무엇을 팔고, 누구에게 팔고, 어떤 방식으로 돈을 남길지까지 봅니다.',
+    callout: {
+      title: '가장 잘 맞는 일의 모양',
+      body: `${report.customerName}님에게 맞는 일은 막연한 사업보다 ${careerMode}에 가깝습니다. 혼자 시작하되, 반복되는 업무는 도구와 협업으로 분리하는 방식이 좋습니다.`
+    },
+    cards: [
+      {
+        title: '혼자 vs 팀',
+        body: `초기에는 1인 브랜드처럼 직접 기준을 잡는 방식이 맞습니다. 다만 규모가 커질수록 상담, 제작, 정산, 고객 응대를 분리해야 오래 갑니다.`,
+        tone: 'good'
+      },
+      {
+        title: '온라인 vs 오프라인',
+        body: `온라인에서는 리포트, 예약, 결제, 다시보기처럼 반복 가능한 구조가 좋고, 오프라인은 신뢰를 강화하는 보조 채널로 쓰는 편이 맞습니다.`
+      },
+      {
+        title: '맞는 고객층',
+        body: `${customerType}에게 강합니다. 감정만 자극하는 판매보다 “무엇을 받게 되는지”를 분명히 보여주는 상품 설명이 매출로 연결됩니다.`
+      },
+      {
+        title: '수익 구조',
+        body: `단건 결제만으로 끝내기보다 기본 리포트, 프리미엄 리포트, 월별 업데이트, 후속 질문 상품처럼 계단형 구조가 좋습니다. 돈은 첫 결제보다 재방문에서 안정됩니다.`,
+        tone: 'good'
+      },
+      {
+        title: '피해야 할 방식',
+        body: `가격이 매번 달라지는 일, 역할이 섞인 동업, 소개받은 일이라 거절 못 하는 구조는 피로가 먼저 쌓입니다. 좋은 기회라도 조건이 흐리면 운을 소모합니다.`,
+        tone: 'warn'
+      }
+    ],
+    details: [
+      {
+        summary: '실제 실행 예시',
+        content: `첫 화면에는 대표 상품 하나를 강하게 두고, 아래에 연애·재회·직업·재물처럼 고민별 입구를 나눕니다.\n\n상품 설명은 “사주를 봐드립니다”가 아니라 “올해 무엇을 줄이고 무엇을 키울지 정리해드립니다”처럼 결과 중심으로 써야 합니다.\n\n고객 응대는 상담자의 감에만 의존하지 말고 주문번호, 입력값, 질문, 생성일, 신고/수정 기록을 남기는 구조가 좋습니다.`,
+        open: true
+      }
+    ]
+  };
+
+  const relationshipPatternSection: ReportSection = {
+    id: 'relationship-pattern',
+    title: '인간관계 실제 패턴',
+    subtitle: '추상적인 관계운이 아니라 생활에서 반복되는 행동 장면으로 풉니다.',
+    cards: [
+      {
+        title: '처음엔 좋은데 나중에 거리두는 이유',
+        body: `${report.customerName}님은 처음에는 상대의 장점과 가능성을 크게 보지만, 시간이 지나며 약속, 돈, 말의 일관성이 어긋나면 마음속 기준선이 급격히 올라갑니다. 그래서 겉으로는 조용해 보여도 안에서는 이미 관계 정리가 시작될 수 있습니다.`
+      },
+      {
+        title: '상대가 집착하거나 기대는 장면',
+        body: `책임감 있게 받아주는 모습이 강하게 보이면, 상대는 “이 사람은 끝까지 들어준다”고 느끼기 쉽습니다. 문제는 그 기대가 커질수록 ${report.customerName}님이 피로를 숨기다가 한 번에 멀어질 수 있다는 점입니다.`,
+        tone: 'warn'
+      },
+      {
+        title: '피로하면 연락을 끊는 패턴',
+        body: `몸과 일정이 밀리면 감정을 설명할 에너지가 줄어듭니다. 이때 답장을 미루는 것은 무관심이라기보다 관계를 망치지 않으려는 방어에 가깝지만, 상대는 거리두기로 받아들일 수 있습니다.`
+      },
+      {
+        title: '돈을 가져오는 관계',
+        body: `${relationshipMoneyLink}가 돈을 가져옵니다. 즉흥적으로 친한 관계보다 약속을 지키고 서로의 역할이 분명한 관계에서 소개, 계약, 재구매가 생기기 쉽습니다.`,
+        tone: 'good'
+      }
+    ],
+    details: [
+      {
+        summary: '관계에서 바로 써야 할 문장',
+        content: `“지금 바로 결정하기보다 조건을 한 번 정리해서 답할게요.”\n\n“내가 가능한 범위는 여기까지고, 이 부분은 따로 맞춰야 해요.”\n\n“감정은 이해하지만 일정과 책임을 먼저 정해야 오래 갈 수 있어요.”\n\n이런 문장을 미리 준비해두면 관계를 끊지 않고도 경계를 세울 수 있습니다.`,
+        open: true
+      }
+    ]
+  };
 
   const expertCheckSection: ReportSection = {
     id: 'expert-check',
@@ -766,7 +955,15 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       }
     ],
     questionAnswers: expertQuestionAnswers,
-    sections: [expertCheckSection, ...expertSections],
+    sections: [
+      lifeGraphSection,
+      eventTimelineSection,
+      yongsinSection,
+      careerDetailSection,
+      relationshipPatternSection,
+      expertCheckSection,
+      ...expertSections
+    ],
     actionPlan: {
       ...report.actionPlan,
       title: '30일 실행 전략',

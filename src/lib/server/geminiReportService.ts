@@ -400,6 +400,11 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Do not invent unsupported facts. If the chart does not support a precise claim, express it as a tendency, condition, or verification checklist.',
                   'For every major section, include four layers: myeongri basis, real-life scene, risk if mishandled, and one concrete next action.',
                   'Question answers must directly answer the customer question first, then explain the basis, then give a 7-day verification action. Avoid vague reassurance.',
+                  'Add life-graph style interpretation in the wording: year-by-year likely themes, why the timing appears, and what the customer should do in that period.',
+                  'Include yongsin/huisin explanation using helpfulElements and cautiousElements: why the helpful elements are needed, what happens when missing elements are neglected, and why cautious elements can destabilize the chart when excessive.',
+                  'Career and business paragraphs must be concrete: solo/team fit, online/offline fit, brand/sales/operation style, customer type, revenue model, and what structure to avoid.',
+                  'Relationship paragraphs must describe real behavior patterns: why the customer distances after a good start, what causes others to depend on them, what happens when tired, and which relationships bring money or opportunity.',
+                  'The paid report should feel like it reads the customer life pattern, not like a generic organized essay. Use scenes, examples, and human observations while staying within deterministic facts.',
                   'Use premium Korean copywriting: concrete, calm, emotionally accurate, and useful. Avoid fear marketing, childish expressions, excessive pink-romance tone, and generic AI phrasing.',
                   'Never overpromise perfect accuracy. Increase trust by showing what is certain from the chart, what is conditional, and what the customer should verify in real life.',
                   'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.'
