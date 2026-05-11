@@ -173,6 +173,24 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
   const strongest = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const weakest = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
   const balanceLabel = strongest && weakest ? `${strongest.label} 중심 · ${weakest.label} 보완` : '오행 균형';
+  const getElementReading = (value: number) => {
+    const ratio = (value / totalValue) * 100;
+
+    if (value === 0 || ratio < 8) {
+      return '매우 부족';
+    }
+    if (ratio < 18) {
+      return '부족';
+    }
+    if (ratio < 28) {
+      return '보통';
+    }
+    if (ratio < 38) {
+      return '강한 편';
+    }
+
+    return '매우 강함';
+  };
 
   return (
     <article className="premium-distribution-card premium-element-compass">
@@ -200,7 +218,22 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
           >
             <span>{item.label}</span>
             <strong>{item.value}</strong>
-            <em>{item.value}/{totalValue}칸</em>
+            <em>{Math.round((item.value / totalValue) * 100)}%</em>
+            <small>{getElementReading(item.value)}</small>
+          </div>
+        ))}
+      </div>
+      <div className="premium-element-table" aria-label="오행 비율 해석">
+        <div>
+          <span>오행</span>
+          <span>비율</span>
+          <span>해석</span>
+        </div>
+        {report.fiveElements.map((item) => (
+          <div key={`${item.label}-row`}>
+            <strong>{item.label}</strong>
+            <span>{Math.round((item.value / totalValue) * 100)}%</span>
+            <em>{getElementReading(item.value)}</em>
           </div>
         ))}
       </div>
