@@ -170,23 +170,37 @@ function SajuWonGukBoard({ report }: { report: SajuReportData }) {
 
 function ElementDistributionBoard({ report }: { report: SajuReportData }) {
   const maxValue = Math.max(...report.fiveElements.map((item) => item.value), 1);
+  const strongest = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
+  const weakest = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
+  const balanceLabel = strongest && weakest ? `${strongest.label} 중심 · ${weakest.label} 보완` : '오행 균형';
 
   return (
-    <article className="premium-distribution-card">
+    <article className="premium-distribution-card premium-element-compass">
       <div className="premium-distribution-head">
         <span>五行</span>
         <h3>오행 분포</h3>
       </div>
+      <div className="premium-element-compass-core">
+        <span>균형 판정</span>
+        <strong>{balanceLabel}</strong>
+        <em>강한 기운은 살리고 빈 곳은 생활 루틴으로 보완합니다.</em>
+      </div>
       <div className="premium-element-medallions">
-        {report.fiveElements.map((item) => (
+        {report.fiveElements.map((item, index) => (
           <div
             key={item.label}
             className={item.value === 0 ? 'premium-element-medallion empty' : 'premium-element-medallion'}
-            style={{ '--element-color': item.color, '--element-level': `${Math.max(14, (item.value / maxValue) * 100)}%` } as React.CSSProperties}
+            style={
+              {
+                '--element-color': item.color,
+                '--element-level': `${Math.max(14, (item.value / maxValue) * 100)}%`,
+                '--element-index': index + 1
+              } as React.CSSProperties & Record<'--element-index', number>
+            }
           >
             <span>{item.label}</span>
             <strong>{item.value}</strong>
-            <em />
+            <em>{Math.round((item.value / maxValue) * 100)}%</em>
           </div>
         ))}
       </div>
@@ -195,20 +209,25 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
 }
 
 function TenGodDistributionBoard({ report }: { report: SajuReportData }) {
-  const tenGods = report.tenGods.slice(0, 6);
+  const tenGods = report.tenGods.slice(0, 8);
   const maxValue = Math.max(...tenGods.map((item) => item.value), 1);
+  const topThree = tenGods.slice(0, 3).map((item) => item.label).join(' · ');
 
   return (
-    <article className="premium-distribution-card ten">
+    <article className="premium-distribution-card ten premium-tengod-board">
       <div className="premium-distribution-head">
         <span>十星</span>
         <h3>십성 분포</h3>
+      </div>
+      <div className="premium-tengod-lead">
+        <span>상위 흐름</span>
+        <strong>{topThree}</strong>
       </div>
       <div className="premium-tengod-seals">
         {tenGods.map((item, index) => (
           <div
             key={item.label}
-            className="premium-tengod-seal"
+            className={index < 3 ? 'premium-tengod-seal major' : 'premium-tengod-seal'}
             style={{ '--seal-level': `${Math.max(16, (item.value / maxValue) * 100)}%` } as React.CSSProperties}
           >
             <small>{String(index + 1).padStart(2, '0')}</small>
@@ -276,6 +295,74 @@ function MonthRibbon({ report }: { report: SajuReportData }) {
   );
 }
 
+function PremiumDayunFlow({ report }: { report: SajuReportData }) {
+  const windows = [
+    {
+      label: '현재 대운',
+      window: report.currentDayun,
+      className: 'current'
+    },
+    {
+      label: '다음 대운',
+      window: report.nextDayun,
+      className: 'next'
+    }
+  ];
+
+  return (
+    <div className="premium-dayun-grid premium-dayun-flow">
+      {windows.map((item) => (
+        <article key={item.label} className={`premium-dayun-card ${item.className}`}>
+          <span>{item.label}</span>
+          <strong>
+            {item.window.name} · {item.window.range}
+          </strong>
+          <em>{item.window.focus}</em>
+          <p>{item.window.summary}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function PremiumFortuneTimeline({ report }: { report: SajuReportData }) {
+  return (
+    <div className="premium-fortune-timeline premium-year-flow">
+      {report.yearLuck.slice(0, 5).map((item, index) => (
+        <article key={item.year} className={`${index === 0 ? 'active' : ''} ${item.score >= 80 ? 'high' : item.score < 55 ? 'low' : 'mid'}`}>
+          <span>{item.year}</span>
+          <strong>
+            {item.ganzhi} · {item.score}점
+          </strong>
+          <p>{item.headline}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function PremiumMonthCalendar({ report }: { report: SajuReportData }) {
+  return (
+    <div className="premium-month-ribbon premium-month-calendar">
+      {report.monthLuck.slice(0, 6).map((item) => (
+        <article key={`${item.year}-${item.month}`} className={item.score >= 80 ? 'high' : item.score < 55 ? 'low' : 'mid'}>
+          <span>
+            {item.year}.{String(item.month).padStart(2, '0')}
+          </span>
+          <div className="premium-month-meter">
+            <em style={{ width: `${item.score}%` }} />
+          </div>
+          <strong>{item.score}</strong>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+void DayunCards;
+void FortuneTimeline;
+void MonthRibbon;
+
 function SectionBlock({
   section,
   number,
@@ -311,9 +398,9 @@ function SectionBlock({
         </div>
       </div>
 
-      {section.id === 'fortune' ? <DayunCards report={report} /> : null}
-      {section.id === 'year' ? <FortuneTimeline report={report} /> : null}
-      {section.id === 'month' ? <MonthRibbon report={report} /> : null}
+      {section.id === 'fortune' ? <PremiumDayunFlow report={report} /> : null}
+      {section.id === 'year' ? <PremiumFortuneTimeline report={report} /> : null}
+      {section.id === 'month' ? <PremiumMonthCalendar report={report} /> : null}
 
       {section.callout ? (
         <div className="premium-callout">
@@ -861,7 +948,7 @@ export default function Report() {
                   </article>
                 </div>
 
-                <MonthRibbon report={report} />
+                <PremiumMonthCalendar report={report} />
               </section>
 
               <div className="premium-divider" />
