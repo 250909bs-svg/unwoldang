@@ -287,7 +287,7 @@ function FortuneTimeline({ report }: { report: SajuReportData }) {
         <article key={item.year} className={index === 0 ? 'active' : ''}>
           <span>{item.year}</span>
           <strong>
-            {item.ganzhi} · {item.score}점
+            {item.ganzhi} · {getLuckPhase(item.score)}
           </strong>
           <p>{item.headline}</p>
         </article>
@@ -307,7 +307,7 @@ function MonthRibbon({ report }: { report: SajuReportData }) {
           <div className="premium-month-meter">
             <em style={{ width: `${item.score}%` }} />
           </div>
-          <strong>{item.score}</strong>
+          <strong>{getLuckPhase(item.score)}</strong>
         </article>
       ))}
     </div>
@@ -351,7 +351,7 @@ function PremiumFortuneTimeline({ report }: { report: SajuReportData }) {
         <article key={item.year} className={`${index === 0 ? 'active' : ''} ${item.score >= 80 ? 'high' : item.score < 55 ? 'low' : 'mid'}`}>
           <span>{item.year}</span>
           <strong>
-            {item.ganzhi} · {item.score}점
+            {item.ganzhi} · {getLuckPhase(item.score)}
           </strong>
           <p>{item.headline}</p>
         </article>
@@ -371,7 +371,7 @@ function PremiumMonthCalendar({ report }: { report: SajuReportData }) {
           <div className="premium-month-meter">
             <em style={{ width: `${item.score}%` }} />
           </div>
-          <strong>{item.score}</strong>
+          <strong>{getLuckPhase(item.score)}</strong>
         </article>
       ))}
     </div>
@@ -381,6 +381,71 @@ function PremiumMonthCalendar({ report }: { report: SajuReportData }) {
 void DayunCards;
 void FortuneTimeline;
 void MonthRibbon;
+
+function getLuckPhase(score: number) {
+  if (score >= 82) return '공개기';
+  if (score >= 70) return '확장기';
+  if (score >= 58) return '조율기';
+  if (score >= 45) return '정비기';
+  return '회복기';
+}
+
+function getLuckAction(score: number) {
+  if (score >= 82) return '준비한 결과물을 밖으로 꺼내고 사람의 반응을 확인할 때';
+  if (score >= 70) return '제안, 협업, 이동, 홍보를 작게라도 열어볼 때';
+  if (score >= 58) return '두 선택지를 비교하고 방향을 다듬을 때';
+  if (score >= 45) return '돈, 일정, 관계 조건을 다시 맞출 때';
+  return '무리한 확정보다 체력과 손실을 먼저 막을 때';
+}
+
+function buildMyeongriClimate(report: SajuReportData) {
+  const pillars = [report.pillars.year, report.pillars.month, report.pillars.day, report.pillars.hour || ''].join(' ');
+  const monthBranch = report.pillars.month.slice(-1);
+  const hasGeumSeason = monthBranch === '申' || monthBranch === '酉';
+  const hasWaterRoot = /子|亥/.test(pillars);
+  const hasFireRoot = /巳|午|丁|丙/.test(pillars);
+  const hasWoodRoot = /寅|卯|甲|乙/.test(pillars);
+  const isMuEarth = report.dayMaster === '무' || report.dayMaster === '戊';
+  const strongest = [...report.fiveElements].sort((left, right) => right.value - left.value)[0]?.label || '강한 오행';
+  const weakest = [...report.fiveElements].sort((left, right) => left.value - right.value)[0]?.label || '약한 오행';
+
+  return {
+    monthBasis: hasGeumSeason
+      ? `${report.pillars.month} 월주는 금기가 왕한 절기 흐름입니다. 월령이 금 쪽으로 기울면 생각, 판단, 계산, 결과물에 대한 기준이 날카로워집니다.`
+      : `${report.pillars.month} 월령은 이 명식의 계절 배경입니다. 같은 오행 숫자라도 월령을 얻은 기운은 실제 체감에서 더 크게 작동합니다.`,
+    johu: hasGeumSeason && hasWaterRoot
+      ? `금수 기운이 함께 살아나면 명식이 차갑게 굳기 쉽습니다. 이때 화는 단순한 보완 오행이 아니라, 판단을 사람의 온도와 실행력으로 데워주는 조후의 역할을 합니다.`
+      : hasFireRoot
+        ? `화 기운은 이 명식에서 생각을 행동으로 옮기게 하는 온도입니다. 마음속 결론을 현실 일정으로 바꾸려면 화의 리듬이 필요합니다.`
+        : `${report.helpfulElements[0] || '희신'} 기운은 명식의 온도와 방향을 맞추는 보조축입니다. 부족하면 판단은 있어도 실행의 열기가 늦게 붙습니다.`,
+    wood: hasWoodRoot
+      ? `목 기운은 관계의 방향과 성장 의지를 열어주는 통로입니다. 살아 있을 때는 배우고 연결하고 새 판을 만드는 감각이 생깁니다.`
+      : `목 기운이 약하게 보이면 단순히 추진력이 없다는 뜻이 아닙니다. 관계에서 어디까지 다가가고 어디서 선을 그을지, 성장 방향을 정하는 감각을 의식적으로 만들어야 합니다.`,
+    dayMaster: isMuEarth
+      ? `무토 일간은 넓은 땅처럼 판을 크게 보고 버티는 힘이 있지만, 금수 한기가 강하면 땅이 차갑게 굳어 혼자 책임을 안고 버티는 쪽으로 흐르기 쉽습니다.`
+      : `${report.dayMaster} 일간은 결정을 내리는 중심입니다. 일간이 월령과 대운을 어떻게 받는지에 따라 같은 사건도 기회나 부담으로 다르게 체감됩니다.`,
+    elementReading: `${strongest}이 강하게 잡히고 ${weakest}이 약하게 잡히더라도, 숫자만으로 균형을 말하면 부족합니다. 월령, 지지의 뿌리, 천간에 드러난 기운, 합충으로 움직이는 방향까지 함께 봐야 실제 체감이 맞습니다.`
+  };
+}
+
+function describeTenGodDepth(label: string, report: SajuReportData) {
+  if (label.includes('식') || label.includes('상')) {
+    return `${label}은 말, 콘텐츠, 설명, 상담, 설계 능력으로 드러납니다. ${report.dayMaster} 일간이 가진 기준을 고객이 이해할 수 있는 언어로 바꾸는 힘이라, 리포트·강의·상담·기획형 상품과 잘 맞습니다.`;
+  }
+  if (label.includes('재')) {
+    return `${label}은 돈 자체보다 시장, 고객, 거래, 선택지의 흐름을 읽는 감각입니다. 잘 쓰면 다중 수익과 판매 감각이 살아나지만, 무리하면 약속과 지출이 동시에 늘어납니다.`;
+  }
+  if (label.includes('비') || label.includes('겁')) {
+    return `${label}은 자기 기준과 독립성을 세우는 힘입니다. 장점으로 쓰이면 흔들리지 않는 중심이 되지만, 피곤할 때는 타인의 방식까지 내 기준에 맞추려는 압박으로 나타날 수 있습니다.`;
+  }
+  if (label.includes('관')) {
+    return `${label}은 책임, 직함, 규칙, 사회적 신뢰와 연결됩니다. 계약, 심사, 제도, 직업 안정성이 중요한 선택일수록 이 기운을 섬세하게 봐야 합니다.`;
+  }
+  if (label.includes('인')) {
+    return `${label}은 공부, 보호, 자격, 문서, 회복의 힘입니다. 급하게 벌리는 일보다 준비와 검증을 거친 선택에서 신뢰가 살아납니다.`;
+  }
+  return `${label}은 이 명식에서 반복되는 행동 방식과 선택 습관을 보여주는 십성입니다. 점수보다 어떤 장면에서 켜지는지를 봐야 실제 해석이 깊어집니다.`;
+}
 
 function SectionBlock({
   section,
@@ -540,14 +605,14 @@ function buildExpandedCoreReport(report: SajuReportData): SajuReportData {
           : '첫 번째 질문은 아직 구체화되지 않았지만, 현재 명식에서는 일과 돈의 기준을 먼저 세우는 것이 전체 운의 중심입니다.',
         secondQuestion
           ? `두 번째 질문의 핵심은 "${secondQuestion.title}"입니다. ${secondQuestion.analysis} 감정적으로는 더 큰 판을 원해도, 현실에서는 에너지 배분과 우선순위를 잘라내는 능력이 만족도를 만듭니다.`
-          : '두 번째 질문이 비어 있다면, 올해는 관계보다 일의 운영 체계와 체력 리듬을 먼저 안정시키는 쪽이 우선입니다.'
+          : '두 번째 질문이 비어 있다면, 올해는 관계보다 일의 흐름과 체력 리듬을 먼저 안정시키는 쪽이 우선입니다.'
       ],
       advice: [
         `${report.helpfulElements.join(', ')} 흐름을 살리는 생활 리듬을 하나 정하세요. 수면, 운동, 업무 시작 시간처럼 몸이 따라오는 루틴이어야 합니다.`,
         `일과 돈은 한 장짜리 운영표로 관리하세요. 가격 기준, 제공 범위, 마감일, 수정 횟수, 책임자를 적어두는 것만으로도 운의 누수가 줄어듭니다.`,
         `좋은 제안이 들어와도 바로 받지 말고, 지금 대운의 주제인 "${report.currentDayun.focus}"와 맞는지 확인하세요. 맞지 않는 제안은 기회처럼 보여도 체력을 먼저 씁니다.`,
         bestMonth
-          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}처럼 점수가 높은 구간에는 제안과 실행을, 흐름이 약한 달에는 정산과 수정에 힘을 쓰세요.`
+          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} ${getLuckPhase(bestMonth.score)}에는 제안과 실행을, ${getLuckPhase(watchMonth?.score || 50)}에는 정산과 수정에 힘을 쓰세요.`
           : '운이 강한 구간에는 실행을, 약한 구간에는 정비를 우선하세요.',
         `관계는 설렘보다 장면을 보세요. 약속 시간, 돈 쓰는 태도, 갈등 후 말투, 바쁠 때의 배려가 오래 갈 인연인지 알려줍니다.`
       ]
@@ -555,7 +620,7 @@ function buildExpandedCoreReport(report: SajuReportData): SajuReportData {
     keyTakeaways: [
       {
         title: '핵심',
-        body: `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운이 만나는 지금은 판을 키우기보다 운영 체계를 손봐야 할 때입니다.`,
+        body: `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운이 만나는 지금은 판을 키우기보다 책임 범위와 돈의 흐름을 먼저 다듬어야 할 때입니다.`,
         tone: 'good'
       },
       {
@@ -600,6 +665,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
   const secondLabel = secondTenGod?.label || '보조 십성';
+  const climate = buildMyeongriClimate(report);
   const lifeGraphYears = report.yearLuck.slice(0, 5);
   const highYears = lifeGraphYears.filter((item) => item.score >= 80);
   const lowYears = lifeGraphYears.filter((item) => item.score < 55);
@@ -625,23 +691,24 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       : '정보를 나누고 기회를 연결해 주는 관계';
 
   const expertSummary = [
-    `${report.customerName}님의 명식은 일간 ${report.dayMaster}, ${report.strengthLabel}, 현재 ${report.currentDayun.name} 대운을 함께 놓고 보아야 결론이 정확해집니다. 겉으로는 여러 선택지가 동시에 열리는 것처럼 보이지만, 실제 승부처는 더 많이 벌리는 것이 아니라 역할, 가격, 마감, 책임 범위를 선명하게 정리하는 데 있습니다.`,
-    `오행 분포에서는 ${strongestLabel} 기운이 앞에 서고 ${weakestLabel} 영역은 의식적으로 보완해야 합니다. 강한 기운은 추진력과 판단력으로 쓰이면 장점이 되지만, 피로가 쌓이면 말이 빨라지고 결론을 서두르며 관계나 일에서 여지를 줄이는 방식으로 나타날 수 있습니다.`,
-    `십성 흐름에서는 ${dominantLabel}의 색이 두드러지고 ${secondLabel}이 뒤를 받칩니다. 그래서 이 사주는 감으로 밀어붙일 때보다 고객, 상대, 동료가 무엇을 기대하는지 먼저 분리하고, 제공 범위와 정산 기준을 정해둘 때 결과가 안정됩니다.`,
-    `${report.currentDayun.name} 대운의 핵심은 "${report.currentDayun.focus}"입니다. 다만 "${report.currentDayun.caution}"도 함께 따라오기 때문에, 지금 들어오는 기회를 전부 잡으려 하면 오히려 체력과 신뢰를 소모할 수 있습니다. 좋은 제안일수록 일정표, 돈의 흐름, 사람의 책임을 먼저 확인해야 합니다.`,
+    `${report.customerName}님의 명식은 일간 ${report.dayMaster}, ${report.pillars.month} 월령, 현재 ${report.currentDayun.name} 대운을 같이 놓아야 결론이 또렷해집니다. ${climate.dayMaster} 그래서 이 사주는 단순히 “열심히 하면 된다”보다, 차가워진 판단을 어느 장면에서 데우고 어떤 관계에서 흘려보낼지를 보는 쪽이 정확합니다.`,
+    `${climate.monthBasis} ${climate.johu} 오행 표가 비슷해 보여도 월령을 얻은 기운과 지지에 뿌리내린 기운은 체감 무게가 다릅니다.`,
+    `${climate.wood} 이 부분이 약하면 사람을 싫어해서가 아니라, 관계의 방향이 흐릴 때 갑자기 피로가 올라옵니다. 그래서 애매한 약속, 말만 많은 제안, 끝이 보이지 않는 관계에서 먼저 지칩니다.`,
+    `십성에서는 ${dominantLabel}과 ${secondLabel}의 조합을 봐야 합니다. ${describeTenGodDepth(dominantLabel, report)} ${describeTenGodDepth(secondLabel, report)}`,
+    `${report.currentDayun.name} 대운은 "${report.currentDayun.focus}" 쪽을 강하게 건드립니다. 특히 재성이나 수 기운이 활성화되는 대운에서는 고객, 돈, 이동, 관계의 양이 늘 수 있지만, 그만큼 책임과 지출도 같이 따라옵니다. ${report.currentDayun.caution}`,
     currentYear
-      ? `${currentYear.year}년은 "${currentYear.headline}"의 해로 읽힙니다. 집중 포인트는 ${currentYear.focus}이고, 주의할 점은 ${currentYear.warning}입니다. 올해의 좋은 운은 한 번에 크게 터지는 방식보다 준비한 것을 보여주고, 반응을 확인하고, 다시 다듬는 반복 속에서 강해집니다.`
+      ? `${currentYear.year}년은 "${currentYear.headline}"의 해로 읽힙니다. 집중 포인트는 ${currentYear.focus}이고, 주의할 점은 ${currentYear.warning}입니다. 이 해는 사건 하나를 맞히는 방식보다, 어떤 선택지가 실제로 사람·돈·일정의 변화를 부르는지 관찰해야 합니다.`
       : `${report.customerName}님에게 올해 필요한 태도는 빠른 확정보다 검증입니다. 감정적으로 끌리는 선택이라도 일정, 비용, 사람의 태도, 내 체력까지 확인한 뒤 움직일 때 손실이 줄어듭니다.`,
     bestMonth && watchMonth
-      ? `가까운 월운에서는 ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 흐름이 가장 강하게 열리고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}에는 속도를 줄이는 편이 좋습니다. 강한 달에는 공개, 제안, 실행을 두고, 약한 달에는 정산, 수정, 관계 정리, 컨디션 회복을 두면 운의 낭비가 줄어듭니다.`
-      : `월운은 강하게 움직일 달과 숨을 고를 달을 분리해서 써야 합니다. 좋은 시기에는 새 일을 열고, 약한 시기에는 기존 일을 정리하는 식으로 리듬을 나누면 결과가 오래 갑니다.`,
-    `종합하면 이 사주의 핵심은 “운이 있느냐 없느냐”가 아니라 운을 담을 그릇이 준비되어 있느냐입니다. ${helpfulText} 기운은 살리고 ${cautiousText} 기운은 과열되지 않게 조절할 때, 일과 돈과 관계가 따로 놀지 않고 하나의 생활 질서 안으로 들어옵니다.`
+      ? `가까운 월운은 숫자 점수보다 단계로 보는 편이 안전합니다. ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}은 ${getLuckPhase(bestMonth.score)}라 ${getLuckAction(bestMonth.score)}이고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}은 ${getLuckPhase(watchMonth.score)}라 ${getLuckAction(watchMonth.score)}입니다.`
+      : `월운은 좋고 나쁨의 점수보다 확장기, 조율기, 정비기처럼 역할을 나눠 읽어야 합니다. 그래야 고객이 “왜 그 달에 그런 일이 생기는지”를 납득할 수 있습니다.`,
+    `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${helpfulText}은 살리고 ${cautiousText}은 과하게 몰리지 않게 조절할 때, 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
   ];
 
   const expertQuestionAnswers = report.questionAnswers.map((qa, index) => ({
     ...qa,
     title: index === 0 ? `첫 번째 질문 핵심 판정: ${qa.title}` : `두 번째 질문 핵심 판정: ${qa.title}`,
-    analysis: `${qa.analysis} 이 답변에서 중요한 근거는 ${report.dayMaster} 일간의 판단 방식, ${report.currentDayun.name} 대운의 압력, 그리고 ${dominantLabel} 흐름이 만드는 현실 반응입니다. 단순히 좋다/나쁘다로 끝내면 고객이 실제 선택을 할 수 없기 때문에, 운월당은 이 질문을 “지금 움직일 것, 확인할 것, 미뤄야 할 것”으로 나누어 봅니다. 지금은 말보다 행동의 흔적을 보는 편이 정확합니다. 상대나 시장의 반응, 반복되는 지출, 약속을 지키는 속도, 내 체력의 남는 정도까지 함께 확인하면 이 질문의 답이 훨씬 선명해집니다.`,
+    analysis: `${qa.analysis} 이 답변의 명리 근거는 ${report.dayMaster} 일간, ${report.pillars.month} 월령, ${report.currentDayun.name} 대운, 그리고 ${dominantLabel} 흐름이 함께 만드는 현실 반응입니다. 좋다/나쁘다보다 먼저 볼 것은 실제 사건의 흔적입니다. 상대나 시장의 반응, 반복되는 지출, 약속을 지키는 속도, 내 체력의 남는 정도까지 보면 이 질문의 답이 훨씬 선명해집니다.`,
     advice: [
       `이 질문은 결론부터 정하지 말고 7일 안에 확인 가능한 행동 하나로 검증하세요. 연락, 제안서, 가격표, 일정표처럼 눈에 보이는 형태가 좋습니다.`,
       `상대나 상황의 말보다 반복 행동을 보세요. 약속 시간, 답변 속도, 돈을 쓰는 방식, 책임을 나누는 태도가 실제 운의 방향을 보여줍니다.`,
@@ -699,29 +766,80 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
 
     return {
       ...section,
-      paragraphs: section.paragraphs?.map((paragraph) =>
-        `${paragraph} 이 대목은 단순한 설명이 아니라 실제 선택 기준으로 써야 합니다. 좋은 흐름은 생활 속에서 반복될 때 힘을 얻고, 약한 흐름은 미리 분리해서 관리할 때 손실이 줄어듭니다.`
-      )
+      paragraphs: section.paragraphs?.map((paragraph, index) => {
+        const bases = [
+          `명리적으로는 ${report.pillars.month} 월령과 ${report.dayMaster} 일간의 관계를 함께 봐야 이 문장이 현실성을 얻습니다.`,
+          `${report.currentDayun.name} 대운에서는 같은 선택도 사람, 돈, 이동의 압력으로 체감될 수 있어 조건 확인이 중요합니다.`,
+          `${dominantLabel} 흐름이 강하게 켜질 때는 말보다 결과물, 반복 행동, 실제 비용에서 답이 드러납니다.`,
+          `${climate.johu}`
+        ];
+        return `${paragraph} ${bases[index % bases.length]}`;
+      })
     };
   });
+
+  const myeongriBasisSection: ReportSection = {
+    id: 'myeongri-basis',
+    title: '명리 근거 해설',
+    subtitle: '오행 숫자만 보지 않고 월령, 조후, 십성, 대운을 함께 읽습니다.',
+    callout: {
+      title: '왜 이 사주는 이렇게 읽히는가',
+      body: `${climate.monthBasis} ${climate.elementReading}`
+    },
+    cards: [
+      {
+        title: '월령과 계절감',
+        body: climate.monthBasis,
+        tone: 'good'
+      },
+      {
+        title: '조후와 화의 역할',
+        body: climate.johu,
+        tone: 'good'
+      },
+      {
+        title: '목 기운의 실제 의미',
+        body: climate.wood
+      },
+      {
+        title: '무토 일간의 체감',
+        body: climate.dayMaster
+      },
+      {
+        title: `${dominantLabel} 해석`,
+        body: describeTenGodDepth(dominantLabel, report)
+      },
+      {
+        title: `${secondLabel} 해석`,
+        body: describeTenGodDepth(secondLabel, report)
+      }
+    ],
+    details: [
+      {
+        summary: '오행 비율을 그대로 믿으면 안 되는 이유',
+        content: `오행 표는 입구일 뿐입니다. 같은 25%라도 월령을 얻었는지, 지지에 뿌리가 있는지, 천간에 드러났는지, 대운·세운에서 다시 자극되는지에 따라 체감은 완전히 달라집니다.\n\n그래서 운월당 리포트는 오행 숫자를 보여주되, 결론은 월령·조후·십성·대운을 함께 놓고 냅니다.`,
+        open: true
+      }
+    ]
+  };
 
   const lifeGraphSection: ReportSection = {
     id: 'life-graph',
     title: '인생 그래프',
-    subtitle: '연도별 흐름을 점수보다 실제 인생 장면 중심으로 읽었습니다.',
+    subtitle: '연도별 흐름을 단계와 실제 인생 장면 중심으로 읽었습니다.',
     callout: {
       title: '그래프 핵심',
-      body: `${report.customerName}님의 가까운 흐름은 ${firstHighYear?.year || '강한 해'} 전후에 실행감이 살아나고, ${firstLowYear?.year || '조율 구간'} 전후에는 속도보다 정리와 회복이 중요해지는 모양입니다. 좋은 해는 더 벌리는 해가 아니라, 준비한 것을 세상에 보여주고 반응을 확인하는 해로 써야 합니다.`
+      body: `${report.customerName}님의 가까운 흐름은 ${firstHighYear?.year || '공개기'} 전후에 실행감이 살아나고, ${firstLowYear?.year || '정비기'} 전후에는 속도보다 정리와 회복이 중요해지는 모양입니다. 이 그래프는 사건을 단정하기보다 어느 해에 관계, 일, 돈의 압력이 먼저 켜지는지 보여줍니다.`
     },
     cards: lifeGraphYears.map((item) => ({
-      title: `${item.year}년 · ${item.score}점`,
-      body: `${item.headline}. 이 해의 이유는 ${item.ganzhi} 흐름이 ${report.currentDayun.name} 대운과 만나 ${item.focus} 쪽을 건드리기 때문입니다. 조심할 점은 ${item.warning}입니다.`,
+      title: `${item.year}년 · ${getLuckPhase(item.score)}`,
+      body: `${item.headline}. ${item.ganzhi} 세운이 ${report.currentDayun.name} 대운과 만나 ${item.focus} 쪽을 건드리기 쉽습니다. 이 구간은 ${getLuckAction(item.score)}이며, ${item.warning}는 미리 관리해야 합니다.`,
       tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
     })),
     details: [
       {
         summary: '그래프를 읽는 법',
-        content: `점수가 높은 해는 무조건 좋은 일만 생긴다는 뜻이 아닙니다. 준비한 일을 공개하고, 사람을 만나고, 결과물을 밖으로 꺼내기 좋은 해입니다.\n\n점수가 낮은 해는 실패의 해가 아니라 정리, 회복, 비용 점검, 관계 재편을 해야 손실이 줄어드는 해입니다. 이 리포트는 사건을 확정하기보다 어떤 종류의 장면이 열리기 쉬운지를 보여줍니다.`,
+        content: `공개기는 무조건 좋은 일만 생긴다는 뜻이 아닙니다. 준비한 일을 밖으로 꺼내고, 사람을 만나고, 반응을 확인하기 좋은 구간입니다.\n\n정비기와 회복기는 실패의 표시가 아니라 비용 점검, 관계 재편, 체력 회복을 통해 다음 흐름을 받을 공간을 만드는 시간입니다.`,
         open: true
       }
     ]
@@ -751,9 +869,9 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       headers: ['시기', '발생 가능 장면', '왜 그런가', '대응'],
       rows: lifeGraphYears.map((item) => [
         `${item.year}년`,
-        item.score >= 80 ? '공개, 제안, 이동, 확장' : item.score < 55 ? '정리, 회복, 손실 방지' : '조율, 비교, 방향 수정',
+        getLuckPhase(item.score),
         `${item.ganzhi} 흐름과 ${report.currentDayun.name} 대운의 결합`,
-        item.score >= 80 ? '준비한 것을 밖으로 꺼내기' : item.score < 55 ? '큰 결정보다 조건 점검' : '작게 테스트하고 반응 보기'
+        getLuckAction(item.score)
       ])
     }
   };
@@ -764,12 +882,12 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     subtitle: '왜 어떤 기운은 필요하고 어떤 기운은 과하면 흔들리는지 설명합니다.',
     callout: {
       title: `${helpfulText} 기운을 살리는 이유`,
-      body: `${report.customerName}님은 ${report.strengthLabel} 흐름으로 읽히기 때문에, ${helpfulText} 기운이 생활을 받쳐줄 때 판단과 체력이 안정됩니다. 용신·희신은 “행운의 색깔”이 아니라 명식이 무너지지 않게 잡아주는 실제 운영 원리로 보는 편이 정확합니다.`
+      body: `${report.customerName}님은 ${report.strengthLabel} 흐름으로 읽히며, ${climate.johu} 용신·희신은 행운의 색깔이 아니라 월령과 조후의 치우침을 현실에서 바로잡는 균형추입니다.`
     },
     cards: [
       {
         title: '용신 방향',
-        body: `${report.helpfulElements[0] || helpfulText} 기운은 중심을 잡고 결과를 남기는 힘으로 쓰입니다. 생활에서는 수면, 식사, 마감, 공간 정리, 가격표처럼 반복 가능한 질서로 나타날 때 가장 잘 살아납니다.`,
+        body: `${report.helpfulElements[0] || helpfulText} 기운은 명식의 중심을 세우는 축입니다. 이 기운은 추상적인 행운보다 수면, 식사, 마감, 공간 정리, 가격표처럼 몸과 현실을 안정시키는 방식으로 써야 살아납니다.`,
         tone: 'good'
       },
       {
@@ -779,7 +897,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       },
       {
         title: `${weakestLabel} 부족의 실제 체감`,
-        body: `${weakestLabel} 기운이 약하면 해당 영역은 처음부터 없는 것이 아니라 의식적으로 챙기지 않으면 놓치기 쉬운 부분입니다. 그래서 좋은 기회가 와도 준비물, 말의 순서, 관계의 온도 중 하나가 비어 보일 수 있습니다.`
+        body: `${weakestLabel} 기운이 약하면 해당 영역은 처음부터 없는 것이 아니라 의식적으로 챙기지 않으면 비어 보입니다. 특히 관계 방향, 말의 온도, 다음 단계 제안이 늦어질 때 고객이나 상대가 확신을 잃을 수 있습니다.`
       },
       {
         title: `${cautiousText} 과열 주의`,
@@ -807,7 +925,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     cards: [
       {
         title: '혼자 vs 팀',
-        body: `초기에는 1인 브랜드처럼 직접 기준을 잡는 방식이 맞습니다. 다만 규모가 커질수록 상담, 제작, 정산, 고객 응대를 분리해야 오래 갑니다.`,
+        body: `초기에는 직접 해석하고 톤을 잡는 방식이 맞습니다. 다만 규모가 커질수록 상담, 제작, 정산, 고객 응대가 한 사람에게 몰리면 금수의 압박이 피로로 바뀌기 쉬우니 역할을 나눠야 합니다.`,
         tone: 'good'
       },
       {
@@ -957,6 +1075,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     questionAnswers: expertQuestionAnswers,
     sections: [
       lifeGraphSection,
+      myeongriBasisSection,
       eventTimelineSection,
       yongsinSection,
       careerDetailSection,
@@ -1195,17 +1314,17 @@ export default function Report() {
                     <span className="yearly-focus-label">BEST MONTHS</span>
                     <div className="yearly-focus-list">
                       {monthlyHotMonths.map((item) => (
-                        <div key={`${item.year}-${item.month}-best`} className="yearly-focus-list-item">
+        <div key={`${item.year}-${item.month}-best`} className="yearly-focus-list-item">
                           <strong>
                             {item.year}.{String(item.month).padStart(2, '0')}
                           </strong>
-                          <span>{item.score}점</span>
+                          <span>{getLuckPhase(item.score)}</span>
                         </div>
                       ))}
                     </div>
                     <p>
                       {monthlyHotMonths[0]
-                        ? `${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')} 흐름이 가장 강하게 붙는 구간으로 보입니다.`
+                        ? `${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')}은 ${getLuckPhase(monthlyHotMonths[0].score)}로, 움직임을 열어보기 좋은 구간입니다.`
                         : '월운 하이라이트를 구성 중입니다.'}
                     </p>
                   </article>
