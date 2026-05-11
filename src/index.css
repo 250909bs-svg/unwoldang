@@ -11941,9 +11941,9 @@ body {
   position: relative;
   z-index: 3;
   display: grid;
-  gap: 24px;
+  gap: 14px;
   margin: -48px 22px 0;
-  padding: 25px 14px 18px;
+  padding: 18px 14px;
   border-radius: 16px 16px 0 0;
   background: rgba(248, 248, 245, 0.94);
   box-shadow: 0 -16px 34px rgba(50, 50, 45, 0.12);

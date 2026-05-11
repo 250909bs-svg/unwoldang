@@ -80,28 +80,9 @@ function LoggedOutReplay() {
       <section className="my-login-hero">
         <div className="my-login-portrait-wrap">
           <img src="/intake-night-blue.png" alt="" className="my-login-portrait" />
-          <div className="my-login-speech">
-            <b>잠깐!</b>
-            <span>
-              카카오 로그인시,
-              <br />
-              다시보기 기간을
-              <br />
-              <strong>무제한으로</strong>
-              <br />
-              늘려드려요!
-            </span>
-          </div>
         </div>
 
         <div className="my-login-benefit-card">
-          <span className="my-login-benefit-pill">결과 다시보기 기간</span>
-          <div className="my-login-duration">
-            <span>30일</span>
-            <em>→</em>
-            <strong>무제한</strong>
-          </div>
-
           <Link to="/login" className="my-kakao-button">
             <MessageCircle size={17} fill="currentColor" />
             카카오로 로그인/가입
