@@ -1478,16 +1478,18 @@ textarea {
   padding: 0;
   background: transparent;
   border: 0;
-  color: #7a5bcb;
-  font-size: 12px;
-  font-weight: 600;
+  color: #111111;
+  font-size: 12.5px;
+  font-weight: 900;
   text-decoration: none;
+  letter-spacing: -0.01em;
 }
 
 .site-footer-links.compact span {
   display: inline;
-  color: #b0a18f;
+  color: #111111;
   font-size: 12px;
+  font-weight: 800;
 }
 
 .inline-text-link {
