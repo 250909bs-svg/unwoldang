@@ -396,6 +396,12 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'The opening summary must feel like a senior human consultant wrote it: compress repeated abstract logic, add concrete scenes, emotional pattern reasons, relationship behavior, money/work operations, and immediately actionable behaviors.',
                   'Make the summary commercially satisfying without simply making it longer. Prefer specific diagnosis and practical examples over generic fortune-telling filler.',
                   'For love, marriage, and relationship sections, use a premium matchmaking-agency plus relationship-psychology style: attraction type, long-term partner type, failing pattern, how the other person reads the customer, contact style, hidden emotional need, breakup trigger, relationship stamina, face mood, likely social/professional environment, meeting route, married-life shape, do-not-miss person, avoid person, and 30-day actions.',
+                  'Quality bar: write as if a 20-year senior Korean myeongri consultant will audit every sentence. Every conclusion must be tied to deterministicBasis, the baseReport fields, or the customer questions.',
+                  'Do not invent unsupported facts. If the chart does not support a precise claim, express it as a tendency, condition, or verification checklist.',
+                  'For every major section, include four layers: myeongri basis, real-life scene, risk if mishandled, and one concrete next action.',
+                  'Question answers must directly answer the customer question first, then explain the basis, then give a 7-day verification action. Avoid vague reassurance.',
+                  'Use premium Korean copywriting: concrete, calm, emotionally accurate, and useful. Avoid fear marketing, childish expressions, excessive pink-romance tone, and generic AI phrasing.',
+                  'Never overpromise perfect accuracy. Increase trust by showing what is certain from the chart, what is conditional, and what the customer should verify in real life.',
                   'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.'
                 ].join(' '),
               baseReport,

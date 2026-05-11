@@ -480,6 +480,216 @@ function buildExpandedCoreReport(report: SajuReportData): SajuReportData {
   };
 }
 
+function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
+  const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
+  const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
+  const dominantTenGod = report.tenGods[0];
+  const secondTenGod = report.tenGods[1];
+  const currentYear = report.yearLuck[0];
+  const bestMonth = [...report.monthLuck].sort((left, right) => right.score - left.score)[0];
+  const watchMonth = [...report.monthLuck].sort((left, right) => left.score - right.score)[0];
+  const helpfulText = report.helpfulElements.join(', ');
+  const cautiousText = report.cautiousElements.join(', ');
+  const strongestLabel = strongestElement?.label || report.helpfulElements[0];
+  const weakestLabel = weakestElement?.label || report.cautiousElements[0];
+  const dominantLabel = dominantTenGod?.label || '주요 십성';
+  const secondLabel = secondTenGod?.label || '보조 십성';
+
+  const expertSummary = [
+    `${report.customerName}님의 명식은 일간 ${report.dayMaster}, ${report.strengthLabel}, 현재 ${report.currentDayun.name} 대운을 함께 놓고 보아야 결론이 정확해집니다. 겉으로는 여러 선택지가 동시에 열리는 것처럼 보이지만, 실제 승부처는 더 많이 벌리는 것이 아니라 역할, 가격, 마감, 책임 범위를 선명하게 정리하는 데 있습니다.`,
+    `오행 분포에서는 ${strongestLabel} 기운이 앞에 서고 ${weakestLabel} 영역은 의식적으로 보완해야 합니다. 강한 기운은 추진력과 판단력으로 쓰이면 장점이 되지만, 피로가 쌓이면 말이 빨라지고 결론을 서두르며 관계나 일에서 여지를 줄이는 방식으로 나타날 수 있습니다.`,
+    `십성 흐름에서는 ${dominantLabel}의 색이 두드러지고 ${secondLabel}이 뒤를 받칩니다. 그래서 이 사주는 감으로 밀어붙일 때보다 고객, 상대, 동료가 무엇을 기대하는지 먼저 분리하고, 제공 범위와 정산 기준을 정해둘 때 결과가 안정됩니다.`,
+    `${report.currentDayun.name} 대운의 핵심은 "${report.currentDayun.focus}"입니다. 다만 "${report.currentDayun.caution}"도 함께 따라오기 때문에, 지금 들어오는 기회를 전부 잡으려 하면 오히려 체력과 신뢰를 소모할 수 있습니다. 좋은 제안일수록 일정표, 돈의 흐름, 사람의 책임을 먼저 확인해야 합니다.`,
+    currentYear
+      ? `${currentYear.year}년은 "${currentYear.headline}"의 해로 읽힙니다. 집중 포인트는 ${currentYear.focus}이고, 주의할 점은 ${currentYear.warning}입니다. 올해의 좋은 운은 한 번에 크게 터지는 방식보다 준비한 것을 보여주고, 반응을 확인하고, 다시 다듬는 반복 속에서 강해집니다.`
+      : `${report.customerName}님에게 올해 필요한 태도는 빠른 확정보다 검증입니다. 감정적으로 끌리는 선택이라도 일정, 비용, 사람의 태도, 내 체력까지 확인한 뒤 움직일 때 손실이 줄어듭니다.`,
+    bestMonth && watchMonth
+      ? `가까운 월운에서는 ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 흐름이 가장 강하게 열리고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}에는 속도를 줄이는 편이 좋습니다. 강한 달에는 공개, 제안, 실행을 두고, 약한 달에는 정산, 수정, 관계 정리, 컨디션 회복을 두면 운의 낭비가 줄어듭니다.`
+      : `월운은 강하게 움직일 달과 숨을 고를 달을 분리해서 써야 합니다. 좋은 시기에는 새 일을 열고, 약한 시기에는 기존 일을 정리하는 식으로 리듬을 나누면 결과가 오래 갑니다.`,
+    `종합하면 이 사주의 핵심은 “운이 있느냐 없느냐”가 아니라 운을 담을 그릇이 준비되어 있느냐입니다. ${helpfulText} 기운은 살리고 ${cautiousText} 기운은 과열되지 않게 조절할 때, 일과 돈과 관계가 따로 놀지 않고 하나의 생활 질서 안으로 들어옵니다.`
+  ];
+
+  const expertQuestionAnswers = report.questionAnswers.map((qa, index) => ({
+    ...qa,
+    title: index === 0 ? `첫 번째 질문 핵심 판정: ${qa.title}` : `두 번째 질문 핵심 판정: ${qa.title}`,
+    analysis: `${qa.analysis} 이 답변에서 중요한 근거는 ${report.dayMaster} 일간의 판단 방식, ${report.currentDayun.name} 대운의 압력, 그리고 ${dominantLabel} 흐름이 만드는 현실 반응입니다. 단순히 좋다/나쁘다로 끝내면 고객이 실제 선택을 할 수 없기 때문에, 운월당은 이 질문을 “지금 움직일 것, 확인할 것, 미뤄야 할 것”으로 나누어 봅니다. 지금은 말보다 행동의 흔적을 보는 편이 정확합니다. 상대나 시장의 반응, 반복되는 지출, 약속을 지키는 속도, 내 체력의 남는 정도까지 함께 확인하면 이 질문의 답이 훨씬 선명해집니다.`,
+    advice: [
+      `이 질문은 결론부터 정하지 말고 7일 안에 확인 가능한 행동 하나로 검증하세요. 연락, 제안서, 가격표, 일정표처럼 눈에 보이는 형태가 좋습니다.`,
+      `상대나 상황의 말보다 반복 행동을 보세요. 약속 시간, 답변 속도, 돈을 쓰는 방식, 책임을 나누는 태도가 실제 운의 방향을 보여줍니다.`,
+      `${bestMonth ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 전후에는 실행을 열고` : '운이 강한 구간에는 실행을 열고'}, ${watchMonth ? `${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')} 전후에는 무리한 확정을 피하세요.` : '운이 약한 구간에는 무리한 확정을 피하세요.'}`,
+      `마지막 판단 기준은 “좋아 보이는가”가 아니라 “내 일정, 돈, 마음, 체력을 망가뜨리지 않고 지속 가능한가”입니다.`
+    ]
+  }));
+
+  const expertSections = report.sections.map((section) => {
+    if (section.id === 'love') {
+      return {
+        ...section,
+        subtitle: section.subtitle || '감정의 설렘보다 오래 가는 관계의 조건을 현실적으로 읽습니다.',
+        callout: {
+          title: '연애운 핵심 판정',
+          body: `${report.customerName}님의 연애운은 강한 끌림만으로 결정되지 않습니다. 안정적으로 오래 가는 인연은 말이 많은 사람보다 생활 리듬, 연락 온도, 책임감, 돈과 시간의 태도가 일정한 사람 쪽에 가깝습니다. 처음부터 뜨겁게 몰아치는 관계보다 천천히 신뢰가 쌓이는 관계가 더 좋은 결과로 이어질 가능성이 큽니다.`
+        },
+        cards: [
+          {
+            title: '끌리는 사람의 공통점',
+            body: '차분해 보이지만 자기 기준이 있고, 말보다 행동으로 신뢰를 주는 사람에게 마음이 움직이기 쉽습니다. 다만 무심함과 안정감을 혼동하면 기다림이 길어질 수 있습니다.',
+            badge: 'attraction'
+          },
+          {
+            title: '오래 가는 관계 조건',
+            body: '연락 빈도보다 약속을 지키는 태도, 감정 표현보다 생활 배려가 중요합니다. 서로의 하루를 방해하지 않으면서도 필요한 순간에는 분명히 곁에 있는 사람이 잘 맞습니다.',
+            badge: 'long-term'
+          },
+          {
+            title: '관계가 흔들리는 지점',
+            body: '상대가 애매하게 굴 때 바로 결론을 내리거나, 반대로 너무 오래 참다가 한 번에 끊어내는 패턴을 조심해야 합니다. 감정이 커질수록 확인 질문을 짧고 분명하게 하는 편이 좋습니다.',
+            badge: 'caution'
+          },
+          {
+            title: '30일 행동',
+            body: '새로운 만남은 반복적으로 마주치는 생활권, 지인 소개, 일과 연결된 자리에서 열기 좋습니다. 연락은 길게 설명하기보다 약속 가능한 날짜와 구체적인 제안을 먼저 던지세요.',
+            badge: 'action'
+          }
+        ],
+        details: [
+          ...(section.details || []),
+          {
+            summary: '상대가 보는 나의 분위기',
+            content: `${report.customerName}님은 쉽게 가벼워 보이는 타입보다, 처음에는 조심스럽지만 가까워질수록 믿을 수 있는 사람으로 읽힙니다. 다만 감정을 감추는 시간이 길어지면 상대는 관심이 없는 것으로 오해할 수 있으니, 호감이 있다면 작은 표현을 늦추지 않는 편이 좋습니다.`,
+            open: true
+          },
+          {
+            summary: '피해야 할 인연과 놓치면 아까운 인연',
+            content: `피해야 할 인연은 말은 달콤하지만 일정과 책임이 흐린 사람입니다. 놓치면 아까운 인연은 속도는 느려도 약속을 지키고, 돈과 시간의 태도가 깨끗하며, 갈등이 생겼을 때 회피하지 않고 대화하는 사람입니다.`,
+            open: true
+          }
+        ]
+      };
+    }
+
+    return {
+      ...section,
+      paragraphs: section.paragraphs?.map((paragraph) =>
+        `${paragraph} 이 대목은 단순한 설명이 아니라 실제 선택 기준으로 써야 합니다. 좋은 흐름은 생활 속에서 반복될 때 힘을 얻고, 약한 흐름은 미리 분리해서 관리할 때 손실이 줄어듭니다.`
+      )
+    };
+  });
+
+  const expertCheckSection: ReportSection = {
+    id: 'expert-check',
+    title: '전문가 검증 포인트',
+    subtitle: '결론을 믿기 전에 반드시 확인해야 할 근거를 따로 정리했습니다.',
+    callout: {
+      title: '왜 이 결론이 나왔는가',
+      body: `이 리포트는 입력한 생년월일, 출생시간, 원국, 오행 분포, 십성 흐름, ${report.currentDayun.name} 대운, 연운과 월운을 함께 놓고 해석합니다. 단정적인 사건 예언보다 실제 선택에 도움이 되는 판단 기준을 우선합니다.`
+    },
+    cards: [
+      {
+        title: '명식 근거',
+        body: `${report.dayMaster} 일간과 ${report.strengthLabel} 흐름을 중심으로, 강한 ${strongestLabel} 기운과 보완이 필요한 ${weakestLabel} 기운의 균형을 봅니다.`,
+        tone: 'good'
+      },
+      {
+        title: '운의 근거',
+        body: `${report.currentDayun.name} 대운은 ${report.currentDayun.focus} 쪽을 밀어주지만, ${report.currentDayun.caution}는 반드시 관리해야 할 변수입니다.`
+      },
+      {
+        title: '현실 검증',
+        body: '좋은 운도 일정, 가격, 관계 태도, 체력 관리가 무너지면 체감되지 않습니다. 그래서 모든 조언은 행동으로 확인 가능한 기준으로 번역했습니다.'
+      },
+      {
+        title: '단정 금지',
+        body: '배우자, 질병, 사고, 투자 성과처럼 삶을 크게 흔드는 사건은 확정적으로 말하지 않습니다. 대신 위험 신호와 선택 기준을 알려드립니다.',
+        tone: 'warn'
+      }
+    ],
+    details: [
+      {
+        summary: '고객이 다시 봐야 할 체크리스트',
+        content: `1. 지금 가장 강한 선택지가 내 체력을 망가뜨리지 않는가\n\n2. 돈이 들어오는 일인지, 돈이 남는 일인지 구분했는가\n\n3. 관계에서 말보다 반복 행동을 확인했는가\n\n4. 좋은 달에는 열고 약한 달에는 정리하는 리듬을 지키고 있는가`,
+        open: true
+      }
+    ]
+  };
+
+  return {
+    ...report,
+    heroNote: `${report.customerName}님의 원국, 대운, 세운, 월운, 질문 맥락을 함께 검토한 프리미엄 상담형 리포트입니다. 단순한 위로보다 실제 선택에 도움이 되는 근거와 행동 기준을 우선했습니다.`,
+    summary: {
+      ...report.summary,
+      title: `${report.customerName}님의 핵심 판정`,
+      analysis: expertSummary,
+      advice: [
+        `오늘 바로 할 일은 한 가지입니다. 지금 가장 중요한 선택을 “돈, 일정, 사람, 체력” 네 칸으로 나누어 적고, 빠진 칸이 있으면 아직 확정하지 마세요.`,
+        `${helpfulText} 기운을 살리려면 생활 리듬을 먼저 고정하세요. 수면, 식사, 이동, 업무 시작 시간을 일정하게 잡는 것이 운을 받는 그릇이 됩니다.`,
+        `${cautiousText} 기운이 과열될 때는 말과 결정을 늦춰야 합니다. 중요한 답변은 하루 뒤 다시 읽고 보내는 편이 손실을 줄입니다.`,
+        `일과 돈은 감이 아니라 숫자로 보세요. 가격표, 반복 매출, 정산일, 제공 범위, 취소 조건을 정리하면 좋은 운이 실제 결과로 남습니다.`,
+        `관계는 설렘보다 회복력을 보세요. 다툰 뒤 말투가 어떻게 돌아오는지, 약속을 어떻게 다시 맞추는지가 오래 갈 사람을 보여줍니다.`
+      ]
+    },
+    keyTakeaways: [
+      {
+        title: '핵심',
+        body: `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운의 결합상, 지금은 넓히는 운보다 정리해서 크게 만드는 운에 가깝습니다.`,
+        tone: 'good'
+      },
+      {
+        title: '일',
+        body: '성과는 많이 벌리는 데서보다 역할 분리, 제공 범위, 마감 습관, 고객 응대 기준을 세울 때 커집니다.'
+      },
+      {
+        title: '돈',
+        body: '재물운은 수입보다 남는 구조가 핵심입니다. 가격, 정산, 반복 구매, 환불 조건을 정리하면 안정감이 올라갑니다.',
+        tone: 'good'
+      },
+      {
+        title: '관계',
+        body: '오래 가는 인연은 말보다 반복 행동에서 드러납니다. 연락 온도, 약속 태도, 갈등 후 회복 방식을 보세요.'
+      },
+      {
+        title: '주의',
+        body: `${cautiousText} 기운이 과하면 판단이 빨라지고 체력 소모가 커질 수 있습니다. 큰 결정은 하루 더 두고 보세요.`,
+        tone: 'warn'
+      },
+      {
+        title: '시기',
+        body: bestMonth
+          ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 전후에는 실행과 공개에 힘을 싣고, 약한 달에는 정리와 회복을 우선하세요.`
+          : '강한 달에는 실행하고 약한 달에는 정리하는 방식으로 운의 리듬을 나누는 편이 좋습니다.'
+      }
+    ],
+    questionAnswers: expertQuestionAnswers,
+    sections: [expertCheckSection, ...expertSections],
+    actionPlan: {
+      ...report.actionPlan,
+      title: '30일 실행 전략',
+      priorities: [
+        '1주차: 지금 진행 중인 일과 관계를 돈, 일정, 책임, 체력 네 칸으로 나누어 정리합니다.',
+        '2주차: 가장 중요한 제안 하나만 골라 가격표, 제공 범위, 마감일을 문서로 고정합니다.',
+        '3주차: 관계에서는 말보다 반복 행동을 확인하고, 애매한 약속은 짧고 분명하게 다시 묻습니다.',
+        '4주차: 결과가 난 것은 유지하고, 피로만 남긴 선택은 과감히 줄여 다음 달 운을 받을 공간을 만듭니다.'
+      ],
+      dos: [
+        '중요한 결정은 일정표와 숫자로 확인한 뒤 확정하기',
+        '좋은 제안일수록 책임 범위와 취소 조건을 먼저 확인하기',
+        '관계에서는 감정 설명보다 구체적인 약속을 제안하기',
+        '몸이 무거운 날에는 일을 늘리지 말고 정리와 회복에 쓰기'
+      ],
+      avoids: [
+        '상대의 말만 믿고 일정이나 돈을 먼저 열어두는 것',
+        '기회가 아깝다는 이유로 체력 한계를 무시하는 것',
+        '불안할 때 긴 메시지로 감정을 한 번에 쏟아내는 것',
+        '가격, 역할, 마감이 흐린 일을 좋은 인연이나 좋은 기회로 착각하는 것'
+      ]
+    },
+    legalNotice: [
+      ...report.legalNotice,
+      '본 리포트는 입력값과 명리학적 해석을 바탕으로 한 상담형 콘텐츠이며, 질병 진단, 투자 판단, 법률 판단, 특정 사건의 확정 예언으로 사용해서는 안 됩니다.'
+    ]
+  };
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -492,7 +702,7 @@ export default function Report() {
   const reportInput = formData?.birthDate ? formData : PREVIEW_FORM_DATA;
   const reportCharacterVideo = reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
-  const report = useMemo(() => buildExpandedCoreReport(baseReport), [baseReport]);
+  const report = useMemo(() => buildExpertSatisfactionReport(buildExpandedCoreReport(baseReport)), [baseReport]);
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const yearlyLead = report.yearLuck[0];
   const yearlyMomentum = report.yearLuck.slice(0, 3);
