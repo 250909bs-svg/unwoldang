@@ -169,7 +169,7 @@ function SajuWonGukBoard({ report }: { report: SajuReportData }) {
 }
 
 function ElementDistributionBoard({ report }: { report: SajuReportData }) {
-  const maxValue = Math.max(...report.fiveElements.map((item) => item.value), 1);
+  const totalValue = Math.max(report.fiveElements.reduce((sum, item) => sum + item.value, 0), 1);
   const strongest = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const weakest = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
   const balanceLabel = strongest && weakest ? `${strongest.label} 중심 · ${weakest.label} 보완` : '오행 균형';
@@ -181,9 +181,9 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
         <h3>오행 분포</h3>
       </div>
       <div className="premium-element-compass-core">
-        <span>균형 판정</span>
+        <span>총 {totalValue}칸 기준</span>
         <strong>{balanceLabel}</strong>
-        <em>강한 기운은 살리고 빈 곳은 생활 루틴으로 보완합니다.</em>
+        <em>천간과 지지를 합산한 실제 분포입니다.</em>
       </div>
       <div className="premium-element-medallions">
         {report.fiveElements.map((item, index) => (
@@ -193,14 +193,14 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
             style={
               {
                 '--element-color': item.color,
-                '--element-level': `${Math.max(14, (item.value / maxValue) * 100)}%`,
+                '--element-level': `${Math.max(14, (item.value / totalValue) * 100)}%`,
                 '--element-index': index + 1
               } as React.CSSProperties & Record<'--element-index', number>
             }
           >
             <span>{item.label}</span>
             <strong>{item.value}</strong>
-            <em>{Math.round((item.value / maxValue) * 100)}%</em>
+            <em>{item.value}/{totalValue}칸</em>
           </div>
         ))}
       </div>
