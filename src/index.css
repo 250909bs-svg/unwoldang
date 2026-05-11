@@ -11005,6 +11005,84 @@ body {
   line-height: 1.45;
 }
 
+.intake-relationship-grid,
+.intake-relationship-duration-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.intake-relationship-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.intake-relationship-duration-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.intake-relationship-card,
+.intake-duration-chip {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.105) 0%, rgba(255, 255, 255, 0.045) 100%);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.intake-relationship-card {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 104px;
+  padding: 14px 11px;
+  border-radius: 20px;
+  text-align: left;
+}
+
+.intake-relationship-card strong {
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.intake-relationship-card span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.intake-duration-chip {
+  min-height: 48px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.intake-relationship-card.active,
+.intake-duration-chip.active {
+  border-color: rgba(91, 141, 255, 0.72);
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.34), transparent 30%),
+    linear-gradient(135deg, #3d74ff 0%, #1848d6 100%);
+  box-shadow:
+    0 16px 28px rgba(31, 79, 220, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.intake-relationship-card.active span {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.intake-relationship-card:hover,
+.intake-duration-chip:hover {
+  transform: translateY(-1px);
+}
+
 .intake-story-question-card,
 .intake-story-context-card {
   padding: 16px;

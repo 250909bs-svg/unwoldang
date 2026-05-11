@@ -12,7 +12,7 @@ const initialState: IntakeFormData = {
   isLeapMonth: false,
   birthDate: '',
   birthTime: '',
-  isUnknownTime: true,
+  isUnknownTime: false,
   relationshipStatus: '',
   relationshipDuration: '',
   location: '',
@@ -20,7 +20,7 @@ const initialState: IntakeFormData = {
   q2: ''
 };
 
-type IntakeStep = 1 | 2 | 3;
+type IntakeStep = 1 | 2 | 3 | 4;
 
 type FormLocationState = {
   formData?: Partial<IntakeFormData>;
@@ -57,6 +57,19 @@ const questionSuggestions = {
   ]
 } as const;
 
+const relationshipStatusOptions = [
+  { value: 'dating', label: '연애중', body: '현재 만나는 사람이 있어요.' },
+  { value: 'single', label: '솔로', body: '현재는 혼자 흐름을 보고 싶어요.' },
+  { value: 'married', label: '기혼', body: '결혼/배우자 흐름까지 함께 보고 싶어요.' }
+] as const;
+
+const relationshipDurationOptions = [
+  { value: 'under1', label: '1년 미만' },
+  { value: 'under3', label: '1년 이상 3년 이하' },
+  { value: 'under5', label: '3년 이상 5년 이하' },
+  { value: 'under10', label: '5년 이상 10년 이하' }
+] as const;
+
 const stepVisuals: Record<
   IntakeStep,
   {
@@ -71,6 +84,9 @@ const stepVisuals: Record<
   },
   3: {
     background: '/intake-beauty-red.png'
+  },
+  4: {
+    background: '/intake-sunlight-girl.png'
   }
 };
 
@@ -88,6 +104,9 @@ const yearlyStepVisuals: Record<
   },
   3: {
     background: '/intake-sunlight-girl.png'
+  },
+  4: {
+    background: '/intake-beauty-red.png'
   }
 };
 
@@ -126,7 +145,7 @@ const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormDat
   isLeapMonth: Boolean(source?.isLeapMonth),
   birthDate: source?.birthDate ?? '',
   birthTime: source?.birthTime ?? '',
-  isUnknownTime: Boolean(source?.isUnknownTime || !source?.birthTime),
+  isUnknownTime: Boolean(source?.isUnknownTime),
   relationshipStatus: source?.relationshipStatus ?? '',
   relationshipDuration: source?.relationshipDuration ?? '',
   location: source?.location ?? '',
@@ -136,7 +155,7 @@ const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormDat
 
 function getBirthTimeSelectValue(formData: IntakeFormData) {
   if (formData.isUnknownTime) {
-    return 'unknown';
+    return '';
   }
 
   return birthTimeOptions.find((option) => option.birthTime === formData.birthTime)?.value || '';
@@ -220,6 +239,14 @@ export default function Form() {
     updateField('birthTime', selected.birthTime);
   };
 
+  const toggleUnknownBirthTime = () => {
+    setFormData((prev) => ({
+      ...prev,
+      isUnknownTime: !prev.isUnknownTime,
+      birthTime: !prev.isUnknownTime ? '' : prev.birthTime
+    }));
+  };
+
   const toggleLeapMonth = () => {
     setFormData((prev) => {
       if (prev.calendar !== 'lunar') {
@@ -234,9 +261,10 @@ export default function Form() {
   const birthTimeReady = Boolean(formData.birthTime) || formData.isUnknownTime;
   const step1Ready =
     Boolean(formData.name.trim()) && Boolean(formData.gender) && birthDateReady && birthTimeReady;
-  const step2Ready = Boolean(formData.q1.trim());
-  const step3Ready = Boolean(formData.q2.trim());
-  const canSubmit = step1Ready && step2Ready && step3Ready;
+  const step2Ready = Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
+  const step3Ready = Boolean(formData.q1.trim());
+  const step4Ready = Boolean(formData.q2.trim());
+  const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;
   const isYearlyFlow = service.id === 'life-flow';
   const isSignatureFlow = service.id === 'general-signature';
   const isLoveReadingFlow = service.id === 'love-reading';
@@ -258,6 +286,11 @@ export default function Form() {
       kicker: 'QUESTION 02',
       title: '留덉?留?吏덈Ц源뚯? ?④퍡 ?뚮뱶?좊젮??',
       body: '?좊뀈?댁꽭 由ы룷?몃뒗 ?뷀솕?쇰줈 ?쎈뒗 怨좊??깃낵 ?덉씠 ?대룞?덈뒗 由щ벉???뷀븿猿?蹂ㅼ빞 ?쒕뵫?꾨줈 ?댁뼱吏묐땲??'
+    },
+    4: {
+      kicker: 'QUESTION 02',
+      title: '留덉?留?吏덈Ц源뚯? ?④퍡 ?뚮뱶?좊젮??',
+      body: '?좊뀈?댁꽭 由ы룷?몃뒗 ?뷀솕?쇰줈 ?쎈뒗 怨좊??깃낵 ?덉씠 ?대룞?덈뒗 由щ벉???뷀븿猿?蹂ㅼ빞 ?쒕뵫?꾨줈 ?댁뼱吏묐땲??'
     }
   } as const;
   void _yearlySceneCopyDraft;
@@ -273,6 +306,11 @@ export default function Form() {
       body: '이번 한 해에서 가장 중요하게 보고 싶은 질문을 먼저 적어두면 결과 리포트의 방향과 밀도가 훨씬 선명해집니다.'
     },
     3: {
+      kicker: 'QUESTION 02',
+      title: '마지막 질문까지 더해 흐름을 완성해 주세요',
+      body: '신년운세 리포트는 큰 흐름뿐 아니라 실제로 어떤 선택과 준비가 필요한지까지 함께 보아야 설득력 있게 이어집니다.'
+    },
+    4: {
       kicker: 'QUESTION 02',
       title: '마지막 질문까지 더해 흐름을 완성해 주세요',
       body: '신년운세 리포트는 큰 흐름뿐 아니라 실제로 어떤 선택과 준비가 필요한지까지 함께 보아야 설득력 있게 이어집니다.'
@@ -293,7 +331,7 @@ export default function Form() {
       return;
     }
 
-    setStep((prev) => (prev === 3 ? 2 : 1));
+    setStep((prev) => (prev === 4 ? 3 : prev === 3 ? 2 : 1));
   };
 
   const submitForm = () => {
@@ -326,6 +364,15 @@ export default function Form() {
       }
 
       setStep(3);
+      return;
+    }
+
+    if (step === 3) {
+      if (!step3Ready) {
+        return;
+      }
+
+      setStep(4);
       return;
     }
 
@@ -447,11 +494,24 @@ export default function Form() {
               </div>
 
               <div className="intake-story-field">
-                <span>태어난 시간</span>
+                <div className="intake-story-field-head">
+                  <span>태어난 시간</span>
+                  <button
+                    type="button"
+                    className="intake-story-mini-check"
+                    aria-pressed={formData.isUnknownTime}
+                    onClick={toggleUnknownBirthTime}
+                  >
+                    <span className={formData.isUnknownTime ? 'intake-story-mini-box checked' : 'intake-story-mini-box'}>
+                      <Check size={11} />
+                    </span>
+                    <small>시간 모름</small>
+                  </button>
+                </div>
                 <div className="intake-story-select-wrap">
                   <select value={getBirthTimeSelectValue(formData)} onChange={(event) => updateBirthTime(event.target.value)}>
                     <option value="">태어난 시간 선택</option>
-                    {birthTimeOptions.map((option) => (
+                    {birthTimeOptions.filter((option) => option.value !== 'unknown').map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -487,6 +547,65 @@ export default function Form() {
           {step === 2 ? (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
+                <strong>현재 관계 상태를 알려주세요</strong>
+                <p>연애중인지, 솔로인지, 기혼인지에 따라 연애운과 결혼운의 해석 기준이 더 선명해집니다.</p>
+              </div>
+
+              <article className="intake-story-question-card">
+                <div className="intake-story-question-head">
+                  <strong>현재 상태</strong>
+                  <span className="intake-story-order-badge">LOVE</span>
+                </div>
+                <div className="intake-relationship-grid">
+                  {relationshipStatusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={
+                        formData.relationshipStatus === option.value
+                          ? 'intake-relationship-card active'
+                          : 'intake-relationship-card'
+                      }
+                      onClick={() => updateField('relationshipStatus', option.value)}
+                    >
+                      <strong>{option.label}</strong>
+                      <span>{option.body}</span>
+                    </button>
+                  ))}
+                </div>
+              </article>
+
+              <article className="intake-story-question-card">
+                <div className="intake-story-question-head">
+                  <strong>기간은 얼마나 되나요?</strong>
+                  <span className="intake-story-order-badge">PERIOD</span>
+                </div>
+                <div className="intake-relationship-duration-grid">
+                  {relationshipDurationOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={
+                        formData.relationshipDuration === option.value
+                          ? 'intake-duration-chip active'
+                          : 'intake-duration-chip'
+                      }
+                      onClick={() => updateField('relationshipDuration', option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="intake-story-caption">
+                  솔로라면 솔로 기간, 연애중/기혼이라면 현재 관계가 이어진 기간으로 선택해 주세요.
+                </p>
+              </article>
+            </div>
+          ) : null}
+
+          {step === 3 ? (
+            <div className="intake-story-form-stack">
+              <div className="intake-story-question-copy">
                 <strong>첫 번째 질문을 적어주세요</strong>
                 <p>가장 시급하거나 가장 궁금한 고민을 먼저 적으면 결과 리포트에서 첫 번째 맞춤 답변 카드로 분석됩니다.</p>
               </div>
@@ -517,7 +636,7 @@ export default function Form() {
             </div>
           ) : null}
 
-          {step === 3 ? (
+          {step === 4 ? (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>두 번째 질문도 적어주세요</strong>
@@ -577,9 +696,14 @@ export default function Form() {
               type="button"
               className="intake-story-primary"
               onClick={handleNext}
-              disabled={(step === 1 && !step1Ready) || (step === 2 && !step2Ready) || (step === 3 && !step3Ready)}
+              disabled={
+                (step === 1 && !step1Ready) ||
+                (step === 2 && !step2Ready) ||
+                (step === 3 && !step3Ready) ||
+                (step === 4 && !step4Ready)
+              }
             >
-              {step === 3 ? (isYearlyFlow ? '결제하고 신년운세 보기' : '결제 정보 확인') : '다음으로'}
+              {step === 4 ? (isYearlyFlow ? '결제하고 신년운세 보기' : '결제 정보 확인') : '다음으로'}
             </button>
           </footer>
         </section>
