@@ -223,20 +223,6 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
           </div>
         ))}
       </div>
-      <div className="premium-element-table" aria-label="오행 비율 해석">
-        <div>
-          <span>오행</span>
-          <span>비율</span>
-          <span>해석</span>
-        </div>
-        {report.fiveElements.map((item) => (
-          <div key={`${item.label}-row`}>
-            <strong>{item.label}</strong>
-            <span>{Math.round((item.value / totalValue) * 100)}%</span>
-            <em>{getElementReading(item.value)}</em>
-          </div>
-        ))}
-      </div>
     </article>
   );
 }
