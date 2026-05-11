@@ -39,7 +39,7 @@ export default function Detail() {
   const tabOrigin = locationState?.tabOrigin || '/';
   const isQuickContentFlow = tabOrigin === '/test' || tabOrigin === '/tarot';
 
-  if (!isQuickContentFlow) {
+  if (!isQuickContentFlow && locationState?.tabOrigin) {
     return <Navigate to={`/form/${service.id}`} state={{ tabOrigin }} replace />;
   }
 

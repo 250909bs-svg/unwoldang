@@ -1,0 +1,20 @@
+{
+  "name": "운월당",
+  "short_name": "운월당",
+  "description": "사주, 종합사주, 신년운세, 연애운, 결혼운, 재회운을 제공하는 프리미엄 운세 리포트 서비스",
+  "lang": "ko-KR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3ede3",
+  "theme_color": "#f3ede3",
+  "icons": [
+    {
+      "src": "/tarot-lucky-amulet.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "entertainment"]
+}

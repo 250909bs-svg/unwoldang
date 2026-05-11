@@ -18,6 +18,7 @@ import LegalPage from './pages/LegalPage';
 import { buildHashCallbackLocation } from './lib/auth';
 import BottomTabBar from './components/BottomTabBar';
 import Footer from './components/Footer';
+import Seo from './components/Seo';
 
 const callbackHashLocation = buildHashCallbackLocation();
 
@@ -28,6 +29,7 @@ if (callbackHashLocation) {
 function AppRoutes() {
   return (
     <>
+      <Seo />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/menu" element={<Menu />} />

@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /form/
+Disallow: /checkout
+Disallow: /loading
+Disallow: /report/
+Disallow: /login
+Disallow: /my
+Disallow: /auth/
+Disallow: /payment/
+
+Sitemap: https://unwoldang.com/sitemap.xml

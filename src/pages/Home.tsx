@@ -368,6 +368,26 @@ export default function Home() {
             );
           })}
         </section>
+
+        <section className="home-seo-panel" aria-labelledby="home-seo-title">
+          <span className="home-seo-eyebrow">UNWOLDANG PREMIUM SAJU</span>
+          <h1 id="home-seo-title">운월당 사주, 종합사주부터 신년운세와 연애운까지</h1>
+          <p>
+            운월당은 사주 원국과 대운, 세운의 흐름을 바탕으로 종합사주, 신년운세, 연애운, 결혼운,
+            재회운, 궁합을 읽는 프리미엄 리포트 서비스입니다. 단순한 오늘의 운세가 아니라 현재
+            고민과 앞으로의 선택 기준을 함께 정리해 고객이 다시 읽고 싶은 결과지를 만드는 것을
+            목표로 합니다.
+          </p>
+          <div className="home-seo-keywords" aria-label="운월당 주요 검색어">
+            <Link to="/detail/general-signature">종합사주</Link>
+            <Link to="/detail/life-flow">신년운세</Link>
+            <Link to="/detail/love-reading">연애운</Link>
+            <Link to="/detail/marriage-blueprint">결혼운</Link>
+            <Link to="/detail/love-reunion">재회운</Link>
+            <Link to="/detail/match-couple">사주궁합</Link>
+            <Link to="/tarot">타로</Link>
+          </div>
+        </section>
       </div>
     </main>
   );
