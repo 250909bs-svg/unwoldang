@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { Download, Flag, Share2, ShieldCheck, User } from 'lucide-react';
+import { Download, Share2, User } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { clearPendingPayment } from '../lib/auth';
@@ -1262,9 +1262,8 @@ export default function Report() {
         <article className={isYearlyShowcase ? 'premium-report-paper yearly-report-paper' : 'premium-report-paper'}>
           <section className={isYearlyShowcase ? 'premium-report-cover yearly-report-cover' : 'premium-report-cover'}>
             <h1>
-              {report.customerName} {report.title.replace('프리미엄 ', '')}
+              {report.customerName} 종합사주 리포트
             </h1>
-            <p className="premium-report-subtitle">입력한 사주 정보와 질문을 기준으로 정리한 운월당 개인 감정서입니다.</p>
 
             {isYearlyShowcase && yearlyLead ? (
               <div className="yearly-report-orbit">
@@ -1287,32 +1286,6 @@ export default function Report() {
             ) : null}
 
           </section>
-
-          <section className="premium-report-section premium-trust-strip" aria-label="리포트 신뢰 기준">
-            <article>
-              <ShieldCheck size={18} />
-              <div>
-                <strong>계산값 고정</strong>
-                <p>원국, 오행, 십성, 대운 값은 입력값 기준으로 먼저 계산하고 해석문과 분리해 검증합니다.</p>
-              </div>
-            </article>
-            <article>
-              <ShieldCheck size={18} />
-              <div>
-                <strong>위험한 단정 금지</strong>
-                <p>질병, 투자, 법률, 결혼 확정일처럼 삶을 크게 흔드는 사건은 확정적으로 말하지 않습니다.</p>
-              </div>
-            </article>
-            <article>
-              <Flag size={18} />
-              <div>
-                <strong>오타·불일치 신고</strong>
-                <p>이상한 표현이나 맞지 않는 내용은 신고하면 다음 개선에 반영할 수 있습니다.</p>
-              </div>
-            </article>
-          </section>
-
-          <div className="premium-divider" />
 
           {isYearlyShowcase ? (
             <>
