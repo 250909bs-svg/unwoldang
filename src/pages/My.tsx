@@ -1,7 +1,8 @@
 import { ChevronRight, LogOut, Menu, MessageCircle, ScrollText, Sparkles } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { buildKakaoAuthorizeUrl } from '../lib/auth';
 import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
 
 type ReplayPromo = {
@@ -73,6 +74,21 @@ function MyReplayHeader() {
 }
 
 function LoggedOutReplay() {
+  const navigate = useNavigate();
+  const { loginDemo } = useAuth();
+
+  const handleKakaoLogin = () => {
+    const authorizeUrl = buildKakaoAuthorizeUrl('/my');
+
+    if (!authorizeUrl) {
+      loginDemo('카카오 회원');
+      navigate('/my', { replace: true });
+      return;
+    }
+
+    window.location.href = authorizeUrl;
+  };
+
   return (
     <main className="my-replay-page my-replay-login-page">
       <MyReplayHeader />
@@ -83,10 +99,10 @@ function LoggedOutReplay() {
         </div>
 
         <div className="my-login-benefit-card">
-          <Link to="/login" state={{ returnTo: '/my' }} className="my-kakao-button">
+          <button type="button" className="my-kakao-button" onClick={handleKakaoLogin}>
             <MessageCircle size={17} fill="currentColor" />
             카카오로 로그인/가입
-          </Link>
+          </button>
         </div>
       </section>
     </main>
