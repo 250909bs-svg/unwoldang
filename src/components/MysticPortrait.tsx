@@ -34,7 +34,7 @@ const variantConfig: Record<
 > = {
   general: { hair: '#121824', robe: '#31486c', robeDark: '#1b2137', symbol: '#f6d59c', glow: '#efd8ba', gem: '#d3a16c', sleeve: '#a86f54' },
   newyear: { hair: '#102337', robe: '#2f7487', robeDark: '#17314a', symbol: '#e9f6fb', glow: '#7dc7de', gem: '#faf0bf', sleeve: '#5ca5c1' },
-  love: { hair: '#241726', robe: '#8f4260', robeDark: '#391f31', symbol: '#f8b4c8', glow: '#e287a0', gem: '#ffd4de', sleeve: '#d66d86' },
+  love: { hair: '#24211f', robe: '#8a7258', robeDark: '#3b3128', symbol: '#efe4d2', glow: '#c9b38f', gem: '#f4eadb', sleeve: '#a89576' },
   compatibility: { hair: '#172544', robe: '#5867a7', robeDark: '#212d54', symbol: '#ffd9ef', glow: '#91a3ec', gem: '#d9e4ff', sleeve: '#7a88cb' },
   wealth: { hair: '#272111', robe: '#816427', robeDark: '#382a10', symbol: '#ffe58a', glow: '#d7be58', gem: '#fff4c6', sleeve: '#b38c3f' },
   career: { hair: '#122031', robe: '#315777', robeDark: '#172b40', symbol: '#bfdeed', glow: '#7ba6c0', gem: '#edf8ff', sleeve: '#5d87a5' },

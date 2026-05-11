@@ -11394,24 +11394,24 @@ body {
 
 .love-reading-video-flow-page {
   background:
-    radial-gradient(circle at top, rgba(255, 120, 170, 0.16), transparent 30%),
-    linear-gradient(180deg, #161319 0%, #1d1820 100%);
+    radial-gradient(circle at top, rgba(218, 197, 166, 0.18), transparent 32%),
+    linear-gradient(180deg, #121418 0%, #1b1d20 100%);
 }
 
 .love-reading-video-flow-page .intake-story-shade {
   background:
-    linear-gradient(180deg, rgba(18, 13, 18, 0.05) 0%, rgba(18, 13, 18, 0.1) 18%, rgba(18, 13, 18, 0.3) 44%, rgba(18, 13, 18, 0.84) 100%),
-    radial-gradient(circle at top, rgba(255, 110, 165, 0.12), transparent 34%);
+    linear-gradient(180deg, rgba(18, 18, 17, 0.04) 0%, rgba(18, 18, 17, 0.1) 18%, rgba(18, 18, 17, 0.32) 44%, rgba(18, 18, 17, 0.86) 100%),
+    radial-gradient(circle at top, rgba(218, 197, 166, 0.13), transparent 36%);
 }
 
 .love-reading-video-flow-page .intake-story-brand-mark {
-  background: linear-gradient(135deg, #ff6f94 0%, #e53c73 100%);
-  box-shadow: 0 14px 28px rgba(229, 60, 115, 0.28);
+  background: linear-gradient(135deg, #8a7258 0%, #30352f 100%);
+  box-shadow: 0 14px 28px rgba(48, 53, 47, 0.28);
 }
 
 .love-reading-video-flow-page .intake-story-primary {
-  background: linear-gradient(180deg, #ff6a96 0%, #e6376f 100%);
-  box-shadow: 0 16px 30px rgba(230, 55, 111, 0.3);
+  background: linear-gradient(180deg, #3d423b 0%, #171a17 100%);
+  box-shadow: 0 16px 30px rgba(24, 29, 24, 0.3);
 }
 
 .my-replay-page {
@@ -12329,22 +12329,22 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 16% 0%, rgba(255, 135, 170, 0.16), transparent 30%),
-    radial-gradient(circle at 90% 10%, rgba(197, 155, 255, 0.14), transparent 28%),
-    linear-gradient(180deg, #fff8f8 0%, #fffdf8 42%, #fffaf2 100%) !important;
+    radial-gradient(circle at 16% 0%, rgba(192, 169, 139, 0.14), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(121, 142, 124, 0.12), transparent 28%),
+    linear-gradient(180deg, #fffdf9 0%, #fbfaf6 45%, #f7f2ea 100%) !important;
 }
 
 .premium-love-section .premium-section-index {
-  background: linear-gradient(135deg, #ff678e 0%, #a970ff 100%);
-  box-shadow: 0 10px 22px rgba(226, 84, 137, 0.22);
+  background: linear-gradient(135deg, #8a7258 0%, #30352f 100%);
+  box-shadow: 0 10px 22px rgba(83, 71, 55, 0.18);
 }
 
 .premium-love-section .premium-callout {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(222, 103, 146, 0.15);
+  border: 1px solid rgba(150, 125, 92, 0.16);
   background:
-    linear-gradient(135deg, rgba(255, 244, 249, 0.98), rgba(247, 239, 255, 0.95)),
+    linear-gradient(135deg, rgba(255, 252, 247, 0.98), rgba(244, 241, 234, 0.96)),
     #fff;
 }
 
@@ -12356,7 +12356,7 @@ body {
   width: 130px;
   height: 130px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 112, 151, 0.2), transparent 68%);
+  background: radial-gradient(circle, rgba(196, 173, 134, 0.18), transparent 68%);
   pointer-events: none;
 }
 
@@ -12372,12 +12372,12 @@ body {
   min-height: 190px;
   padding: 18px 16px 16px;
   overflow: hidden;
-  border: 1px solid rgba(218, 116, 148, 0.14);
+  border: 1px solid rgba(150, 125, 92, 0.14);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 250, 0.96)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 247, 240, 0.96)),
     #fff;
   box-shadow:
-    0 14px 28px rgba(87, 54, 70, 0.07),
+    0 14px 28px rgba(69, 61, 49, 0.07),
     inset 0 0 0 1px rgba(255, 255, 255, 0.76);
 }
 
@@ -12388,7 +12388,7 @@ body {
   inset: 0 auto auto 0;
   width: 5px;
   height: 100%;
-  background: linear-gradient(180deg, #ff6d9b, #b987ff);
+  background: linear-gradient(180deg, #8a7258, #6f8a72);
 }
 
 .premium-love-card::after {
@@ -12400,7 +12400,7 @@ body {
   height: 112px;
   border-radius: 999px;
   background:
-    radial-gradient(circle, rgba(255, 221, 235, 0.9), rgba(198, 164, 255, 0.18) 52%, transparent 70%);
+    radial-gradient(circle, rgba(239, 228, 210, 0.9), rgba(122, 148, 126, 0.16) 52%, transparent 70%);
   pointer-events: none;
 }
 
@@ -12411,7 +12411,7 @@ body {
   align-items: center;
   gap: 8px;
   margin-bottom: 9px;
-  color: #2b2430;
+  color: #2a2b27;
   font-size: 14px;
   line-height: 1.35;
 }
@@ -12422,14 +12422,14 @@ body {
   width: 9px;
   height: 9px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff6d9b, #a970ff);
-  box-shadow: 0 0 0 5px rgba(255, 109, 155, 0.1);
+  background: linear-gradient(135deg, #8a7258, #6f8a72);
+  box-shadow: 0 0 0 5px rgba(138, 114, 88, 0.1);
 }
 
 .premium-love-card p {
   position: relative;
   z-index: 1;
-  color: #4a3e49;
+  color: #3f443d;
   font-size: 13.5px;
   line-height: 1.72;
 }
@@ -12438,17 +12438,17 @@ body {
   position: relative;
   z-index: 1;
   margin-top: 14px;
-  background: rgba(255, 237, 245, 0.9);
-  color: #a13f67;
-  border-color: rgba(220, 95, 139, 0.16);
+  background: rgba(246, 241, 232, 0.92);
+  color: #6f573a;
+  border-color: rgba(138, 114, 88, 0.18);
 }
 
 .premium-love-section .premium-accordion {
-  border-color: rgba(218, 116, 148, 0.14);
+  border-color: rgba(150, 125, 92, 0.14);
 }
 
 .premium-love-section .premium-accordion summary {
-  background: linear-gradient(90deg, #fff 0%, #fff7fb 100%);
+  background: linear-gradient(90deg, #fff 0%, #faf6ee 100%);
 }
 
 .premium-report-character {

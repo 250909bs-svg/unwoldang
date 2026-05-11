@@ -28,7 +28,7 @@ const renderDecoration = (variant: SceneVariant) => {
     case 'newyear':
       return <path d="M486 86L497 52L508 86L542 94L516 114L523 149L497 130L471 149L478 114L452 94L486 86Z" fill="#f6e8a9" opacity="0.95" />;
     case 'love':
-      return <path d="M498 112C515 88 547 92 552 118C558 147 525 165 498 192C471 165 438 147 444 118C449 92 481 88 498 112Z" fill="#f6abc1" opacity="0.88" />;
+      return <path d="M498 112C515 88 547 92 552 118C558 147 525 165 498 192C471 165 438 147 444 118C449 92 481 88 498 112Z" fill="#d8bfa2" opacity="0.88" />;
     case 'compatibility':
       return (
         <>
@@ -56,7 +56,7 @@ export default function IllustratedScene({
 }: IllustratedSceneProps) {
   const foreground =
     variant === 'love'
-      ? '#311c2b'
+      ? '#2d2a26'
       : variant === 'newyear'
         ? '#17394b'
         : variant === 'compatibility'

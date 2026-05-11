@@ -25,7 +25,7 @@ const replayPromos: ReplayPromo[] = [
     subtitle: '올해 내 연애 흐름은?',
     image: '/intake-blossom-girl.png',
     to: '/form/love-reading',
-    tone: '#ff5c9a'
+    tone: '#8a7258'
   },
   {
     title: '재회비책',

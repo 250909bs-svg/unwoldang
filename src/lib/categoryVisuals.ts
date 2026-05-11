@@ -30,8 +30,8 @@ export const categoryVisuals: Record<ServiceCategoryId, CategoryVisual> = {
   },
   love: {
     icon: Heart,
-    tint: '#fce8ed',
-    accent: '#d8607f',
+    tint: '#f8f3ea',
+    accent: '#8a7258',
     note: '썸·재회'
   },
   compatibility: {
