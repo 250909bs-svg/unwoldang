@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { User } from 'lucide-react';
+import { Download, Flag, Share2, ShieldCheck, User } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { clearPendingPayment } from '../lib/auth';
@@ -855,6 +855,29 @@ export default function Report() {
     document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const handlePrintReport = () => {
+    window.print();
+  };
+
+  const handleShareReport = async () => {
+    if (navigator.share) {
+      await navigator.share({
+        title: `${report.customerName} ${report.title}`,
+        text: '운월당 사주 리포트',
+        url: window.location.href
+      });
+      return;
+    }
+
+    await navigator.clipboard?.writeText(window.location.href);
+  };
+
+  const issueMailHref = `mailto:250909bs@gmail.com?subject=${encodeURIComponent(
+    `[운월당 리포트 신고] ${report.serialNumber}`
+  )}&body=${encodeURIComponent(
+    `리포트 번호: ${report.serialNumber}\n상품: ${report.title}\n이름: ${report.customerName}\n\n오타/불일치/개선이 필요한 부분을 적어주세요.\n`
+  )}`;
+
   return (
     <main className={isYearlyShowcase ? 'premium-report-page yearly-premium-page' : 'premium-report-page'}>
       <header className="premium-report-topbar">
@@ -864,6 +887,12 @@ export default function Report() {
           </Link>
 
           <div className="premium-report-top-actions">
+            <button type="button" className="premium-icon-action" aria-label="리포트 공유" onClick={handleShareReport}>
+              <Share2 size={16} />
+            </button>
+            <button type="button" className="premium-icon-action" aria-label="PDF로 저장" onClick={handlePrintReport}>
+              <Download size={16} />
+            </button>
             <Link to="/my" className="app-profile-button" aria-label="마이페이지">
               <User size={17} strokeWidth={2.2} />
             </Link>
@@ -899,6 +928,30 @@ export default function Report() {
               </div>
             ) : null}
 
+          </section>
+
+          <section className="premium-report-section premium-trust-strip" aria-label="리포트 신뢰 기준">
+            <article>
+              <ShieldCheck size={18} />
+              <div>
+                <strong>계산값 고정</strong>
+                <p>원국, 오행, 십성, 대운 값은 입력값 기준으로 먼저 계산하고 해석문과 분리해 검증합니다.</p>
+              </div>
+            </article>
+            <article>
+              <ShieldCheck size={18} />
+              <div>
+                <strong>위험한 단정 금지</strong>
+                <p>질병, 투자, 법률, 결혼 확정일처럼 삶을 크게 흔드는 사건은 확정적으로 말하지 않습니다.</p>
+              </div>
+            </article>
+            <article>
+              <Flag size={18} />
+              <div>
+                <strong>오타·불일치 신고</strong>
+                <p>이상한 표현이나 맞지 않는 내용은 신고하면 다음 개선에 반영할 수 있습니다.</p>
+              </div>
+            </article>
           </section>
 
           <div className="premium-divider" />
@@ -1174,6 +1227,16 @@ export default function Report() {
                   <p>{item}</p>
                 </article>
               ))}
+            </div>
+
+            <div className="premium-report-support-card">
+              <div>
+                <strong>결과가 이상하거나 오타가 있나요?</strong>
+                <p>리포트 번호와 함께 보내주시면 검수 기준에 따라 개선할 수 있습니다.</p>
+              </div>
+              <a href={issueMailHref} className="app-black-button">
+                오타·불일치 신고
+              </a>
             </div>
           </section>
 
