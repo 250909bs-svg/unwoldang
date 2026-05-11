@@ -83,7 +83,7 @@ function LoggedOutReplay() {
         </div>
 
         <div className="my-login-benefit-card">
-          <Link to="/login" className="my-kakao-button">
+          <Link to="/login" state={{ returnTo: '/my' }} className="my-kakao-button">
             <MessageCircle size={17} fill="currentColor" />
             카카오로 로그인/가입
           </Link>

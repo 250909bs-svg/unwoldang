@@ -3010,8 +3010,13 @@ body {
 }
 
 .login-kakao-main-button:hover {
-  transform: translateY(-1px);
+  transform: none;
   box-shadow: 0 17px 30px rgba(209, 177, 0, 0.24);
+}
+
+.login-kakao-main-button:active,
+.my-kakao-button:active {
+  transform: none;
 }
 
 .mobile-page-content {

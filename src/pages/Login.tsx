@@ -16,7 +16,7 @@ export default function Login() {
 
   const returnTo = useMemo(() => {
     const state = (location.state as LoginLocationState) || {};
-    return state.returnTo || '/menu';
+    return state.returnTo || '/my';
   }, [location.state]);
 
   const tabOrigin = useMemo(() => {
