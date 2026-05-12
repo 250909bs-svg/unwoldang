@@ -1,6 +1,7 @@
 export const serviceIds = [
   'general-signature',
   'life-flow',
+  'concern-reading',
   'love-reading',
   'love-reunion',
   'match-couple',
@@ -181,6 +182,25 @@ export const serviceCatalog: ServiceDefinition[] = [
     bullets: ['상승 구간 체크', '전환기 분석', '기회가 오는 시점', '결정이 필요한 순간 안내'],
     process: ['기간별 흐름 분리', '좋은 타이밍 추출', '주의 구간 정리', '실행 우선순위 제안'],
     output: ['상승 타이밍 카드', '기간별 분석 노트', '실전 선택 가이드', '질문 맞춤 코멘트']
+  },
+  {
+    id: 'concern-reading',
+    category: 'general',
+    label: '운월당 고민풀이',
+    advisor: '운월선생',
+    subtitle: '사주 구조, 십성, 신살, 대운과 세운을 바탕으로 지금의 고민을 현실 언어로 풀어주는 2,900원 입문 리포트',
+    teaser: '왜 마음이 지치고 관계와 돈, 일의 선택이 꼬이는지 사주 구조로 짚어주는 고민풀이입니다.',
+    description:
+      '종합사주 전체를 길게 펼치기 전, 지금 가장 크게 걸려 있는 고민을 빠르게 정리하는 리포트입니다. 생년월일시를 천간지지로 변환해 원국과 십성, 귀인, 매력살, 합충형해파, 대운과 세운을 확인하고 연애, 재물, 직업, 인간관계 고민을 행동 조언까지 연결합니다.',
+    price: '2,900원',
+    accent: '#7b8fb8',
+    theme: 'newyear',
+    heroTag: 'CONCERN',
+    badge: '고민풀이',
+    spotlight: '사주 근거와 심리 체감, 행동 가이드를 한 번에 보는 2,900원 고민풀이',
+    bullets: ['사주 기본 구조 분석', '십성·신살·합충형해파 확인', '감정 상태와 인간관계 패턴', '고민별 행동 처방전'],
+    process: ['천간지지 원국 확인', '십성 분포와 신강/신약 점검', '대운·세운·월운 흐름 분석', '연애·재물·직업 고민별 정리'],
+    output: ['고민풀이 리포트', '감정 상태 분석', '올해 피해야 할 것 TOP3', '사주 처방전']
   },
   {
     id: 'love-reading',

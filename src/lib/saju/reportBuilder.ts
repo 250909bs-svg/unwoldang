@@ -51,6 +51,7 @@ const KIND_META: Record<ReportKind, { title: string; subtitle: string; badge: st
 const KIND_BY_SERVICE: Partial<Record<ServiceId, ReportKind>> = {
   'general-signature': 'comprehensive',
   'life-flow': 'yearly',
+  'concern-reading': 'comprehensive',
   'love-reading': 'love',
   'love-reunion': 'reunion',
   'marriage-blueprint': 'marriage',

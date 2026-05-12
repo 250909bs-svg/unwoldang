@@ -23,6 +23,7 @@ const illustrationDeck = {
 const mainCategories = [
   { target: 'general-signature', label: '종합사주', icon: ScrollText, tint: '#fff6df' },
   { target: 'life-flow', label: '신년운세', icon: Sparkles, tint: '#f4efff' },
+  { target: 'concern-reading', label: '고민풀이', icon: Sparkles, tint: '#eef7ff' },
   { target: 'love-reading', label: '연애운', icon: Heart, tint: '#fff0f5' },
   { target: 'marriage-blueprint', label: '결혼운', icon: Sparkles, tint: '#fff6f0' },
   { target: 'love-reunion', label: '재회운', icon: Heart, tint: '#fff6f8' },

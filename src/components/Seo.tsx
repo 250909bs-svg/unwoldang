@@ -64,6 +64,12 @@ const routeSeo: Record<string, RouteSeo> = {
     keywords: '신년운세, 2026년 운세, 올해 운세, 인생 흐름, 대운 분석',
     image: '/intake-lantern-night.png'
   },
+  '/detail/concern-reading': {
+    title: '고민풀이 사주 리포트 | 운월당 2,900원 사주 고민 분석',
+    description: '사주 구조, 십성, 신살, 대운과 세운으로 지금의 고민을 감정 상태, 인간관계, 돈, 일 스타일, 행동 처방전까지 정리합니다.',
+    keywords: '고민풀이, 사주 고민, 신년운세 고민풀이, 십성 분석, 신살 분석, 운월당 고민풀이',
+    image: '/intake-lantern-night.png'
+  },
   '/detail/love-reading': {
     title: '연애운 리포트 | 운월당 인연·감정 흐름 분석',
     description: '내가 끌리는 사람, 오래 가는 인연, 연애 패턴과 만남의 흐름을 정리하는 운월당 연애운 리포트입니다.',
@@ -114,6 +120,7 @@ const routeSeo: Record<string, RouteSeo> = {
 Object.assign(routeSeo, {
   '/form/general-signature': routeSeo['/detail/general-signature'],
   '/form/life-flow': routeSeo['/detail/life-flow'],
+  '/form/concern-reading': routeSeo['/detail/concern-reading'],
   '/form/love-reading': routeSeo['/detail/love-reading'],
   '/form/love-reunion': routeSeo['/detail/love-reunion'],
   '/form/match-couple': routeSeo['/detail/match-couple'],
