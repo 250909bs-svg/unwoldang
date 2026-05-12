@@ -2,7 +2,6 @@ import { Check, ChevronDown, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { type IntakeFormData, findServiceById } from '../api/mockData';
-import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { useAuth } from '../context/AuthContext';
 
 const initialState: IntakeFormData = {
@@ -270,7 +269,6 @@ export default function Form() {
   const isLoveReadingFlow = service.id === 'love-reading';
   const isCinematicFlow = isSignatureFlow || isLoveReadingFlow;
   const activeVisual = (isYearlyFlow ? yearlyStepVisuals : stepVisuals)[step];
-  const analysisPayload = useMemo(() => buildAnalysisRequestPayload(service.id, formData), [formData, service.id]);
   const _yearlySceneCopyDraft = {
     1: {
       kicker: 'YEARLY FLOW',
@@ -664,25 +662,6 @@ export default function Form() {
                       {item}
                     </button>
                   ))}
-                </div>
-              </article>
-
-              <article className="intake-story-context-card">
-                <div className="intake-story-context-grid">
-                  <article>
-                    <span>기본 정보</span>
-                    <strong>
-                      {formData.name || '미입력'} / {birthDateReady ? formData.birthDate : '생년월일 확인 필요'}
-                    </strong>
-                  </article>
-                  <article>
-                    <span>태어난 시간</span>
-                    <strong>{formData.isUnknownTime ? '시간 모름' : formData.birthTime || '선택 필요'}</strong>
-                  </article>
-                  <article>
-                    <span>GPT 분석 준비</span>
-                    <strong>{analysisPayload.questions.length}개 질문 전달</strong>
-                  </article>
                 </div>
               </article>
             </div>

@@ -263,10 +263,6 @@ export default function Loading() {
               </div>
               <strong>{progress}%</strong>
             </div>
-
-            <p className="saju-loading-meta">
-              {orderId || '임시주문'} · {paymentMethod || 'demo'} · {hasAiEndpoint ? '프리미엄 분석 연결' : '내부 분석 생성'}
-            </p>
           </div>
         </section>
       </div>
