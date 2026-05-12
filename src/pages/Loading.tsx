@@ -4,6 +4,7 @@ import { findServiceById, type IntakeFormData, type ServiceId } from '../api/moc
 import MobileTopBar from '../components/MobileTopBar';
 import { readPendingPayment } from '../lib/auth';
 import { getAiReportEndpoint, requestAiReport } from '../lib/aiReport';
+import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
 
 type LoadingLocationState = {
@@ -16,6 +17,28 @@ type LoadingLocationState = {
 };
 
 const LOADING_FALLBACK_TIMEOUT_MS = 28000;
+
+const LOADING_PILLARS = [
+  { key: 'hour', label: '시주' },
+  { key: 'day', label: '일주' },
+  { key: 'month', label: '월주' },
+  { key: 'year', label: '년주' }
+] as const;
+
+const LOADING_PHASES = ['원국 계산', '오행 균형', '질문 해석', '리포트 완성'];
+
+const LOADING_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
+  name: '운월당',
+  gender: 'female',
+  calendar: 'solar',
+  isLeapMonth: false,
+  birthDate: '1992-09-09',
+  birthTime: '10:24',
+  isUnknownTime: false,
+  relationshipStatus: 'single',
+  q1: '올해 가장 크게 들어오는 기회는 어느 쪽인가요?',
+  q2: '재물운과 직업운 중 어떤 쪽에 집중해야 하나요?'
+};
 
 export default function Loading() {
   const navigate = useNavigate();
@@ -34,6 +57,22 @@ export default function Loading() {
   const [analysisFinished, setAnalysisFinished] = useState(false);
   const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
   const hasAiEndpoint = Boolean(getAiReportEndpoint());
+  const previewReport = useMemo(() => {
+    if (reportData) {
+      return reportData;
+    }
+
+    if (!product) {
+      return null;
+    }
+
+    try {
+      return buildSajuReport(product || service.id, formData || LOADING_PREVIEW_FORM_DATA);
+    } catch {
+      return null;
+    }
+  }, [formData, product, reportData, service.id]);
+  const elementTotal = Math.max(previewReport?.fiveElements.reduce((sum, item) => sum + item.value, 0) || 0, 1);
 
   const messages = useMemo(
     () =>
@@ -161,20 +200,73 @@ export default function Loading() {
         <MobileTopBar title="리포트 생성 중" backTo="/" backLabel="홈" />
 
         <section className="mobile-page-content centered">
-          <div className="mobile-loading-card">
-            <span className="mobile-chip">GENERATING REPORT</span>
-            <h1>{messages[messageIndex]}</h1>
-            <p>
-              주문번호 {orderId || '임시주문'} / 결제수단 {paymentMethod || 'demo'} 기준으로 결과 리포트를 생성하고 있습니다.
-              {hasAiEndpoint
-                ? ' 연결된 AI 결과 API로 프리미엄 분석 요청을 보내는 중입니다.'
-                : ' 아직 AI API가 연결되지 않아 내부 생성 로직으로 먼저 처리합니다.'}
-            </p>
-            {analysisNotice ? <p className="mobile-loading-notice">{analysisNotice}</p> : null}
-            <div className="progress-track">
-              <span style={{ width: `${progress}%` }} />
+          <div className="mobile-loading-card saju-loading-card">
+            <div className="saju-loading-head">
+              <span className="mobile-chip">운월당 사주 원국 분석</span>
+              <h1>{messages[messageIndex]}</h1>
             </div>
-            <strong>{progress}%</strong>
+
+            {previewReport ? (
+              <div className="saju-loading-board" aria-label="사주 원국 미리보기">
+                <div className="saju-loading-board-head">
+                  <span>{previewReport.customerName}</span>
+                  <strong>사주 원국</strong>
+                </div>
+                <div className="saju-loading-pillars">
+                  {LOADING_PILLARS.map((item) => {
+                    const value = previewReport.pillars[item.key] || '미상';
+
+                    return (
+                      <article key={item.key}>
+                        <span>{item.label}</span>
+                        <strong>{value}</strong>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {previewReport ? (
+              <div className="saju-loading-elements" aria-label="오행 분포">
+                <div className="saju-loading-elements-head">
+                  <span>오행 분포</span>
+                  <strong>{previewReport.dayMaster} 일간</strong>
+                </div>
+                <div className="saju-loading-element-list">
+                  {previewReport.fiveElements.map((item) => (
+                    <div key={item.label} className={item.value === 0 ? 'empty' : undefined}>
+                      <span>{item.label}</span>
+                      <div className="saju-loading-element-track">
+                        <em style={{ width: `${Math.max(7, (item.value / elementTotal) * 100)}%`, background: item.color }} />
+                      </div>
+                      <strong>{Math.round((item.value / elementTotal) * 100)}%</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="saju-loading-phases" aria-label="분석 진행 단계">
+              {LOADING_PHASES.map((phase, index) => (
+                <span key={phase} className={progress >= (index + 1) * 24 ? 'active' : undefined}>
+                  {phase}
+                </span>
+              ))}
+            </div>
+
+            {analysisNotice ? <p className="mobile-loading-notice">{analysisNotice}</p> : null}
+
+            <div className="saju-loading-progress">
+              <div className="progress-track">
+                <span style={{ width: `${progress}%` }} />
+              </div>
+              <strong>{progress}%</strong>
+            </div>
+
+            <p className="saju-loading-meta">
+              {orderId || '임시주문'} · {paymentMethod || 'demo'} · {hasAiEndpoint ? '프리미엄 분석 연결' : '내부 분석 생성'}
+            </p>
           </div>
         </section>
       </div>
