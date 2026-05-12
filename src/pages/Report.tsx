@@ -1071,6 +1071,106 @@ function hasConcernKeyword(text: string, keywords: string[]) {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+function asSentence(text?: string) {
+  const trimmed = (text || '').trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  return /[.!?。！？]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function hasFinalConsonant(text: string) {
+  const hangul = text.replace(/[^\uAC00-\uD7A3]/g, '');
+  const last = hangul[hangul.length - 1];
+
+  if (!last) {
+    return false;
+  }
+
+  return (last.charCodeAt(0) - 0xac00) % 28 !== 0;
+}
+
+function withObjectParticle(text: string) {
+  return `${text}${hasFinalConsonant(text) ? '을' : '를'}`;
+}
+
+function withTopicParticle(text: string) {
+  return `${text}${hasFinalConsonant(text) ? '은' : '는'}`;
+}
+
+function formatElementList(elements: string[]) {
+  return Array.from(new Set(elements.filter(Boolean))).join('·');
+}
+
+function buildConcernCautionLabel(elements: string[]) {
+  const unique = Array.from(new Set(elements.filter(Boolean)));
+  const speedElements = unique.filter((element) => element !== '목');
+  const labels: string[] = [];
+
+  if (speedElements.length) {
+    labels.push(`${formatElementList(speedElements)} 과속 조절`);
+  }
+
+  if (unique.includes('목')) {
+    labels.push('목은 보완하되 무리한 확장 주의');
+  }
+
+  return labels.join(', ') || '과속 흐름 조절';
+}
+
+function buildConcernCautionSentence(elements: string[]) {
+  const unique = Array.from(new Set(elements.filter(Boolean)));
+  const speedElements = unique.filter((element) => element !== '목');
+  const sentences: string[] = [];
+
+  if (speedElements.length) {
+    sentences.push(`${formatElementList(speedElements)} 기운이 강해질 때는 정보, 돈, 감정 반응의 속도를 기록으로 늦춰야 합니다.`);
+  }
+
+  if (unique.includes('목')) {
+    sentences.push('목은 부족하다고 밀어붙일 기운이 아니라, 관계 방향과 성장 계획을 천천히 세우는 방식으로 보완해야 합니다.');
+  }
+
+  return sentences.join(' ');
+}
+
+const CONCERN_YEAR_ROLES = [
+  {
+    title: '공개와 테스트',
+    body: '준비한 결과물을 작게 내보내고 반응을 확인하는 해입니다. 완성도를 끝없이 붙잡기보다, 고객이 실제로 어디에서 멈추고 어디에서 결제하는지 보는 쪽이 핵심입니다.'
+  },
+  {
+    title: '고객층 확장',
+    body: '소개, 반복 구매, 협업 제안이 늘어나는 흐름입니다. 바빠지는 것과 돈이 남는 것은 다르므로 응대 시간, 단가, 수정 범위를 먼저 나눠야 합니다.'
+  },
+  {
+    title: '구조 조정',
+    body: '잘 팔리는 것과 손이 많이 가는 것을 분리하는 해입니다. 새 메뉴를 늘리기보다 환불 기준, 마감 기준, 상담 흐름을 다시 짜야 피로가 줄어듭니다.'
+  },
+  {
+    title: '수익 모델 고정',
+    body: '반복 결제, 다시보기, 예약형 리포트처럼 돈이 남는 방식을 고정하는 흐름입니다. 가까운 사람 부탁이나 할인 요구에 가격표가 흔들리지 않게 해야 합니다.'
+  },
+  {
+    title: '재정비와 선택',
+    body: '계속 가져갈 일과 내려놓을 일을 나누는 시기입니다. 체력과 시간에 맞지 않는 관계나 상품을 정리해야 다음 주기의 기회가 들어올 자리가 생깁니다.'
+  }
+] as const;
+
+function buildConcernLifeCycleCards(report: SajuReportData): NonNullable<ReportSection['cards']> {
+  return report.yearLuck.slice(0, 5).map((item, index) => {
+    const role = CONCERN_YEAR_ROLES[index] || CONCERN_YEAR_ROLES[CONCERN_YEAR_ROLES.length - 1];
+
+    return {
+      title: `${item.year}년 · ${role.title}`,
+      body: `${getLuckPhase(item.score)} 역할로 읽습니다. ${role.body}`,
+      tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
+    };
+  });
+}
+
 function buildConcernDirectAnswer(
   qa: SajuReportData['questionAnswers'][number],
   index: number,
@@ -1089,11 +1189,11 @@ function buildConcernDirectAnswer(
     return {
       ...qa,
       title: `고민 ${index + 1} 결론: 일과 진로`,
-      analysis: `${report.customerName}님은 완전한 조직 순응형보다, 상담·분석·기획·콘텐츠화처럼 자신의 기준을 상품으로 만드는 일이 맞습니다. 특히 상담형 콘텐츠, 분석형 서비스, 가격표가 있는 지식판매, 반복형 온라인 상품, 예약형 리포트, 데이터 정리형 기획 업무와 잘 맞습니다. ${dominantTenGod} 흐름은 “남이 시킨 일을 오래 버티는 힘”보다 “내 기준으로 설명하고 구조화하는 힘”으로 쓸 때 만족도가 커집니다.`,
+      analysis: `결론부터 말하면, ${report.customerName}님은 완전한 조직 순응형보다 상담·분석·기획·콘텐츠화처럼 자신의 기준을 상품으로 만드는 일이 맞습니다. 특히 상담형 콘텐츠, 분석형 서비스, 가격표가 있는 지식판매, 반복형 온라인 상품, 예약형 리포트, 데이터 정리형 기획 업무와 잘 맞습니다. 실제 장면으로 보면 고객이 헷갈리는 정보를 표로 정리해주거나, 상대가 말로만 설명한 고민을 결론·근거·행동 순서로 바꿔주는 일에서 힘이 살아납니다. ${dominantTenGod} 흐름은 “남이 시킨 일을 오래 버티는 힘”보다 “내 기준으로 설명하고 설계하는 힘”으로 쓸 때 만족도가 커집니다.`,
       advice: [
-        '처음부터 큰 사업보다 2,900원 입문 상품, 9,900원 확장 상품, 프리미엄 리포트처럼 단계형 상품 구조가 맞습니다.',
-        '직업명으로 찾지 말고 상담형, 분석형, 기획형, 콘텐츠형, 운영형 중 어디서 오래 버티는지 먼저 보세요.',
-        '이번 달에는 팔 수 있는 결과물 하나를 정하고 가격, 제공 범위, 마감 시간을 문서로 고정하세요.'
+        '처음부터 큰 사업을 벌이기보다 2,900원 입문 상품, 9,900원 확장 상품, 프리미엄 리포트처럼 계단식 상품 구조가 맞습니다.',
+        '직업명으로 찾지 말고 상담형, 분석형, 기획형, 콘텐츠형, 운영형 중 어느 방식에서 덜 지치고 오래 설명할 수 있는지 먼저 보세요.',
+        '이번 달에는 팔 수 있는 결과물 하나를 정하고 가격, 제공 범위, 마감 시간, 수정 가능 횟수를 한 화면에 적어두세요.'
       ]
     };
   }
@@ -1102,7 +1202,7 @@ function buildConcernDirectAnswer(
     return {
       ...qa,
       title: `고민 ${index + 1} 결론: 결혼 가능성`,
-      analysis: `가능성은 있습니다. 다만 빠른 연애나 뜨거운 감정보다 생활 기준이 맞는 안정형 인연이 결혼으로 이어질 확률이 높습니다. ${report.customerName}님은 말이 많은 사람보다 약속, 돈, 시간, 가족과의 거리, 감정 회복 방식이 일정한 사람과 맞습니다. 결혼운은 “언제 만나느냐”보다 “만난 뒤 생활을 유지할 조건이 맞느냐”에서 갈립니다.`,
+      analysis: `가능성은 있습니다. 다만 빠른 연애나 뜨거운 감정보다 생활 기준이 맞는 안정형 인연이 결혼으로 이어질 확률이 높습니다. ${report.customerName}님은 말이 많은 사람보다 약속, 돈, 시간, 가족과의 거리, 감정 회복 방식이 일정한 사람과 맞습니다. 처음에는 무난해 보여도 상대가 약속을 자주 바꾸거나 돈 이야기를 흐리면 마음이 빨리 피곤해질 수 있습니다. 결혼운은 “언제 만나느냐”보다 “만난 뒤 생활을 유지할 조건이 맞느냐”에서 갈립니다.`,
       advice: [
         '결혼을 보려면 호감보다 주거, 돈, 가족 거리, 일의 리듬을 먼저 확인하세요.',
         `${bestMonthText}에는 관계를 현실 주제로 꺼내기 좋고, ${watchMonthText}에는 결론을 서두르지 않는 편이 좋습니다.`,
@@ -1115,7 +1215,7 @@ function buildConcernDirectAnswer(
     return {
       ...qa,
       title: `고민 ${index + 1} 결론: 연애와 인연`,
-      analysis: `지금 연애 고민은 상대 마음을 맞히는 문제보다, ${report.customerName}님이 어떤 관계에서 안정감을 느끼고 어떤 관계에서 소모되는지 구분하는 문제에 가깝습니다. 끌림은 생길 수 있지만 오래 가는 인연은 연락의 양보다 약속의 질, 감정 표현보다 생활 배려에서 갈립니다.`,
+      analysis: `지금 연애 고민은 상대 마음을 맞히는 문제보다, ${report.customerName}님이 어떤 관계에서 안정감을 느끼고 어떤 관계에서 소모되는지 구분하는 문제에 가깝습니다. 답장을 기다리며 혼자 결론을 내리거나, 상대는 괜찮다고 했는데 나만 오래 신경 쓰는 장면이 반복될 수 있습니다. 끌림은 생길 수 있지만 오래 가는 인연은 연락의 양보다 약속의 질, 감정 표현보다 생활 배려에서 갈립니다.`,
       advice: [
         '상대의 말보다 반복 행동을 보세요. 일정, 약속, 돈, 갈등 후 태도가 핵심입니다.',
         '불안해서 연락을 늘리는 방식은 관계를 무겁게 만들 수 있으니 짧고 분명한 제안이 좋습니다.',
@@ -1128,7 +1228,7 @@ function buildConcernDirectAnswer(
     return {
       ...qa,
       title: `고민 ${index + 1} 결론: 돈 흐름`,
-      analysis: `돈은 들어올 수 있지만, 지금은 크게 한 번 벌기보다 새는 구조를 막고 반복 수익을 만드는 쪽이 더 안정적입니다. ${report.customerName}님에게 맞는 돈 흐름은 충동적 확장보다 가격표, 정산 기준, 제공 범위가 분명한 구조에서 살아납니다.`,
+      analysis: `돈은 들어올 수 있지만, 지금은 크게 한 번 벌기보다 새는 구조를 막고 반복 수익을 만드는 쪽이 더 안정적입니다. ${report.customerName}님에게 맞는 돈 흐름은 충동적 확장보다 가격표, 정산 기준, 제공 범위가 분명한 구조에서 살아납니다. 사람 정 때문에 할인하거나 급한 마음에 새 결제를 누르면 수익보다 피로가 먼저 남을 수 있습니다.`,
       advice: [
         '투자보다 현금 방어와 기록이 먼저입니다.',
         '수입을 늘리려면 단건 판매보다 반복 구매, 다시보기, 추가 리포트처럼 이어지는 구조가 좋습니다.',
@@ -1140,7 +1240,7 @@ function buildConcernDirectAnswer(
   return {
     ...qa,
     title: `고민 ${index + 1} 결론`,
-    analysis: `결론부터 말하면, 이 고민은 감정 하나로 결정할 문제가 아니라 사람, 돈, 시간, 체력 조건을 나눠 확인해야 풀립니다. ${report.customerName}님은 빠른 확답보다 기준을 세운 뒤 움직일 때 손실이 줄어드는 구조입니다.`,
+    analysis: `결론부터 말하면, 이 고민은 감정 하나로 결정할 문제가 아니라 사람, 돈, 시간, 체력 조건을 나눠 확인해야 풀립니다. ${report.customerName}님은 빠른 확답보다 기준을 세운 뒤 움직일 때 손실이 줄어드는 구조입니다. 지금 답답한 이유는 의지가 약해서가 아니라, 여러 조건이 한꺼번에 엉켜 있는데 마음만 먼저 결론을 내리려 하기 때문입니다.`,
     advice: [
       '고민을 감정, 돈, 관계, 일, 체력 중 하나로 먼저 분류하세요.',
       `${bestMonthText}에는 작은 실행을 열고, ${watchMonthText}에는 속도를 줄이세요.`,
@@ -1165,8 +1265,9 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
     .slice(0, 3)
     .map((item) => item.label)
     .join(' · ');
-  const helpfulText = report.helpfulElements.join(' · ') || '균형 오행';
-  const cautiousText = report.cautiousElements.join(' · ') || '과속 기운';
+  const helpfulText = formatElementList(report.helpfulElements) || '균형 오행';
+  const cautiousText = buildConcernCautionLabel(report.cautiousElements);
+  const cautionSentence = buildConcernCautionSentence(report.cautiousElements);
   const directAnswers = report.questionAnswers.map((qa, index) =>
     buildConcernDirectAnswer(qa, index, report, dominantTenGod, bestMonthText, watchMonthText)
   );
@@ -1179,11 +1280,7 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
         ? '상황에 따라 안정적으로 작동합니다. 고민의 종류에 따라 장점과 부담이 함께 나옵니다.'
         : '부족하거나 약하게 드러나는 영역입니다. 의식적으로 보완하면 체감 만족도가 커집니다.'
   ]);
-  const lifeCycleCards: NonNullable<ReportSection['cards']> = report.yearLuck.slice(0, 5).map((item) => ({
-    title: `${item.year}년 · ${getLuckPhase(item.score)}`,
-    body: `${item.headline} 집중 포인트는 ${item.focus}입니다. 주의할 점은 ${item.warning}입니다.`,
-    tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
-  }));
+  const lifeCycleCards = buildConcernLifeCycleCards(report);
   const yongsinCards = report.helpfulElements.map((element) => ({
     title: `${element} 보완 기준`,
     body: getElementRole(element),
@@ -1253,14 +1350,14 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
       title: '3. 용신·희기 판단',
       subtitle: '왜 어떤 기운은 살리고 어떤 기운은 조절해야 하는지 명리 근거를 분명히 봅니다.',
       callout: {
-        title: `${helpfulText}은 보완축, ${cautiousText}은 과속 주의`,
+        title: `${helpfulText} 기운은 보완축, ${cautiousText}`,
         body: '용신은 무조건 좋은 오행이라는 뜻이 아니라, 명식의 치우침을 현실에서 바로잡는 기준입니다. 고민풀이에서는 이 기준을 직업, 관계, 돈, 생활 리듬으로 번역합니다.'
       },
       cards: [
         ...yongsinCards,
         {
           title: '희기 판단',
-          body: `${cautiousText} 흐름은 무조건 나쁘다는 뜻이 아닙니다. 다만 과해질 때 판단 과속, 감정 소모, 지출 증가로 나타날 수 있어 조절 기준이 필요합니다.`,
+          body: `${cautionSentence || '과해지는 기운은 무조건 나쁜 것이 아니라 속도 조절이 필요한 신호입니다.'} 그래서 결론을 빨리 내기보다 기록, 가격표, 일정표처럼 확인 가능한 기준을 먼저 세워야 합니다.`,
           tone: 'warn'
         }
       ]
@@ -1305,7 +1402,7 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
       cards: [
         {
           title: `현재 대운 · ${report.currentDayun.name}`,
-          body: `${report.currentDayun.range} 구간입니다. 중심 주제는 ${report.currentDayun.focus}입니다. 주의할 점은 ${report.currentDayun.caution}입니다.`,
+          body: `${report.currentDayun.range} 구간입니다. ${asSentence(report.currentDayun.focus)} ${asSentence(report.currentDayun.caution)}`,
           tone: 'good'
         },
         {
@@ -1315,7 +1412,7 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
         {
           title: currentYear ? `${currentYear.year}년 세운` : '올해 세운',
           body: currentYear
-            ? `${currentYear.headline} 집중 포인트는 ${currentYear.focus}입니다. 주의할 점은 ${currentYear.warning}입니다.`
+            ? `${asSentence(currentYear.headline)} ${asSentence(currentYear.focus)} ${asSentence(currentYear.warning)}`
             : '올해 흐름은 현재 대운과 원국의 충돌 지점을 함께 보아야 정확합니다.'
         },
         {
@@ -1352,7 +1449,7 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
       details: directAnswers.map((qa, index) => ({
         summary: qa.title || `고민 ${index + 1}`,
         content: `${qa.analysis}\n\n실행 조언: ${qa.advice.join(' ')}`,
-        open: index === 0
+        open: true
       }))
     },
     {
@@ -1484,12 +1581,12 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
       title: `${report.customerName}님의 고민풀이 핵심 결론`,
       analysis: [
         `결론부터 말하면, ${report.customerName}님은 빠른 확답보다 기준을 세운 뒤 움직일 때 손실이 줄어드는 구조입니다.`,
-        `일간 ${report.dayMaster}, ${report.strengthLabel}, 현재 ${report.currentDayun.name} 대운을 함께 보면 지금 고민은 ${report.currentDayun.focus} 흐름과 연결됩니다.`,
+        `현재 ${report.currentDayun.name} 대운에서는 ${report.currentDayun.focus} 쪽 압력이 먼저 켜집니다. 그래서 이 고민은 마음의 문제가 아니라 사람, 돈, 일정, 체력이 한꺼번에 걸리는 선택으로 봐야 합니다.`,
         `십성에서는 ${topTenGods || dominantTenGod} 흐름이 앞에 있어 감정 상태, 인간관계, 돈과 일의 선택 방식에 직접 영향을 줍니다.`,
         currentYear
-          ? `${currentYear.year}년은 ${currentYear.headline} 흐름입니다. 집중 포인트는 ${currentYear.focus}입니다. 주의할 점은 ${currentYear.warning}입니다.`
+          ? `${currentYear.year}년은 ${asSentence(currentYear.headline)} ${asSentence(currentYear.focus)} ${asSentence(currentYear.warning)}`
           : '올해는 결론보다 기준을 다시 세우는 해로 읽는 편이 안정적입니다.',
-        `용신·희기 기준으로는 ${helpfulText}을 현실에서 보완하고, ${cautiousText} 흐름이 과해질 때 속도를 조절하는 것이 핵심입니다.`
+        `용신·희기 기준으로는 ${withObjectParticle(`${helpfulText} 기운`)} 현실에서 보완해야 합니다. ${cautionSentence || `${cautiousText} 기준으로 속도를 조절하는 것이 핵심입니다.`}`
       ],
       advice: [
         '지금 고민은 감정만 보지 말고 일정, 돈, 관계, 체력 조건까지 함께 보세요.',
@@ -1596,12 +1693,12 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     `십성에서는 ${dominantLabel}과 ${secondLabel}의 조합을 봐야 합니다. ${describeTenGodDepth(dominantLabel, report)} ${describeTenGodDepth(secondLabel, report)}`,
     `${report.currentDayun.name} 대운은 "${report.currentDayun.focus}" 쪽을 강하게 건드립니다. 특히 재성이나 수 기운이 활성화되는 대운에서는 고객, 돈, 이동, 관계의 양이 늘 수 있지만, 그만큼 책임과 지출도 같이 따라옵니다. ${report.currentDayun.caution}`,
     currentYear
-      ? `${currentYear.year}년은 "${currentYear.headline}"의 해로 읽힙니다. 집중 포인트는 ${currentYear.focus}이고, 주의할 점은 ${currentYear.warning}입니다. 이 해는 사건 하나를 맞히는 방식보다, 어떤 선택지가 실제로 사람·돈·일정의 변화를 부르는지 관찰해야 합니다.`
+      ? `${currentYear.year}년은 "${currentYear.headline}"의 해로 읽힙니다. ${asSentence(currentYear.focus)} ${asSentence(currentYear.warning)} 이 해는 사건 하나를 맞히는 방식보다, 어떤 선택지가 실제로 사람·돈·일정의 변화를 부르는지 관찰해야 합니다.`
       : `${report.customerName}님에게 올해 필요한 태도는 빠른 확정보다 검증입니다. 감정적으로 끌리는 선택이라도 일정, 비용, 사람의 태도, 내 체력까지 확인한 뒤 움직일 때 손실이 줄어듭니다.`,
     bestMonth && watchMonth
       ? `가까운 월운은 숫자 점수보다 단계로 보는 편이 안전합니다. ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}은 ${getLuckPhase(bestMonth.score)}라 ${getLuckAction(bestMonth.score)}이고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}은 ${getLuckPhase(watchMonth.score)}라 ${getLuckAction(watchMonth.score)}입니다.`
       : `월운은 좋고 나쁨의 점수보다 확장기, 조율기, 정비기처럼 역할을 나눠 읽어야 합니다. 그래야 고객이 “왜 그 달에 그런 일이 생기는지”를 납득할 수 있습니다.`,
-    `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${helpfulText}은 살리고, ${cautionGuidance} 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
+    `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${withTopicParticle(`${helpfulText} 기운`)} 살리고, ${cautionGuidance} 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
   ];
 
   const expertQuestionAnswers = report.questionAnswers.map((qa, index) => ({
