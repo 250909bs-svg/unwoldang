@@ -14108,6 +14108,118 @@ body {
   background: #111827;
 }
 
+.concern-answer-priority {
+  background:
+    linear-gradient(180deg, rgba(250, 248, 242, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.concern-answer-priority-grid,
+.concern-answer-block,
+.concern-answer-card,
+.concern-action-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.concern-answer-label {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.concern-question-card {
+  border-color: #ded6c3;
+  background: #fbfaf7;
+}
+
+.concern-question-card h3 {
+  margin-top: 10px;
+}
+
+.concern-answer-card {
+  border-color: #d9d2c1;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfaf7 100%);
+  box-shadow: 0 16px 34px rgba(38, 34, 26, 0.08);
+}
+
+.concern-answer-block.spotlight .concern-answer-card {
+  border-color: #cdbf9f;
+}
+
+.concern-evidence-panel,
+.concern-action-panel,
+.concern-today-panel {
+  margin-top: 6px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #e7e1d3;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.concern-evidence-panel strong,
+.concern-action-panel strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.concern-today-panel {
+  margin-top: 14px;
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.concern-today-panel .concern-answer-label {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.concern-today-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.concern-today-card {
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.concern-today-card strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #111827;
+  font-size: 13px;
+}
+
+.concern-today-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
 @media (min-width: 860px) {
   .premium-report-paper {
     max-width: 780px;
@@ -14150,6 +14262,10 @@ body {
   .premium-love-card {
     min-height: 0;
     padding: 16px 15px 15px;
+  }
+
+  .concern-today-grid {
+    grid-template-columns: 1fr;
   }
 
   .premium-card p,

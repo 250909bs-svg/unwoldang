@@ -595,6 +595,125 @@ function SectionBlock({
   );
 }
 
+function getConcernEvidenceItems(report: SajuReportData, index: number) {
+  const topTenGods = report.tenGods
+    .slice(0, 2)
+    .map((item) => item.label)
+    .join('·');
+  const helpfulText = formatElementList(report.helpfulElements) || '균형 오행';
+  const questionOrder = index === 0 ? '첫 번째 질문' : '두 번째 질문';
+
+  return [
+    `${questionOrder}은 일간 ${report.dayMaster}과 ${report.strengthLabel} 흐름을 기준으로 봅니다. 감정 하나보다 돈, 시간, 관계, 체력 조건을 나눠 볼 때 답이 선명해집니다.`,
+    `현재 ${report.currentDayun.name} 대운은 ${report.currentDayun.focus}을 건드리는 시기입니다. 그래서 이 고민은 마음가짐보다 실제 책임 범위와 선택 순서가 중요합니다.`,
+    topTenGods
+      ? `십성에서는 ${topTenGods} 흐름이 앞에 있습니다. 말보다 반복 행동, 기분보다 결과물, 호감보다 약속 이행에서 진짜 답이 드러납니다.`
+      : `${withTopicParticle(`${helpfulText} 기운`)} 지금 고민을 현실로 정리하는 기준입니다. 생활 리듬과 기록이 잡히면 판단이 안정됩니다.`
+  ];
+}
+
+function getConcernTodayActions(report: SajuReportData) {
+  const watchMonth = [...report.monthLuck].sort((left, right) => left.score - right.score)[0];
+
+  return [
+    '지금 고민을 돈, 관계, 일, 체력 중 하나로 먼저 분류하기',
+    '카톡이나 통화로 결론내지 말고 메모앱에 조건 3개 적기',
+    watchMonth
+      ? `${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')} ${getLuckPhase(watchMonth.score)}에는 새 확장보다 정리와 회복을 우선하기`
+      : '이번 달에는 새 확장보다 정리와 회복을 우선하기'
+  ];
+}
+
+function ConcernQuestionAnswerCard({
+  qa,
+  index,
+  report,
+  variant = 'detail'
+}: {
+  qa: SajuReportData['questionAnswers'][number];
+  index: number;
+  report: SajuReportData;
+  variant?: 'spotlight' | 'detail';
+}) {
+  const evidenceItems = getConcernEvidenceItems(report, index);
+
+  return (
+    <div className={`premium-qa-block concern-answer-block ${variant === 'spotlight' ? 'spotlight' : ''}`}>
+      <div className="premium-card premium-question-card concern-question-card">
+        <span className="concern-answer-label">질문 {index + 1}</span>
+        <h3>Q. {qa.question}</h3>
+      </div>
+
+      <div className="premium-card premium-answer-card concern-answer-card">
+        <span className="concern-answer-label">결론 먼저</span>
+        <h3>{qa.title}</h3>
+        <p>{qa.analysis}</p>
+
+        <div className="concern-evidence-panel">
+          <strong>명리 근거</strong>
+          <ul className="premium-list">
+            {evidenceItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="concern-action-panel">
+          <strong>실행 조언</strong>
+          <ul className="premium-list">
+            {qa.advice.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConcernAnswerSpotlight({ report }: { report: SajuReportData }) {
+  if (report.serviceId !== 'concern-reading' || !report.questionAnswers.length) {
+    return null;
+  }
+
+  const todayActions = getConcernTodayActions(report);
+
+  return (
+    <section className="premium-report-section concern-answer-priority" id="answer-first">
+      <div className="premium-section-heading">
+        <div>
+          <h2>고민 결론 먼저 보기</h2>
+          <p className="premium-muted">고객이 결제 직후 가장 먼저 확인해야 할 답만 위로 올렸습니다.</p>
+        </div>
+      </div>
+
+      <div className="concern-answer-priority-grid">
+        {report.questionAnswers.slice(0, 2).map((qa, index) => (
+          <ConcernQuestionAnswerCard
+            key={`spotlight-${qa.question}-${index}`}
+            qa={qa}
+            index={index}
+            report={report}
+            variant="spotlight"
+          />
+        ))}
+      </div>
+
+      <div className="concern-today-panel">
+        <span className="concern-answer-label">오늘 바로 할 일 3개</span>
+        <div className="concern-today-grid">
+          {todayActions.map((item, index) => (
+            <article key={item} className="concern-today-card">
+              <strong>{index + 1}</strong>
+              <p>{item}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function buildExpandedCoreReport(report: SajuReportData): SajuReportData {
   const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
@@ -1369,21 +1488,21 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
       cards: [
         {
           title: '귀인 분석',
-          body: '도움이 들어오는 사람, 배움의 통로, 문제를 풀어주는 정보가 어디서 오는지 보는 보조 신호입니다.',
+          body: '귀인은 막연한 행운보다 “문제를 풀어주는 사람”으로 봐야 합니다. 이 리포트에서는 말만 좋은 사람보다 일정, 자료, 금전 조건을 같이 정리해주는 사람이 실제 귀인에 가깝습니다.',
           tone: 'good'
         },
         {
           title: '매력살 분석',
-          body: '도화, 홍염, 화개살은 단순 인기보다 어떤 분위기로 주목받고 어떤 사람에게 끌리는지를 봅니다.'
+          body: '도화, 홍염, 화개살은 인기 점수가 아니라 주목받는 방식입니다. 처음엔 조용해 보여도 말이 정리되고 결과가 보일 때 신뢰가 붙는지, 혹은 감정선이 깊어질수록 상대가 끌리는지를 봅니다.'
         },
         {
           title: '합충형해파',
-          body: '관계와 일의 흐름이 붙고, 부딪히고, 흔들리는 지점입니다. 고민이 갑자기 커지는 시기 판단에 중요합니다.',
+          body: '합충형해파는 사건이 커지는 접점입니다. 연락, 돈, 일정, 책임이 한꺼번에 맞물릴 때 갑자기 피로가 올라오거나 관계를 정리하고 싶어지는 장면을 여기서 읽습니다.',
           tone: 'warn'
         },
         {
           title: '십이신살·간여지동',
-          body: '이동, 고집, 반복 감정, 같은 문제를 다시 겪는 구조를 확인하는 보조 항목입니다.'
+          body: '같은 유형의 사람, 같은 돈 문제, 같은 결정 피로가 반복되는지 확인합니다. 단순 성격이 아니라 특정 상황에서 자동으로 켜지는 반응을 찾는 보조 항목입니다.'
         }
       ],
       details: [
@@ -2178,6 +2297,7 @@ export default function Report() {
   }
 
   const tocItems = [
+    ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
     { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
     { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
     { id: 'glance', label: '핵심 지표 요약', number: '02' },
@@ -2327,6 +2447,13 @@ export default function Report() {
             </section>
           ) : null}
 
+          {report.serviceId === 'concern-reading' ? (
+            <>
+              <ConcernAnswerSpotlight report={report} />
+              <div className="premium-divider" />
+            </>
+          ) : null}
+
           <section className="premium-report-section" id="toc">
             <button
               type="button"
@@ -2408,20 +2535,24 @@ export default function Report() {
 
             {report.questionAnswers.length ? (
               report.questionAnswers.map((qa, index) => (
-                <div key={`${qa.question}-${index}`} className="premium-qa-block">
-                  <div className="premium-card premium-question-card">
-                    <h3>Q. {qa.question}</h3>
+                report.serviceId === 'concern-reading' ? (
+                  <ConcernQuestionAnswerCard key={`${qa.question}-${index}`} qa={qa} index={index} report={report} />
+                ) : (
+                  <div key={`${qa.question}-${index}`} className="premium-qa-block">
+                    <div className="premium-card premium-question-card">
+                      <h3>Q. {qa.question}</h3>
+                    </div>
+                    <div className="premium-card premium-answer-card">
+                      <h3>{qa.title}</h3>
+                      <p>{qa.analysis}</p>
+                      <ul className="premium-list">
+                        {qa.advice.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <div className="premium-card premium-answer-card">
-                    <h3>{qa.title}</h3>
-                    <p>{qa.analysis}</p>
-                    <ul className="premium-list">
-                      {qa.advice.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                )
               ))
             ) : (
               <div className="premium-card">
