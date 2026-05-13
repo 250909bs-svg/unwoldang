@@ -88,16 +88,6 @@ type CustomerRow = {
   readRate: number;
 };
 
-const viewTabs: Array<{ id: AdminView; label: string; icon: IconComponent }> = [
-  { id: 'overview', label: '요약', icon: BarChart3 },
-  { id: 'funnel', label: '퍼널', icon: MousePointerClick },
-  { id: 'orders', label: '주문', icon: CreditCard },
-  { id: 'customers', label: '고객', icon: Users },
-  { id: 'reports', label: '리포트', icon: ScrollText },
-  { id: 'issues', label: '신고', icon: MessageSquareWarning },
-  { id: 'costs', label: '비용', icon: WalletCards }
-];
-
 const sampleChannels: SourceChannel[] = ['카카오', '네이버검색', '인스타그램', '직접방문', '재방문'];
 const sampleDevices: DeviceType[] = ['mobile', 'mobile', 'mobile', 'desktop'];
 const sampleAges = ['20대 후반', '30대 초반', '30대 후반', '40대 초반', '비공개'];
@@ -987,15 +977,123 @@ export default function Admin() {
   };
 
   const todayPaidCount = todayOrders.filter((order) => order.status === 'paid').length;
-  const categoryCards: Array<{ id: AdminView; label: string; value: string; description: string; icon: IconComponent; tone?: 'good' | 'warn' | 'blue' }> = [
-    { id: 'overview', label: '전체 흐름', value: `${todayPaidCount}건`, description: `${bestCategory?.label || '핵심 카테고리'} 중심으로 오늘 매출과 액션 확인`, icon: BarChart3, tone: 'good' },
-    { id: 'funnel', label: '유입·이탈', value: formatPercent(largestDrop.drop), description: '어느 단계에서 고객이 빠지는지 확인', icon: MousePointerClick, tone: 'warn' },
-    { id: 'orders', label: '결제·주문', value: formatCurrency(todayRevenue), description: '주문번호, 유입, 기기, 결제 상태 관리', icon: CreditCard, tone: 'good' },
-    { id: 'customers', label: '고객·카카오', value: `${customerRows.length}명`, description: '고객군, 재구매 후보, 열람률 확인', icon: Users, tone: 'blue' },
-    { id: 'reports', label: '리포트 품질', value: `${avgReadRate}%`, description: '생성 시간, 열람률, 신고율 관리', icon: ScrollText },
-    { id: 'issues', label: '오류 신고', value: `${highSeverityIssues}건`, description: '오타, 불일치, 결제 문의 검수', icon: MessageSquareWarning, tone: highSeverityIssues ? 'warn' : undefined },
-    { id: 'costs', label: '비용·마진', value: formatCurrency(netRevenue), description: 'API 원가, 결제 수수료, 상품별 마진', icon: WalletCards, tone: 'blue' }
+  const categoryCards: Array<{
+    id: AdminView;
+    label: string;
+    value: string;
+    description: string;
+    detailTitle: string;
+    detailBody: string;
+    highlights: Array<{ label: string; value: string }>;
+    icon: IconComponent;
+    tone?: 'good' | 'warn' | 'blue';
+  }> = [
+    {
+      id: 'overview',
+      label: '전체 흐름',
+      value: `${todayPaidCount}건`,
+      description: `${bestCategory?.label || '핵심 카테고리'} 중심`,
+      detailTitle: '오늘 운영 흐름 한눈에 보기',
+      detailBody: '매출, 이탈, 상품 성과, 액션 큐를 압축해서 보는 관제 화면입니다. 하루 시작할 때 이 화면만 먼저 보면 됩니다.',
+      highlights: [
+        { label: '오늘 결제', value: `${todayPaidCount}건` },
+        { label: '오늘 매출', value: formatCurrency(todayRevenue) },
+        { label: '주력 상품', value: bestProduct?.label || '데이터 없음' }
+      ],
+      icon: BarChart3,
+      tone: 'good'
+    },
+    {
+      id: 'funnel',
+      label: '유입·이탈',
+      value: formatPercent(largestDrop.drop),
+      description: '고객이 빠지는 구간',
+      detailTitle: '방문부터 결제까지 이탈 구간 분석',
+      detailBody: '홈 방문, 상품 상세, 입력폼, 결제창, 리포트 열람까지 이어지는 흐름을 단계별로 분리해서 봅니다.',
+      highlights: [
+        { label: '최대 이탈', value: formatPercent(largestDrop.drop) },
+        { label: '병목 구간', value: largestDrop.label },
+        { label: '모바일 비중', value: formatPercent(mobileShare) }
+      ],
+      icon: MousePointerClick,
+      tone: 'warn'
+    },
+    {
+      id: 'orders',
+      label: '결제·주문',
+      value: formatCurrency(todayRevenue),
+      description: '주문과 결제 상태',
+      detailTitle: '결제 성공, 대기, 실패 주문 관리',
+      detailBody: '주문번호, 고객, 유입 채널, 기기, 결제 상태, 리포트 생성 상태를 한 번에 확인합니다.',
+      highlights: [
+        { label: '성공률', value: formatPercent(successRate) },
+        { label: '대기 주문', value: `${orders.filter((order) => order.status === 'pending').length}건` },
+        { label: '실패 주문', value: `${orders.filter((order) => order.status === 'failed').length}건` }
+      ],
+      icon: CreditCard,
+      tone: 'good'
+    },
+    {
+      id: 'customers',
+      label: '고객·카카오',
+      value: `${customerRows.length}명`,
+      description: '고객군과 재구매',
+      detailTitle: '카카오 고객과 재구매 후보 관리',
+      detailBody: '고객을 마스킹해서 보되, 구매 횟수, 누적 매출, 열람률로 재구매 가능성을 빠르게 나눕니다.',
+      highlights: [
+        { label: '전체 고객', value: `${customerRows.length}명` },
+        { label: '고관여', value: `${customerSegments[1]?.value || 0}명` },
+        { label: 'VIP 후보', value: `${customerSegments[0]?.value || 0}명` }
+      ],
+      icon: Users,
+      tone: 'blue'
+    },
+    {
+      id: 'reports',
+      label: '리포트 품질',
+      value: `${avgReadRate}%`,
+      description: '열람과 생성 속도',
+      detailTitle: '리포트 만족도와 생성 품질 확인',
+      detailBody: '열람률, 생성 시간, 신고율을 함께 보고 고객이 끝까지 읽는 결과지인지 확인합니다.',
+      highlights: [
+        { label: '평균 열람', value: `${avgReadRate}%` },
+        { label: '90% 이상', value: formatPercent(reportRead90) },
+        { label: '생성 시간', value: `${avgLatency}초` }
+      ],
+      icon: ScrollText
+    },
+    {
+      id: 'issues',
+      label: '오류 신고',
+      value: `${highSeverityIssues}건`,
+      description: '검수와 문의 처리',
+      detailTitle: '오류, 오타, 계산 불일치 신고함',
+      detailBody: '신고가 들어온 리포트와 주문을 묶어서 보고, 심각도 높은 건부터 처리할 수 있게 정리합니다.',
+      highlights: [
+        { label: '긴급 검수', value: `${highSeverityIssues}건` },
+        { label: '총 신고', value: `${issueRows.length}건` },
+        { label: '신고율', value: formatPercent(issueRate) }
+      ],
+      icon: MessageSquareWarning,
+      tone: highSeverityIssues ? 'warn' : undefined
+    },
+    {
+      id: 'costs',
+      label: '비용·마진',
+      value: formatCurrency(netRevenue),
+      description: '원가와 순매출',
+      detailTitle: 'API 비용, 결제 수수료, 상품별 마진',
+      detailBody: '저가 상품이 실제로 남는지, API 비용과 결제 수수료를 제외한 순매출을 확인합니다.',
+      highlights: [
+        { label: '순매출', value: formatCurrency(netRevenue) },
+        { label: '마진율', value: formatPercent(marginRate) },
+        { label: 'API 비용', value: formatCurrency(apiCost) }
+      ],
+      icon: WalletCards,
+      tone: 'blue'
+    }
   ];
+  const activeCategory = categoryCards.find((card) => card.id === activeView) || categoryCards[0];
 
   const refresh = () => {
     setReports(readReportArchiveEntries());
@@ -1078,55 +1176,67 @@ export default function Admin() {
         </section>
       ) : null}
 
-      <section className="admin-metric-grid">
-        <MetricCard title="오늘 결제" value={`${todayOrders.filter((order) => order.status === 'paid').length}건`} delta={formatCurrency(todayRevenue)} icon={CreditCard} tone="good" />
-        <MetricCard title="총 매출" value={formatCurrency(totalRevenue)} delta={`객단가 ${formatCurrency(avgOrderValue)}`} icon={WalletCards} tone="good" />
-        <MetricCard title="결제 성공률" value={formatPercent(successRate)} delta={`${paidOrders.length}/${orders.length}건 성공`} icon={TrendingUp} />
-        <MetricCard title="리포트 열람" value={`${avgReadRate}%`} delta={`90% 이상 ${formatPercent(reportRead90)}`} icon={Eye} />
-        <MetricCard title="이탈 집중 구간" value={formatPercent(largestDrop.drop)} delta={largestDrop.label} icon={MousePointerClick} tone="warn" />
-        <MetricCard title="추정 순매출" value={formatCurrency(netRevenue)} delta={`API ${formatCurrency(apiCost)} · 수수료 ${formatCurrency(paymentFee)}`} icon={LineChart} tone="blue" />
-      </section>
-
-      <section className="admin-control-strip">
-        <div className="admin-login-chip">
-          <UserRound size={17} />
-          <span>{authUser ? `${maskName(authUser.nickname)} · ${authUser.provider}` : '로그인 고객 없음'}</span>
+      <section className="admin-top-categories">
+        <div className="admin-top-category-head">
+          <div>
+            <span>OPERATIONS CATEGORY</span>
+            <h2>카테고리별 상세 보기</h2>
+          </div>
+          <div className="admin-login-chip">
+            <UserRound size={17} />
+            <span>{authUser ? `${maskName(authUser.nickname)} · ${authUser.provider}` : '관리자 접속 중'}</span>
+          </div>
         </div>
-        <div className="admin-tabs" role="tablist" aria-label="관리자 메뉴">
-          {viewTabs.map((tab) => {
-            const Icon = tab.icon;
+
+        <div className="admin-category-hub" aria-label="운영 카테고리">
+          {categoryCards.map((card) => {
+            const Icon = card.icon;
 
             return (
-              <button key={tab.id} type="button" className={activeView === tab.id ? 'active' : ''} onClick={() => openView(tab.id)}>
-                <Icon size={15} />
-                {tab.label}
+              <button
+                key={card.id}
+                type="button"
+                className={`${activeView === card.id ? 'active' : ''} ${card.tone || ''}`}
+                onClick={() => openView(card.id)}
+              >
+                <span>
+                  <Icon size={18} />
+                  {card.label}
+                </span>
+                <strong>{card.value}</strong>
+                <p>{card.description}</p>
               </button>
             );
           })}
         </div>
       </section>
 
-      <section className="admin-category-hub" aria-label="운영 카테고리">
-        {categoryCards.map((card) => {
-          const Icon = card.icon;
-
-          return (
-            <button
-              key={card.id}
-              type="button"
-              className={`${activeView === card.id ? 'active' : ''} ${card.tone || ''}`}
-              onClick={() => openView(card.id)}
-            >
-              <span>
-                <Icon size={18} />
-                {card.label}
-              </span>
-              <strong>{card.value}</strong>
-              <p>{card.description}</p>
-            </button>
-          );
-        })}
+      <section className={`admin-selected-category ${activeCategory.tone || ''}`}>
+        <div>
+          <span>SELECTED DETAIL</span>
+          <h2>{activeCategory.detailTitle}</h2>
+          <p>{activeCategory.detailBody}</p>
+        </div>
+        <div className="admin-selected-metrics">
+          {activeCategory.highlights.map((item) => (
+            <article key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </article>
+          ))}
+        </div>
       </section>
+
+      {activeView === 'overview' ? (
+        <section className="admin-metric-grid">
+          <MetricCard title="오늘 결제" value={`${todayPaidCount}건`} delta={formatCurrency(todayRevenue)} icon={CreditCard} tone="good" />
+          <MetricCard title="총 매출" value={formatCurrency(totalRevenue)} delta={`객단가 ${formatCurrency(avgOrderValue)}`} icon={WalletCards} tone="good" />
+          <MetricCard title="결제 성공률" value={formatPercent(successRate)} delta={`${paidOrders.length}/${orders.length}건 성공`} icon={TrendingUp} />
+          <MetricCard title="리포트 열람" value={`${avgReadRate}%`} delta={`90% 이상 ${formatPercent(reportRead90)}`} icon={Eye} />
+          <MetricCard title="이탈 집중 구간" value={formatPercent(largestDrop.drop)} delta={largestDrop.label} icon={MousePointerClick} tone="warn" />
+          <MetricCard title="추정 순매출" value={formatCurrency(netRevenue)} delta={`API ${formatCurrency(apiCost)} · 수수료 ${formatCurrency(paymentFee)}`} icon={LineChart} tone="blue" />
+        </section>
+      ) : null}
 
       {activeView === 'overview' ? (
         <>
