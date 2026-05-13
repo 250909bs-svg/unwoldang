@@ -213,6 +213,10 @@ function getConversion(current: number, previous: number) {
   return (current / previous) * 100;
 }
 
+function clamp(value: number, min = 0, max = 100) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function toAdminOrder(report: ReportArchiveEntry, index: number): AdminOrder {
   const service = findServiceById(report.productId);
   const channel = sampleChannels[index % sampleChannels.length];
@@ -665,6 +669,202 @@ function InsightCard({
   );
 }
 
+function CustomerJourneyMap({
+  funnel,
+  largestDrop
+}: {
+  funnel: FunnelStep[];
+  largestDrop: ReturnType<typeof getLargestDrop>;
+}) {
+  return (
+    <article className="admin-command-panel admin-journey-map">
+      <div className="admin-command-head">
+        <div>
+          <span>LIVE CUSTOMER JOURNEY</span>
+          <h2>고객 흐름 지도</h2>
+        </div>
+        <strong>핵심 병목 {formatPercent(largestDrop.drop)}</strong>
+      </div>
+      <div className="admin-journey-line" aria-label="고객 여정 단계">
+        {funnel.map((step, index) => {
+          const isCritical = largestDrop.label.includes(step.label);
+          const width = clamp(getConversion(step.count, funnel[0].count), 8, 100);
+
+          return (
+            <div key={step.key} className={isCritical ? 'critical' : ''}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>{step.label}</strong>
+              <b>{step.count.toLocaleString('ko-KR')}</b>
+              <i>
+                <em style={{ width: `${width}%` }} />
+              </i>
+              <small>{index === 0 ? '방문 시작' : `${formatPercent(step.benchmark)} 전환`}</small>
+            </div>
+          );
+        })}
+      </div>
+      <div className="admin-journey-callout">
+        <AlertTriangle size={17} />
+        <p>
+          <strong>{largestDrop.label}</strong>
+          <span>이 구간의 문구, 로딩, 가격 안내, 버튼 위치를 먼저 손보면 매출 개선 가능성이 가장 큽니다.</span>
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function HealthRadar({
+  items
+}: {
+  items: Array<{ label: string; value: number; display: string; note: string }>;
+}) {
+  const size = 240;
+  const center = size / 2;
+  const radius = 82;
+  const axis = items.map((item, index) => {
+    const angle = (-90 + (360 / items.length) * index) * (Math.PI / 180);
+    return {
+      ...item,
+      x: center + Math.cos(angle) * radius,
+      y: center + Math.sin(angle) * radius,
+      pointX: center + Math.cos(angle) * radius * (clamp(item.value) / 100),
+      pointY: center + Math.sin(angle) * radius * (clamp(item.value) / 100),
+      labelX: center + Math.cos(angle) * (radius + 24),
+      labelY: center + Math.sin(angle) * (radius + 24)
+    };
+  });
+  const polygon = axis.map((item) => `${item.pointX},${item.pointY}`).join(' ');
+  const average = Math.round(items.reduce((sum, item) => sum + clamp(item.value), 0) / items.length);
+
+  return (
+    <article className="admin-command-panel admin-health-radar">
+      <div className="admin-command-head">
+        <div>
+          <span>OPERATION HEALTH</span>
+          <h2>운영 건강도</h2>
+        </div>
+        <strong>{average}점</strong>
+      </div>
+      <div className="admin-radar-wrap">
+        <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="운영 건강도 레이더 차트">
+          {[0.35, 0.7, 1].map((scale) => (
+            <polygon
+              key={scale}
+              points={axis
+                .map((item) => `${center + (item.x - center) * scale},${center + (item.y - center) * scale}`)
+                .join(' ')}
+            />
+          ))}
+          {axis.map((item) => (
+            <line key={item.label} x1={center} y1={center} x2={item.x} y2={item.y} />
+          ))}
+          <polygon className="score" points={polygon} />
+          {axis.map((item) => (
+            <g key={item.label}>
+              <circle cx={item.pointX} cy={item.pointY} r="4" />
+              <text x={item.labelX} y={item.labelY} textAnchor="middle">
+                {item.label}
+              </text>
+            </g>
+          ))}
+        </svg>
+        <div className="admin-radar-list">
+          {items.map((item) => (
+            <div key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.display}</strong>
+              <small>{item.note}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ProductHeatmap({
+  rows
+}: {
+  rows: ReturnType<typeof buildProductRows>;
+}) {
+  const maxOrders = Math.max(1, ...rows.map((row) => row.orders));
+  const visibleRows = rows.slice(0, 7);
+  const cells = [
+    { key: 'share', label: '매출비중', get: (row: (typeof rows)[number]) => row.share, display: (value: number) => formatPercent(value) },
+    { key: 'orders', label: '주문', get: (row: (typeof rows)[number]) => getConversion(row.orders, maxOrders), display: (_value: number, row: (typeof rows)[number]) => `${row.orders}건` },
+    { key: 'conversion', label: '전환', get: (row: (typeof rows)[number]) => row.conversion, display: (value: number) => formatPercent(value) },
+    { key: 'read', label: '열람', get: (row: (typeof rows)[number]) => row.avgReadRate, display: (value: number) => `${Math.round(value)}%` }
+  ];
+
+  return (
+    <article className="admin-command-panel admin-product-heatmap">
+      <div className="admin-command-head">
+        <div>
+          <span>PRODUCT HEATMAP</span>
+          <h2>상품별 성과 온도</h2>
+        </div>
+        <strong>{visibleRows.length}개 상품</strong>
+      </div>
+      <div className="admin-heatmap-grid">
+        <span />
+        {cells.map((cell) => (
+          <b key={cell.key}>{cell.label}</b>
+        ))}
+        {visibleRows.map((row) => (
+          <div className="admin-heatmap-row" key={row.id}>
+            <strong>{row.label}</strong>
+            {cells.map((cell) => {
+              const value = clamp(cell.get(row));
+              const dark = value > 52;
+
+              return (
+                <span
+                  key={cell.key}
+                  className={dark ? 'hot' : ''}
+                  style={{ backgroundColor: `rgba(17, 24, 39, ${0.07 + value / 145})` }}
+                >
+                  {cell.display(value, row)}
+                </span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function ActionCommand({
+  actions
+}: {
+  actions: Array<{ status: string; title: string; body: string; tone?: 'warn' | 'good' }>;
+}) {
+  return (
+    <article className="admin-command-panel admin-action-command">
+      <div className="admin-command-head">
+        <div>
+          <span>TODAY ACTION BOARD</span>
+          <h2>오늘 액션 큐</h2>
+        </div>
+        <strong>{actions.length}개</strong>
+      </div>
+      <div className="admin-action-list">
+        {actions.map((action, index) => (
+          <div key={action.title} className={action.tone || ''}>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <b>{action.status}</b>
+              <strong>{action.title}</strong>
+              <p>{action.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export default function Admin() {
   const adminCode = import.meta.env.VITE_ADMIN_ACCESS_CODE;
   const [inputCode, setInputCode] = useState('');
@@ -711,6 +911,40 @@ export default function Admin() {
   const bestProduct = productRows[0];
   const bestCategory = [...categoryRows].sort((left, right) => right.revenue - left.revenue)[0];
   const highSeverityIssues = issueRows.filter((issue) => issue.severity === 'high').length;
+  const marginRate = getConversion(netRevenue, totalRevenue || 1);
+  const issueRate = getConversion(issueRows.length, orders.length);
+  const healthItems = [
+    { label: '결제', value: successRate, display: formatPercent(successRate), note: '성공/시도' },
+    { label: '열람', value: avgReadRate, display: `${avgReadRate}%`, note: '평균 완독 신호' },
+    { label: '마진', value: clamp(marginRate), display: formatPercent(marginRate), note: '추정 순매출' },
+    { label: '속도', value: clamp(100 - avgLatency), display: `${avgLatency}초`, note: '생성 시간' },
+    { label: '품질', value: clamp(100 - issueRate * 3), display: formatPercent(issueRate), note: '신고율' },
+    { label: '모바일', value: mobileShare, display: formatPercent(mobileShare), note: '결제 비중' }
+  ];
+  const actionRows = [
+    {
+      status: '매출',
+      title: `${largestDrop.label} 병목 개선`,
+      body: `이탈 ${formatPercent(largestDrop.drop)} 구간입니다. 이 단계의 버튼, 금액 안내, 로딩 문구를 가장 먼저 줄여보세요.`,
+      tone: 'warn' as const
+    },
+    {
+      status: '상품',
+      title: `${bestProduct?.label || '주력 상품'} 노출 강화`,
+      body: `현재 매출 비중 ${formatPercent(bestProduct?.share || 0)}입니다. 홈 상단과 결제 직전 추천 영역에 우선 배치하기 좋습니다.`,
+      tone: 'good' as const
+    },
+    {
+      status: '품질',
+      title: `리포트 생성 ${avgLatency}초 관리`,
+      body: avgLatency > 45 ? '로딩 화면에서 원국·오행 미리보기와 진행 문구를 더 촘촘하게 보여줘야 합니다.' : '현재 속도는 안정권입니다. 실패 주문과 신고 큐만 먼저 확인하면 됩니다.'
+    },
+    {
+      status: 'CRM',
+      title: `${customerSegments[1]?.value || 0}명 재구매 후보`,
+      body: '열람률이 높은 고객에게 종합사주, 궁합, 결혼운으로 이어지는 다음 상품 동선을 만들면 좋습니다.'
+    }
+  ];
 
   const unlock = () => {
     if (!adminCode || inputCode.trim() === adminCode) {
@@ -836,10 +1070,20 @@ export default function Admin() {
 
       {activeView === 'overview' ? (
         <>
+          <section className="admin-command-grid">
+            <CustomerJourneyMap funnel={funnel} largestDrop={largestDrop} />
+            <HealthRadar items={healthItems} />
+          </section>
+
           <section className="admin-ops-grid">
             <RevenueTrendChart data={dailyTrend} />
             <HourlyBarChart data={hourlyRows} />
             <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
+          </section>
+
+          <section className="admin-visual-grid">
+            <ProductHeatmap rows={productRows} />
+            <ActionCommand actions={actionRows} />
           </section>
 
           <section className="admin-dashboard-grid">
