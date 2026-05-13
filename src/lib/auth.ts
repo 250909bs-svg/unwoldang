@@ -28,6 +28,7 @@ export interface PendingPayment {
 
 const AUTH_STORAGE_KEY = 'unwoldang.auth.user';
 const PAYMENT_STORAGE_KEY = 'unwoldang.payment.pending';
+const AUTH_STATE_STORAGE_KEY = 'unwoldang.auth.kakao.state';
 
 type AuthStatePayload = {
   provider: 'kakao';
@@ -112,6 +113,37 @@ export const buildHashCallbackLocation = () => {
 
 const encodeAuthState = (payload: AuthStatePayload) => encodeURIComponent(JSON.stringify(payload));
 
+const writePendingAuthState = (state: string) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.setItem(AUTH_STATE_STORAGE_KEY, state);
+};
+
+export const consumePendingAuthState = (state?: string | null) => {
+  if (typeof window === 'undefined' || !state) {
+    return false;
+  }
+
+  const stored = window.sessionStorage.getItem(AUTH_STATE_STORAGE_KEY);
+  window.sessionStorage.removeItem(AUTH_STATE_STORAGE_KEY);
+
+  return Boolean(stored && stored === state);
+};
+
+export const sanitizeAuthReturnTo = (returnTo?: string | null) => {
+  if (!returnTo || !returnTo.startsWith('/') || returnTo.startsWith('//')) {
+    return '/my';
+  }
+
+  if (returnTo.startsWith('/auth/') || returnTo.startsWith('/payment/')) {
+    return '/my';
+  }
+
+  return returnTo;
+};
+
 export const decodeAuthState = (rawState?: string | null): AuthStatePayload | null => {
   if (!rawState) {
     return null;
@@ -134,7 +166,7 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
   const redirectUri = getKakaoRedirectUri();
   const state = encodeAuthState({
     provider: 'kakao',
-    returnTo,
+    returnTo: sanitizeAuthReturnTo(returnTo),
     issuedAt: Date.now()
   });
   const params = new URLSearchParams({
@@ -148,6 +180,8 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
   if (scopes) {
     params.set('scope', scopes);
   }
+
+  writePendingAuthState(state);
 
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
 };

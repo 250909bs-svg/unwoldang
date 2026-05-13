@@ -11,6 +11,14 @@ const productPriceMap: Record<string, number> = {
   'general-signature': 79000
 };
 
+function isLocalAdminHost() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+}
+
 function formatCurrency(value: number) {
   return `${value.toLocaleString('ko-KR')}원`;
 }
@@ -25,12 +33,14 @@ export default function Admin() {
   const [accessError, setAccessError] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(() => {
     if (!adminCode) {
-      return true;
+      return isLocalAdminHost();
     }
 
     return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok';
   });
   const [reports, setReports] = useState(() => readReportArchiveEntries());
+  const isLocalOnlyMode = !adminCode && isLocalAdminHost();
+  const isBlockedLiveAdmin = !adminCode && !isLocalAdminHost();
 
   const stats = useMemo(() => {
     const todayKey = new Date().toDateString();
@@ -59,6 +69,21 @@ export default function Admin() {
 
     setAccessError('관리자 코드가 맞지 않습니다.');
   };
+
+  if (isBlockedLiveAdmin) {
+    return (
+      <main className="admin-page">
+        <section className="admin-lock-card">
+          <span className="admin-icon-circle">
+            <ShieldCheck size={22} />
+          </span>
+          <h1>관리자 페이지가 잠겨 있습니다</h1>
+          <p>운영 도메인에서는 서버 권한 검증이 연결되기 전까지 관리자 화면을 열 수 없습니다.</p>
+          <Link to="/" className="admin-back-link">홈으로 돌아가기</Link>
+        </section>
+      </main>
+    );
+  }
 
   if (!isUnlocked) {
     return (
@@ -109,7 +134,7 @@ export default function Admin() {
         </button>
       </header>
 
-      {!adminCode ? (
+      {isLocalOnlyMode ? (
         <section className="admin-warning">
           <ShieldCheck size={18} />
           <p>

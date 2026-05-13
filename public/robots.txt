@@ -6,6 +6,7 @@ Disallow: /loading
 Disallow: /report/
 Disallow: /login
 Disallow: /my
+Disallow: /admin
 Disallow: /auth/
 Disallow: /payment/
 

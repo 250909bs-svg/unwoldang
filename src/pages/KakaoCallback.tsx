@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
-import { decodeAuthState, getKakaoRedirectUri } from '../lib/auth';
+import { consumePendingAuthState, decodeAuthState, getKakaoRedirectUri, sanitizeAuthReturnTo } from '../lib/auth';
 
 type CallbackStatus = 'loading' | 'error';
 
@@ -59,8 +59,9 @@ export default function KakaoCallback() {
   const code = params.get('code');
   const error = params.get('error');
   const errorDescription = params.get('error_description');
-  const decodedState = decodeAuthState(params.get('state'));
-  const returnTo = decodedState?.returnTo || '/menu';
+  const rawState = params.get('state');
+  const decodedState = decodeAuthState(rawState);
+  const returnTo = sanitizeAuthReturnTo(decodedState?.returnTo || '/menu');
 
   useEffect(() => {
     const run = async () => {
@@ -73,6 +74,12 @@ export default function KakaoCallback() {
       if (!code) {
         setStatus('error');
         setMessage('카카오에서 전달된 인증 코드가 없습니다.');
+        return;
+      }
+
+      if (!consumePendingAuthState(rawState)) {
+        setStatus('error');
+        setMessage('로그인 요청 검증값이 일치하지 않습니다. 로그인 버튼을 다시 눌러 주세요.');
         return;
       }
 
@@ -113,7 +120,7 @@ export default function KakaoCallback() {
     };
 
     void run();
-  }, [code, completeLogin, error, errorDescription, navigate, returnTo]);
+  }, [code, completeLogin, error, errorDescription, navigate, rawState, returnTo]);
 
   return (
     <main className="mobile-page-shell">

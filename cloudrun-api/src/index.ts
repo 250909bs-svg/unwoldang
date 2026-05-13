@@ -43,6 +43,12 @@ function isLocalDevelopmentOrigin(origin: string) {
   return /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(origin);
 }
 
+function applySecurityHeaders(res: any) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-Frame-Options', 'DENY');
+}
+
 function applyCors(req: any, res: any) {
   const origin = req.headers.origin;
   const allowedOrigins = getAllowedOrigins();
@@ -51,7 +57,7 @@ function applyCors(req: any, res: any) {
     return;
   }
 
-  if (!allowedOrigins.length) {
+  if (!allowedOrigins.length && isLocalDevelopmentOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else if (allowedOrigins.includes(origin) || isLocalDevelopmentOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -64,6 +70,7 @@ function applyCors(req: any, res: any) {
 
 function sendJson(res: any, status: number, payload: unknown) {
   res.statusCode = status;
+  applySecurityHeaders(res);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
   res.end(JSON.stringify(payload));
