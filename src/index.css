@@ -1794,6 +1794,14 @@ body {
   box-shadow: 0 0 0 1px rgba(228, 232, 238, 0.8);
 }
 
+.app-container.admin-app-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: #f4f1eb;
+  box-shadow: none;
+}
+
 .site-nav {
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid #eef1f4;
@@ -14328,6 +14336,20 @@ body {
 .admin-page *::before,
 .admin-page *::after {
   box-sizing: border-box;
+}
+
+.admin-app-container .admin-hero,
+.admin-app-container .admin-warning,
+.admin-app-container .admin-metric-grid,
+.admin-app-container .admin-top-categories,
+.admin-app-container .admin-selected-category,
+.admin-app-container .admin-command-grid,
+.admin-app-container .admin-visual-grid,
+.admin-app-container .admin-ops-grid,
+.admin-app-container .admin-dashboard-grid,
+.admin-app-container .admin-panel,
+.admin-app-container .admin-data-note {
+  max-width: 1440px;
 }
 
 .admin-lock-card,

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Test from './pages/Test';
@@ -59,12 +59,21 @@ function AppRoutes() {
   );
 }
 
+function AppShell() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <div className={isAdminRoute ? 'app-container admin-app-container' : 'app-container'}>
+      <AppRoutes />
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <div className="app-container">
-        <AppRoutes />
-      </div>
+      <AppShell />
     </Router>
   );
 }
