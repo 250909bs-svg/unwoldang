@@ -1,38 +1,47 @@
 import {
+  Activity,
   AlertTriangle,
   BarChart3,
+  CalendarDays,
   ChevronLeft,
   Clock,
   CreditCard,
+  Database,
   Eye,
-  Filter,
+  Gauge,
   LineChart,
   Lock,
   MessageSquareWarning,
   MousePointerClick,
+  PieChart,
   RefreshCw,
   ScrollText,
   ShieldCheck,
   Sparkles,
+  Target,
   TrendingUp,
   UserRound,
   Users,
-  WalletCards
+  WalletCards,
+  Zap
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { findServiceById, serviceCatalog, serviceCategories, type ServiceCategoryId } from '../api/mockData';
+import { findServiceById, serviceCatalog, serviceCategories, type ServiceCategoryId, type ServiceId } from '../api/mockData';
 import { readStoredAuthUser } from '../lib/auth';
 import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
 
 const ADMIN_SESSION_KEY = 'unwoldang.admin.session';
 
 type AdminView = 'overview' | 'funnel' | 'orders' | 'customers' | 'reports' | 'issues' | 'costs';
+type IconComponent = typeof BarChart3;
+type SourceChannel = '카카오' | '네이버검색' | '인스타그램' | '직접방문' | '재방문';
+type DeviceType = 'mobile' | 'desktop';
 
 type AdminOrder = {
   id: string;
   orderId: string;
-  productId: string;
+  productId: ServiceId;
   productName: string;
   category: Exclude<ServiceCategoryId, 'all'>;
   customerName: string;
@@ -45,10 +54,42 @@ type AdminOrder = {
   readRate: number;
   issueCount: number;
   source: 'real' | 'sample';
+  sourceChannel: SourceChannel;
+  device: DeviceType;
+  ageRange: string;
+  reportLatencySec: number;
   archive?: ReportArchiveEntry;
 };
 
-const viewTabs: Array<{ id: AdminView; label: string; icon: typeof BarChart3 }> = [
+type FunnelStep = {
+  key: string;
+  label: string;
+  count: number;
+  benchmark: number;
+};
+
+type CategoryRow = {
+  id: Exclude<ServiceCategoryId, 'all'>;
+  label: string;
+  orders: number;
+  revenue: number;
+  views: number;
+  conversion: number;
+  avgReadRate: number;
+};
+
+type CustomerRow = {
+  name: string;
+  maskedName: string;
+  email: string;
+  orders: number;
+  spent: number;
+  lastProduct: string;
+  lastSeen: string;
+  readRate: number;
+};
+
+const viewTabs: Array<{ id: AdminView; label: string; icon: IconComponent }> = [
   { id: 'overview', label: '요약', icon: BarChart3 },
   { id: 'funnel', label: '퍼널', icon: MousePointerClick },
   { id: 'orders', label: '주문', icon: CreditCard },
@@ -58,17 +99,45 @@ const viewTabs: Array<{ id: AdminView; label: string; icon: typeof BarChart3 }> 
   { id: 'costs', label: '비용', icon: WalletCards }
 ];
 
-const sampleNames = ['차민호', '김서연', '이하준', '박지아', '정도윤', '한유진', '오민재', '윤하린'];
-const sampleProducts = [
-  'concern-reading',
-  'general-signature',
-  'love-reading',
-  'life-flow',
-  'marriage-blueprint',
-  'match-couple',
-  'concern-reading',
-  'love-reunion'
-] as const;
+const sampleChannels: SourceChannel[] = ['카카오', '네이버검색', '인스타그램', '직접방문', '재방문'];
+const sampleDevices: DeviceType[] = ['mobile', 'mobile', 'mobile', 'desktop'];
+const sampleAges = ['20대 후반', '30대 초반', '30대 후반', '40대 초반', '비공개'];
+const chartColors = ['#111827', '#8a7258', '#2f6f68', '#b54708', '#7c3aed', '#475467'];
+
+const sampleSeeds: Array<{
+  productId: ServiceId;
+  name: string;
+  offsetHours: number;
+  status?: AdminOrder['status'];
+  reportStatus?: AdminOrder['reportStatus'];
+  readRate: number;
+  issueCount?: number;
+  channel: SourceChannel;
+  device: DeviceType;
+  ageRange: string;
+  reportLatencySec: number;
+}> = [
+  { productId: 'concern-reading', name: '차민호', offsetHours: 0.35, readRate: 96, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 19 },
+  { productId: 'general-signature', name: '김서연', offsetHours: 1.1, readRate: 91, channel: '네이버검색', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 42 },
+  { productId: 'love-reading', name: '이하준', offsetHours: 2.2, readRate: 78, issueCount: 1, channel: '인스타그램', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 36 },
+  { productId: 'life-flow', name: '박지아', offsetHours: 3.5, readRate: 83, channel: '직접방문', device: 'desktop', ageRange: '40대 초반', reportLatencySec: 28 },
+  { productId: 'marriage-blueprint', name: '정도윤', offsetHours: 4.4, readRate: 94, channel: '재방문', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 31 },
+  { productId: 'match-couple', name: '한유진', offsetHours: 5.6, readRate: 87, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 24 },
+  { productId: 'concern-reading', name: '오민재', offsetHours: 7.5, status: 'pending', reportStatus: 'generating', readRate: 38, channel: '네이버검색', device: 'mobile', ageRange: '비공개', reportLatencySec: 68 },
+  { productId: 'love-reunion', name: '윤하린', offsetHours: 9.2, readRate: 82, channel: '인스타그램', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 33 },
+  { productId: 'concern-reading', name: '서지후', offsetHours: 23.4, readRate: 93, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 21 },
+  { productId: 'general-signature', name: '강나은', offsetHours: 29.1, readRate: 89, channel: '재방문', device: 'desktop', ageRange: '40대 초반', reportLatencySec: 47 },
+  { productId: 'marriage-timing', name: '문도현', offsetHours: 35.7, readRate: 72, channel: '네이버검색', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 39 },
+  { productId: 'match-destiny', name: '배수아', offsetHours: 45.2, readRate: 86, channel: '직접방문', device: 'desktop', ageRange: '30대 초반', reportLatencySec: 34 },
+  { productId: 'concern-reading', name: '차민호', offsetHours: 55.8, readRate: 98, channel: '재방문', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 18 },
+  { productId: 'love-reading', name: '김서연', offsetHours: 66.4, readRate: 76, channel: '인스타그램', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 41 },
+  { productId: 'life-flow', name: '이하준', offsetHours: 77.9, status: 'failed', reportStatus: 'failed', readRate: 0, issueCount: 1, channel: '네이버검색', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 120 },
+  { productId: 'concern-reading', name: '박지아', offsetHours: 95.6, readRate: 90, channel: '카카오', device: 'mobile', ageRange: '40대 초반', reportLatencySec: 20 },
+  { productId: 'general-signature', name: '정도윤', offsetHours: 111.5, readRate: 92, channel: '직접방문', device: 'desktop', ageRange: '30대 후반', reportLatencySec: 46 },
+  { productId: 'love-reunion', name: '한유진', offsetHours: 130.2, readRate: 81, channel: '인스타그램', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 35 },
+  { productId: 'concern-reading', name: '오민재', offsetHours: 149.3, readRate: 84, channel: '카카오', device: 'mobile', ageRange: '비공개', reportLatencySec: 22 },
+  { productId: 'match-couple', name: '윤하린', offsetHours: 166.7, readRate: 88, channel: '재방문', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 37 }
+];
 
 function isLocalAdminHost() {
   if (typeof window === 'undefined') {
@@ -99,6 +168,18 @@ function formatDateTime(value: string) {
   });
 }
 
+function getDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDayLabel(dateKey: string) {
+  const [, month, day] = dateKey.split('-');
+  return `${Number(month)}/${Number(day)}`;
+}
+
 function maskName(name: string) {
   if (!name) {
     return '고객';
@@ -120,60 +201,8 @@ function maskEmail(email?: string) {
   return `${name.slice(0, 2)}***@${domain}`;
 }
 
-function getServiceAmount(productId: string) {
+function getServiceAmount(productId: ServiceId) {
   return parsePrice(findServiceById(productId).price);
-}
-
-function toAdminOrder(report: ReportArchiveEntry, index: number): AdminOrder {
-  const service = findServiceById(report.productId);
-
-  return {
-    id: report.id,
-    orderId: report.orderId || report.id,
-    productId: report.productId,
-    productName: report.title || service.label,
-    category: service.category,
-    customerName: report.customerName,
-    amount: getServiceAmount(report.productId),
-    status: 'paid',
-    reportStatus: 'done',
-    paymentMethod: report.paymentMethod || 'toss',
-    createdAt: report.createdAt,
-    readRate: Math.min(96, 62 + index * 7),
-    issueCount: 0,
-    source: 'real',
-    archive: report
-  };
-}
-
-function buildSampleOrders(): AdminOrder[] {
-  return sampleProducts.map((productId, index) => {
-    const service = findServiceById(productId);
-    const createdAt = new Date(Date.now() - index * 1000 * 60 * 47).toISOString();
-
-    return {
-      id: `sample-${productId}-${index}`,
-      orderId: `UW-SAMPLE-${String(index + 1).padStart(4, '0')}`,
-      productId,
-      productName: service.label,
-      category: service.category,
-      customerName: sampleNames[index],
-      customerEmail: `${sampleNames[index].toLowerCase()}@kakao.sample`,
-      amount: parsePrice(service.price),
-      status: index === 6 ? 'pending' : 'paid',
-      reportStatus: index === 6 ? 'generating' : 'done',
-      paymentMethod: index % 3 === 0 ? 'kakaoPay' : 'toss',
-      createdAt,
-      readRate: [94, 88, 77, 65, 92, 71, 38, 83][index],
-      issueCount: index === 2 ? 1 : 0,
-      source: 'sample'
-    };
-  });
-}
-
-function countToday(orders: AdminOrder[]) {
-  const today = new Date().toDateString();
-  return orders.filter((order) => new Date(order.createdAt).toDateString() === today);
 }
 
 function getConversion(current: number, previous: number) {
@@ -184,14 +213,76 @@ function getConversion(current: number, previous: number) {
   return (current / previous) * 100;
 }
 
-function buildFunnel(orders: AdminOrder[]) {
+function toAdminOrder(report: ReportArchiveEntry, index: number): AdminOrder {
+  const service = findServiceById(report.productId);
+  const channel = sampleChannels[index % sampleChannels.length];
+
+  return {
+    id: report.id,
+    orderId: report.orderId || report.id,
+    productId: report.productId,
+    productName: report.title || service.label,
+    category: service.category,
+    customerName: report.customerName,
+    customerEmail: report.formData?.name ? `${report.formData.name}@local.customer` : undefined,
+    amount: getServiceAmount(report.productId),
+    status: 'paid',
+    reportStatus: 'done',
+    paymentMethod: report.paymentMethod || 'toss',
+    createdAt: report.createdAt,
+    readRate: Math.min(98, 74 + index * 5),
+    issueCount: 0,
+    source: 'real',
+    sourceChannel: channel,
+    device: sampleDevices[index % sampleDevices.length],
+    ageRange: sampleAges[index % sampleAges.length],
+    reportLatencySec: 22 + index * 4,
+    archive: report
+  };
+}
+
+function buildSampleOrders(): AdminOrder[] {
+  return sampleSeeds.map((seed, index) => {
+    const service = findServiceById(seed.productId);
+    const createdAt = new Date(Date.now() - seed.offsetHours * 1000 * 60 * 60).toISOString();
+
+    return {
+      id: `sample-${seed.productId}-${index}`,
+      orderId: `UW-SAMPLE-${String(index + 1).padStart(4, '0')}`,
+      productId: seed.productId,
+      productName: service.label,
+      category: service.category,
+      customerName: seed.name,
+      customerEmail: `${seed.name.toLowerCase()}@kakao.sample`,
+      amount: parsePrice(service.price),
+      status: seed.status || 'paid',
+      reportStatus: seed.reportStatus || 'done',
+      paymentMethod: index % 3 === 0 ? 'kakaoPay' : 'toss',
+      createdAt,
+      readRate: seed.readRate,
+      issueCount: seed.issueCount || 0,
+      source: 'sample',
+      sourceChannel: seed.channel,
+      device: seed.device,
+      ageRange: seed.ageRange,
+      reportLatencySec: seed.reportLatencySec
+    };
+  });
+}
+
+function countToday(orders: AdminOrder[]) {
+  const today = new Date().toDateString();
+  return orders.filter((order) => new Date(order.createdAt).toDateString() === today);
+}
+
+function buildFunnel(orders: AdminOrder[]): FunnelStep[] {
   const paidCount = orders.filter((order) => order.status === 'paid').length;
   const reportViews = orders.filter((order) => order.reportStatus === 'done').length;
-  const checkout = Math.max(orders.length + 11, Math.ceil(paidCount * 1.7));
-  const formComplete = Math.max(checkout + 18, Math.ceil(checkout * 1.35));
-  const formStart = Math.max(formComplete + 26, Math.ceil(formComplete * 1.45));
-  const detail = Math.max(formStart + 58, Math.ceil(formStart * 1.8));
-  const home = Math.max(detail + 120, Math.ceil(detail * 2.2));
+  const checkout = Math.max(orders.length + 18, Math.ceil(paidCount * 2.1));
+  const formComplete = Math.max(checkout + 31, Math.ceil(checkout * 1.42));
+  const formStart = Math.max(formComplete + 44, Math.ceil(formComplete * 1.52));
+  const detail = Math.max(formStart + 76, Math.ceil(formStart * 1.76));
+  const home = Math.max(detail + 160, Math.ceil(detail * 2.05));
 
   return [
     { key: 'home_view', label: '홈 방문', count: home, benchmark: 100 },
@@ -204,7 +295,7 @@ function buildFunnel(orders: AdminOrder[]) {
   ];
 }
 
-function buildCustomerRows(orders: AdminOrder[]) {
+function buildCustomerRows(orders: AdminOrder[]): CustomerRow[] {
   const rows = new Map<string, AdminOrder[]>();
 
   orders.forEach((order) => {
@@ -231,7 +322,7 @@ function buildCustomerRows(orders: AdminOrder[]) {
 }
 
 function buildIssueRows(orders: AdminOrder[]) {
-  const issueOrders = orders.filter((order) => order.issueCount > 0);
+  const issueOrders = orders.filter((order) => order.issueCount > 0 || order.status === 'failed' || order.reportStatus === 'failed');
   const fallback = orders.slice(0, 4);
   const targets = issueOrders.length ? issueOrders : fallback;
   const issueTypes = ['오타 신고', '계산 불일치 확인', '결제 문의', '리포트 생성 지연'];
@@ -241,20 +332,21 @@ function buildIssueRows(orders: AdminOrder[]) {
     type: issueTypes[index % issueTypes.length],
     customer: maskName(order.customerName),
     product: order.productName,
+    orderId: order.orderId,
     status: index === 0 ? '검수 필요' : index === 1 ? '처리 중' : '대기',
     severity: index === 0 ? 'high' : index === 1 ? 'medium' : 'low',
     createdAt: order.createdAt
   }));
 }
 
-function buildCategoryRows(orders: AdminOrder[]) {
+function buildCategoryRows(orders: AdminOrder[]): CategoryRow[] {
   return serviceCategories
-    .filter((category) => category.id !== 'all')
+    .filter((category): category is typeof category & { id: Exclude<ServiceCategoryId, 'all'> } => category.id !== 'all')
     .map((category) => {
       const categoryOrders = orders.filter((order) => order.category === category.id);
       const paidOrders = categoryOrders.filter((order) => order.status === 'paid');
       const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
-      const views = Math.max(categoryOrders.length * 18 + 32, paidOrders.length * 22);
+      const views = Math.max(categoryOrders.length * 28 + 48, paidOrders.length * 31);
 
       return {
         id: category.id,
@@ -270,6 +362,136 @@ function buildCategoryRows(orders: AdminOrder[]) {
     });
 }
 
+function buildDailyTrend(orders: AdminOrder[]) {
+  const dayKeys = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    return getDateKey(date);
+  });
+
+  return dayKeys.map((key) => {
+    const dayOrders = orders.filter((order) => getDateKey(new Date(order.createdAt)) === key);
+    const paidOrders = dayOrders.filter((order) => order.status === 'paid');
+    const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+    const visitors = Math.max(28, dayOrders.length * 34 + Math.round(revenue / 9000));
+
+    return {
+      key,
+      label: formatDayLabel(key),
+      orders: paidOrders.length,
+      revenue,
+      visitors,
+      conversion: getConversion(paidOrders.length, visitors)
+    };
+  });
+}
+
+function buildHourlyRows(orders: AdminOrder[]) {
+  const todayOrders = countToday(orders);
+  const source = todayOrders.length ? todayOrders : orders;
+  const rows = Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    label: `${String(hour).padStart(2, '0')}시`,
+    orders: 0,
+    revenue: 0
+  }));
+
+  source.forEach((order) => {
+    const hour = new Date(order.createdAt).getHours();
+    rows[hour].orders += order.status === 'paid' ? 1 : 0;
+    rows[hour].revenue += order.status === 'paid' ? order.amount : 0;
+  });
+
+  return rows;
+}
+
+function buildChannelRows(orders: AdminOrder[]) {
+  return sampleChannels.map((channel) => {
+    const channelOrders = orders.filter((order) => order.sourceChannel === channel);
+    const paidOrders = channelOrders.filter((order) => order.status === 'paid');
+    const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+
+    return {
+      label: channel,
+      value: paidOrders.length,
+      revenue,
+      conversion: getConversion(paidOrders.length, Math.max(channelOrders.length * 12, paidOrders.length + 1))
+    };
+  });
+}
+
+function buildDeviceRows(orders: AdminOrder[]) {
+  return (['mobile', 'desktop'] as DeviceType[]).map((device) => {
+    const deviceOrders = orders.filter((order) => order.device === device);
+    const paidOrders = deviceOrders.filter((order) => order.status === 'paid');
+    const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+
+    return {
+      label: device === 'mobile' ? '모바일' : '데스크톱',
+      value: paidOrders.length,
+      revenue
+    };
+  });
+}
+
+function buildProductRows(orders: AdminOrder[]) {
+  const paidOrders = orders.filter((order) => order.status === 'paid');
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+
+  return serviceCatalog
+    .map((service) => {
+      const serviceOrders = paidOrders.filter((order) => order.productId === service.id);
+      const revenue = serviceOrders.reduce((sum, order) => sum + order.amount, 0);
+      const avgReadRate = serviceOrders.length
+        ? Math.round(serviceOrders.reduce((sum, order) => sum + order.readRate, 0) / serviceOrders.length)
+        : 0;
+      const estimatedViews = Math.max(serviceOrders.length * 24 + 24, serviceOrders.length + 1);
+
+      return {
+        id: service.id,
+        label: service.label,
+        category: service.category,
+        orders: serviceOrders.length,
+        revenue,
+        share: getConversion(revenue, totalRevenue || 1),
+        conversion: getConversion(serviceOrders.length, estimatedViews),
+        avgReadRate
+      };
+    })
+    .sort((left, right) => right.revenue - left.revenue);
+}
+
+function buildCustomerSegments(customers: CustomerRow[]) {
+  const vip = customers.filter((customer) => customer.orders >= 2 || customer.spent >= 79000).length;
+  const highIntent = customers.filter((customer) => customer.readRate >= 88).length;
+  const newCustomers = customers.filter((customer) => customer.orders === 1).length;
+  const risk = customers.filter((customer) => customer.readRate < 70).length;
+
+  return [
+    { label: 'VIP/고액 고객', value: vip, note: '종합사주·궁합 업셀 대상', icon: Sparkles },
+    { label: '고관여 고객', value: highIntent, note: '90% 가까이 읽은 재구매 후보', icon: Eye },
+    { label: '신규 고객', value: newCustomers, note: '첫 결제 후 온보딩 필요', icon: UserRound },
+    { label: '이탈 위험', value: risk, note: '열람 낮음·생성 지연 체크', icon: AlertTriangle }
+  ];
+}
+
+function getLargestDrop(funnel: FunnelStep[]) {
+  return funnel.slice(1).reduce(
+    (worst, step, index) => {
+      const prev = funnel[index];
+      const drop = 100 - getConversion(step.count, prev.count);
+
+      return drop > worst.drop
+        ? {
+            label: `${prev.label} → ${step.label}`,
+            drop
+          }
+        : worst;
+    },
+    { label: '이탈 없음', drop: 0 }
+  );
+}
+
 function MetricCard({
   title,
   value,
@@ -280,8 +502,8 @@ function MetricCard({
   title: string;
   value: string;
   delta: string;
-  tone?: 'good' | 'warn';
-  icon: typeof BarChart3;
+  tone?: 'good' | 'warn' | 'blue';
+  icon: IconComponent;
 }) {
   return (
     <article className={`admin-metric-card ${tone || ''}`}>
@@ -291,6 +513,154 @@ function MetricCard({
         <p>{delta}</p>
       </div>
       <Icon size={22} />
+    </article>
+  );
+}
+
+function RevenueTrendChart({
+  data
+}: {
+  data: ReturnType<typeof buildDailyTrend>;
+}) {
+  const width = 420;
+  const height = 176;
+  const paddingX = 18;
+  const paddingTop = 18;
+  const paddingBottom = 38;
+  const chartHeight = height - paddingTop - paddingBottom;
+  const maxRevenue = Math.max(1, ...data.map((point) => point.revenue));
+  const points = data.map((point, index) => {
+    const x = paddingX + (index / Math.max(1, data.length - 1)) * (width - paddingX * 2);
+    const y = paddingTop + chartHeight - (point.revenue / maxRevenue) * chartHeight;
+    return { ...point, x, y };
+  });
+  const polyline = points.map((point) => `${point.x},${point.y}`).join(' ');
+  const area = `${paddingX},${height - paddingBottom} ${polyline} ${width - paddingX},${height - paddingBottom}`;
+
+  return (
+    <div className="admin-chart-card admin-trend-card">
+      <div className="admin-chart-head">
+        <div>
+          <span>7 DAY REVENUE</span>
+          <h3>최근 7일 매출 추이</h3>
+        </div>
+        <strong>{formatCurrency(data.reduce((sum, point) => sum + point.revenue, 0))}</strong>
+      </div>
+      <svg className="admin-line-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="최근 7일 매출 추이 그래프">
+        <polygon points={area} />
+        <polyline points={polyline} />
+        {points.map((point) => (
+          <g key={point.key}>
+            <circle cx={point.x} cy={point.y} r="4" />
+            <text x={point.x} y={height - 16} textAnchor="middle">
+              {point.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function HourlyBarChart({
+  data
+}: {
+  data: ReturnType<typeof buildHourlyRows>;
+}) {
+  const maxOrders = Math.max(1, ...data.map((row) => row.orders));
+
+  return (
+    <div className="admin-chart-card">
+      <div className="admin-chart-head">
+        <div>
+          <span>TIME BAND</span>
+          <h3>시간대별 결제</h3>
+        </div>
+        <strong>{data.reduce((sum, row) => sum + row.orders, 0)}건</strong>
+      </div>
+      <div className="admin-hour-bars" aria-label="시간대별 결제 막대그래프">
+        {data.map((row) => (
+          <div key={row.hour} title={`${row.label} ${row.orders}건`}>
+            <span>
+              <i style={{ height: `${Math.max(6, (row.orders / maxOrders) * 100)}%` }} />
+            </span>
+            {row.hour % 3 === 0 ? <em>{row.hour}</em> : <em />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DonutChart({
+  title,
+  rows,
+  centerLabel
+}: {
+  title: string;
+  rows: Array<{ label: string; value: number; revenue?: number }>;
+  centerLabel: string;
+}) {
+  const total = rows.reduce((sum, row) => sum + row.value, 0) || 1;
+  let cursor = 0;
+  const gradient = rows
+    .map((row, index) => {
+      const start = cursor;
+      const end = cursor + (row.value / total) * 360;
+      cursor = end;
+      return `${chartColors[index % chartColors.length]} ${start}deg ${end}deg`;
+    })
+    .join(', ');
+
+  return (
+    <div className="admin-chart-card admin-donut-card">
+      <div className="admin-chart-head">
+        <div>
+          <span>SEGMENT</span>
+          <h3>{title}</h3>
+        </div>
+        <PieChart size={18} />
+      </div>
+      <div className="admin-donut-wrap">
+        <div className="admin-donut" style={{ background: `conic-gradient(${gradient})` }}>
+          <div>
+            <strong>{total}</strong>
+            <span>{centerLabel}</span>
+          </div>
+        </div>
+        <div className="admin-donut-legend">
+          {rows.map((row, index) => (
+            <div key={row.label}>
+              <i style={{ background: chartColors[index % chartColors.length] }} />
+              <span>{row.label}</span>
+              <b>{row.value}건</b>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InsightCard({
+  title,
+  value,
+  body,
+  icon: Icon,
+  tone
+}: {
+  title: string;
+  value: string;
+  body: string;
+  icon: IconComponent;
+  tone?: 'warn' | 'good';
+}) {
+  return (
+    <article className={`admin-insight-card ${tone || ''}`}>
+      <Icon size={18} />
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <p>{body}</p>
     </article>
   );
 }
@@ -319,15 +689,28 @@ export default function Admin() {
   const totalRevenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
   const todayRevenue = todayOrders.filter((order) => order.status === 'paid').reduce((sum, order) => sum + order.amount, 0);
   const avgOrderValue = paidOrders.length ? totalRevenue / paidOrders.length : 0;
+  const avgReadRate = paidOrders.length ? Math.round(paidOrders.reduce((sum, order) => sum + order.readRate, 0) / paidOrders.length) : 0;
+  const avgLatency = paidOrders.length ? Math.round(paidOrders.reduce((sum, order) => sum + order.reportLatencySec, 0) / paidOrders.length) : 0;
   const funnel = useMemo(() => buildFunnel(orders), [orders]);
   const categoryRows = useMemo(() => buildCategoryRows(orders), [orders]);
   const customerRows = useMemo(() => buildCustomerRows(orders), [orders]);
   const issueRows = useMemo(() => buildIssueRows(orders), [orders]);
+  const dailyTrend = useMemo(() => buildDailyTrend(orders), [orders]);
+  const hourlyRows = useMemo(() => buildHourlyRows(orders), [orders]);
+  const channelRows = useMemo(() => buildChannelRows(orders), [orders]);
+  const deviceRows = useMemo(() => buildDeviceRows(orders), [orders]);
+  const productRows = useMemo(() => buildProductRows(orders), [orders]);
+  const customerSegments = useMemo(() => buildCustomerSegments(customerRows), [customerRows]);
+  const largestDrop = useMemo(() => getLargestDrop(funnel), [funnel]);
   const apiCost = paidOrders.length * 92;
   const paymentFee = totalRevenue * 0.033;
   const netRevenue = totalRevenue - apiCost - paymentFee;
   const successRate = getConversion(paidOrders.length, orders.length);
   const reportRead90 = getConversion(orders.filter((order) => order.readRate >= 90).length, orders.length);
+  const mobileShare = getConversion(orders.filter((order) => order.device === 'mobile').length, orders.length);
+  const bestProduct = productRows[0];
+  const bestCategory = [...categoryRows].sort((left, right) => right.revenue - left.revenue)[0];
+  const highSeverityIssues = issueRows.filter((issue) => issue.severity === 'high').length;
 
   const unlock = () => {
     if (!adminCode || inputCode.trim() === adminCode) {
@@ -402,7 +785,7 @@ export default function Admin() {
           <div>
             <span className="admin-kicker">UNWOLDANG COMMAND CENTER</span>
             <h1>운월당 운영 대시보드</h1>
-            <p>결제, 이탈, 고객, 리포트 품질, API 비용을 한 화면에서 확인합니다.</p>
+            <p>결제, 이탈, 고객, 리포트 품질, 비용, 신고 큐를 한눈에 보는 운영 센터입니다.</p>
           </div>
         </div>
         <div className="admin-hero-actions">
@@ -419,7 +802,7 @@ export default function Admin() {
       {isLocalOnlyMode ? (
         <section className="admin-warning">
           <ShieldCheck size={18} />
-          <p>로컬 개발용 화면입니다. 출시용 어드민은 서버 권한 검증, DB, 관리자 접속 로그를 붙여야 합니다.</p>
+          <p>로컬 개발용 화면입니다. 출시용 어드민은 서버 권한 검증, DB, 관리자 접속 로그, 개인정보 접근 이력을 붙여야 합니다.</p>
         </section>
       ) : null}
 
@@ -427,9 +810,9 @@ export default function Admin() {
         <MetricCard title="오늘 결제" value={`${todayOrders.filter((order) => order.status === 'paid').length}건`} delta={formatCurrency(todayRevenue)} icon={CreditCard} tone="good" />
         <MetricCard title="총 매출" value={formatCurrency(totalRevenue)} delta={`객단가 ${formatCurrency(avgOrderValue)}`} icon={WalletCards} tone="good" />
         <MetricCard title="결제 성공률" value={formatPercent(successRate)} delta={`${paidOrders.length}/${orders.length}건 성공`} icon={TrendingUp} />
-        <MetricCard title="90% 이상 열람" value={formatPercent(reportRead90)} delta="리포트 만족도 핵심 지표" icon={Eye} />
-        <MetricCard title="오류 신고" value={`${issueRows.filter((issue) => issue.severity === 'high').length}건`} delta="우선 검수 필요" icon={AlertTriangle} tone="warn" />
-        <MetricCard title="추정 순매출" value={formatCurrency(netRevenue)} delta={`API ${formatCurrency(apiCost)} · 수수료 ${formatCurrency(paymentFee)}`} icon={LineChart} />
+        <MetricCard title="리포트 열람" value={`${avgReadRate}%`} delta={`90% 이상 ${formatPercent(reportRead90)}`} icon={Eye} />
+        <MetricCard title="이탈 집중 구간" value={formatPercent(largestDrop.drop)} delta={largestDrop.label} icon={MousePointerClick} tone="warn" />
+        <MetricCard title="추정 순매출" value={formatCurrency(netRevenue)} delta={`API ${formatCurrency(apiCost)} · 수수료 ${formatCurrency(paymentFee)}`} icon={LineChart} tone="blue" />
       </section>
 
       <section className="admin-control-strip">
@@ -452,99 +835,105 @@ export default function Admin() {
       </section>
 
       {activeView === 'overview' ? (
-        <section className="admin-dashboard-grid">
-          <article className="admin-panel wide">
-            <div className="admin-panel-head">
-              <div>
-                <span>FUNNEL SNAPSHOT</span>
-                <h2>오늘 결제 흐름</h2>
-              </div>
-              <p>어디서 빠지는지 가장 먼저 봅니다.</p>
-            </div>
-            <div className="admin-funnel-flow">
-              {funnel.map((step, index) => (
-                <div key={step.key} className="admin-funnel-step">
-                  <div>
-                    <strong>{step.count.toLocaleString('ko-KR')}</strong>
-                    <span>{step.label}</span>
-                  </div>
-                  {index > 0 ? <em>{formatPercent(step.benchmark)}</em> : <em>기준</em>}
-                </div>
-              ))}
-            </div>
-          </article>
+        <>
+          <section className="admin-ops-grid">
+            <RevenueTrendChart data={dailyTrend} />
+            <HourlyBarChart data={hourlyRows} />
+            <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
+          </section>
 
-          <article className="admin-panel">
-            <div className="admin-panel-head compact">
-              <div>
-                <span>TOP PRODUCT</span>
-                <h2>잘 팔리는 카테고리</h2>
+          <section className="admin-dashboard-grid">
+            <article className="admin-panel wide">
+              <div className="admin-panel-head">
+                <div>
+                  <span>FUNNEL SNAPSHOT</span>
+                  <h2>오늘 결제 흐름</h2>
+                </div>
+                <p>어디서 빠지는지 가장 먼저 봅니다.</p>
               </div>
-            </div>
-            <div className="admin-rank-list">
-              {categoryRows
-                .sort((left, right) => right.revenue - left.revenue)
-                .map((row) => (
+              <div className="admin-funnel-flow">
+                {funnel.map((step, index) => (
+                  <div key={step.key} className="admin-funnel-step">
+                    <div>
+                      <strong>{step.count.toLocaleString('ko-KR')}</strong>
+                      <span>{step.label}</span>
+                    </div>
+                    {index > 0 ? <em>{formatPercent(step.benchmark)}</em> : <em>기준</em>}
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="admin-panel">
+              <div className="admin-panel-head compact">
+                <div>
+                  <span>PRODUCT MIX</span>
+                  <h2>상품별 매출 비중</h2>
+                </div>
+              </div>
+              <div className="admin-rank-list">
+                {productRows.slice(0, 5).map((row) => (
                   <div key={row.id}>
                     <strong>{row.label}</strong>
-                    <span>{formatCurrency(row.revenue)}</span>
+                    <span>{formatCurrency(row.revenue)} · {formatPercent(row.share)}</span>
                     <div className="admin-mini-bar">
-                      <i style={{ width: `${Math.min(100, row.conversion * 8)}%` }} />
+                      <i style={{ width: `${Math.max(6, row.share)}%` }} />
                     </div>
                   </div>
                 ))}
-            </div>
-          </article>
-
-          <article className="admin-panel wide">
-            <div className="admin-panel-head">
-              <div>
-                <span>REALTIME ORDERS</span>
-                <h2>최근 결제와 리포트 생성</h2>
               </div>
-              <Link to="#" onClick={(event) => { event.preventDefault(); setActiveView('orders'); }}>전체 보기</Link>
-            </div>
-            <div className="admin-order-list">
-              {orders.slice(0, 6).map((order) => (
-                <div key={order.id} className="admin-order-row">
-                  <span className={`admin-status-dot ${order.status}`} />
-                  <div>
-                    <strong>{maskName(order.customerName)}</strong>
-                    <p>{order.productName}</p>
-                  </div>
-                  <em>{formatCurrency(order.amount)}</em>
-                  <small>{formatDateTime(order.createdAt)}</small>
+            </article>
+
+            <article className="admin-panel wide">
+              <div className="admin-panel-head">
+                <div>
+                  <span>REALTIME ORDERS</span>
+                  <h2>최근 결제와 리포트 생성</h2>
                 </div>
-              ))}
-            </div>
-          </article>
+                <Link to="#" onClick={(event) => { event.preventDefault(); setActiveView('orders'); }}>전체 보기</Link>
+              </div>
+              <div className="admin-order-list">
+                {orders.slice(0, 7).map((order) => (
+                  <div key={order.id} className="admin-order-row">
+                    <span className={`admin-status-dot ${order.status}`} />
+                    <div>
+                      <strong>{maskName(order.customerName)}</strong>
+                      <p>{order.productName}</p>
+                    </div>
+                    <em>{formatCurrency(order.amount)}</em>
+                    <small>{formatDateTime(order.createdAt)}</small>
+                  </div>
+                ))}
+              </div>
+            </article>
 
-          <article className="admin-panel">
-            <div className="admin-panel-head compact">
-              <div>
-                <span>QUALITY</span>
-                <h2>리포트 품질 신호</h2>
+            <article className="admin-panel">
+              <div className="admin-panel-head compact">
+                <div>
+                  <span>EXECUTION QUEUE</span>
+                  <h2>오늘 봐야 할 것</h2>
+                </div>
               </div>
-            </div>
-            <div className="admin-quality-stack">
-              <div>
-                <Sparkles size={18} />
-                <strong>{formatPercent(reportRead90)}</strong>
-                <span>끝까지 읽은 비율</span>
+              <div className="admin-quality-stack">
+                <div>
+                  <Target size={18} />
+                  <strong>{bestCategory?.label || '데이터 없음'}</strong>
+                  <span>{bestProduct?.label || '주력 상품'} 중심으로 매출 발생</span>
+                </div>
+                <div>
+                  <Gauge size={18} />
+                  <strong>{avgLatency}초</strong>
+                  <span>평균 리포트 생성 시간</span>
+                </div>
+                <div>
+                  <MessageSquareWarning size={18} />
+                  <strong>{highSeverityIssues}건</strong>
+                  <span>우선 처리 신고</span>
+                </div>
               </div>
-              <div>
-                <MessageSquareWarning size={18} />
-                <strong>{issueRows.length}건</strong>
-                <span>검수 큐</span>
-              </div>
-              <div>
-                <Clock size={18} />
-                <strong>정상</strong>
-                <span>생성 지연 모니터</span>
-              </div>
-            </div>
-          </article>
-        </section>
+            </article>
+          </section>
+        </>
       ) : null}
 
       {activeView === 'funnel' ? (
@@ -554,8 +943,26 @@ export default function Admin() {
               <span>DROP-OFF ANALYSIS</span>
               <h2>단계별 이탈 분석</h2>
             </div>
-            <p>입력폼과 결제창 중 어디를 손봐야 하는지 확인합니다.</p>
+            <p>방문부터 결제 성공까지 어디를 고치면 매출이 바로 오르는지 확인합니다.</p>
           </div>
+
+          <div className="admin-insight-grid">
+            <InsightCard title="최대 이탈" value={formatPercent(largestDrop.drop)} body={largestDrop.label} icon={AlertTriangle} tone="warn" />
+            <InsightCard title="결제 진입률" value={formatPercent(funnel[4]?.benchmark || 0)} body="입력 완료 후 결제창까지 이어진 비율" icon={CreditCard} />
+            <InsightCard title="모바일 비중" value={formatPercent(mobileShare)} body="모바일 UI가 매출에 가장 큰 영향을 줍니다." icon={MousePointerClick} tone="good" />
+            <InsightCard title="우선 액션" value="결제 직전" body="금액, 제공 항목, 환불 기준을 더 짧게 보여주세요." icon={Zap} />
+          </div>
+
+          <div className="admin-funnel-visual">
+            {funnel.map((step, index) => (
+              <div key={step.key} style={{ width: `${Math.max(16, getConversion(step.count, funnel[0].count))}%` }}>
+                <strong>{step.label}</strong>
+                <span>{step.count.toLocaleString('ko-KR')}명</span>
+                <em>{index === 0 ? '방문 기준' : `${formatPercent(step.benchmark)} 전환`}</em>
+              </div>
+            ))}
+          </div>
+
           <div className="admin-funnel-table">
             {funnel.map((step, index) => {
               const prev = funnel[index - 1]?.count || step.count;
@@ -586,9 +993,27 @@ export default function Admin() {
               <span>PAYMENT OPS</span>
               <h2>주문 관리</h2>
             </div>
-            <p>주문번호, 금액, 리포트 생성상태를 한 줄에서 확인합니다.</p>
+            <p>주문번호, 유입, 기기, 금액, 리포트 생성 상태를 한 줄에서 확인합니다.</p>
           </div>
-          <div className="admin-data-table orders">
+
+          <div className="admin-insight-grid">
+            <InsightCard title="오늘 매출" value={formatCurrency(todayRevenue)} body={`${todayOrders.length}건의 결제 흐름`} icon={CalendarDays} tone="good" />
+            <InsightCard title="대기 주문" value={`${orders.filter((order) => order.status === 'pending').length}건`} body="결제 콜백 또는 리포트 생성 확인" icon={Clock} />
+            <InsightCard title="실패 주문" value={`${orders.filter((order) => order.status === 'failed').length}건`} body="토스 실패 콜백과 고객 안내 필요" icon={AlertTriangle} tone="warn" />
+            <InsightCard title="모바일 결제" value={formatPercent(mobileShare)} body="결제창 모바일 최적화 우선" icon={MousePointerClick} />
+          </div>
+
+          <div className="admin-data-table orders enhanced">
+            <div className="admin-table-head">
+              <span>시간</span>
+              <span>주문번호</span>
+              <span>고객</span>
+              <span>상품</span>
+              <span>유입</span>
+              <span>기기</span>
+              <span>금액</span>
+              <span>상태</span>
+            </div>
             {orders.map((order) => {
               const content = (
                 <>
@@ -596,9 +1021,13 @@ export default function Admin() {
                   <strong>{order.orderId}</strong>
                   <em>{maskName(order.customerName)}</em>
                   <p>{order.productName}</p>
+                  <span>{order.sourceChannel}</span>
+                  <span>{order.device === 'mobile' ? '모바일' : '데스크톱'}</span>
                   <b>{formatCurrency(order.amount)}</b>
-                  <small className={`admin-pill ${order.status}`}>{order.status}</small>
-                  <small className={`admin-pill ${order.reportStatus}`}>{order.reportStatus}</small>
+                  <div className="admin-pill-stack">
+                    <small className={`admin-pill ${order.status}`}>{order.status}</small>
+                    <small className={`admin-pill ${order.reportStatus}`}>{order.reportStatus}</small>
+                  </div>
                 </>
               );
 
@@ -630,8 +1059,15 @@ export default function Admin() {
               <span>KAKAO CRM</span>
               <h2>고객 정보와 재구매 가능성</h2>
             </div>
-            <p>목록에서는 개인정보를 마스킹하고, 실제 상세는 서버 권한 확인 후 열어야 합니다.</p>
+            <p>카카오 로그인 고객은 개인정보를 마스킹하고, 상세 접근은 서버 권한 확인 후 열어야 합니다.</p>
           </div>
+
+          <div className="admin-insight-grid">
+            {customerSegments.map((segment) => (
+              <InsightCard key={segment.label} title={segment.label} value={`${segment.value}명`} body={segment.note} icon={segment.icon} tone={segment.label.includes('위험') ? 'warn' : 'good'} />
+            ))}
+          </div>
+
           <div className="admin-customer-grid">
             {customerRows.map((customer) => (
               <article key={customer.name}>
@@ -647,6 +1083,8 @@ export default function Admin() {
                   <dd>{formatCurrency(customer.spent)}</dd>
                   <dt>열람</dt>
                   <dd>{customer.readRate}%</dd>
+                  <dt>최근</dt>
+                  <dd>{formatDateTime(customer.lastSeen)}</dd>
                 </dl>
                 <p>{customer.lastProduct}</p>
               </article>
@@ -662,19 +1100,29 @@ export default function Admin() {
               <span>REPORT QUALITY</span>
               <h2>리포트 생성/열람 관리</h2>
             </div>
-            <p>고객 만족도는 90% 이상 열람, 신고율, 생성 실패율로 봅니다.</p>
+            <p>고객 만족도는 열람률, 신고율, 생성 지연, 재방문 여부로 관리합니다.</p>
           </div>
+
+          <div className="admin-report-layout">
+            <DonutChart title="기기별 리포트 열람" rows={deviceRows} centerLabel="결제" />
+            <div className="admin-quality-board">
+              <InsightCard title="평균 열람률" value={`${avgReadRate}%`} body="80% 아래 상품은 본문 길이와 초반 요약을 점검합니다." icon={Eye} tone="good" />
+              <InsightCard title="평균 생성 시간" value={`${avgLatency}초`} body="60초 이상이면 로딩 화면 이탈 가능성이 커집니다." icon={Clock} />
+              <InsightCard title="신고율" value={formatPercent(getConversion(issueRows.length, orders.length))} body="계산 불일치와 오타 신고를 분리해서 봅니다." icon={MessageSquareWarning} tone="warn" />
+            </div>
+          </div>
+
           <div className="admin-report-grid">
             {orders.map((order) => (
               <article key={order.id}>
                 <div>
                   <strong>{order.productName}</strong>
-                  <span>{order.orderId}</span>
+                  <span>{order.orderId} · {order.sourceChannel}</span>
                 </div>
                 <div className="admin-read-meter">
                   <i style={{ width: `${order.readRate}%` }} />
                 </div>
-                <p>{order.readRate}% 열람 · 신고 {order.issueCount}건 · {order.reportStatus}</p>
+                <p>{order.readRate}% 열람 · 생성 {order.reportLatencySec}초 · 신고 {order.issueCount}건 · {order.reportStatus}</p>
               </article>
             ))}
           </div>
@@ -688,15 +1136,23 @@ export default function Admin() {
               <span>ISSUE INBOX</span>
               <h2>오류·오타·불일치 신고함</h2>
             </div>
-            <p>심각도 높은 신고는 상품명, 주문번호, 원국 계산값과 함께 먼저 검수합니다.</p>
+            <p>심각도 높은 신고는 상품명, 주문번호, 원국 계산값, 결제 상태를 묶어서 먼저 검수합니다.</p>
           </div>
+
+          <div className="admin-insight-grid">
+            <InsightCard title="긴급 검수" value={`${highSeverityIssues}건`} body="계산값·결제·생성 실패 우선" icon={AlertTriangle} tone="warn" />
+            <InsightCard title="처리 중" value={`${issueRows.filter((issue) => issue.status === '처리 중').length}건`} body="고객 재안내 전 내부 확인" icon={Activity} />
+            <InsightCard title="대기" value={`${issueRows.filter((issue) => issue.status === '대기').length}건`} body="동일 유형 반복 여부 확인" icon={Clock} />
+            <InsightCard title="운영 기준" value="24시간" body="유료 고객 신고는 하루 안에 답변하는 기준" icon={ShieldCheck} tone="good" />
+          </div>
+
           <div className="admin-issue-list">
             {issueRows.map((issue) => (
               <article key={issue.id} className={issue.severity}>
                 <MessageSquareWarning size={18} />
                 <div>
                   <strong>{issue.type}</strong>
-                  <p>{issue.customer} · {issue.product}</p>
+                  <p>{issue.customer} · {issue.product} · {issue.orderId}</p>
                 </div>
                 <span>{issue.status}</span>
                 <small>{formatDateTime(issue.createdAt)}</small>
@@ -719,6 +1175,7 @@ export default function Admin() {
               <div><span>매출</span><strong>{formatCurrency(totalRevenue)}</strong></div>
               <div><span>Gemini/KASI 추정</span><strong>{formatCurrency(apiCost)}</strong></div>
               <div><span>결제 수수료 추정</span><strong>{formatCurrency(paymentFee)}</strong></div>
+              <div><span>리포트 평균 생성</span><strong>{avgLatency}초</strong></div>
               <div className="net"><span>순매출 추정</span><strong>{formatCurrency(netRevenue)}</strong></div>
             </div>
           </article>
@@ -730,19 +1187,20 @@ export default function Admin() {
               </div>
               <p>저가 상품은 API 원가와 결제 수수료가 더 민감합니다.</p>
             </div>
-            <div className="admin-margin-list">
-              {serviceCatalog.map((service) => {
-                const serviceOrders = paidOrders.filter((order) => order.productId === service.id);
-                const revenue = serviceOrders.reduce((sum, order) => sum + order.amount, 0);
-                const cost = serviceOrders.length * 92 + revenue * 0.033;
-                const margin = revenue - cost;
+            <div className="admin-margin-list enhanced">
+              {productRows.map((service) => {
+                const cost = service.orders * 92 + service.revenue * 0.033;
+                const margin = service.revenue - cost;
 
                 return (
                   <article key={service.id}>
                     <strong>{service.label}</strong>
-                    <span>{serviceOrders.length}건</span>
-                    <em>{formatCurrency(revenue)}</em>
+                    <span>{service.orders}건</span>
+                    <em>{formatCurrency(service.revenue)}</em>
                     <b>{formatCurrency(margin)}</b>
+                    <div className="admin-mini-bar">
+                      <i style={{ width: `${Math.max(4, Math.min(100, service.share))}%` }} />
+                    </div>
                   </article>
                 );
               })}
@@ -752,10 +1210,10 @@ export default function Admin() {
       ) : null}
 
       <section className="admin-data-note">
-        <Filter size={16} />
+        <Database size={16} />
         <p>
-          지금 화면은 {isSampleMode ? '샘플 데이터' : '현재 브라우저 저장 데이터'} 기준입니다. 실제 대기업식 운영을 위해서는
-          `analytics_events`, `orders`, `payments`, `users`, `reports`, `report_issues` 테이블을 서버에 저장해야 합니다.
+          지금 화면은 {isSampleMode ? '샘플 데이터' : '현재 브라우저 저장 데이터'} 기준입니다. 실제 운영 데이터로 바꾸려면
+          `analytics_events`, `orders`, `payments`, `users`, `reports`, `report_issues` 테이블과 서버 관리자 권한 검증을 연결하면 됩니다.
         </p>
       </section>
     </main>
