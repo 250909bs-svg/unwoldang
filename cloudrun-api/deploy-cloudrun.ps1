@@ -9,7 +9,9 @@ param(
   [string]$AllowedOrigins = "https://unwoldang.com,https://www.unwoldang.com",
   [string]$GeminiModel = "gemini-2.5-flash",
   [string]$KasiSecretName = "",
-  [string]$TossSecretName = ""
+  [string]$TossSecretName = "",
+  [string]$KakaoRestApiKey = "",
+  [string]$KakaoClientSecretName = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -32,7 +34,14 @@ Write-Host "Region  : $Region"
   if ($TossSecretName.Trim()) {
     $secretPairs += "TOSS_SECRET_KEY=$($TossSecretName):latest"
   }
+  if ($KakaoClientSecretName.Trim()) {
+    $secretPairs += "KAKAO_CLIENT_SECRET=$($KakaoClientSecretName):latest"
+  }
   $secretArg = $secretPairs -join ","
+  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel"
+  if ($KakaoRestApiKey.Trim()) {
+    $envVars = "$envVars|KAKAO_REST_API_KEY=$KakaoRestApiKey"
+  }
 
 Push-Location $root
 try {
@@ -54,7 +63,7 @@ try {
     --region $Region `
     --platform managed `
     --allow-unauthenticated `
-    --set-env-vars "^|^ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel" `
+    --set-env-vars "^|^$envVars" `
     --set-secrets $secretArg
 
   Write-Host ""

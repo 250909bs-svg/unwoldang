@@ -37,9 +37,14 @@ const navItems = [
 export default function BottomTabBar() {
   const location = useLocation();
   const locationState = (location.state as { tabOrigin?: string } | null) ?? null;
-  const inFlowPage = ['/detail/', '/form/', '/checkout', '/loading', '/report/'].some((path) =>
+  const inFlowPage = ['/detail/', '/form/', '/checkout', '/loading', '/report/', '/admin'].some((path) =>
     location.pathname.startsWith(path)
   );
+
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
   const effectivePathname = inFlowPage ? locationState?.tabOrigin || '/' : location.pathname;
 
   return (

@@ -12271,6 +12271,17 @@ body {
   cursor: pointer;
 }
 
+.login-inline-error,
+.my-login-error {
+  margin: 10px 0 0;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+  word-break: keep-all;
+}
+
 .my-replay-content {
   display: grid;
   gap: 22px;
@@ -14305,6 +14316,226 @@ body {
   line-height: 1.75;
 }
 
+.admin-page {
+  min-height: 100vh;
+  padding: 22px;
+  background: #f4f1eb;
+  color: #171717;
+}
+
+.admin-lock-card,
+.admin-topbar,
+.admin-warning,
+.admin-stat-grid article,
+.admin-panel {
+  border: 1px solid rgba(38, 38, 38, 0.08);
+  background: #fffdf8;
+  box-shadow: 0 16px 36px rgba(31, 28, 23, 0.08);
+}
+
+.admin-lock-card {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 14px;
+  margin: 72px auto;
+  padding: 24px;
+  border-radius: 22px;
+}
+
+.admin-icon-circle {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #111827;
+  color: #ffffff;
+}
+
+.admin-lock-card h1,
+.admin-topbar h1,
+.admin-panel h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.admin-lock-card p,
+.admin-panel-head p,
+.admin-warning p {
+  margin: 0;
+  color: #667085;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.admin-lock-card label {
+  display: grid;
+  gap: 8px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-lock-card input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+}
+
+.admin-lock-card small {
+  color: #b42318;
+  font-weight: 800;
+}
+
+.admin-lock-card button,
+.admin-topbar button,
+.admin-back-link {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.admin-topbar {
+  max-width: 1040px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 auto 16px;
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.admin-topbar span {
+  color: #8a7258;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-topbar h1 {
+  font-size: 24px;
+}
+
+.admin-warning {
+  max-width: 1040px;
+  display: flex;
+  gap: 10px;
+  margin: 0 auto 14px;
+  padding: 14px;
+  border-radius: 18px;
+  color: #8a7258;
+}
+
+.admin-stat-grid,
+.admin-panel {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-stat-grid article {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 20px;
+}
+
+.admin-stat-grid svg {
+  color: #8a7258;
+}
+
+.admin-stat-grid span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-stat-grid strong {
+  font-size: 26px;
+}
+
+.admin-panel {
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.admin-panel-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-panel h2 {
+  font-size: 18px;
+}
+
+.admin-product-list,
+.admin-table {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-product-list article,
+.admin-table a {
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  border: 1px solid #eaecf0;
+  border-radius: 16px;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-product-list article {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.admin-product-list span,
+.admin-table span,
+.admin-table small {
+  color: #667085;
+  font-size: 12px;
+}
+
+.admin-table a {
+  grid-template-columns: 150px minmax(90px, 0.7fr) minmax(110px, 1fr) minmax(160px, 1.1fr);
+  align-items: center;
+}
+
+.admin-table em {
+  color: #344054;
+  font-style: normal;
+}
+
+.admin-empty {
+  margin: 0;
+  color: #667085;
+}
+
 @media (min-width: 860px) {
   .premium-report-paper {
     max-width: 780px;
@@ -14371,5 +14602,23 @@ body {
   .premium-table td {
     font-size: 13.5px;
     line-height: 1.72;
+  }
+
+  .admin-page {
+    padding: 14px;
+  }
+
+  .admin-topbar,
+  .admin-panel-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-table a {
+    grid-template-columns: 1fr;
   }
 }

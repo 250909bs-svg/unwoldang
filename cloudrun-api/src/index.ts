@@ -3,6 +3,8 @@ import { generateGeminiSajuReport, ReportRequestError } from '../../src/lib/serv
 
 const port = Number(process.env.PORT || 8080);
 const TOSS_CONFIRM_ENDPOINT = 'https://api.tosspayments.com/v1/payments/confirm';
+const KAKAO_TOKEN_ENDPOINT = 'https://kauth.kakao.com/oauth/token';
+const KAKAO_USER_ENDPOINT = 'https://kapi.kakao.com/v2/user/me';
 
 class PaymentRequestError extends Error {
   status: number;
@@ -10,6 +12,16 @@ class PaymentRequestError extends Error {
   constructor(status: number, message: string) {
     super(message);
     this.name = 'PaymentRequestError';
+    this.status = status;
+  }
+}
+
+class KakaoAuthError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'KakaoAuthError';
     this.status = status;
   }
 }
@@ -130,6 +142,72 @@ async function confirmTossPayment(body: Record<string, unknown>) {
   };
 }
 
+async function exchangeKakaoLogin(body: Record<string, unknown>) {
+  const clientId = process.env.KAKAO_REST_API_KEY?.trim();
+  const clientSecret = process.env.KAKAO_CLIENT_SECRET?.trim();
+
+  if (!clientId) {
+    throw new KakaoAuthError(500, '카카오 REST API 키가 서버에 설정되지 않았습니다.');
+  }
+
+  const code = getRequiredString(body, 'code');
+  const redirectUri = getRequiredString(body, 'redirectUri');
+  const tokenParams = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    code
+  });
+
+  if (clientSecret) {
+    tokenParams.set('client_secret', clientSecret);
+  }
+
+  const tokenResponse = await fetch(KAKAO_TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+    },
+    body: tokenParams
+  });
+  const tokenPayload = (await tokenResponse.json().catch(() => null)) as Record<string, unknown> | null;
+
+  if (!tokenResponse.ok || typeof tokenPayload?.access_token !== 'string') {
+    const message =
+      (typeof tokenPayload?.error_description === 'string' && tokenPayload.error_description) ||
+      (typeof tokenPayload?.error === 'string' && tokenPayload.error) ||
+      '카카오 토큰 발급 요청이 실패했습니다.';
+    throw new KakaoAuthError(tokenResponse.status || 502, message);
+  }
+
+  const userResponse = await fetch(KAKAO_USER_ENDPOINT, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${tokenPayload.access_token}`
+    }
+  });
+  const userPayload = (await userResponse.json().catch(() => null)) as Record<string, any> | null;
+
+  if (!userResponse.ok || !userPayload) {
+    const message =
+      (typeof userPayload?.msg === 'string' && userPayload.msg) ||
+      (typeof userPayload?.message === 'string' && userPayload.message) ||
+      '카카오 사용자 정보 조회가 실패했습니다.';
+    throw new KakaoAuthError(userResponse.status || 502, message);
+  }
+
+  return {
+    user: {
+      id: String(userPayload.id || ''),
+      nickname: userPayload.properties?.nickname || userPayload.kakao_account?.profile?.nickname || '카카오 회원',
+      email: userPayload.kakao_account?.email,
+      avatar: userPayload.properties?.profile_image || userPayload.kakao_account?.profile?.profile_image_url
+    },
+    provider: 'kakao',
+    connectedAt: new Date().toISOString()
+  };
+}
+
 async function readJsonBody(req: any) {
   const chunks: Uint8Array[] = [];
   let size = 0;
@@ -207,9 +285,31 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (
+    req.method === 'POST' &&
+    (url.pathname === '/auth/kakao/exchange' || url.pathname === '/api/auth/kakao/exchange')
+  ) {
+    try {
+      const body = (await readJsonBody(req)) as Record<string, unknown>;
+      const payload = await exchangeKakaoLogin(body);
+      sendJson(res, 200, payload);
+    } catch (error) {
+      const status = error instanceof KakaoAuthError || error instanceof PaymentRequestError ? error.status : 500;
+      const message = error instanceof Error ? error.message : '카카오 로그인 처리 중 오류가 발생했습니다.';
+      sendJson(res, status, { message });
+    }
+    return;
+  }
+
   sendJson(res, 404, {
     message: '지원하지 않는 경로입니다.',
-    routes: ['GET /health', 'POST /api/report', 'POST /report', 'POST /api/payments/toss/confirm']
+    routes: [
+      'GET /health',
+      'POST /api/report',
+      'POST /report',
+      'POST /api/payments/toss/confirm',
+      'POST /api/auth/kakao/exchange'
+    ]
   });
 });
 

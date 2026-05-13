@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import KakaoCallback from './pages/KakaoCallback';
 import PaymentCallback from './pages/PaymentCallback';
 import My from './pages/My';
+import Admin from './pages/Admin';
 import LegalPage from './pages/LegalPage';
 import { buildHashCallbackLocation } from './lib/auth';
 import BottomTabBar from './components/BottomTabBar';
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route path="/dreams" element={<Dreams />} />
         <Route path="/tarot" element={<Tarot />} />
         <Route path="/my" element={<My />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Login />} />
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route path="/payment/toss/callback" element={<PaymentCallback />} />

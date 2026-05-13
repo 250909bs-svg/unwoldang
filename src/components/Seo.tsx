@@ -114,6 +114,11 @@ const routeSeo: Record<string, RouteSeo> = {
     title: '환불정책 | 운월당',
     description: '운월당 유료 콘텐츠 결제 취소 및 환불정책입니다.',
     keywords: '운월당 환불정책'
+  },
+  '/admin': {
+    title: '운월당 관리자',
+    description: '운월당 운영자 전용 관리자 페이지입니다.',
+    keywords: '운월당 관리자'
   }
 };
 
@@ -129,7 +134,7 @@ Object.assign(routeSeo, {
 });
 
 const noIndexPrefixes = ['/form/', '/report/', '/auth/', '/payment/'];
-const noIndexPaths = new Set(['/checkout', '/loading', '/login', '/my']);
+const noIndexPaths = new Set(['/checkout', '/loading', '/login', '/my', '/admin']);
 
 function setMeta(name: string, content: string, attribute: 'name' | 'property' = 'name') {
   let tag = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`);

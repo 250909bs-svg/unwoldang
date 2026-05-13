@@ -74,12 +74,12 @@ export const createDemoUser = (nickname = '운월당 회원'): AuthUser => ({
   connectedAt: new Date().toISOString()
 });
 
-export const getExternalCallbackBaseUrl = () => {
+export const getKakaoRedirectUri = () => {
   if (typeof window === 'undefined') {
     return '';
   }
 
-  return `${window.location.origin}${window.location.pathname}`;
+  return `${window.location.origin}/auth/kakao/callback`;
 };
 
 export const buildHashCallbackLocation = () => {
@@ -131,7 +131,7 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
     return null;
   }
 
-  const redirectUri = getExternalCallbackBaseUrl();
+  const redirectUri = getKakaoRedirectUri();
   const state = encodeAuthState({
     provider: 'kakao',
     returnTo,
@@ -143,6 +143,11 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
     response_type: 'code',
     state
   });
+  const scopes = import.meta.env.VITE_KAKAO_SCOPES;
+
+  if (scopes) {
+    params.set('scope', scopes);
+  }
 
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
 };

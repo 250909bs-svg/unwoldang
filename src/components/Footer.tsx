@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 
-const hiddenPrefixes = ['/form/', '/checkout', '/loading', '/report/'];
+const hiddenPrefixes = ['/form/', '/checkout', '/loading', '/report/', '/admin'];
 
 export default function Footer() {
   const location = useLocation();

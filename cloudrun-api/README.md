@@ -7,6 +7,8 @@
 - `GET /health`
 - `POST /api/report`
 - `POST /report`
+- `POST /api/auth/kakao/exchange`
+- `POST /api/payments/toss/confirm`
 
 ## 로컬 빌드
 
@@ -64,6 +66,39 @@ gcloud run deploy unwoldang-report-api `
 ```env
 VITE_REPORT_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/report
 VITE_TOSSPAYMENTS_CONFIRM_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/payments/toss/confirm
+VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/auth/kakao/exchange
+```
+
+## Kakao Login
+
+카카오 로그인은 프론트에서 인가 코드를 받은 뒤 Cloud Run에서 토큰 발급과 사용자 정보 조회를 처리합니다.
+
+카카오 개발자 콘솔에서 아래 Redirect URI를 등록하세요.
+
+```text
+https://unwoldang.com/auth/kakao/callback
+https://www.unwoldang.com/auth/kakao/callback
+http://localhost:5173/auth/kakao/callback
+http://127.0.0.1:5173/auth/kakao/callback
+```
+
+프론트에는 REST API 키를 공개 환경변수로 넣습니다.
+
+```env
+VITE_KAKAO_REST_API_KEY=your_kakao_rest_api_key
+VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/auth/kakao/exchange
+VITE_KAKAO_SCOPES=profile_nickname,profile_image,account_email
+```
+
+Cloud Run에는 같은 REST API 키를 서버 환경변수로 넣고, 카카오 Client Secret을 켠 경우 Secret Manager로 연결합니다.
+
+```powershell
+gcloud secrets create KAKAO_CLIENT_SECRET --data-file="C:\path\to\kakao-client-secret.txt"
+
+.\cloudrun-api\deploy-cloudrun.ps1 `
+  -ProjectId YOUR_PROJECT `
+  -KakaoRestApiKey YOUR_KAKAO_REST_API_KEY `
+  -KakaoClientSecretName KAKAO_CLIENT_SECRET
 ```
 
 ## KASI calendar verification

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
-import { decodeAuthState, getExternalCallbackBaseUrl } from '../lib/auth';
+import { decodeAuthState, getKakaoRedirectUri } from '../lib/auth';
 
 type CallbackStatus = 'loading' | 'error';
 
@@ -51,7 +51,7 @@ const normalizeKakaoUser = (payload: KakaoExchangeResponse) => {
 export default function KakaoCallback() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { completeLogin, loginDemo } = useAuth();
+  const { completeLogin } = useAuth();
   const [status, setStatus] = useState<CallbackStatus>('loading');
   const [message, setMessage] = useState('카카오 로그인 결과를 확인하고 있습니다.');
 
@@ -79,8 +79,8 @@ export default function KakaoCallback() {
       const exchangeEndpoint = import.meta.env.VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT;
 
       if (!exchangeEndpoint) {
-        loginDemo('카카오 테스트 회원');
-        navigate(returnTo, { replace: true });
+        setStatus('error');
+        setMessage('카카오 로그인 교환 API가 아직 설정되지 않았습니다.');
         return;
       }
 
@@ -92,7 +92,7 @@ export default function KakaoCallback() {
           },
           body: JSON.stringify({
             code,
-            redirectUri: getExternalCallbackBaseUrl()
+            redirectUri: getKakaoRedirectUri()
           })
         });
 
@@ -113,7 +113,7 @@ export default function KakaoCallback() {
     };
 
     void run();
-  }, [code, completeLogin, error, errorDescription, loginDemo, navigate, returnTo]);
+  }, [code, completeLogin, error, errorDescription, navigate, returnTo]);
 
   return (
     <main className="mobile-page-shell">

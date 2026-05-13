@@ -1,7 +1,6 @@
 import { Menu, MessageCircle } from 'lucide-react';
-import { useMemo } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { buildKakaoAuthorizeUrl } from '../lib/auth';
 
 type LoginLocationState = {
@@ -10,30 +9,19 @@ type LoginLocationState = {
 };
 
 export default function Login() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { loginDemo } = useAuth();
+  const [loginError, setLoginError] = useState('');
 
   const returnTo = useMemo(() => {
     const state = (location.state as LoginLocationState) || {};
     return state.returnTo || '/my';
   }, [location.state]);
 
-  const tabOrigin = useMemo(() => {
-    const state = (location.state as LoginLocationState) || {};
-    return state.tabOrigin;
-  }, [location.state]);
-
-  const moveAfterLogin = () => {
-    navigate(returnTo, { replace: true, state: tabOrigin ? { tabOrigin } : undefined });
-  };
-
   const handleKakaoLogin = () => {
     const authorizeUrl = buildKakaoAuthorizeUrl(returnTo);
 
     if (!authorizeUrl) {
-      loginDemo('카카오 회원');
-      moveAfterLogin();
+      setLoginError('카카오 REST API 키가 설정되지 않았습니다. 관리자에게 문의해 주세요.');
       return;
     }
 
@@ -63,6 +51,7 @@ export default function Login() {
               <MessageCircle size={18} fill="currentColor" />
               카카오로 로그인/가입
             </button>
+            {loginError ? <p className="login-inline-error">{loginError}</p> : null}
           </div>
         </section>
       </div>

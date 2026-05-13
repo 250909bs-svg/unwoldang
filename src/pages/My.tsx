@@ -1,6 +1,6 @@
 import { ChevronRight, LogOut, Menu, MessageCircle, ScrollText, Sparkles } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { buildKakaoAuthorizeUrl } from '../lib/auth';
 import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
@@ -74,15 +74,13 @@ function MyReplayHeader() {
 }
 
 function LoggedOutReplay() {
-  const navigate = useNavigate();
-  const { loginDemo } = useAuth();
+  const [loginError, setLoginError] = useState('');
 
   const handleKakaoLogin = () => {
     const authorizeUrl = buildKakaoAuthorizeUrl('/my');
 
     if (!authorizeUrl) {
-      loginDemo('카카오 회원');
-      navigate('/my', { replace: true });
+      setLoginError('카카오 REST API 키가 설정되지 않았습니다. 관리자에게 문의해 주세요.');
       return;
     }
 
@@ -103,6 +101,7 @@ function LoggedOutReplay() {
             <MessageCircle size={17} fill="currentColor" />
             카카오로 로그인/가입
           </button>
+          {loginError ? <p className="my-login-error">{loginError}</p> : null}
         </div>
       </section>
     </main>
