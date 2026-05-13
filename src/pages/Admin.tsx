@@ -8,7 +8,6 @@ import {
   CreditCard,
   Database,
   Eye,
-  Gauge,
   LineChart,
   Lock,
   MessageSquareWarning,
@@ -18,20 +17,20 @@ import {
   ScrollText,
   ShieldCheck,
   Sparkles,
-  Target,
   TrendingUp,
   UserRound,
   Users,
   WalletCards,
   Zap
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { findServiceById, serviceCatalog, serviceCategories, type ServiceCategoryId, type ServiceId } from '../api/mockData';
 import { readStoredAuthUser } from '../lib/auth';
 import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
 
-const ADMIN_SESSION_KEY = 'unwoldang.admin.session';
+const ADMIN_SESSION_KEY = 'unwoldang.admin.session.v2';
+const ADMIN_CREDENTIAL_HASH = '1772a644a9ccd340736c342b6dfe5b928d316deaa8646746b85cd2cf714a57ab';
 
 type AdminView = 'overview' | 'funnel' | 'orders' | 'customers' | 'reports' | 'issues' | 'costs';
 type IconComponent = typeof BarChart3;
@@ -157,6 +156,16 @@ function formatCurrency(value: number) {
 
 function formatPercent(value: number) {
   return `${value.toFixed(1)}%`;
+}
+
+function arrayBufferToHex(buffer: ArrayBuffer) {
+  return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashAdminCredential(adminId: string, password: string) {
+  const encoded = new TextEncoder().encode(`${adminId.trim()}:${password}`);
+  const digest = await window.crypto.subtle.digest('SHA-256', encoded);
+  return arrayBufferToHex(digest);
 }
 
 function formatDateTime(value: string) {
@@ -866,21 +875,15 @@ function ActionCommand({
 }
 
 export default function Admin() {
-  const adminCode = import.meta.env.VITE_ADMIN_ACCESS_CODE;
-  const [inputCode, setInputCode] = useState('');
+  const [adminId, setAdminId] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [accessError, setAccessError] = useState('');
   const [activeView, setActiveView] = useState<AdminView>('overview');
-  const [isUnlocked, setIsUnlocked] = useState(() => {
-    if (!adminCode) {
-      return isLocalAdminHost();
-    }
-
-    return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok';
-  });
+  const [isUnlocked, setIsUnlocked] = useState(() => window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok');
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [reports, setReports] = useState(() => readReportArchiveEntries());
   const authUser = readStoredAuthUser();
-  const isLocalOnlyMode = !adminCode && isLocalAdminHost();
-  const isBlockedLiveAdmin = !adminCode && !isLocalAdminHost();
+  const isLocalOnlyMode = isLocalAdminHost();
   const realOrders = useMemo(() => reports.map(toAdminOrder), [reports]);
   const isSampleMode = realOrders.length === 0;
   const orders = useMemo(() => (realOrders.length ? realOrders : buildSampleOrders()), [realOrders]);
@@ -946,64 +949,95 @@ export default function Admin() {
     }
   ];
 
-  const unlock = () => {
-    if (!adminCode || inputCode.trim() === adminCode) {
-      window.sessionStorage.setItem(ADMIN_SESSION_KEY, 'ok');
-      setIsUnlocked(true);
-      setAccessError('');
-      return;
-    }
+  const unlock = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    setIsCheckingAccess(true);
 
-    setAccessError('관리자 코드가 맞지 않습니다.');
+    try {
+      const credentialHash = await hashAdminCredential(adminId, adminPassword);
+
+      if (credentialHash === ADMIN_CREDENTIAL_HASH) {
+        window.sessionStorage.setItem(ADMIN_SESSION_KEY, 'ok');
+        setAdminPassword('');
+        setIsUnlocked(true);
+        setAccessError('');
+        return;
+      }
+
+      setAccessError('아이디 또는 비밀번호가 맞지 않습니다.');
+    } catch {
+      setAccessError('브라우저 보안 모듈을 사용할 수 없어 로그인할 수 없습니다.');
+    } finally {
+      setIsCheckingAccess(false);
+    }
   };
+
+  const lockAdmin = () => {
+    window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    setIsUnlocked(false);
+    setAdminPassword('');
+  };
+
+  const openView = (view: AdminView) => {
+    setActiveView(view);
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const todayPaidCount = todayOrders.filter((order) => order.status === 'paid').length;
+  const categoryCards: Array<{ id: AdminView; label: string; value: string; description: string; icon: IconComponent; tone?: 'good' | 'warn' | 'blue' }> = [
+    { id: 'overview', label: '전체 흐름', value: `${todayPaidCount}건`, description: `${bestCategory?.label || '핵심 카테고리'} 중심으로 오늘 매출과 액션 확인`, icon: BarChart3, tone: 'good' },
+    { id: 'funnel', label: '유입·이탈', value: formatPercent(largestDrop.drop), description: '어느 단계에서 고객이 빠지는지 확인', icon: MousePointerClick, tone: 'warn' },
+    { id: 'orders', label: '결제·주문', value: formatCurrency(todayRevenue), description: '주문번호, 유입, 기기, 결제 상태 관리', icon: CreditCard, tone: 'good' },
+    { id: 'customers', label: '고객·카카오', value: `${customerRows.length}명`, description: '고객군, 재구매 후보, 열람률 확인', icon: Users, tone: 'blue' },
+    { id: 'reports', label: '리포트 품질', value: `${avgReadRate}%`, description: '생성 시간, 열람률, 신고율 관리', icon: ScrollText },
+    { id: 'issues', label: '오류 신고', value: `${highSeverityIssues}건`, description: '오타, 불일치, 결제 문의 검수', icon: MessageSquareWarning, tone: highSeverityIssues ? 'warn' : undefined },
+    { id: 'costs', label: '비용·마진', value: formatCurrency(netRevenue), description: 'API 원가, 결제 수수료, 상품별 마진', icon: WalletCards, tone: 'blue' }
+  ];
 
   const refresh = () => {
     setReports(readReportArchiveEntries());
   };
 
-  if (isBlockedLiveAdmin) {
-    return (
-      <main className="admin-page">
-        <section className="admin-lock-card">
-          <span className="admin-icon-circle">
-            <ShieldCheck size={22} />
-          </span>
-          <h1>관리자 페이지가 잠겨 있습니다</h1>
-          <p>운영 도메인에서는 서버 권한 검증이 연결되기 전까지 관리자 화면을 열 수 없습니다.</p>
-          <Link to="/" className="admin-back-link">홈으로 돌아가기</Link>
-        </section>
-      </main>
-    );
-  }
-
   if (!isUnlocked) {
     return (
       <main className="admin-page">
-        <section className="admin-lock-card">
+        <form className="admin-lock-card" onSubmit={unlock}>
           <span className="admin-icon-circle">
             <Lock size={22} />
           </span>
           <h1>운월당 관리자</h1>
-          <p>결제, 고객, 리포트, 오류 신고를 확인하는 운영자 전용 화면입니다.</p>
+          <p>결제, 고객, 리포트, 오류 신고를 확인하는 운영자 전용 화면입니다. 관리자 아이디와 비밀번호로 접속합니다.</p>
           <label>
-            관리자 코드
+            관리자 아이디
+            <input
+              type="text"
+              value={adminId}
+              onChange={(event) => setAdminId(event.target.value)}
+              placeholder="아이디를 입력하세요"
+              autoComplete="username"
+              required
+            />
+          </label>
+          <label>
+            비밀번호
             <input
               type="password"
-              value={inputCode}
-              onChange={(event) => setInputCode(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  unlock();
-                }
-              }}
-              placeholder="관리자 코드를 입력하세요"
+              value={adminPassword}
+              onChange={(event) => setAdminPassword(event.target.value)}
+              placeholder="비밀번호를 입력하세요"
+              autoComplete="current-password"
+              required
             />
           </label>
           {accessError ? <small>{accessError}</small> : null}
-          <button type="button" onClick={unlock}>
-            관리자 페이지 열기
+          <button type="submit" disabled={isCheckingAccess}>
+            {isCheckingAccess ? '확인 중' : '관리자 페이지 열기'}
           </button>
-        </section>
+          <p className="admin-lock-note">프론트 잠금은 임시 보호입니다. 출시 전 서버 로그인과 접속 로그를 반드시 연결해야 합니다.</p>
+        </form>
       </main>
     );
   }
@@ -1029,6 +1063,10 @@ export default function Admin() {
           <button type="button" onClick={refresh}>
             <RefreshCw size={16} />
             새로고침
+          </button>
+          <button type="button" onClick={lockAdmin}>
+            <Lock size={16} />
+            잠금
           </button>
         </div>
       </header>
@@ -1059,13 +1097,35 @@ export default function Admin() {
             const Icon = tab.icon;
 
             return (
-              <button key={tab.id} type="button" className={activeView === tab.id ? 'active' : ''} onClick={() => setActiveView(tab.id)}>
+              <button key={tab.id} type="button" className={activeView === tab.id ? 'active' : ''} onClick={() => openView(tab.id)}>
                 <Icon size={15} />
                 {tab.label}
               </button>
             );
           })}
         </div>
+      </section>
+
+      <section className="admin-category-hub" aria-label="운영 카테고리">
+        {categoryCards.map((card) => {
+          const Icon = card.icon;
+
+          return (
+            <button
+              key={card.id}
+              type="button"
+              className={`${activeView === card.id ? 'active' : ''} ${card.tone || ''}`}
+              onClick={() => openView(card.id)}
+            >
+              <span>
+                <Icon size={18} />
+                {card.label}
+              </span>
+              <strong>{card.value}</strong>
+              <p>{card.description}</p>
+            </button>
+          );
+        })}
       </section>
 
       {activeView === 'overview' ? (
@@ -1075,107 +1135,9 @@ export default function Admin() {
             <HealthRadar items={healthItems} />
           </section>
 
-          <section className="admin-ops-grid">
-            <RevenueTrendChart data={dailyTrend} />
-            <HourlyBarChart data={hourlyRows} />
-            <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
-          </section>
-
           <section className="admin-visual-grid">
             <ProductHeatmap rows={productRows} />
             <ActionCommand actions={actionRows} />
-          </section>
-
-          <section className="admin-dashboard-grid">
-            <article className="admin-panel wide">
-              <div className="admin-panel-head">
-                <div>
-                  <span>FUNNEL SNAPSHOT</span>
-                  <h2>오늘 결제 흐름</h2>
-                </div>
-                <p>어디서 빠지는지 가장 먼저 봅니다.</p>
-              </div>
-              <div className="admin-funnel-flow">
-                {funnel.map((step, index) => (
-                  <div key={step.key} className="admin-funnel-step">
-                    <div>
-                      <strong>{step.count.toLocaleString('ko-KR')}</strong>
-                      <span>{step.label}</span>
-                    </div>
-                    {index > 0 ? <em>{formatPercent(step.benchmark)}</em> : <em>기준</em>}
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            <article className="admin-panel">
-              <div className="admin-panel-head compact">
-                <div>
-                  <span>PRODUCT MIX</span>
-                  <h2>상품별 매출 비중</h2>
-                </div>
-              </div>
-              <div className="admin-rank-list">
-                {productRows.slice(0, 5).map((row) => (
-                  <div key={row.id}>
-                    <strong>{row.label}</strong>
-                    <span>{formatCurrency(row.revenue)} · {formatPercent(row.share)}</span>
-                    <div className="admin-mini-bar">
-                      <i style={{ width: `${Math.max(6, row.share)}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            <article className="admin-panel wide">
-              <div className="admin-panel-head">
-                <div>
-                  <span>REALTIME ORDERS</span>
-                  <h2>최근 결제와 리포트 생성</h2>
-                </div>
-                <Link to="#" onClick={(event) => { event.preventDefault(); setActiveView('orders'); }}>전체 보기</Link>
-              </div>
-              <div className="admin-order-list">
-                {orders.slice(0, 7).map((order) => (
-                  <div key={order.id} className="admin-order-row">
-                    <span className={`admin-status-dot ${order.status}`} />
-                    <div>
-                      <strong>{maskName(order.customerName)}</strong>
-                      <p>{order.productName}</p>
-                    </div>
-                    <em>{formatCurrency(order.amount)}</em>
-                    <small>{formatDateTime(order.createdAt)}</small>
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            <article className="admin-panel">
-              <div className="admin-panel-head compact">
-                <div>
-                  <span>EXECUTION QUEUE</span>
-                  <h2>오늘 봐야 할 것</h2>
-                </div>
-              </div>
-              <div className="admin-quality-stack">
-                <div>
-                  <Target size={18} />
-                  <strong>{bestCategory?.label || '데이터 없음'}</strong>
-                  <span>{bestProduct?.label || '주력 상품'} 중심으로 매출 발생</span>
-                </div>
-                <div>
-                  <Gauge size={18} />
-                  <strong>{avgLatency}초</strong>
-                  <span>평균 리포트 생성 시간</span>
-                </div>
-                <div>
-                  <MessageSquareWarning size={18} />
-                  <strong>{highSeverityIssues}건</strong>
-                  <span>우선 처리 신고</span>
-                </div>
-              </div>
-            </article>
           </section>
         </>
       ) : null}
@@ -1246,6 +1208,12 @@ export default function Admin() {
             <InsightCard title="실패 주문" value={`${orders.filter((order) => order.status === 'failed').length}건`} body="토스 실패 콜백과 고객 안내 필요" icon={AlertTriangle} tone="warn" />
             <InsightCard title="모바일 결제" value={formatPercent(mobileShare)} body="결제창 모바일 최적화 우선" icon={MousePointerClick} />
           </div>
+
+          <section className="admin-ops-grid">
+            <RevenueTrendChart data={dailyTrend} />
+            <HourlyBarChart data={hourlyRows} />
+            <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
+          </section>
 
           <div className="admin-data-table orders enhanced">
             <div className="admin-table-head">

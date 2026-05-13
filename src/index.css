@@ -14392,6 +14392,16 @@ body {
   font-weight: 800;
 }
 
+.admin-lock-note {
+  margin: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff6e8;
+  color: #8a4b08 !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
 .admin-lock-card button,
 .admin-topbar button,
 .admin-back-link {
@@ -14408,6 +14418,11 @@ body {
   font-size: 13px;
   font-weight: 900;
   text-decoration: none;
+}
+
+.admin-lock-card button:disabled {
+  cursor: wait;
+  opacity: 0.62;
 }
 
 .admin-topbar {
@@ -14726,6 +14741,73 @@ body {
 .admin-tabs button.active {
   background: #111827;
   color: #ffffff;
+}
+
+.admin-category-hub {
+  max-width: 1180px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 auto 14px;
+}
+
+.admin-category-hub button {
+  min-height: 126px;
+  display: grid;
+  align-content: space-between;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(38, 38, 38, 0.08);
+  border-radius: 20px;
+  background: #fffdf8;
+  color: #111827;
+  text-align: left;
+  box-shadow: 0 12px 28px rgba(31, 28, 23, 0.055);
+}
+
+.admin-category-hub button.active {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+.admin-category-hub button.good:not(.active) {
+  background: linear-gradient(180deg, #ffffff 0%, #f2fbf6 100%);
+}
+
+.admin-category-hub button.warn:not(.active) {
+  background: linear-gradient(180deg, #ffffff 0%, #fff4f2 100%);
+}
+
+.admin-category-hub button.blue:not(.active) {
+  background: linear-gradient(180deg, #ffffff 0%, #effaf8 100%);
+}
+
+.admin-category-hub span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.admin-category-hub strong {
+  color: inherit;
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+.admin-category-hub p {
+  margin: 0;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.admin-category-hub button.active p {
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .admin-dashboard-grid {
@@ -15924,6 +16006,7 @@ body {
   .admin-metric-grid,
   .admin-dashboard-grid,
   .admin-stat-grid,
+  .admin-category-hub,
   .admin-command-grid,
   .admin-visual-grid,
   .admin-ops-grid,
