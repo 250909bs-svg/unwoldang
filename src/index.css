@@ -15031,10 +15031,12 @@ body {
 .admin-margin-list article,
 .admin-report-grid article,
 .admin-customer-grid article,
+.admin-customer-grid button,
 .admin-issue-list article,
 .admin-funnel-table article,
 .admin-order-row,
 .admin-data-table a,
+.admin-data-table button,
 .admin-data-table article {
   border: 1px solid #eaecf0;
   border-radius: 16px;
@@ -15165,6 +15167,7 @@ body {
 }
 
 .admin-data-table a,
+.admin-data-table button,
 .admin-data-table article {
   display: grid;
   grid-template-columns: 100px minmax(130px, 1fr) 90px minmax(170px, 1.25fr) 90px 76px 88px;
@@ -15173,6 +15176,7 @@ body {
   padding: 12px;
   color: inherit;
   text-decoration: none;
+  text-align: left;
 }
 
 .admin-data-table span,
@@ -15214,15 +15218,323 @@ body {
   color: #b42318;
 }
 
+.admin-data-table button.active,
+.admin-customer-grid button.active {
+  border-color: #111827;
+  box-shadow: inset 0 0 0 1px #111827;
+}
+
+.admin-drilldown-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.86fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-detail-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(38, 38, 38, 0.08);
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.admin-detail-panel.empty {
+  align-content: center;
+  min-height: 260px;
+}
+
+.admin-detail-panel.empty strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.admin-detail-panel.empty p,
+.admin-empty-detail {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-detail-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-avatar.large {
+  width: 52px;
+  height: 52px;
+  font-size: 18px;
+}
+
+.admin-detail-head span,
+.admin-next-action span,
+.admin-detail-list-head span {
+  color: #8a7258;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.admin-detail-head h3 {
+  margin: 3px 0 0;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.admin-detail-head p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-segment-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: #344054;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-segment-badge.good {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.admin-segment-badge.warn {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.admin-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-detail-metrics div {
+  display: grid;
+  gap: 5px;
+  padding: 11px;
+  border-radius: 14px;
+  background: #f8f4ec;
+}
+
+.admin-detail-metrics span {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-detail-metrics strong {
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.admin-next-action {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #111827;
+  color: #ffffff;
+}
+
+.admin-next-action span,
+.admin-next-action p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.admin-next-action strong {
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-next-action p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.admin-detail-timeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-detail-timeline div {
+  display: grid;
+  gap: 5px;
+  min-height: 86px;
+  padding: 11px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.admin-detail-timeline span {
+  color: #8a7258;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.admin-detail-timeline strong {
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.admin-detail-timeline em {
+  align-self: end;
+  width: fit-content;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #067647;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.admin-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.admin-detail-tags span {
+  min-height: 28px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-detail-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-detail-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-detail-list-head strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.admin-detail-list button,
+.admin-linked-customer,
+.admin-report-open-link {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #fffdf8;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.admin-detail-list button span,
+.admin-detail-list button em {
+  color: #667085;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.admin-detail-list button strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.admin-linked-customer {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: #f3fbf6;
+}
+
+.admin-linked-customer span,
+.admin-linked-customer strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.admin-report-open-link {
+  place-items: center;
+  min-height: 44px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 950;
+  text-align: center;
+}
+
+.admin-customer-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-customer-filter-bar button {
+  display: grid;
+  gap: 6px;
+  min-height: 70px;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111827;
+  text-align: left;
+}
+
+.admin-customer-filter-bar button.active {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+.admin-customer-filter-bar span {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.admin-customer-filter-bar strong {
+  color: inherit;
+  font-size: 19px;
+}
+
 .admin-customer-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.admin-customer-grid article {
+.admin-customer-grid article,
+.admin-customer-grid button {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   padding: 14px;
+  color: inherit;
+  text-align: left;
 }
 
 .admin-avatar {
@@ -15664,7 +15976,8 @@ body {
 
 .admin-data-table.enhanced .admin-table-head,
 .admin-data-table.enhanced a,
-.admin-data-table.enhanced article {
+.admin-data-table.enhanced article,
+.admin-data-table.enhanced button {
   grid-template-columns: 92px minmax(142px, 1.05fr) 78px minmax(160px, 1.15fr) 86px 78px 86px 112px;
 }
 
@@ -16100,7 +16413,8 @@ body {
   .admin-command-grid,
   .admin-visual-grid,
   .admin-dashboard-grid,
-  .admin-report-layout {
+  .admin-report-layout,
+  .admin-drilldown-layout {
     grid-template-columns: 1fr;
   }
 
@@ -16119,8 +16433,14 @@ body {
 
   .admin-data-table.enhanced .admin-table-head,
   .admin-data-table.enhanced a,
-  .admin-data-table.enhanced article {
+  .admin-data-table.enhanced article,
+  .admin-data-table.enhanced button {
     min-width: 920px;
+  }
+
+  .admin-customer-filter-bar,
+  .admin-detail-timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -16245,6 +16565,7 @@ body {
   .admin-ops-grid,
   .admin-insight-grid,
   .admin-report-layout,
+  .admin-drilldown-layout,
   .admin-quality-board {
     grid-template-columns: 1fr;
   }
@@ -16283,9 +16604,11 @@ body {
   .admin-funnel-table article,
   .admin-data-table a,
   .admin-data-table article,
+  .admin-data-table button,
   .admin-data-table.enhanced .admin-table-head,
   .admin-data-table.enhanced a,
   .admin-data-table.enhanced article,
+  .admin-data-table.enhanced button,
   .admin-issue-list article,
   .admin-margin-list article {
     grid-template-columns: 1fr;
@@ -16327,6 +16650,12 @@ body {
 
   .admin-top-categories .admin-category-hub button {
     min-width: 158px;
+  }
+
+  .admin-customer-filter-bar,
+  .admin-detail-timeline,
+  .admin-detail-head {
+    grid-template-columns: 1fr;
   }
 
   .admin-table a {

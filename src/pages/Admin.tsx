@@ -36,6 +36,7 @@ type AdminView = 'overview' | 'funnel' | 'orders' | 'customers' | 'reports' | 'i
 type IconComponent = typeof BarChart3;
 type SourceChannel = '카카오' | '네이버검색' | '인스타그램' | '직접방문' | '재방문';
 type DeviceType = 'mobile' | 'desktop';
+type CustomerFilter = 'all' | 'registered' | 'paid' | 'vip' | 'risk';
 
 type AdminOrder = {
   id: string;
@@ -86,6 +87,19 @@ type CustomerRow = {
   lastProduct: string;
   lastSeen: string;
   readRate: number;
+};
+
+type CustomerProfile = CustomerRow & {
+  id: string;
+  provider: 'kakao' | 'demo';
+  signedAt: string;
+  paidOrders: number;
+  status: 'registered' | 'paid';
+  sourceChannel: SourceChannel;
+  device: DeviceType;
+  segment: 'VIP' | '재구매 후보' | '신규' | '이탈 위험' | '가입만 완료';
+  riskScore: number;
+  nextAction: string;
 };
 
 const sampleChannels: SourceChannel[] = ['카카오', '네이버검색', '인스타그램', '직접방문', '재방문'];
@@ -322,6 +336,117 @@ function buildCustomerRows(orders: AdminOrder[]): CustomerRow[] {
       };
     })
     .sort((left, right) => right.spent - left.spent);
+}
+
+function buildCustomerProfiles(customers: CustomerRow[], orders: AdminOrder[], includeSampleSignups: boolean): CustomerProfile[] {
+  const profiles = customers.map((customer, index) => {
+    const customerOrders = orders
+      .filter((order) => order.customerName === customer.name)
+      .sort((left, right) => +new Date(right.createdAt) - +new Date(left.createdAt));
+    const paidOrders = customerOrders.filter((order) => order.status === 'paid');
+    const firstOrder = customerOrders[customerOrders.length - 1] || customerOrders[0];
+    const latestOrder = customerOrders[0];
+    const riskScore = Math.max(0, Math.min(100, 100 - customer.readRate + (customer.orders === 1 ? 12 : 0)));
+    const segment =
+      customer.orders >= 2 || customer.spent >= 79000
+        ? 'VIP'
+        : customer.readRate >= 88
+          ? '재구매 후보'
+          : customer.readRate < 70
+            ? '이탈 위험'
+            : '신규';
+
+    return {
+      ...customer,
+      id: `customer-${customer.name}`,
+      provider: latestOrder?.paymentMethod === 'kakaoPay' ? 'kakao' : 'demo',
+      signedAt: new Date(new Date(firstOrder?.createdAt || customer.lastSeen).getTime() - (index + 1) * 1000 * 60 * 45).toISOString(),
+      paidOrders: paidOrders.length,
+      status: paidOrders.length ? 'paid' : 'registered',
+      sourceChannel: latestOrder?.sourceChannel || sampleChannels[index % sampleChannels.length],
+      device: latestOrder?.device || sampleDevices[index % sampleDevices.length],
+      segment,
+      riskScore,
+      nextAction:
+        segment === 'VIP'
+          ? '고가 종합사주, 궁합, 결혼운을 묶은 프리미엄 추천'
+          : segment === '재구매 후보'
+            ? '읽은 리포트와 이어지는 다음 상품 배너 노출'
+            : segment === '이탈 위험'
+              ? '생성 지연, 오타 신고, 첫 화면 이탈 여부 확인'
+              : '첫 결제 후 리포트 보관함과 추천 상품 안내'
+    } satisfies CustomerProfile;
+  });
+
+  if (!includeSampleSignups) {
+    return profiles;
+  }
+
+  const now = Date.now();
+  const signupOnly: CustomerProfile[] = [
+    {
+      id: 'signup-only-1',
+      name: '최라온',
+      maskedName: '최*온',
+      email: 'ra***@kakao.sample',
+      orders: 0,
+      paidOrders: 0,
+      spent: 0,
+      lastProduct: '가입 후 상품 탐색',
+      lastSeen: new Date(now - 1000 * 60 * 24).toISOString(),
+      readRate: 0,
+      provider: 'kakao',
+      signedAt: new Date(now - 1000 * 60 * 31).toISOString(),
+      status: 'registered',
+      sourceChannel: '카카오',
+      device: 'mobile',
+      segment: '가입만 완료',
+      riskScore: 71,
+      nextAction: '첫 결제 유도용 2,900원 고민풀이 쿠폰 또는 홈 상단 추천'
+    },
+    {
+      id: 'signup-only-2',
+      name: '신아린',
+      maskedName: '신*린',
+      email: 'ar***@kakao.sample',
+      orders: 0,
+      paidOrders: 0,
+      spent: 0,
+      lastProduct: '결제창 전 이탈',
+      lastSeen: new Date(now - 1000 * 60 * 76).toISOString(),
+      readRate: 0,
+      provider: 'kakao',
+      signedAt: new Date(now - 1000 * 60 * 102).toISOString(),
+      status: 'registered',
+      sourceChannel: '인스타그램',
+      device: 'mobile',
+      segment: '가입만 완료',
+      riskScore: 84,
+      nextAction: '결제 직전 이탈 고객으로 가격 안내와 제공 항목을 다시 노출'
+    }
+  ];
+
+  return [...profiles, ...signupOnly];
+}
+
+function filterCustomerProfiles(profiles: CustomerProfile[], filter: CustomerFilter) {
+  if (filter === 'registered') {
+    return profiles.filter((profile) => profile.status === 'registered');
+  }
+
+  if (filter === 'paid') {
+    return profiles.filter((profile) => profile.paidOrders > 0);
+  }
+
+  if (filter === 'vip') {
+    return profiles.filter((profile) => profile.segment === 'VIP' || profile.segment === '재구매 후보');
+  }
+
+  if (filter === 'risk') {
+    return profiles.filter((profile) => profile.segment === '이탈 위험' || profile.segment === '가입만 완료' || profile.riskScore >= 65);
+  }
+
+  return profiles;
 }
 
 function buildIssueRows(orders: AdminOrder[]) {
@@ -864,6 +989,227 @@ function ActionCommand({
   );
 }
 
+function CustomerDetailPanel({
+  profile,
+  orders,
+  onSelectOrder
+}: {
+  profile?: CustomerProfile;
+  orders: AdminOrder[];
+  onSelectOrder: (orderId: string) => void;
+}) {
+  if (!profile) {
+    return (
+      <article className="admin-detail-panel empty">
+        <strong>고객을 선택하세요</strong>
+        <p>가입 고객이나 결제 고객 카드를 클릭하면 상세 정보가 표시됩니다.</p>
+      </article>
+    );
+  }
+
+  const customerOrders = orders
+    .filter((order) => order.customerName === profile.name)
+    .sort((left, right) => +new Date(right.createdAt) - +new Date(left.createdAt));
+  const firstPaidOrder = [...customerOrders].reverse().find((order) => order.status === 'paid');
+  const latestOrder = customerOrders[0];
+  const journeyRows = [
+    { label: '가입', value: formatDateTime(profile.signedAt), status: '완료' },
+    { label: '첫 결제', value: firstPaidOrder ? formatDateTime(firstPaidOrder.createdAt) : '아직 없음', status: firstPaidOrder ? '완료' : '전환 필요' },
+    { label: '최근 상품', value: latestOrder?.productName || profile.lastProduct, status: latestOrder?.status || profile.status },
+    { label: '최근 활동', value: formatDateTime(profile.lastSeen), status: profile.readRate >= 75 ? '관심 유지' : '재유입 필요' }
+  ];
+  const riskReasons = [
+    profile.paidOrders === 0 ? '가입 후 결제 없음' : '',
+    profile.readRate < 70 ? '리포트 열람률 낮음' : '',
+    profile.riskScore >= 70 ? '이탈 위험도 높음' : '',
+    latestOrder?.status === 'failed' ? '최근 결제 실패' : '',
+    latestOrder?.reportStatus === 'failed' ? '최근 리포트 생성 실패' : ''
+  ].filter(Boolean);
+
+  return (
+    <article className="admin-detail-panel">
+      <div className="admin-detail-head">
+        <div className="admin-avatar large">{profile.maskedName.slice(0, 1)}</div>
+        <div>
+          <span>{profile.provider === 'kakao' ? 'KAKAO CUSTOMER' : 'LOCAL CUSTOMER'}</span>
+          <h3>{profile.maskedName}</h3>
+          <p>{profile.email} · {profile.sourceChannel} · {profile.device === 'mobile' ? '모바일' : '데스크톱'}</p>
+        </div>
+        <b className={`admin-segment-badge ${profile.segment === '이탈 위험' || profile.segment === '가입만 완료' ? 'warn' : 'good'}`}>
+          {profile.segment}
+        </b>
+      </div>
+
+      <div className="admin-detail-metrics">
+        <div><span>가입일</span><strong>{formatDateTime(profile.signedAt)}</strong></div>
+        <div><span>결제</span><strong>{profile.paidOrders}건</strong></div>
+        <div><span>누적 결제</span><strong>{formatCurrency(profile.spent)}</strong></div>
+        <div><span>열람률</span><strong>{profile.readRate}%</strong></div>
+        <div><span>위험도</span><strong>{profile.riskScore}점</strong></div>
+        <div><span>최근 활동</span><strong>{formatDateTime(profile.lastSeen)}</strong></div>
+      </div>
+
+      <div className="admin-next-action">
+        <span>NEXT BEST ACTION</span>
+        <strong>{profile.nextAction}</strong>
+        <p>고객 상태에 따라 다음 상품 추천, 결제 이탈 복구, 리포트 품질 확인을 다르게 처리합니다.</p>
+      </div>
+
+      <div className="admin-detail-timeline">
+        {journeyRows.map((row) => (
+          <div key={`${profile.id}-${row.label}`}>
+            <span>{row.label}</span>
+            <strong>{row.value}</strong>
+            <em>{row.status}</em>
+          </div>
+        ))}
+      </div>
+
+      <div className="admin-detail-tags">
+        <span>유입 {profile.sourceChannel}</span>
+        <span>{profile.provider === 'kakao' ? '카카오 로그인' : '데모/로컬'}</span>
+        <span>{profile.device === 'mobile' ? '모바일 중심' : 'PC 유입'}</span>
+        <span>{riskReasons.length ? riskReasons.join(' · ') : '위험 신호 낮음'}</span>
+      </div>
+
+      <div className="admin-detail-list">
+        <div className="admin-detail-list-head">
+          <span>PAYMENT HISTORY</span>
+          <strong>{customerOrders.length}건</strong>
+        </div>
+        {customerOrders.length ? (
+          customerOrders.map((order) => (
+            <button key={order.id} type="button" onClick={() => onSelectOrder(order.id)}>
+              <span>{formatDateTime(order.createdAt)}</span>
+              <strong>{order.productName}</strong>
+              <em>{formatCurrency(order.amount)} · {order.status} · {order.reportStatus}</em>
+            </button>
+          ))
+        ) : (
+          <p className="admin-empty-detail">가입 후 결제 이력이 없습니다. 첫 결제 전환 캠페인 대상으로 분류하세요.</p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function OrderDetailPanel({
+  order,
+  customer,
+  onSelectCustomer
+}: {
+  order?: AdminOrder;
+  customer?: CustomerProfile;
+  onSelectCustomer: (customerId: string) => void;
+}) {
+  if (!order) {
+    return (
+      <article className="admin-detail-panel empty">
+        <strong>주문을 선택하세요</strong>
+        <p>주문 행을 클릭하면 결제와 리포트 생성 상세가 표시됩니다.</p>
+      </article>
+    );
+  }
+
+  const orderSteps = [
+    {
+      label: '결제 요청',
+      value: formatDateTime(order.createdAt),
+      status: order.status === 'failed' ? '실패' : order.status === 'pending' ? '대기' : '완료'
+    },
+    {
+      label: 'AI 분석',
+      value: `${order.reportLatencySec}초`,
+      status: order.reportStatus === 'failed' ? '실패' : order.reportStatus === 'generating' ? '생성중' : '완료'
+    },
+    {
+      label: '결과 열람',
+      value: `${order.readRate}%`,
+      status: order.readRate >= 80 ? '우수' : order.readRate >= 60 ? '보통' : '개선'
+    },
+    {
+      label: '오류 신고',
+      value: `${order.issueCount}건`,
+      status: order.issueCount ? '확인' : '없음'
+    }
+  ];
+
+  return (
+    <article className="admin-detail-panel">
+      <div className="admin-detail-head">
+        <span className={`admin-status-dot ${order.status}`} />
+        <div>
+          <span>ORDER DETAIL</span>
+          <h3>{order.orderId}</h3>
+          <p>{order.productName} · {order.sourceChannel} · {order.device === 'mobile' ? '모바일' : '데스크톱'}</p>
+        </div>
+        <b className={`admin-segment-badge ${order.status === 'paid' ? 'good' : 'warn'}`}>{order.status}</b>
+      </div>
+
+      <div className="admin-detail-metrics">
+        <div><span>결제금액</span><strong>{formatCurrency(order.amount)}</strong></div>
+        <div><span>결제수단</span><strong>{order.paymentMethod}</strong></div>
+        <div><span>리포트</span><strong>{order.reportStatus}</strong></div>
+        <div><span>생성 시간</span><strong>{order.reportLatencySec}초</strong></div>
+        <div><span>열람률</span><strong>{order.readRate}%</strong></div>
+        <div><span>신고</span><strong>{order.issueCount}건</strong></div>
+      </div>
+
+      <div className="admin-next-action">
+        <span>ORDER ACTION</span>
+        <strong>
+          {order.status === 'failed'
+            ? '결제 실패 고객에게 재결제 안내와 고객센터 문구를 노출하세요.'
+            : order.reportStatus === 'generating'
+              ? '생성 지연 상태입니다. 로딩 이탈과 API 응답 시간을 확인하세요.'
+              : '정상 생성 주문입니다. 열람률이 낮으면 리포트 초반 요약을 점검하세요.'}
+        </strong>
+        <p>{formatDateTime(order.createdAt)} 결제 요청 기준으로 확인합니다.</p>
+      </div>
+
+      <div className="admin-detail-timeline order">
+        {orderSteps.map((step) => (
+          <div key={`${order.id}-${step.label}`}>
+            <span>{step.label}</span>
+            <strong>{step.value}</strong>
+            <em>{step.status}</em>
+          </div>
+        ))}
+      </div>
+
+      <div className="admin-detail-tags">
+        <span>상품 {order.productName}</span>
+        <span>유입 {order.sourceChannel}</span>
+        <span>{order.device === 'mobile' ? '모바일 결제' : 'PC 결제'}</span>
+        <span>{order.archive ? '리포트 보관 있음' : '리포트 보관 없음'}</span>
+      </div>
+
+      {customer ? (
+        <button type="button" className="admin-linked-customer" onClick={() => onSelectCustomer(customer.id)}>
+          <UserRound size={17} />
+          <span>{customer.maskedName} 고객 상세 열기</span>
+          <strong>{formatCurrency(customer.spent)}</strong>
+        </button>
+      ) : null}
+
+      {order.archive ? (
+        <Link
+          className="admin-report-open-link"
+          to={`/report/${order.productId}`}
+          state={{
+            formData: order.archive.formData,
+            paymentMethod: order.archive.paymentMethod,
+            orderId: order.archive.orderId,
+            reportData: order.archive.reportData
+          }}
+        >
+          리포트 화면 열기
+        </Link>
+      ) : null}
+    </article>
+  );
+}
+
 export default function Admin() {
   const [adminId, setAdminId] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
@@ -871,6 +1217,9 @@ export default function Admin() {
   const [activeView, setActiveView] = useState<AdminView>('overview');
   const [isUnlocked, setIsUnlocked] = useState(() => window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok');
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+  const [customerFilter, setCustomerFilter] = useState<CustomerFilter>('all');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState('');
   const [reports, setReports] = useState(() => readReportArchiveEntries());
   const authUser = readStoredAuthUser();
   const isLocalOnlyMode = isLocalAdminHost();
@@ -887,13 +1236,15 @@ export default function Admin() {
   const funnel = useMemo(() => buildFunnel(orders), [orders]);
   const categoryRows = useMemo(() => buildCategoryRows(orders), [orders]);
   const customerRows = useMemo(() => buildCustomerRows(orders), [orders]);
+  const customerProfiles = useMemo(() => buildCustomerProfiles(customerRows, orders, isSampleMode), [customerRows, orders, isSampleMode]);
   const issueRows = useMemo(() => buildIssueRows(orders), [orders]);
   const dailyTrend = useMemo(() => buildDailyTrend(orders), [orders]);
   const hourlyRows = useMemo(() => buildHourlyRows(orders), [orders]);
   const channelRows = useMemo(() => buildChannelRows(orders), [orders]);
   const deviceRows = useMemo(() => buildDeviceRows(orders), [orders]);
   const productRows = useMemo(() => buildProductRows(orders), [orders]);
-  const customerSegments = useMemo(() => buildCustomerSegments(customerRows), [customerRows]);
+  const customerSegments = useMemo(() => buildCustomerSegments(customerProfiles), [customerProfiles]);
+  const filteredCustomerProfiles = useMemo(() => filterCustomerProfiles(customerProfiles, customerFilter), [customerProfiles, customerFilter]);
   const largestDrop = useMemo(() => getLargestDrop(funnel), [funnel]);
   const apiCost = paidOrders.length * 92;
   const paymentFee = totalRevenue * 0.033;
@@ -904,6 +1255,9 @@ export default function Admin() {
   const bestProduct = productRows[0];
   const bestCategory = [...categoryRows].sort((left, right) => right.revenue - left.revenue)[0];
   const highSeverityIssues = issueRows.filter((issue) => issue.severity === 'high').length;
+  const selectedCustomer = customerProfiles.find((profile) => profile.id === selectedCustomerId) || filteredCustomerProfiles[0] || customerProfiles[0];
+  const selectedOrder = orders.find((order) => order.id === selectedOrderId) || orders[0];
+  const selectedOrderCustomer = selectedOrder ? customerProfiles.find((profile) => profile.name === selectedOrder.customerName) : undefined;
   const marginRate = getConversion(netRevenue, totalRevenue || 1);
   const issueRate = getConversion(issueRows.length, orders.length);
   const healthItems = [
@@ -1036,12 +1390,12 @@ export default function Admin() {
     {
       id: 'customers',
       label: '고객·카카오',
-      value: `${customerRows.length}명`,
+      value: `${customerProfiles.length}명`,
       description: '고객군과 재구매',
       detailTitle: '카카오 고객과 재구매 후보 관리',
       detailBody: '고객을 마스킹해서 보되, 구매 횟수, 누적 매출, 열람률로 재구매 가능성을 빠르게 나눕니다.',
       highlights: [
-        { label: '전체 고객', value: `${customerRows.length}명` },
+        { label: '전체 고객', value: `${customerProfiles.length}명` },
         { label: '고관여', value: `${customerSegments[1]?.value || 0}명` },
         { label: 'VIP 후보', value: `${customerSegments[0]?.value || 0}명` }
       ],
@@ -1325,6 +1679,22 @@ export default function Admin() {
             <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
           </section>
 
+          <section className="admin-drilldown-layout">
+            <OrderDetailPanel
+              order={selectedOrder}
+              customer={selectedOrderCustomer}
+              onSelectCustomer={(customerId) => {
+                setSelectedCustomerId(customerId);
+                setActiveView('customers');
+              }}
+            />
+            <CustomerDetailPanel
+              profile={selectedOrderCustomer}
+              orders={orders}
+              onSelectOrder={(orderId) => setSelectedOrderId(orderId)}
+            />
+          </section>
+
           <div className="admin-data-table orders enhanced">
             <div className="admin-table-head">
               <span>시간</span>
@@ -1353,21 +1723,15 @@ export default function Admin() {
                 </>
               );
 
-              return order.archive ? (
-                <Link
+              return (
+                <button
                   key={order.id}
-                  to={`/report/${order.productId}`}
-                  state={{
-                    formData: order.archive.formData,
-                    paymentMethod: order.archive.paymentMethod,
-                    orderId: order.archive.orderId,
-                    reportData: order.archive.reportData
-                  }}
+                  type="button"
+                  className={selectedOrder?.id === order.id ? 'active' : ''}
+                  onClick={() => setSelectedOrderId(order.id)}
                 >
                   {content}
-                </Link>
-              ) : (
-                <article key={order.id}>{content}</article>
+                </button>
               );
             })}
           </div>
@@ -1390,17 +1754,66 @@ export default function Admin() {
             ))}
           </div>
 
+          <div className="admin-customer-filter-bar">
+            {[
+              { id: 'all' as const, label: '전체 고객', value: `${customerProfiles.length}명` },
+              { id: 'registered' as const, label: '가입 고객', value: `${customerProfiles.filter((profile) => profile.status === 'registered').length}명` },
+              { id: 'paid' as const, label: '결제 고객', value: `${customerProfiles.filter((profile) => profile.paidOrders > 0).length}명` },
+              { id: 'vip' as const, label: 'VIP/재구매', value: `${customerProfiles.filter((profile) => profile.segment === 'VIP' || profile.segment === '재구매 후보').length}명` },
+              { id: 'risk' as const, label: '이탈 위험', value: `${customerProfiles.filter((profile) => profile.segment === '이탈 위험' || profile.segment === '가입만 완료' || profile.riskScore >= 65).length}명` }
+            ].map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                className={customerFilter === filter.id ? 'active' : ''}
+                onClick={() => {
+                  setCustomerFilter(filter.id);
+                  const nextProfile = filterCustomerProfiles(customerProfiles, filter.id)[0];
+                  if (nextProfile) {
+                    setSelectedCustomerId(nextProfile.id);
+                  }
+                }}
+              >
+                <span>{filter.label}</span>
+                <strong>{filter.value}</strong>
+              </button>
+            ))}
+          </div>
+
+          <section className="admin-drilldown-layout">
+            <CustomerDetailPanel
+              profile={selectedCustomer}
+              orders={orders}
+              onSelectOrder={(orderId) => {
+                setSelectedOrderId(orderId);
+                setActiveView('orders');
+              }}
+            />
+            <OrderDetailPanel
+              order={selectedOrder}
+              customer={selectedOrderCustomer}
+              onSelectCustomer={(customerId) => setSelectedCustomerId(customerId)}
+            />
+          </section>
+
           <div className="admin-customer-grid">
-            {customerRows.map((customer) => (
-              <article key={customer.name}>
+            {filteredCustomerProfiles.map((customer) => (
+              <button
+                key={customer.id}
+                type="button"
+                className={selectedCustomer?.id === customer.id ? 'active' : ''}
+                onClick={() => setSelectedCustomerId(customer.id)}
+              >
                 <div className="admin-avatar">{customer.maskedName.slice(0, 1)}</div>
                 <div>
                   <strong>{customer.maskedName}</strong>
-                  <span>{customer.email}</span>
+                  <span>{customer.email} · {customer.segment}</span>
                 </div>
                 <dl>
+                  <dt>상태</dt>
+                  <dd>{customer.status === 'paid' ? '결제' : '가입'}</dd>
                   <dt>구매</dt>
-                  <dd>{customer.orders}건</dd>
+                  <dd>{customer.paidOrders}건</dd>
                   <dt>누적</dt>
                   <dd>{formatCurrency(customer.spent)}</dd>
                   <dt>열람</dt>
@@ -1408,8 +1821,8 @@ export default function Admin() {
                   <dt>최근</dt>
                   <dd>{formatDateTime(customer.lastSeen)}</dd>
                 </dl>
-                <p>{customer.lastProduct}</p>
-              </article>
+                <p>{customer.lastProduct} · 위험도 {customer.riskScore}점</p>
+              </button>
             ))}
           </div>
         </section>

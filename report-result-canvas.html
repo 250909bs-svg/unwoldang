@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>운월당 사주 결과 화면</title>
+    <style>
+      :root {
+        --bg: #f7f4ee;
+        --paper: #fffdfa;
+        --ink: #171717;
+        --muted: #6f675d;
+        --line: #e7ded2;
+        --gold: #b88942;
+        --gold-dark: #7a5524;
+        --red: #c7483b;
+        --green: #2f8f68;
+        --blue: #356ba6;
+        --charcoal: #2f3440;
+        --radius: 20px;
+        --shadow: 0 18px 50px rgba(50, 36, 18, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(184, 137, 66, 0.22), transparent 28%),
+          linear-gradient(180deg, #fbf7ef 0%, var(--bg) 100%);
+        color: var(--ink);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        letter-spacing: 0;
+      }
+
+      button,
+      a {
+        font: inherit;
+      }
+
+      .report-page {
+        min-height: 100vh;
+        padding: 18px 12px 48px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        width: min(820px, 100%);
+        margin: 0 auto 12px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid rgba(231, 222, 210, 0.75);
+        border-radius: 999px;
+        background: rgba(255, 253, 250, 0.86);
+        backdrop-filter: blur(14px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .brand-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--gold);
+        box-shadow: 0 0 0 5px rgba(184, 137, 66, 0.12);
+      }
+
+      .top-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .pill {
+        min-height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: #4c453d;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .paper {
+        width: min(820px, 100%);
+        margin: 0 auto;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .cover {
+        position: relative;
+        padding: 30px 22px 24px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 247, 232, 0.84)),
+          radial-gradient(circle at 88% 8%, rgba(184, 137, 66, 0.3), transparent 36%);
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 11px;
+        border: 1px solid rgba(184, 137, 66, 0.24);
+        border-radius: 999px;
+        background: #fff8ec;
+        color: var(--gold-dark);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 16px;
+        font-size: clamp(30px, 7vw, 44px);
+        line-height: 1.15;
+      }
+
+      .subtitle {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .meta-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .meta-card,
+      .card,
+      .callout {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #ffffff;
+      }
+
+      .meta-card {
+        padding: 13px;
+      }
+
+      .meta-card span {
+        display: block;
+        color: #9a9186;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .meta-card strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .section {
+        padding: 24px 22px;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--line);
+      }
+
+      .section-head {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+      }
+
+      .section-index {
+        flex: 0 0 auto;
+        min-width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: #171717;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      h2 {
+        font-size: 24px;
+        line-height: 1.25;
+      }
+
+      .muted {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .callout {
+        padding: 17px;
+        border-left: 5px solid var(--gold);
+        background: #fffaf2;
+      }
+
+      .callout p,
+      .card p,
+      .list li {
+        color: #34302b;
+        font-size: 15px;
+        line-height: 1.75;
+      }
+
+      .grid2,
+      .grid3 {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .grid2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        padding: 17px;
+      }
+
+      .card h3 {
+        margin-bottom: 8px;
+        font-size: 17px;
+        line-height: 1.35;
+      }
+
+      .tone-good {
+        background: #f5fbf4;
+      }
+
+      .tone-warn {
+        background: #fff7ef;
+      }
+
+      .tone-focus {
+        background: #f4f7ff;
+      }
+
+      .list {
+        margin: 12px 0 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .wonguk {
+        padding: 16px;
+        border: 1px solid #e4d7c4;
+        border-radius: 22px;
+        background:
+          linear-gradient(180deg, rgba(255, 250, 242, 0.92), rgba(247, 239, 226, 0.88)),
+          #fffaf2;
+      }
+
+      .wonguk-columns {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .pillar {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .pillar-head {
+        text-align: center;
+      }
+
+      .pillar-head strong {
+        display: block;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .pillar-head span {
+        display: block;
+        margin-top: 3px;
+        color: #77715f;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .pillar-chip {
+        min-height: 86px;
+        padding: 10px 8px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: #fff;
+        background: var(--charcoal);
+      }
+
+      .pillar-chip small {
+        font-size: 10px;
+        opacity: 0.82;
+      }
+
+      .pillar-chip b {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 30px;
+      }
+
+      .pillar-chip em {
+        font-style: normal;
+        font-size: 11px;
+      }
+
+      .wood {
+        background: linear-gradient(155deg, #2f9d72 0%, #55bf89 100%);
+      }
+
+      .fire {
+        background: linear-gradient(155deg, #d73338 0%, #f06464 100%);
+      }
+
+      .earth {
+        background: linear-gradient(155deg, #a77b33 0%, #d0aa65 100%);
+      }
+
+      .metal {
+        background: linear-gradient(155deg, #343943 0%, #717986 100%);
+      }
+
+      .water {
+        background: linear-gradient(155deg, #1f5f9e 0%, #5a9cff 100%);
+      }
+
+      .bars {
+        display: grid;
+        gap: 10px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 48px 1fr 34px;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .bar-track {
+        height: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #eee8de;
+      }
+
+      .bar-track span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--gold), #d8b76b);
+      }
+
+      .qa-block {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .question {
+        background: #171717;
+        color: #fff;
+      }
+
+      .question p {
+        color: #fff;
+        font-weight: 800;
+      }
+
+      .answer {
+        background: #fffaf2;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .timeline-card {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+      }
+
+      .timeline-card span {
+        color: var(--gold-dark);
+        font-weight: 900;
+      }
+
+      .timeline-card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .footer {
+        padding: 22px;
+        color: #7a7168;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 720px) {
+        .topbar {
+          border-radius: 18px;
+        }
+
+        .top-actions {
+          display: none;
+        }
+
+        .paper {
+          border-radius: 22px;
+        }
+
+        .meta-grid,
+        .grid2,
+        .grid3 {
+          grid-template-columns: 1fr;
+        }
+
+        .wonguk-columns {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .section,
+        .cover {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="report-page">
+      <nav class="topbar">
+        <div class="brand"><span class="brand-dot"></span>운월당 프리미엄 리포트</div>
+        <div class="top-actions">
+          <a class="pill" href="#summary">요약</a>
+          <a class="pill" href="#qa">질문</a>
+          <a class="pill" href="#wonguk">원국</a>
+        </div>
+      </nav>
+
+      <article class="paper">
+        <header class="cover">
+          <span class="kicker">PREMIUM SAJU REPORT</span>
+          <h1>차민호 님의 정통 종합사주</h1>
+          <p class="subtitle">
+            입력한 생년월일시와 질문 2개를 기준으로 정리한 개인 맞춤 사주 리포트입니다.
+          </p>
+
+          <div class="meta-grid">
+            <div class="meta-card">
+              <span>생년월일</span>
+              <strong>1992-09-09 / 양력</strong>
+            </div>
+            <div class="meta-card">
+              <span>태어난 시간</span>
+              <strong>사/巳 (09:30-11:29)</strong>
+            </div>
+            <div class="meta-card">
+              <span>리포트 번호</span>
+              <strong>UW-1778224086973</strong>
+            </div>
+          </div>
+        </header>
+
+        <div class="divider"></div>
+
+        <section class="section" id="summary">
+          <div class="section-head">
+            <span class="section-index">01</span>
+            <div>
+              <h2>핵심 결론</h2>
+              <p class="muted">올해의 방향과 가장 먼저 잡아야 할 선택지를 요약했습니다.</p>
+            </div>
+          </div>
+
+          <div class="callout">
+            <p>
+              차민호 님의 사주는 실행력과 현실 감각이 강하게 드러나는 구조입니다. 올해는 큰 방향을 새로 만들기보다 이미 가진 실력과 네트워크를 현금화하는 쪽이 유리합니다.
+            </p>
+          </div>
+
+          <div class="grid3">
+            <article class="card tone-good">
+              <h3>기회</h3>
+              <p>직업운과 재물운이 함께 움직입니다. 새 프로젝트보다 기존 일의 단가와 구조를 재정비하는 선택이 좋습니다.</p>
+            </article>
+            <article class="card tone-focus">
+              <h3>집중</h3>
+              <p>한 번에 여러 방향을 벌리면 힘이 분산됩니다. 수익과 연결되는 한 가지 축을 먼저 고정하세요.</p>
+            </article>
+            <article class="card tone-warn">
+              <h3>주의</h3>
+              <p>감정적으로 급하게 결정하는 투자, 동업, 장기 계약은 충분히 검토한 뒤 움직이는 편이 안전합니다.</p>
+            </article>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section" id="qa">
+          <div class="section-head">
+            <span class="section-index">Q</span>
+            <div>
+              <h2>질문 맞춤 해석</h2>
+              <p class="muted">고객이 입력한 질문에 바로 답하는 영역입니다.</p>
+            </div>
+          </div>
+
+          <div class="qa-block">
+            <article class="card question">
+              <p>Q. 올해 가장 크게 들어오는 기회는 어느 쪽인가요?</p>
+            </article>
+            <article class="card answer">
+              <h3>직업 기반의 재물 기회가 큽니다</h3>
+              <p>
+                올해는 단순한 횡재수보다는 일, 제안, 계약, 역할 확장을 통해 돈이 따라오는 흐름입니다. 특히 기존 경험을 더 전문적인 상품이나 서비스로 묶어내는 선택이 좋습니다.
+              </p>
+            </article>
+          </div>
+
+          <div class="qa-block">
+            <article class="card question">
+              <p>Q. 재물운과 직업운 중 어떤 쪽에 집중해야 하나요?</p>
+            </article>
+            <article class="card answer">
+              <h3>직업운을 먼저 잡으면 재물운이 따라옵니다</h3>
+              <p>
+                지금은 돈만 보고 움직이기보다 직업적 신뢰도, 포트폴리오, 반복 가능한 수익 구조를 먼저 만드는 편이 좋습니다. 재물운은 직업운의 결과로 커지는 흐름입니다.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section" id="wonguk">
+          <div class="section-head">
+            <span class="section-index">02</span>
+            <div>
+              <h2>사주 원국</h2>
+              <p class="muted">년주, 월주, 일주, 시주를 한눈에 보는 영역입니다.</p>
+            </div>
+          </div>
+
+          <div class="wonguk">
+            <div class="wonguk-columns">
+              <div class="pillar">
+                <div class="pillar-head"><strong>年</strong><span>년주</span></div>
+                <div class="pillar-chip metal"><small>천간</small><b>壬</b><em>임 · 수</em></div>
+                <div class="pillar-chip metal"><small>지지</small><b>申</b><em>신 · 금</em></div>
+              </div>
+              <div class="pillar">
+                <div class="pillar-head"><strong>月</strong><span>월주</span></div>
+                <div class="pillar-chip earth"><small>천간</small><b>己</b><em>기 · 토</em></div>
+                <div class="pillar-chip metal"><small>지지</small><b>酉</b><em>유 · 금</em></div>
+              </div>
+              <div class="pillar">
+                <div class="pillar-head"><strong>日</strong><span>일주</span></div>
+                <div class="pillar-chip fire"><small>천간</small><b>丙</b><em>병 · 화</em></div>
+                <div class="pillar-chip earth"><small>지지</small><b>辰</b><em>진 · 토</em></div>
+              </div>
+              <div class="pillar">
+                <div class="pillar-head"><strong>時</strong><span>시주</span></div>
+                <div class="pillar-chip water"><small>천간</small><b>癸</b><em>계 · 수</em></div>
+                <div class="pillar-chip fire"><small>지지</small><b>巳</b><em>사 · 화</em></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <article class="card">
+              <h3>오행 분포</h3>
+              <div class="bars">
+                <div class="bar-row"><span>목</span><div class="bar-track"><span style="width: 24%"></span></div><b>2</b></div>
+                <div class="bar-row"><span>화</span><div class="bar-track"><span style="width: 54%"></span></div><b>4</b></div>
+                <div class="bar-row"><span>토</span><div class="bar-track"><span style="width: 68%"></span></div><b>5</b></div>
+                <div class="bar-row"><span>금</span><div class="bar-track"><span style="width: 82%"></span></div><b>6</b></div>
+                <div class="bar-row"><span>수</span><div class="bar-track"><span style="width: 44%"></span></div><b>3</b></div>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>구조 해석</h3>
+              <p>
+                금과 토의 힘이 강해 현실 판단, 계산, 책임감이 두드러집니다. 화의 기운은 추진력을 만들지만, 과하면 조급함으로 드러날 수 있습니다.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <div class="section-head">
+            <span class="section-index">03</span>
+            <div>
+              <h2>올해 운세 흐름</h2>
+              <p class="muted">연간 흐름을 짧게 읽는 영역입니다.</p>
+            </div>
+          </div>
+
+          <div class="timeline">
+            <article class="timeline-card">
+              <span>2026</span>
+              <div>
+                <strong>확장과 재정비</strong>
+                <p>새로운 무대를 넓히되, 지출과 일정 관리를 함께 잡아야 성과가 남습니다.</p>
+              </div>
+            </article>
+            <article class="timeline-card">
+              <span>2027</span>
+              <div>
+                <strong>수익 구조 안정</strong>
+                <p>올해 만든 기반을 반복 가능한 수익으로 바꾸는 흐름이 강해집니다.</p>
+              </div>
+            </article>
+            <article class="timeline-card">
+              <span>2028</span>
+              <div>
+                <strong>관계와 협업</strong>
+                <p>혼자 밀어붙이기보다 함께 움직이는 구조에서 더 큰 기회가 열립니다.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <div class="section-head">
+            <span class="section-index">04</span>
+            <div>
+              <h2>실천 가이드</h2>
+              <p class="muted">결과를 행동으로 옮기기 위한 우선순위입니다.</p>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <article class="card tone-good">
+              <h3>DO</h3>
+              <ul class="list">
+                <li>올해는 직업적 신뢰도를 먼저 키우세요.</li>
+                <li>수익 모델을 하나로 묶어 반복 가능하게 만드세요.</li>
+                <li>3개월 단위로 목표와 비용을 점검하세요.</li>
+              </ul>
+            </article>
+            <article class="card tone-warn">
+              <h3>AVOID</h3>
+              <ul class="list">
+                <li>감정적으로 큰돈을 움직이는 결정은 피하세요.</li>
+                <li>검토되지 않은 동업, 투자, 장기 계약은 늦추세요.</li>
+                <li>한 번에 여러 방향을 벌리는 선택은 줄이세요.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <footer class="footer">
+          이 화면은 GPT Canvas에서 디자인 수정하기 쉽게 만든 정적 샘플입니다. 실제 앱에서는 Gemini 응답 데이터가 각 섹션에 동적으로 들어갑니다.
+        </footer>
+      </article>
+    </main>
+  </body>
+</html>
