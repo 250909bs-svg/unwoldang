@@ -8,14 +8,14 @@ import { useAuth } from '../context/AuthContext';
 import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
 import {
-  buildTossRedirectUrls,
+  buildPortOneRedirectUrl,
   createCustomerKey,
   createOrderId,
   getPriceValue,
   readPendingPayment,
   savePendingPayment
 } from '../lib/auth';
-import { requestTossPayment } from '../lib/tossPayments';
+import { requestPortOnePayment } from '../lib/portonePayments';
 
 type CheckoutState = {
   product?: string;
@@ -60,16 +60,19 @@ export default function Checkout() {
     [formData, service?.id]
   );
   const paymentMode = import.meta.env.VITE_PAYMENT_MODE ?? 'demo';
-  const tossClientKey = import.meta.env.VITE_TOSSPAYMENTS_CLIENT_KEY?.trim();
-  const confirmEndpoint = import.meta.env.VITE_TOSSPAYMENTS_CONFIRM_ENDPOINT?.trim();
+  const portOneStoreId = import.meta.env.VITE_PORTONE_STORE_ID?.trim();
+  const portOneChannelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY?.trim();
+  const confirmEndpoint = import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim();
+  const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || '01000000000';
+  const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
   const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
   const isLiveMisconfigured = isLiveHost && paymentMode === 'demo';
   const isDemoPayment = paymentMode === 'demo' && !isLiveHost;
-  const canUseTossRuntime = Boolean(tossClientKey && confirmEndpoint && !isDemoPayment);
+  const canUsePortOneRuntime = Boolean(portOneStoreId && portOneChannelKey && confirmEndpoint && !isDemoPayment);
   const hasRequiredBirthInfo = Boolean(formData?.name && formData?.birthDate && (formData?.birthTime || formData?.isUnknownTime));
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());
-  const paymentReady = !isLiveMisconfigured && (isDemoPayment || canUseTossRuntime);
+  const paymentReady = !isLiveMisconfigured && (isDemoPayment || canUsePortOneRuntime);
   const canSubmit = Boolean(
     agreeService &&
       agreePrivacy &&
@@ -120,7 +123,7 @@ export default function Checkout() {
     const pendingPayment = {
       orderId,
       productId: service.id,
-      paymentMethod: 'toss',
+      paymentMethod: 'portone',
       amount,
       customerKey,
       formData,
@@ -134,35 +137,68 @@ export default function Checkout() {
     setError(null);
 
     if (isDemoPayment) {
-      navigate('/payment/toss/callback?payment=toss-success&mock=1', {
+      navigate('/payment/portone/callback?payment=portone-success&mock=1', {
         replace: false
       });
       return;
     }
 
-    if (!canUseTossRuntime || !tossClientKey || !confirmEndpoint) {
+    if (!canUsePortOneRuntime || !portOneStoreId || !portOneChannelKey || !confirmEndpoint) {
       setError('결제 설정을 확인해 주세요.');
       setIsSubmitting(false);
       return;
     }
 
-    const redirectUrls = buildTossRedirectUrls();
-
     try {
-      await requestTossPayment({
-        clientKey: tossClientKey,
-        customerKey,
-        method: 'CARD',
-        orderId,
+      const paymentResponse = await requestPortOnePayment({
+        storeId: portOneStoreId,
+        channelKey: portOneChannelKey,
+        paymentId: orderId,
         orderName: service.label,
-        amount,
-        successUrl: redirectUrls.successUrl,
-        failUrl: redirectUrls.failUrl,
+        totalAmount: amount,
+        customerId: customerKey,
         customerName: formData?.name || user?.nickname || '운월당 고객',
-        customerEmail: user?.email,
-        metadata: {
+        customerEmail,
+        customerPhone,
+        redirectUrl: buildPortOneRedirectUrl(),
+        customData: {
           productId: service.id,
-          paymentMethod: 'toss'
+          paymentMethod: 'portone'
+        }
+      });
+
+      if (!paymentResponse) {
+        return;
+      }
+
+      const response = await fetch(confirmEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          paymentId: paymentResponse.paymentId || orderId,
+          txId: paymentResponse.txId,
+          orderId,
+          amount,
+          productId: service.id
+        })
+      });
+
+      const parsed = (await response.json().catch(() => null)) as { message?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(parsed?.message || 'PortOne KG이니시스 결제 검증에 실패했습니다.');
+      }
+
+      navigate('/loading', {
+        replace: true,
+        state: {
+          product: service.id,
+          formData,
+          paymentMethod: 'portone',
+          orderId,
+          tabOrigin
         }
       });
     } catch (caughtError) {

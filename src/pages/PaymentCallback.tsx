@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
-import { readPendingPayment, type PendingPayment } from '../lib/auth';
+import { readPendingPayment, savePendingPayment, type PendingPayment } from '../lib/auth';
 
 type CallbackView = 'loading' | 'fail' | 'error';
 
@@ -18,11 +18,23 @@ function moveToResult(navigate: ReturnType<typeof useNavigate>, payment: Pending
   });
 }
 
+function getFirstParam(params: URLSearchParams, keys: string[]) {
+  for (const key of keys) {
+    const value = params.get(key);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 export default function PaymentCallback() {
   const location = useLocation();
   const navigate = useNavigate();
   const [view, setView] = useState<CallbackView>('loading');
-  const [message, setMessage] = useState('토스 결제 결과를 확인하고 있습니다.');
+  const [message, setMessage] = useState('PortOne KG이니시스 결제 결과를 확인하고 있습니다.');
 
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
@@ -31,58 +43,56 @@ export default function PaymentCallback() {
     const paymentFlag = params.get('payment');
     const isMock = params.get('mock') === '1';
     const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
-    const paymentKey = params.get('paymentKey');
-    const orderId = params.get('orderId');
-    const amount = params.get('amount');
-    const errorCode = params.get('code');
-    const errorMessage = params.get('message');
+    const paymentId = getFirstParam(params, ['paymentId', 'payment_id', 'orderId']);
+    const txId = getFirstParam(params, ['txId', 'tx_id', 'transactionId']);
+    const errorCode = params.get('code') || params.get('errorCode');
+    const errorMessage = params.get('message') || params.get('errorMessage');
 
     if (!pendingPayment) {
       setView('error');
-      setMessage('진행 중인 주문 정보가 없습니다. 다시 주문 화면으로 이동해 주세요.');
+      setMessage('진행 중인 주문 정보가 없습니다. 다시 주문 화면에서 결제를 시도해 주세요.');
       return;
     }
 
-    if (paymentFlag === 'toss-fail' || errorCode) {
+    if (paymentFlag === 'portone-fail' || errorCode) {
       setView('fail');
-      setMessage(errorMessage || '토스 결제가 취소되었거나 실패했습니다.');
+      setMessage(errorMessage || '결제가 취소되었거나 실패했습니다. 다시 결제해 주세요.');
       return;
     }
 
     if (isMock) {
       if (isLiveHost) {
         setView('error');
-        setMessage('실서비스 도메인에서는 데모 결제 결과를 사용할 수 없습니다. 토스 실결제 승인으로 다시 진행해 주세요.');
+        setMessage('운영 도메인에서는 데모 결제 결과를 사용할 수 없습니다. 실제 KG이니시스 결제로 다시 진행해 주세요.');
         return;
       }
 
-      moveToResult(navigate, pendingPayment);
+      savePendingPayment({
+        ...pendingPayment,
+        paymentMethod: 'portone',
+        paymentKey: pendingPayment.orderId
+      });
+      moveToResult(navigate, { ...pendingPayment, paymentMethod: 'portone' });
       return;
     }
 
-    if (!paymentKey || !orderId || !amount) {
+    if (!paymentId) {
       setView('error');
-      setMessage('토스 결제 승인 정보가 누락되었습니다. 다시 결제를 시도해 주세요.');
+      setMessage('PortOne 결제 ID가 전달되지 않았습니다. 다시 결제를 시도해 주세요.');
       return;
     }
 
-    if (orderId !== pendingPayment.orderId) {
+    if (paymentId !== pendingPayment.orderId) {
       setView('error');
-      setMessage('주문번호가 일치하지 않습니다. 안전을 위해 결제를 중단했습니다.');
+      setMessage('주문번호가 일치하지 않아 결제를 중단했습니다. 고객센터 확인이 필요합니다.');
       return;
     }
 
-    if (Number(amount) !== pendingPayment.amount) {
-      setView('error');
-      setMessage('결제 금액이 주문 정보와 다릅니다. 안전을 위해 결제를 중단했습니다.');
-      return;
-    }
-
-    const confirmEndpoint = import.meta.env.VITE_TOSSPAYMENTS_CONFIRM_ENDPOINT?.trim();
+    const confirmEndpoint = import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim();
 
     if (!confirmEndpoint) {
       setView('error');
-      setMessage('토스 승인 API가 연결되지 않았습니다. 서버 설정을 먼저 확인해 주세요.');
+      setMessage('PortOne 결제 검증 API가 연결되지 않았습니다. 서버 설정을 먼저 확인해 주세요.');
       return;
     }
 
@@ -94,27 +104,33 @@ export default function PaymentCallback() {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            paymentKey,
-            orderId,
-            amount: Number(amount)
+            paymentId,
+            txId,
+            orderId: pendingPayment.orderId,
+            amount: pendingPayment.amount,
+            productId: pendingPayment.productId
           })
         });
 
         const parsed = (await response.json().catch(() => null)) as
-          | { message?: string; paymentKey?: string }
+          | { message?: string; paymentId?: string; txId?: string }
           | null;
 
         if (!response.ok) {
-          throw new Error(parsed?.message || '토스 결제 승인 요청이 실패했습니다.');
+          throw new Error(parsed?.message || 'PortOne KG이니시스 결제 검증에 실패했습니다.');
         }
 
-        moveToResult(navigate, {
+        const confirmedPayment = {
           ...pendingPayment,
-          paymentKey: parsed?.paymentKey || paymentKey
-        });
+          paymentMethod: 'portone',
+          paymentKey: parsed?.paymentId || paymentId,
+          txId: parsed?.txId || txId || undefined
+        } satisfies PendingPayment;
+        savePendingPayment(confirmedPayment);
+        moveToResult(navigate, confirmedPayment);
       } catch (caughtError) {
         setView('error');
-        setMessage(caughtError instanceof Error ? caughtError.message : '결제 승인 처리 중 문제가 발생했습니다.');
+        setMessage(caughtError instanceof Error ? caughtError.message : '결제 검증 처리 중 문제가 발생했습니다.');
       }
     };
 
@@ -127,7 +143,7 @@ export default function PaymentCallback() {
         <MobileTopBar title="결제 결과 확인" backTo="/checkout" backLabel="결제" />
         <section className="mobile-page-content centered">
           <div className="mobile-loading-card">
-            <span className="mobile-chip">TOSS CALLBACK</span>
+            <span className="mobile-chip">PORTONE KG이니시스</span>
             <h1>{message}</h1>
             {view === 'loading' ? (
               <div className="progress-track">

@@ -9,7 +9,9 @@ param(
   [string]$AllowedOrigins = "https://unwoldang.com,https://www.unwoldang.com",
   [string]$GeminiModel = "gemini-2.5-flash",
   [string]$KasiSecretName = "",
-  [string]$TossSecretName = "",
+  [string]$PortOneSecretName = "",
+  [string]$PortOneStoreId = "",
+  [string]$PortOneApiBaseUrl = "https://api.portone.io",
   [string]$KakaoRestApiKey = "",
   [string]$KakaoClientSecretName = ""
 )
@@ -31,14 +33,17 @@ Write-Host "Region  : $Region"
   if ($KasiSecretName.Trim()) {
     $secretPairs += "KASI_SERVICE_KEY=$($KasiSecretName):latest"
   }
-  if ($TossSecretName.Trim()) {
-    $secretPairs += "TOSS_SECRET_KEY=$($TossSecretName):latest"
+  if ($PortOneSecretName.Trim()) {
+    $secretPairs += "PORTONE_API_SECRET=$($PortOneSecretName):latest"
   }
   if ($KakaoClientSecretName.Trim()) {
     $secretPairs += "KAKAO_CLIENT_SECRET=$($KakaoClientSecretName):latest"
   }
   $secretArg = $secretPairs -join ","
-  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel"
+  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|PORTONE_API_BASE_URL=$PortOneApiBaseUrl"
+  if ($PortOneStoreId.Trim()) {
+    $envVars = "$envVars|PORTONE_STORE_ID=$PortOneStoreId"
+  }
   if ($KakaoRestApiKey.Trim()) {
     $envVars = "$envVars|KAKAO_REST_API_KEY=$KakaoRestApiKey"
   }

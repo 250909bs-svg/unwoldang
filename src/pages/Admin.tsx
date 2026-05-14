@@ -30,7 +30,8 @@ import { readStoredAuthUser } from '../lib/auth';
 import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
 
 const ADMIN_SESSION_KEY = 'unwoldang.admin.session.v2';
-const ADMIN_CREDENTIAL_HASH = '1772a644a9ccd340736c342b6dfe5b928d316deaa8646746b85cd2cf714a57ab';
+const ADMIN_CREDENTIAL_HASH = import.meta.env.VITE_LOCAL_ADMIN_CREDENTIAL_HASH || '';
+const ENABLE_CLIENT_ADMIN = import.meta.env.VITE_ENABLE_CLIENT_ADMIN === 'true';
 
 type AdminView = 'overview' | 'funnel' | 'orders' | 'customers' | 'reports' | 'issues' | 'costs';
 type IconComponent = typeof BarChart3;
@@ -245,7 +246,7 @@ function toAdminOrder(report: ReportArchiveEntry, index: number): AdminOrder {
     amount: getServiceAmount(report.productId),
     status: 'paid',
     reportStatus: 'done',
-    paymentMethod: report.paymentMethod || 'toss',
+    paymentMethod: report.paymentMethod || 'portone',
     createdAt: report.createdAt,
     readRate: Math.min(98, 74 + index * 5),
     issueCount: 0,
@@ -274,7 +275,7 @@ function buildSampleOrders(): AdminOrder[] {
       amount: parsePrice(service.price),
       status: seed.status || 'paid',
       reportStatus: seed.reportStatus || 'done',
-      paymentMethod: index % 3 === 0 ? 'kakaoPay' : 'toss',
+      paymentMethod: index % 3 === 0 ? 'kakaoPay' : 'portone',
       createdAt,
       readRate: seed.readRate,
       issueCount: seed.issueCount || 0,
@@ -1215,7 +1216,9 @@ export default function Admin() {
   const [adminPassword, setAdminPassword] = useState('');
   const [accessError, setAccessError] = useState('');
   const [activeView, setActiveView] = useState<AdminView>('overview');
-  const [isUnlocked, setIsUnlocked] = useState(() => window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok');
+  const [isUnlocked, setIsUnlocked] = useState(
+    () => (isLocalAdminHost() || ENABLE_CLIENT_ADMIN) && window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok'
+  );
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [customerFilter, setCustomerFilter] = useState<CustomerFilter>('all');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -1223,6 +1226,7 @@ export default function Admin() {
   const [reports, setReports] = useState(() => readReportArchiveEntries());
   const authUser = readStoredAuthUser();
   const isLocalOnlyMode = isLocalAdminHost();
+  const isAdminAvailable = isLocalOnlyMode || ENABLE_CLIENT_ADMIN;
   const realOrders = useMemo(() => reports.map(toAdminOrder), [reports]);
   const isSampleMode = realOrders.length === 0;
   const orders = useMemo(() => (realOrders.length ? realOrders : buildSampleOrders()), [realOrders]);
@@ -1452,6 +1456,26 @@ export default function Admin() {
   const refresh = () => {
     setReports(readReportArchiveEntries());
   };
+
+  if (!isAdminAvailable) {
+    return (
+      <main className="admin-page">
+        <section className="admin-lock-card">
+          <span className="admin-icon-circle">
+            <ShieldCheck size={22} />
+          </span>
+          <h1>운영 어드민 보호 중</h1>
+          <p>
+            출시 도메인의 클라이언트 어드민은 비활성화되어 있습니다. 실제 고객/결제 데이터는 서버 인증이 붙은
+            관리자 API로만 열어야 합니다.
+          </p>
+          <Link to="/" className="admin-black-button">
+            홈으로 돌아가기
+          </Link>
+        </section>
+      </main>
+    );
+  }
 
   if (!isUnlocked) {
     return (

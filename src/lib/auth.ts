@@ -2,7 +2,7 @@ import type { IntakeFormData, ServiceId } from '../api/mockData';
 import type { AnalysisRequestPayload } from './analysisPayload';
 
 export type AuthProviderType = 'kakao' | 'demo';
-export type PaymentMethodType = 'toss' | 'card' | 'bank';
+export type PaymentMethodType = 'portone' | 'card' | 'bank';
 
 export interface AuthUser {
   id: string;
@@ -23,6 +23,7 @@ export interface PendingPayment {
   analysisPayload?: AnalysisRequestPayload;
   tabOrigin?: string;
   paymentKey?: string;
+  txId?: string;
   createdAt: string;
 }
 
@@ -103,15 +104,21 @@ export const buildHashCallbackLocation = () => {
 
   if (
     hash.startsWith('#/auth/kakao/callback') ||
-    hash.startsWith('#/payment/toss/callback') ||
+    hash.startsWith('#/payment/portone/callback') ||
     pathname.startsWith('/auth/kakao/callback') ||
-    pathname.startsWith('/payment/toss/callback')
+    pathname.startsWith('/payment/portone/callback')
   ) {
     return null;
   }
 
-  if (params.has('paymentKey') || params.get('payment')?.startsWith('toss-')) {
-    return `/payment/toss/callback${search}`;
+  if (
+    params.has('paymentId') ||
+    params.has('payment_id') ||
+    params.has('txId') ||
+    params.has('transactionId') ||
+    params.get('payment')?.startsWith('portone-')
+  ) {
+    return `/payment/portone/callback${search}`;
   }
 
   if (params.has('code')) {
@@ -190,18 +197,12 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
 };
 
-export const buildTossRedirectUrls = () => {
+export const buildPortOneRedirectUrl = () => {
   if (typeof window === 'undefined') {
-    return {
-      successUrl: '',
-      failUrl: ''
-    };
+    return '';
   }
 
-  return {
-    successUrl: `${window.location.origin}/payment/toss/callback?payment=toss-success`,
-    failUrl: `${window.location.origin}/payment/toss/callback?payment=toss-fail`
-  };
+  return `${window.location.origin}/payment/portone/callback`;
 };
 
 export const savePendingPayment = (payment: PendingPayment) => {

@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { generateGeminiSajuReport, ReportRequestError } from '../../src/lib/server/geminiReportService.ts';
 
 const port = Number(process.env.PORT || 8080);
-const TOSS_CONFIRM_ENDPOINT = 'https://api.tosspayments.com/v1/payments/confirm';
+const PORTONE_API_BASE_URL = (process.env.PORTONE_API_BASE_URL || 'https://api.portone.io').replace(/\/$/, '');
 const KAKAO_TOKEN_ENDPOINT = 'https://kauth.kakao.com/oauth/token';
 const KAKAO_USER_ENDPOINT = 'https://kapi.kakao.com/v2/user/me';
 
@@ -47,6 +47,8 @@ function applySecurityHeaders(res: any) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
 }
 
 function applyCors(req: any, res: any) {
@@ -96,8 +98,9 @@ function getRequiredAmount(body: Record<string, unknown>) {
   return amount;
 }
 
-async function confirmTossPayment(body: Record<string, unknown>) {
-  const secretKey = process.env.TOSS_SECRET_KEY?.trim();
+/*
+async function confirmLegacyPayment(body: Record<string, unknown>) {
+  const secretKey = process.env.LEGACY_SECRET_KEY?.trim();
 
   if (!secretKey) {
     throw new PaymentRequestError(500, '토스 시크릿 키가 서버에 설정되지 않았습니다.');
@@ -108,7 +111,7 @@ async function confirmTossPayment(body: Record<string, unknown>) {
   const amount = getRequiredAmount(body);
   const authorization = Buffer.from(`${secretKey}:`).toString('base64');
 
-  const response = await fetch(TOSS_CONFIRM_ENDPOINT, {
+  const response = await fetch(LEGACY_CONFIRM_ENDPOINT, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${authorization}`,
@@ -146,6 +149,163 @@ async function confirmTossPayment(body: Record<string, unknown>) {
       typeof parsed.receipt === 'object' && parsed.receipt && 'url' in parsed.receipt
         ? (parsed.receipt as { url?: string }).url
         : undefined
+  };
+}
+
+*/
+function getOptionalString(body: Record<string, unknown>, key: string) {
+  const value = body[key];
+
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function readNestedNumber(source: any, paths: string[][]) {
+  for (const path of paths) {
+    const value = path.reduce((current, key) => (current && typeof current === 'object' ? current[key] : undefined), source);
+    const normalized = Number(value);
+
+    if (Number.isFinite(normalized)) {
+      return normalized;
+    }
+  }
+
+  return null;
+}
+
+function readNestedString(source: any, paths: string[][]) {
+  for (const path of paths) {
+    const value = path.reduce((current, key) => (current && typeof current === 'object' ? current[key] : undefined), source);
+
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return undefined;
+}
+
+function getPortOnePaymentPayload(parsed: Record<string, unknown> | null) {
+  if (!parsed) {
+    return null;
+  }
+
+  if (typeof parsed.payment === 'object' && parsed.payment) {
+    return parsed.payment as Record<string, unknown>;
+  }
+
+  return parsed;
+}
+
+async function fetchPortOnePayment(paymentId: string) {
+  const accessToken = await requestPortOneAccessToken();
+
+  const response = await fetch(`${PORTONE_API_BASE_URL}/payments/${encodeURIComponent(paymentId)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  const parsed = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+
+  if (!response.ok) {
+    const message =
+      (typeof parsed?.message === 'string' && parsed.message) ||
+      (typeof parsed?.code === 'string' && parsed.code) ||
+      'PortOne 결제 내역 조회에 실패했습니다.';
+    throw new PaymentRequestError(response.status, message);
+  }
+
+  const payment = getPortOnePaymentPayload(parsed);
+
+  if (!payment) {
+    throw new PaymentRequestError(502, 'PortOne 결제 내역 응답이 비어 있습니다.');
+  }
+
+  return payment;
+}
+
+async function requestPortOneAccessToken() {
+  const apiSecret = process.env.PORTONE_API_SECRET?.trim();
+
+  if (!apiSecret) {
+    throw new PaymentRequestError(500, 'PORTONE_API_SECRET이 서버에 설정되지 않았습니다.');
+  }
+
+  const response = await fetch(`${PORTONE_API_BASE_URL}/login/api-secret`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ apiSecret })
+  });
+  const parsed = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+
+  if (!response.ok || typeof parsed?.accessToken !== 'string') {
+    const message =
+      (typeof parsed?.message === 'string' && parsed.message) ||
+      (typeof parsed?.code === 'string' && parsed.code) ||
+      'PortOne access token 발급에 실패했습니다.';
+    throw new PaymentRequestError(response.status || 502, message);
+  }
+
+  return parsed.accessToken;
+}
+
+async function confirmPortOnePayment(body: Record<string, unknown>) {
+  const paymentId = getRequiredString(body, 'paymentId');
+  const orderId = getRequiredString(body, 'orderId');
+  const amount = getRequiredAmount(body);
+  const txId = getOptionalString(body, 'txId');
+  const payment = await fetchPortOnePayment(paymentId);
+  const status = String(readNestedString(payment, [['status']]) || '').toUpperCase();
+  const paidAmount = readNestedNumber(payment, [
+    ['amount', 'paid'],
+    ['amount', 'total'],
+    ['paidAmount'],
+    ['totalAmount'],
+    ['amount']
+  ]);
+  const portOnePaymentId =
+    readNestedString(payment, [['paymentId'], ['id'], ['merchantUid']]) ||
+    paymentId;
+  const configuredStoreId = process.env.PORTONE_STORE_ID?.trim();
+  const storeId = readNestedString(payment, [
+    ['storeId'],
+    ['store', 'id'],
+    ['store', 'storeId']
+  ]);
+
+  if (paymentId !== orderId) {
+    throw new PaymentRequestError(409, '결제 ID와 주문번호가 일치하지 않습니다.');
+  }
+
+  if (portOnePaymentId !== paymentId) {
+    throw new PaymentRequestError(409, 'PortOne 응답의 결제 ID가 주문 정보와 일치하지 않습니다.');
+  }
+
+  if (paidAmount !== amount) {
+    throw new PaymentRequestError(409, 'PortOne 결제 금액이 주문 금액과 일치하지 않습니다.');
+  }
+
+  if (status !== 'PAID') {
+    throw new PaymentRequestError(409, `PortOne 결제가 아직 완료 상태가 아닙니다. 현재 상태: ${status || 'UNKNOWN'}`);
+  }
+
+  if (configuredStoreId && storeId && configuredStoreId !== storeId) {
+    throw new PaymentRequestError(409, 'PortOne 상점 ID가 서버 설정과 일치하지 않습니다.');
+  }
+
+  return {
+    paymentId,
+    txId:
+      txId ||
+      readNestedString(payment, [['txId'], ['transactionId'], ['transactions', '0', 'id']]),
+    orderId,
+    amount,
+    status,
+    method: readNestedString(payment, [['method', 'type'], ['method'], ['payMethod']]),
+    approvedAt: readNestedString(payment, [['paidAt'], ['approvedAt']])
   };
 }
 
@@ -278,11 +438,28 @@ const server = createServer(async (req, res) => {
 
   if (
     req.method === 'POST' &&
-    (url.pathname === '/payments/toss/confirm' || url.pathname === '/api/payments/toss/confirm')
+    (url.pathname === '/payments/portone/confirm' || url.pathname === '/api/payments/portone/confirm')
   ) {
     try {
       const body = (await readJsonBody(req)) as Record<string, unknown>;
-      const payload = await confirmTossPayment(body);
+      const payload = await confirmPortOnePayment(body);
+      sendJson(res, 200, payload);
+    } catch (error) {
+      const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
+      const message = error instanceof Error ? error.message : 'PortOne 결제 검증 처리 중 오류가 발생했습니다.';
+      sendJson(res, status, { message });
+    }
+    return;
+  }
+
+  /*
+  if (
+    req.method === 'POST' &&
+    false
+  ) {
+    try {
+      const body = (await readJsonBody(req)) as Record<string, unknown>;
+      const payload = await confirmLegacyPayment(body);
       sendJson(res, 200, payload);
     } catch (error) {
       const status = error instanceof PaymentRequestError ? error.status : 500;
@@ -291,6 +468,7 @@ const server = createServer(async (req, res) => {
     }
     return;
   }
+  */
 
   if (
     req.method === 'POST' &&
@@ -314,7 +492,7 @@ const server = createServer(async (req, res) => {
       'GET /health',
       'POST /api/report',
       'POST /report',
-      'POST /api/payments/toss/confirm',
+      'POST /api/payments/portone/confirm',
       'POST /api/auth/kakao/exchange'
     ]
   });

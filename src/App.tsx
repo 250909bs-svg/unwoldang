@@ -42,7 +42,7 @@ function AppRoutes() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Login />} />
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
-        <Route path="/payment/toss/callback" element={<PaymentCallback />} />
+        <Route path="/payment/portone/callback" element={<PaymentCallback />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/form/:id" element={<Form />} />
         <Route path="/checkout" element={<Checkout />} />
