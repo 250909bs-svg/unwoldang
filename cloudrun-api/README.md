@@ -87,7 +87,7 @@ http://127.0.0.1:5173/auth/kakao/callback
 ```env
 VITE_KAKAO_REST_API_KEY=your_kakao_rest_api_key
 VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/auth/kakao/exchange
-VITE_KAKAO_SCOPES=profile_nickname,profile_image,account_email
+VITE_KAKAO_SCOPES=
 ```
 
 Cloud Run에는 같은 REST API 키를 서버 환경변수로 넣고, 카카오 Client Secret을 켠 경우 Secret Manager로 연결합니다.

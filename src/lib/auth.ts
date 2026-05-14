@@ -80,7 +80,14 @@ export const getKakaoRedirectUri = () => {
     return '';
   }
 
-  return `${window.location.origin}/auth/kakao/callback`;
+  const overrideOrigin = import.meta.env.VITE_KAKAO_REDIRECT_ORIGIN;
+  const origin =
+    overrideOrigin ||
+    (window.location.hostname === '127.0.0.1' && window.location.port === '5173'
+      ? 'http://localhost:5173'
+      : window.location.origin);
+
+  return `${origin.replace(/\/$/, '')}/auth/kakao/callback`;
 };
 
 export const buildHashCallbackLocation = () => {
@@ -175,12 +182,6 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
     response_type: 'code',
     state
   });
-  const scopes = import.meta.env.VITE_KAKAO_SCOPES;
-
-  if (scopes) {
-    params.set('scope', scopes);
-  }
-
   writePendingAuthState(state);
 
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;

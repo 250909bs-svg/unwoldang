@@ -18,6 +18,11 @@ export default function Login() {
   }, [location.state]);
 
   const handleKakaoLogin = () => {
+    if (window.location.hostname === '127.0.0.1' && window.location.port === '5173') {
+      window.location.href = `${window.location.protocol}//localhost:5173/login`;
+      return;
+    }
+
     const authorizeUrl = buildKakaoAuthorizeUrl(returnTo);
 
     if (!authorizeUrl) {
