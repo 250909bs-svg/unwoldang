@@ -11,13 +11,12 @@
 - 프론트 결과 UI 준비 완료
 - 결정론적 사주 계산 basis 준비 완료
 - Gemini draft merge 로직 준비 완료
-- Vercel 함수용 `api/report.ts` 준비 완료
+- Vercel `api/report.ts` is disabled with 410. Cloud Run owns report generation.
 - Cloud Run 백엔드 폴더 준비 완료
 
 관련 파일:
 
 - [geminiReportService.ts](C:/Users/1/Documents/unwoldang/src/lib/server/geminiReportService.ts)
-- [report.ts](C:/Users/1/Documents/unwoldang/api/report.ts)
 - [index.ts](C:/Users/1/Documents/unwoldang/cloudrun-api/src/index.ts)
 - [deploy-cloudrun.ps1](C:/Users/1/Documents/unwoldang/cloudrun-api/deploy-cloudrun.ps1)
 
@@ -64,6 +63,7 @@ Cloud Run URL이 나오면 프론트 환경변수에 아래처럼 넣습니다.
 
 ```env
 VITE_REPORT_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/report
+VITE_REPORT_TIMEOUT_MS=70000
 ```
 
 ## 7. 최종 테스트 순서
@@ -80,3 +80,4 @@ VITE_REPORT_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/report
 이 PC에는 아직 `gcloud`가 설치되어 있지 않음
 
 즉, 코드와 배포 스크립트는 준비됐고, 실제 Cloud Run 배포는 `gcloud 설치 + 로그인` 후 바로 진행 가능
+> Launch note: Vercel `/api/report` is disabled. Gemini report generation must go through Cloud Run and requires a paid `reportAccessToken`.

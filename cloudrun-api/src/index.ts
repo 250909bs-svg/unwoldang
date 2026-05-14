@@ -1,3 +1,4 @@
+﻿import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { generateGeminiSajuReport, ReportRequestError } from '../../src/lib/server/geminiReportService.ts';
 
@@ -5,6 +6,10 @@ const port = Number(process.env.PORT || 8080);
 const PORTONE_API_BASE_URL = (process.env.PORTONE_API_BASE_URL || 'https://api.portone.io').replace(/\/$/, '');
 const KAKAO_TOKEN_ENDPOINT = 'https://kauth.kakao.com/oauth/token';
 const KAKAO_USER_ENDPOINT = 'https://kapi.kakao.com/v2/user/me';
+const REPORT_ACCESS_TOKEN_TTL_MS = Number(process.env.REPORT_ACCESS_TOKEN_TTL_MS || 30 * 60 * 1000);
+const REPORT_RATE_LIMIT_WINDOW_MS = Number(process.env.REPORT_RATE_LIMIT_WINDOW_MS || 60 * 1000);
+const REPORT_RATE_LIMIT_MAX = Number(process.env.REPORT_RATE_LIMIT_MAX || 12);
+const reportRateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 class PaymentRequestError extends Error {
   status: number;
@@ -98,65 +103,157 @@ function getRequiredAmount(body: Record<string, unknown>) {
   return amount;
 }
 
-/*
-async function confirmLegacyPayment(body: Record<string, unknown>) {
-  const secretKey = process.env.LEGACY_SECRET_KEY?.trim();
-
-  if (!secretKey) {
-    throw new PaymentRequestError(500, '토스 시크릿 키가 서버에 설정되지 않았습니다.');
-  }
-
-  const paymentKey = getRequiredString(body, 'paymentKey');
-  const orderId = getRequiredString(body, 'orderId');
-  const amount = getRequiredAmount(body);
-  const authorization = Buffer.from(`${secretKey}:`).toString('base64');
-
-  const response = await fetch(LEGACY_CONFIRM_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${authorization}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      paymentKey,
-      orderId,
-      amount
-    })
-  });
-
-  const parsed = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-
-  if (!response.ok) {
-    const message =
-      (typeof parsed?.message === 'string' && parsed.message) ||
-      (typeof parsed?.code === 'string' && parsed.code) ||
-      '토스 결제 승인 요청이 실패했습니다.';
-    throw new PaymentRequestError(response.status, message);
-  }
-
-  if (parsed?.orderId !== orderId || Number(parsed?.totalAmount) !== amount) {
-    throw new PaymentRequestError(409, '토스 승인 응답의 주문번호 또는 금액이 일치하지 않습니다.');
-  }
-
-  return {
-    paymentKey,
-    orderId,
-    amount,
-    status: parsed.status,
-    method: parsed.method,
-    approvedAt: parsed.approvedAt,
-    receiptUrl:
-      typeof parsed.receipt === 'object' && parsed.receipt && 'url' in parsed.receipt
-        ? (parsed.receipt as { url?: string }).url
-        : undefined
-  };
-}
-
-*/
 function getOptionalString(body: Record<string, unknown>, key: string) {
   const value = body[key];
 
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function getClientIp(req: any) {
+  const forwardedFor = String(req.headers['x-forwarded-for'] || '').split(',')[0]?.trim();
+
+  return forwardedFor || req.socket?.remoteAddress || 'unknown';
+}
+
+function enforceReportRateLimit(req: any) {
+  const key = getClientIp(req);
+  const now = Date.now();
+  const bucket = reportRateLimitBuckets.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    reportRateLimitBuckets.set(key, {
+      count: 1,
+      resetAt: now + REPORT_RATE_LIMIT_WINDOW_MS
+    });
+    return;
+  }
+
+  bucket.count += 1;
+
+  if (bucket.count > REPORT_RATE_LIMIT_MAX) {
+    throw new ReportRequestError(429, 'AI report request limit exceeded. Please try again shortly.');
+  }
+}
+
+function getReportAccessSecret() {
+  const secret = process.env.REPORT_ACCESS_SECRET?.trim();
+
+  if (!secret && process.env.ALLOW_UNVERIFIED_REPORTS !== 'true') {
+    throw new ReportRequestError(500, 'REPORT_ACCESS_SECRET is not configured.');
+  }
+
+  return secret || '';
+}
+
+function toBase64Url(value: string | Buffer) {
+  return Buffer.from(value).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function fromBase64Url(value: string) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  return Buffer.from(normalized, 'base64').toString('utf-8');
+}
+
+function signReportTokenPayload(encodedPayload: string, secret: string) {
+  return createHmac('sha256', secret).update(encodedPayload).digest('base64url');
+}
+
+function safeEqual(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function createReportAccessToken(input: {
+  orderId: string;
+  paymentId: string;
+  productId?: string;
+  amount: number;
+}) {
+  const secret = getReportAccessSecret();
+  const now = Date.now();
+  const payload = {
+    orderId: input.orderId,
+    paymentId: input.paymentId,
+    productId: input.productId,
+    amount: input.amount,
+    iat: now,
+    exp: now + REPORT_ACCESS_TOKEN_TTL_MS,
+    nonce: randomBytes(12).toString('hex')
+  };
+  const encodedPayload = toBase64Url(JSON.stringify(payload));
+  const signature = signReportTokenPayload(encodedPayload, secret);
+
+  return `${encodedPayload}.${signature}`;
+}
+
+function getReportBearerToken(req: any, body: Record<string, unknown>) {
+  const authorization = String(req.headers.authorization || '');
+
+  if (authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.slice(7).trim();
+  }
+
+  return getOptionalString(body, 'reportAccessToken');
+}
+
+function verifyReportAccessToken(token: string) {
+  const secret = getReportAccessSecret();
+  const [encodedPayload, signature] = token.split('.');
+
+  if (!encodedPayload || !signature) {
+    throw new ReportRequestError(401, 'Invalid report access token.');
+  }
+
+  const expectedSignature = signReportTokenPayload(encodedPayload, secret);
+
+  if (!safeEqual(signature, expectedSignature)) {
+    throw new ReportRequestError(401, 'Invalid report access token.');
+  }
+
+  let payload: any;
+
+  try {
+    payload = JSON.parse(fromBase64Url(encodedPayload));
+  } catch {
+    throw new ReportRequestError(401, 'Invalid report access token.');
+  }
+
+  if (!payload?.exp || Number(payload.exp) < Date.now()) {
+    throw new ReportRequestError(401, 'Report access token has expired.');
+  }
+
+  return payload as {
+    orderId: string;
+    paymentId: string;
+    productId?: string;
+    amount: number;
+  };
+}
+
+function assertReportAccess(req: any, body: Record<string, unknown>) {
+  if (process.env.ALLOW_UNVERIFIED_REPORTS === 'true') {
+    return;
+  }
+
+  const token = getReportBearerToken(req, body);
+
+  if (!token) {
+    throw new ReportRequestError(401, 'Report access token is required.');
+  }
+
+  const payload = verifyReportAccessToken(token);
+  const serviceId = getOptionalString(body, 'serviceId');
+  const orderId = getOptionalString(body, 'orderId');
+
+  if (serviceId && payload.productId && serviceId !== payload.productId) {
+    throw new ReportRequestError(403, 'Report token does not match this product.');
+  }
+
+  if (orderId && orderId !== payload.orderId) {
+    throw new ReportRequestError(403, 'Report token does not match this order.');
+  }
 }
 
 function readNestedNumber(source: any, paths: string[][]) {
@@ -257,6 +354,7 @@ async function confirmPortOnePayment(body: Record<string, unknown>) {
   const orderId = getRequiredString(body, 'orderId');
   const amount = getRequiredAmount(body);
   const txId = getOptionalString(body, 'txId');
+  const productId = getOptionalString(body, 'productId');
   const payment = await fetchPortOnePayment(paymentId);
   const status = String(readNestedString(payment, [['status']]) || '').toUpperCase();
   const paidAmount = readNestedNumber(payment, [
@@ -305,7 +403,13 @@ async function confirmPortOnePayment(body: Record<string, unknown>) {
     amount,
     status,
     method: readNestedString(payment, [['method', 'type'], ['method'], ['payMethod']]),
-    approvedAt: readNestedString(payment, [['paidAt'], ['approvedAt']])
+    approvedAt: readNestedString(payment, [['paidAt'], ['approvedAt']]),
+    reportAccessToken: createReportAccessToken({
+      orderId,
+      paymentId,
+      productId,
+      amount
+    })
   };
 }
 
@@ -425,8 +529,13 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && (url.pathname === '/report' || url.pathname === '/api/report')) {
     try {
-      const body = await readJsonBody(req);
-      const payload = await generateGeminiSajuReport(body);
+      enforceReportRateLimit(req);
+      const body = (await readJsonBody(req)) as Record<string, unknown>;
+      assertReportAccess(req, body);
+      const { reportAccessToken, orderId, ...reportBody } = body;
+      void reportAccessToken;
+      void orderId;
+      const payload = await generateGeminiSajuReport(reportBody);
       sendJson(res, 200, payload);
     } catch (error) {
       const status = error instanceof ReportRequestError ? error.status : 500;
@@ -452,23 +561,6 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  /*
-  if (
-    req.method === 'POST' &&
-    false
-  ) {
-    try {
-      const body = (await readJsonBody(req)) as Record<string, unknown>;
-      const payload = await confirmLegacyPayment(body);
-      sendJson(res, 200, payload);
-    } catch (error) {
-      const status = error instanceof PaymentRequestError ? error.status : 500;
-      const message = error instanceof Error ? error.message : '토스 결제 승인 처리 중 오류가 발생했습니다.';
-      sendJson(res, status, { message });
-    }
-    return;
-  }
-  */
 
   if (
     req.method === 'POST' &&

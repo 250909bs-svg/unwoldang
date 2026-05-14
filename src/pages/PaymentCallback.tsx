@@ -13,7 +13,8 @@ function moveToResult(navigate: ReturnType<typeof useNavigate>, payment: Pending
       formData: payment.formData,
       paymentMethod: payment.paymentMethod,
       orderId: payment.orderId,
-      tabOrigin: payment.tabOrigin
+      tabOrigin: payment.tabOrigin,
+      reportAccessToken: payment.reportAccessToken
     }
   });
 }
@@ -113,7 +114,7 @@ export default function PaymentCallback() {
         });
 
         const parsed = (await response.json().catch(() => null)) as
-          | { message?: string; paymentId?: string; txId?: string }
+          | { message?: string; paymentId?: string; txId?: string; reportAccessToken?: string }
           | null;
 
         if (!response.ok) {
@@ -124,7 +125,8 @@ export default function PaymentCallback() {
           ...pendingPayment,
           paymentMethod: 'portone',
           paymentKey: parsed?.paymentId || paymentId,
-          txId: parsed?.txId || txId || undefined
+          txId: parsed?.txId || txId || undefined,
+          reportAccessToken: parsed?.reportAccessToken
         } satisfies PendingPayment;
         savePendingPayment(confirmedPayment);
         moveToResult(navigate, confirmedPayment);

@@ -13,6 +13,7 @@ type LoadingLocationState = {
   paymentMethod?: string;
   orderId?: string;
   tabOrigin?: string;
+  reportAccessToken?: string;
   reportData?: SajuReportData;
 };
 
@@ -50,6 +51,7 @@ export default function Loading() {
   const paymentMethod = locationState?.paymentMethod || recoveredPayment?.paymentMethod;
   const orderId = locationState?.orderId || recoveredPayment?.orderId;
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
+  const reportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
   const service = findServiceById(product);
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -57,6 +59,9 @@ export default function Loading() {
   const [analysisFinished, setAnalysisFinished] = useState(false);
   const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
   const hasAiEndpoint = Boolean(getAiReportEndpoint());
+  const paymentMode = import.meta.env.VITE_PAYMENT_MODE ?? 'demo';
+  const isMissingLiveReportAccess =
+    paymentMode === 'live' && hasAiEndpoint && !locationState?.reportData && !reportAccessToken;
   const previewReport = useMemo(() => {
     if (reportData) {
       return reportData;
@@ -101,8 +106,17 @@ export default function Loading() {
         return;
       }
 
+      if (isMissingLiveReportAccess) {
+        setAnalysisNotice('결제 검증 정보가 확인되지 않아 리포트를 열 수 없습니다. 결제 화면에서 다시 진행해 주세요.');
+        setAnalysisFinished(true);
+        return;
+      }
+
       try {
-        const generated = await requestAiReport(product, formData || {});
+        const generated = await requestAiReport(product, formData || {}, {
+          orderId,
+          reportAccessToken
+        });
 
         if (!cancelled) {
           setReportData(generated);
@@ -128,7 +142,7 @@ export default function Loading() {
     return () => {
       cancelled = true;
     };
-  }, [formData, locationState?.reportData, product]);
+  }, [formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, reportAccessToken]);
 
   useEffect(() => {
     if (analysisFinished) {
@@ -175,6 +189,18 @@ export default function Loading() {
     }
 
     const moveTimer = window.setTimeout(() => {
+      if (isMissingLiveReportAccess) {
+        navigate('/checkout', {
+          replace: true,
+          state: {
+            product,
+            formData,
+            tabOrigin
+          }
+        });
+        return;
+      }
+
       navigate(`/report/${service.id}`, {
         replace: true,
         state: {
@@ -184,6 +210,7 @@ export default function Loading() {
           paymentMethod,
           orderId,
           tabOrigin,
+          reportAccessToken,
           reportData: reportData || undefined
         }
       });
@@ -192,7 +219,7 @@ export default function Loading() {
     return () => {
       window.clearTimeout(moveTimer);
     };
-  }, [analysisFinished, formData, locationState, navigate, product, progress, reportData, service.id, tabOrigin]);
+  }, [analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, service.id, tabOrigin]);
 
   return (
     <main className="mobile-page-shell">

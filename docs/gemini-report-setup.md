@@ -5,7 +5,7 @@
 `.env.local` 또는 배포 환경변수에 아래 값을 넣습니다.
 
 ```env
-VITE_REPORT_ENDPOINT=/api/report
+VITE_REPORT_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/report
 ```
 
 Cloud Run으로 분리할 때는 아래처럼 바꿉니다.
@@ -53,7 +53,6 @@ ALLOWED_ORIGINS=https://unwoldang.com,https://www.unwoldang.com
 이제 Gemini 리포트 생성 로직은 공용 서비스로 분리되어 있습니다.
 
 - 공용 엔진: [geminiReportService.ts](C:/Users/1/Documents/unwoldang/src/lib/server/geminiReportService.ts)
-- Vercel 함수: [report.ts](C:/Users/1/Documents/unwoldang/api/report.ts)
 - Cloud Run 서버: [index.ts](C:/Users/1/Documents/unwoldang/cloudrun-api/src/index.ts)
 
 즉, 리포트 생성 로직을 한 번만 수정하면 Vercel과 Cloud Run 양쪽에 같이 반영됩니다.
@@ -114,3 +113,4 @@ Gemini 키가 없으면 fallback 리포트로 응답하고, 키가 있으면 Gem
 3. Cloud Run URL 확인
 4. 프론트의 `VITE_REPORT_ENDPOINT`를 Cloud Run URL로 변경
 5. 종합사주 1건 실제 테스트
+> Launch note: the Vercel `/api/report` route is disabled with 410. Use Cloud Run only. The report API now requires the short-lived `reportAccessToken` returned after PortOne payment verification.

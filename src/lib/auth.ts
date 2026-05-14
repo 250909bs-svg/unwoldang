@@ -24,6 +24,7 @@ export interface PendingPayment {
   tabOrigin?: string;
   paymentKey?: string;
   txId?: string;
+  reportAccessToken?: string;
   createdAt: string;
 }
 

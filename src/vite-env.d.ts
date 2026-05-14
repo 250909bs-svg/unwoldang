@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_ENABLE_CLIENT_ADMIN?: string;
   readonly VITE_LOCAL_ADMIN_CREDENTIAL_HASH?: string;
   readonly VITE_REPORT_ENDPOINT?: string;
+  readonly VITE_REPORT_TIMEOUT_MS?: string;
   readonly VITE_OPENAI_REPORT_ENDPOINT?: string;
   readonly VITE_PAYMENT_MODE?: 'demo' | 'test' | 'live';
 }

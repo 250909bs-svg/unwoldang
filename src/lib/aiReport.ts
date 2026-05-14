@@ -38,7 +38,8 @@ function isAbortError(error: unknown) {
 
 export async function requestAiReport(
   serviceId: ServiceId,
-  formData: Partial<IntakeFormData>
+  formData: Partial<IntakeFormData>,
+  options: { orderId?: string; reportAccessToken?: string } = {}
 ): Promise<SajuReportData | null> {
   const endpoint = getAiReportEndpoint();
 
@@ -55,11 +56,13 @@ export async function requestAiReport(
     response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...(options.reportAccessToken ? { Authorization: `Bearer ${options.reportAccessToken}` } : {})
       },
       signal: controller.signal,
       body: JSON.stringify({
         serviceId,
+        orderId: options.orderId,
         payload,
         reportMode: PREMIUM_SAJU_REPORT_MODE,
         promptVersion: PREMIUM_SAJU_PROMPT_VERSION

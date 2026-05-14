@@ -12,6 +12,10 @@ param(
   [string]$PortOneSecretName = "",
   [string]$PortOneStoreId = "",
   [string]$PortOneApiBaseUrl = "https://api.portone.io",
+  [string]$ReportAccessSecretName = "REPORT_ACCESS_SECRET",
+  [string]$ReportAccessTokenTtlMs = "1800000",
+  [string]$ReportRateLimitWindowMs = "60000",
+  [string]$ReportRateLimitMax = "12",
   [string]$KakaoRestApiKey = "",
   [string]$KakaoClientSecretName = ""
 )
@@ -36,11 +40,14 @@ Write-Host "Region  : $Region"
   if ($PortOneSecretName.Trim()) {
     $secretPairs += "PORTONE_API_SECRET=$($PortOneSecretName):latest"
   }
+  if ($ReportAccessSecretName.Trim()) {
+    $secretPairs += "REPORT_ACCESS_SECRET=$($ReportAccessSecretName):latest"
+  }
   if ($KakaoClientSecretName.Trim()) {
     $secretPairs += "KAKAO_CLIENT_SECRET=$($KakaoClientSecretName):latest"
   }
   $secretArg = $secretPairs -join ","
-  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|PORTONE_API_BASE_URL=$PortOneApiBaseUrl"
+  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|PORTONE_API_BASE_URL=$PortOneApiBaseUrl|REPORT_ACCESS_TOKEN_TTL_MS=$ReportAccessTokenTtlMs|REPORT_RATE_LIMIT_WINDOW_MS=$ReportRateLimitWindowMs|REPORT_RATE_LIMIT_MAX=$ReportRateLimitMax"
   if ($PortOneStoreId.Trim()) {
     $envVars = "$envVars|PORTONE_STORE_ID=$PortOneStoreId"
   }

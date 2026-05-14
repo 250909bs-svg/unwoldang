@@ -11,6 +11,7 @@ type ReportLocationState = {
   formData?: Partial<IntakeFormData>;
   paymentMethod?: string;
   orderId?: string;
+  reportAccessToken?: string;
   reportData?: SajuReportData;
 };
 
@@ -2408,11 +2409,11 @@ export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { formData, paymentMethod, orderId, reportData } = (location.state as ReportLocationState) || {};
+  const { formData, paymentMethod, orderId, reportAccessToken, reportData } = (location.state as ReportLocationState) || {};
   const service = findServiceById(id);
   const hasReportSource = Boolean(reportData || formData?.birthDate);
   const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
-  const shouldBlockPreview = isLiveHost && !hasReportSource;
+  const shouldBlockPreview = isLiveHost && (!hasReportSource || (!reportData && !reportAccessToken));
   const reportInput = formData?.birthDate ? formData : PREVIEW_FORM_DATA;
   const reportCharacterVideo = reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);

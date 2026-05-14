@@ -1693,7 +1693,7 @@ export default function Admin() {
           <div className="admin-insight-grid">
             <InsightCard title="오늘 매출" value={formatCurrency(todayRevenue)} body={`${todayOrders.length}건의 결제 흐름`} icon={CalendarDays} tone="good" />
             <InsightCard title="대기 주문" value={`${orders.filter((order) => order.status === 'pending').length}건`} body="결제 콜백 또는 리포트 생성 확인" icon={Clock} />
-            <InsightCard title="실패 주문" value={`${orders.filter((order) => order.status === 'failed').length}건`} body="토스 실패 콜백과 고객 안내 필요" icon={AlertTriangle} tone="warn" />
+            <InsightCard title="실패 주문" value={`${orders.filter((order) => order.status === 'failed').length}건`} body="결제 실패 콜백과 고객 안내 필요" icon={AlertTriangle} tone="warn" />
             <InsightCard title="모바일 결제" value={formatPercent(mobileShare)} body="결제창 모바일 최적화 우선" icon={MousePointerClick} />
           </div>
 

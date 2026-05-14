@@ -21,9 +21,13 @@ KAKAO_CLIENT_SECRET=...
 PORTONE_API_SECRET=...
 PORTONE_STORE_ID=store-...
 PORTONE_API_BASE_URL=https://api.portone.io
+REPORT_ACCESS_SECRET=...
+REPORT_ACCESS_TOKEN_TTL_MS=1800000
+REPORT_RATE_LIMIT_WINDOW_MS=60000
+REPORT_RATE_LIMIT_MAX=12
 ```
 
-`PORTONE_API_SECRET`, `GEMINI_API_KEY`, `KASI_SERVICE_KEY`, and `KAKAO_CLIENT_SECRET` should be stored in Secret Manager, not in frontend env.
+`PORTONE_API_SECRET`, `GEMINI_API_KEY`, `REPORT_ACCESS_SECRET`, `KASI_SERVICE_KEY`, and `KAKAO_CLIENT_SECRET` should be stored in Secret Manager, not in frontend env.
 
 ## Deploy
 
@@ -34,6 +38,7 @@ PORTONE_API_BASE_URL=https://api.portone.io
   -KasiSecretName KASI_SERVICE_KEY `
   -PortOneSecretName PORTONE_API_SECRET `
   -PortOneStoreId store-your-portone-store-id `
+  -ReportAccessSecretName REPORT_ACCESS_SECRET `
   -KakaoRestApiKey YOUR_KAKAO_REST_API_KEY `
   -KakaoClientSecretName KAKAO_CLIENT_SECRET
 ```
@@ -54,3 +59,5 @@ The frontend only opens the payment window. Cloud Run exchanges `PORTONE_API_SEC
 - paid amount matches the order amount
 - payment status is `PAID`
 - store ID matches `PORTONE_STORE_ID` when configured
+
+After a verified payment, Cloud Run returns a short-lived `reportAccessToken`. `/api/report` requires that signed token, so a direct unpaid Gemini report request is rejected before model cost is incurred.

@@ -61,5 +61,5 @@ export const highlightChips = [
   '궁합',
   '결혼운',
   '카카오 로그인',
-  '토스 결제 준비'
+  'KG이니시스 결제 준비'
 ] as const;

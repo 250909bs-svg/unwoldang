@@ -94,7 +94,7 @@ export default function Checkout() {
     legalModal === 'terms' ? '운월당 서비스 이용약관' : legalModal === 'privacy' ? '운월당 개인정보처리방침' : '';
 
   const handleEasyPayPreview = (label: string) => {
-    setError(`${label}는 토스페이먼츠 심사 후 연결 예정입니다. 지금은 아래 일반 결제로 진행해 주세요.`);
+    setError(`${label}는 간편결제 심사 후 연결 예정입니다. 지금은 아래 일반 결제로 진행해 주세요.`);
   };
 
   const handlePayment = async () => {
@@ -185,11 +185,20 @@ export default function Checkout() {
         })
       });
 
-      const parsed = (await response.json().catch(() => null)) as { message?: string } | null;
+      const parsed = (await response.json().catch(() => null)) as
+        | { message?: string; paymentId?: string; txId?: string; reportAccessToken?: string }
+        | null;
 
       if (!response.ok) {
         throw new Error(parsed?.message || 'PortOne KG이니시스 결제 검증에 실패했습니다.');
       }
+
+      savePendingPayment({
+        ...pendingPayment,
+        paymentKey: parsed?.paymentId || paymentResponse.paymentId || orderId,
+        txId: parsed?.txId || paymentResponse.txId,
+        reportAccessToken: parsed?.reportAccessToken
+      });
 
       navigate('/loading', {
         replace: true,
@@ -198,7 +207,8 @@ export default function Checkout() {
           formData,
           paymentMethod: 'portone',
           orderId,
-          tabOrigin
+          tabOrigin,
+          reportAccessToken: parsed?.reportAccessToken
         }
       });
     } catch (caughtError) {
