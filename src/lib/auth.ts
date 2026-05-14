@@ -80,12 +80,15 @@ export const getKakaoRedirectUri = () => {
     return '';
   }
 
+  const canonicalOrigin = 'https://unwoldang.com';
   const overrideOrigin = import.meta.env.VITE_KAKAO_REDIRECT_ORIGIN;
   const origin =
     overrideOrigin ||
-    (window.location.hostname === '127.0.0.1' && window.location.port === '5173'
-      ? 'http://localhost:5173'
-      : window.location.origin);
+    (window.location.hostname.endsWith('.vercel.app')
+      ? canonicalOrigin
+      : window.location.hostname === '127.0.0.1' && window.location.port === '5173'
+        ? 'http://localhost:5173'
+        : window.location.origin);
 
   return `${origin.replace(/\/$/, '')}/auth/kakao/callback`;
 };
