@@ -6,6 +6,8 @@ import { consumePendingAuthState, decodeAuthState, getKakaoRedirectUri, sanitize
 
 type CallbackStatus = 'loading' | 'error';
 
+const DEFAULT_KAKAO_EXCHANGE_ENDPOINT = 'https://unwoldang-report-api-pt76url4oa-du.a.run.app/api/auth/kakao/exchange';
+
 type KakaoExchangeResponse = {
   user?: {
     id?: string | number;
@@ -83,11 +85,11 @@ export default function KakaoCallback() {
         return;
       }
 
-      const exchangeEndpoint = import.meta.env.VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT;
+      const exchangeEndpoint = import.meta.env.VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT || DEFAULT_KAKAO_EXCHANGE_ENDPOINT;
 
       if (!exchangeEndpoint) {
         setStatus('error');
-        setMessage('카카오 로그인 교환 API가 아직 설정되지 않았습니다.');
+        setMessage('카카오 로그인 교환 API 주소를 확인할 수 없습니다.');
         return;
       }
 
