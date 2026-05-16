@@ -28,6 +28,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -39,6 +40,7 @@ body {
     radial-gradient(circle at top left, rgba(250, 242, 226, 0.9), transparent 28%),
     radial-gradient(circle at top right, rgba(245, 230, 208, 0.75), transparent 22%),
     linear-gradient(180deg, #f7f3eb 0%, #f1ebdf 48%, #eee6d9 100%);
+  overflow-x: hidden;
 }
 
 a {
@@ -1871,10 +1873,12 @@ body {
   min-height: 100vh;
   padding: 0 0 126px;
   background: #ffffff;
+  overflow-x: hidden;
 }
 
 .app-mobile-shell {
   padding: 14px 8px 0;
+  overflow-x: hidden;
 }
 
 .app-home-header,
@@ -1973,6 +1977,7 @@ body {
 
 .home-cardnews-wrap {
   margin: 0 6px 18px;
+  animation: appFadeLift 0.56s ease both;
 }
 
 .home-cardnews-stage {
@@ -1998,14 +2003,16 @@ body {
 
 .home-cardnews-card.next {
   transform: translateX(14px) translateY(8px) scale(0.98);
-  opacity: 0.8;
+  opacity: 0.34;
+  filter: saturate(0.92) blur(0.2px);
   z-index: 3;
   pointer-events: none;
 }
 
 .home-cardnews-card.tail {
   transform: translateX(24px) translateY(14px) scale(0.96);
-  opacity: 0.55;
+  opacity: 0.16;
+  filter: saturate(0.88) blur(0.6px);
   z-index: 2;
   pointer-events: none;
 }
@@ -2016,38 +2023,39 @@ body {
   object-fit: cover;
   object-position: center top;
   transform: scale(1.02);
+  filter: saturate(1.08) contrast(1.06);
 }
 
 .home-cardnews-overlay {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 105%, rgba(255, 0, 136, 0.45) 0%, transparent 42%),
-    linear-gradient(180deg, rgba(8, 12, 24, 0.12) 0%, rgba(8, 12, 24, 0.8) 100%);
+    radial-gradient(circle at 50% 105%, rgba(255, 0, 136, 0.34) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(8, 12, 24, 0.03) 0%, rgba(8, 12, 24, 0.66) 100%);
 }
 
 .home-cardnews-card.tone-rose .home-cardnews-overlay {
   background:
-    radial-gradient(circle at 55% 105%, rgba(255, 75, 151, 0.52) 0%, transparent 45%),
-    linear-gradient(180deg, rgba(8, 10, 26, 0.1) 0%, rgba(24, 9, 25, 0.82) 100%);
+    radial-gradient(circle at 55% 105%, rgba(255, 75, 151, 0.38) 0%, transparent 45%),
+    linear-gradient(180deg, rgba(8, 10, 26, 0.03) 0%, rgba(24, 9, 25, 0.68) 100%);
 }
 
 .home-cardnews-card.tone-violet .home-cardnews-overlay {
   background:
-    radial-gradient(circle at 54% 103%, rgba(121, 69, 255, 0.52) 0%, transparent 44%),
-    linear-gradient(180deg, rgba(8, 10, 30, 0.12) 0%, rgba(10, 11, 34, 0.84) 100%);
+    radial-gradient(circle at 54% 103%, rgba(121, 69, 255, 0.38) 0%, transparent 44%),
+    linear-gradient(180deg, rgba(8, 10, 30, 0.04) 0%, rgba(10, 11, 34, 0.68) 100%);
 }
 
 .home-cardnews-card.tone-amber .home-cardnews-overlay {
   background:
-    radial-gradient(circle at 53% 103%, rgba(255, 168, 59, 0.5) 0%, transparent 44%),
-    linear-gradient(180deg, rgba(12, 14, 26, 0.1) 0%, rgba(30, 18, 11, 0.84) 100%);
+    radial-gradient(circle at 53% 103%, rgba(255, 168, 59, 0.38) 0%, transparent 44%),
+    linear-gradient(180deg, rgba(12, 14, 26, 0.04) 0%, rgba(30, 18, 11, 0.68) 100%);
 }
 
 .home-cardnews-card.tone-emerald .home-cardnews-overlay {
   background:
-    radial-gradient(circle at 54% 103%, rgba(40, 224, 167, 0.45) 0%, transparent 44%),
-    linear-gradient(180deg, rgba(10, 14, 24, 0.1) 0%, rgba(8, 24, 21, 0.84) 100%);
+    radial-gradient(circle at 54% 103%, rgba(40, 224, 167, 0.34) 0%, transparent 44%),
+    linear-gradient(180deg, rgba(10, 14, 24, 0.04) 0%, rgba(8, 24, 21, 0.68) 100%);
 }
 
 .home-cardnews-rank {
@@ -2493,8 +2501,9 @@ body {
   gap: 8px;
   padding: 14px 8px;
   border-radius: 22px;
-  background: #fbfbfc;
-  border: 1px solid #f0f2f5;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf8f3 100%);
+  border: 1px solid #efe5d8;
+  box-shadow: 0 10px 22px rgba(32, 24, 16, 0.045);
   text-align: center;
 }
 
@@ -2505,12 +2514,15 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  color: #77706a;
+  color: #211b16;
+  border: 1px solid rgba(33, 27, 22, 0.08);
 }
 
 .live-category-card strong {
+  color: #2a241e;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 850;
+  letter-spacing: -0.02em;
 }
 
 .live-chip-strip {
@@ -9163,7 +9175,6 @@ body {
 
 /* High fidelity flow polish */
 
-.home-cardnews-card,
 .live-category-card,
 .live-info-card,
 .live-feature-card,
@@ -9182,10 +9193,6 @@ body {
 .premium-callout,
 .premium-accordion,
 .premium-toc-item {
-  animation: appFadeLift 0.56s ease both;
-}
-
-.home-cardnews-card {
   animation: appFadeLift 0.56s ease both;
 }
 
