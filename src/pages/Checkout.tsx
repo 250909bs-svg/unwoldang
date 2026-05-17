@@ -314,7 +314,13 @@ export default function Checkout() {
                 <strong>pay 결제</strong>
               </button>
             </div>
-            <button type="button" className="checkout-luxe-general-pay" onClick={handlePayment} disabled={!canSubmit}>
+            <button
+              type="button"
+              className="checkout-luxe-general-pay"
+              onClick={handlePayment}
+              disabled={isSubmitting}
+              aria-disabled={!canSubmit && !isSubmitting}
+            >
               <WalletCards size={17} />
               <strong>{isSubmitting ? '처리 중' : '일반 결제'}</strong>
             </button>
