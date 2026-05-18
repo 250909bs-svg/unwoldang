@@ -3,6 +3,7 @@ import { buildDeterministicSajuBasis } from '../saju/deterministicBasis';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
 import {
   buildPremiumSajuPromptContext,
+  PREMIUM_SAJU_HUMAN_SENSORY_POLICY,
   PREMIUM_SAJU_PROMPT_VERSION,
   PREMIUM_SAJU_REPORT_MODE,
   PREMIUM_SAJU_SYSTEM_PROMPT
@@ -372,7 +373,7 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
 
   return {
     systemInstruction: {
-      parts: [{ text: PREMIUM_SAJU_SYSTEM_PROMPT }]
+      parts: [{ text: PREMIUM_SAJU_SYSTEM_PROMPT }, { text: PREMIUM_SAJU_HUMAN_SENSORY_POLICY }]
     },
     contents: [
       {
@@ -418,7 +419,17 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'The paid report should feel like it reads the customer life pattern, not like a generic organized essay. Use scenes, examples, and human observations while staying within deterministic facts.',
                   'Use premium Korean copywriting: concrete, calm, emotionally accurate, and useful. Avoid fear marketing, childish expressions, excessive pink-romance tone, and generic AI phrasing.',
                   'Never overpromise perfect accuracy. Increase trust by showing what is certain from the chart, what is conditional, and what the customer should verify in real life.',
-                  'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.'
+                  'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.',
+                  'Top rule: the user wants life resonance, not abstract explanation. Prioritize visceral realism over textbook wording.',
+                  'Answer in a scene-first style. Convert traits into concrete moments from daily life (reply delay, pricing ambiguity, over-responsibility burnout, sudden distancing, emotional shutdown).',
+                  'For each major section include: user behavior, others perception, repeated failure loop, a blow-up scene (money/love/relationship), and one immediate habit change.',
+                  'Use the order: direct hit diagnosis -> myeongri reason -> practical fix.',
+                  'Do not soften every sentence with hedging. Avoid repetitive endings and avoid empty reassurance.',
+                  'Minimize abstract buzzwords such as 균형/흐름/방향성/에너지/조율/리듬/안정감. Prefer concrete language: 돈/연락/약속/피로/거리감/책임/일정/말투/소비.',
+                  'Do not repeat stock phrases across sections. If a similar conclusion appears, rewrite with a different scene, different emotional trigger, and different action.',
+                  'Mix short and medium sentence length intentionally so the report feels human, not machine-uniform.',
+                  'Each section should contain one capture-worthy one-liner that a user wants to save or share.',
+                  'Do not produce generic coaching tone. Speak as a veteran consultant who has observed the pattern for years.'
                 ].join(' '),
               baseReport,
               deterministicBasis

@@ -1,6 +1,57 @@
 export const PREMIUM_SAJU_REPORT_MODE = 'premium_saju_comprehensive_v4' as const;
 export const PREMIUM_SAJU_PROMPT_VERSION = 'gemini-premium-saju-2026-05-08-v4' as const;
 
+export const PREMIUM_SAJU_HUMAN_SENSORY_POLICY = String.raw`
+TOP PRIORITY:
+- The user does not want saju information. The user wants the felt experience: "This report read my life exactly."
+- Sensory impact beats explanation. Real human scenes beat abstract advice.
+
+MANDATORY TONE:
+- Do not write as a textbook counselor.
+- Write like a veteran consultant who has already seen the user's relationship, money, and work pattern.
+- Mix short hard-hitting lines with medium lines. Do not keep long uniform paragraphs.
+
+NO HEDGING STYLE:
+- Avoid evasive phrasing like "~할 수 있습니다", "~일 가능성", "~처럼 보입니다".
+- Use decisive wording for behavior diagnosis, while still keeping factual safety boundaries.
+
+NO REPETITIVE SKELETON:
+- Do not recycle template endings.
+- Even with similar meaning, change scene, wording, emotional angle, and action.
+- Do not repeat stock advice patterns such as "문서화가 중요", "조건표 만들기", "속도 조절", "균형 맞추기".
+
+SCENE-FIRST INTERPRETATION:
+- Convert every abstract trait into a concrete human scene.
+- Include scenes like:
+  1) 읽고도 답장을 미루는 연락 장면
+  2) 혼자 책임 떠안고 체력 무너지는 장면
+  3) 좋아해도 표현이 늦어 관계 놓치는 장면
+  4) 가격/범위 애매해서 돈 손해 보는 장면
+  5) 참다가 갑자기 관계를 끊는 장면
+
+STRUCTURE PER MAJOR SECTION:
+- For every major section, include all of the following:
+  1) what the user actually does
+  2) how others perceive that behavior
+  3) repeated failure pattern
+  4) a money/love/relationship blow-up scene
+  5) one habit to change immediately
+  6) one "capture-worthy line" that feels viral
+
+DIAGNOSIS ORDER:
+- Use this order: 팩폭 -> 이유(명리 근거) -> 현실 해결책.
+- Do not hide difficult parts. Name anxiety, fatigue, distance, money leakage, and role confusion first.
+- Never leave pain points without a practical action.
+
+ANTI-AI VOCAB RULE:
+- Minimize abstract buzzwords: 균형, 흐름, 방향성, 에너지, 조율, 리듬, 안정감.
+- Prefer concrete words: 돈, 연락, 약속, 피로, 거리감, 책임, 일정, 인간관계, 수면, 말투, 소비.
+
+OUTPUT QUALITY BAR:
+- The result must feel like "life resonance generation", not generic saju generation.
+- Every section should trigger: "이거 내 얘기인데?"
+`;
+
 export const PREMIUM_SAJU_REQUIRED_SECTION_IDS = [
   'summary',
   'qa',
@@ -147,7 +198,8 @@ export function buildPremiumSajuPromptContext(args: {
       sourceOfTruth: 'Use deterministicBasis for every calculated value.',
       goldenCase: 'The golden test case is only for verification, never for non-matching users.',
       ifBasisMissing: 'Do not invent deterministic calculations.',
-      ifQuestionMissing: 'Leave questionAnswers empty or clearly mark the question as 미입력 without fabrication.'
+      ifQuestionMissing: 'Leave questionAnswers empty or clearly mark the question as 미입력 without fabrication.',
+      writingMode: 'Generate life resonance with concrete scenes, direct diagnosis, and practical action steps.'
     }
   };
 }

@@ -601,6 +601,21 @@ function getQuestionCategory(question: string): QuestionCategory {
   return 'general';
 }
 
+function buildCareerIndustryGuide(
+  dayMaster: string,
+  currentDayunName: string,
+  helpfulText: string,
+  cautionGuidance: string
+) {
+  return [
+    `사주 흐름 기준 추천 업종 TOP 5: 1) 분석·진단 컨설팅, 2) 문서형 전문 서비스(리포트/가이드), 3) 교육·코칭형 비즈니스, 4) 서비스기획·PM·운영설계, 5) 신뢰 기반 B2B 고객관리/프로세스 개선.`,
+    `${dayMaster} 일간과 ${currentDayunName} 대운에서는 전문성을 눈에 보이는 결과물로 바꾸는 구조가 유리합니다. 단건 노동보다 패키지 상품(진단 + 실행안 + 피드백)으로 설계하세요.`,
+    `권장 포지션: 전략기획, 운영기획, 브랜드/콘텐츠 PM, 컨설턴트, 교육 콘텐츠 디렉터. 핵심은 “문제 정의 → 진단 → 실행 체크리스트” 3단계 표준화입니다.`,
+    `90일 실행: 1~2주 대표 서비스 1개 정의, 3~4주 가격표·샘플 결과물·소개문 완성, 5~8주 파일럿 고객 3명 검증, 9~12주 표준 프로세스 고정.`,
+    `${helpfulText} 기운은 기록과 반복에서 강해집니다. ${cautionGuidance} 즉흥 확장보다 한 분야 선명화와 결과물 표준화가 커리어를 빠르게 끌어올립니다.`
+  ];
+}
+
 function buildQuestionResponse(
   question: string,
   category: QuestionCategory,
@@ -614,6 +629,16 @@ function buildQuestionResponse(
   const helpfulText = helpful.join(', ');
   const cautionGuidance = formatElementGuidance(cautious, basis);
   const context = getRelationshipContextSentence(relationshipLabel);
+
+  if ((category as string) === 'career') {
+    const careerGuide = buildCareerIndustryGuide(dayMaster, currentDayunName, helpfulText, cautionGuidance);
+
+    return {
+      label: '직업·커리어 질문 직답',
+      analysis: `질문 "${question}"은 지금 가진 능력을 어떤 업종과 역할에서 수익 구조로 바꿀지에 대한 질문입니다. ${dayMaster} 일간은 기준을 세우고 구조를 설계할 때 강점이 살아나며, ${currentDayunName} 대운에서는 전문성을 상품화하고 표준화할수록 커리어 성장이 빨라집니다.`,
+      advice: careerGuide
+    };
+  }
 
   if (category === 'relationship') {
     const relationshipProfile = getElementLoveSignature(basis.dayMaster.element as FiveElement);
@@ -644,7 +669,7 @@ function buildQuestionResponse(
     };
   }
 
-  if (category === 'career') {
+  if ((category as string) === 'career') {
     return {
       label: '직업·커리어 질문 직답',
       analysis: `질문 "${question}"은 지금 가진 능력을 어떻게 보이는 성과로 바꿀지에 대한 질문으로 읽힙니다. ${dayMaster} 일간은 기준을 세우고 구조를 잡을 때 강점이 드러나며, ${currentDayunName} 대운에서는 전문성을 문서, 포트폴리오, 상품으로 전환하는 흐름이 중요합니다.`,
