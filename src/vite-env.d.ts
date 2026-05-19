@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_KAKAO_REST_API_KEY?: string;
   readonly VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT?: string;
   readonly VITE_KAKAO_SCOPES?: string;
+  readonly VITE_PUBLIC_SITE_URL?: string;
   readonly VITE_PORTONE_STORE_ID?: string;
   readonly VITE_PORTONE_CHANNEL_KEY?: string;
   readonly VITE_PORTONE_CONFIRM_ENDPOINT?: string;

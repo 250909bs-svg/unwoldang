@@ -90,3 +90,4 @@ VITE_ENABLE_CLIENT_ADMIN=false
 - Cloud Run rejects wrong amount, wrong payment ID, or non-`PAID` status
 - `/admin` is not usable on the public domain
 - Report and payment pages are `no-store`
+- Google Search Console and Naver Search Advisor have `https://unwoldang.com/sitemap.xml` submitted
