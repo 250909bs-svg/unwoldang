@@ -45,6 +45,16 @@ const KIND_META: Record<ReportKind, { title: string; subtitle: string; badge: st
     title: '궁합 프리미엄 리포트',
     subtitle: '둘의 기질, 생활 리듬, 관계 운영 방식을 함께 보는 궁합 리포트',
     badge: '궁합 감정서'
+  },
+  career: {
+    title: '직업운 프리미엄 리포트',
+    subtitle: '직업 적성, 이직·창업 타이밍, 브랜딩과 수익 구조를 함께 보는 직업 리포트',
+    badge: '직업 감정서'
+  },
+  wealth: {
+    title: '금전운 프리미엄 리포트',
+    subtitle: '돈이 들어오는 방식, 새는 패턴, 투자·사업 성향을 현실적으로 정리한 재물 리포트',
+    badge: '금전 감정서'
   }
 };
 
@@ -57,7 +67,9 @@ const KIND_BY_SERVICE: Partial<Record<ServiceId, ReportKind>> = {
   'marriage-blueprint': 'marriage',
   'marriage-timing': 'marriage',
   'match-couple': 'compatibility',
-  'match-destiny': 'compatibility'
+  'match-destiny': 'compatibility',
+  'career-reading': 'career',
+  'money-reading': 'wealth'
 };
 
 const ELEMENT_COLORS: Record<FiveElement, string> = {

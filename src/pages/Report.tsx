@@ -3044,6 +3044,469 @@ function buildYearlyFortuneReportV2(report: SajuReportData): SajuReportData {
   };
 }
 
+function getFocusedBestMonthText(report: SajuReportData) {
+  const bestMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
+
+  return bestMonths
+    .map((item) => `${item.year}.${String(item.month).padStart(2, '0')} ${getLuckPhase(item.score)}`)
+    .join(', ');
+}
+
+function getFocusedWatchMonthText(report: SajuReportData) {
+  const watchMonths = [...report.monthLuck].sort((left, right) => left.score - right.score).slice(0, 2);
+
+  return watchMonths
+    .map((item) => `${item.year}.${String(item.month).padStart(2, '0')} ${getLuckPhase(item.score)}`)
+    .join(', ');
+}
+
+function buildFocusedMonthSection(report: SajuReportData, title: string, subtitle: string): ReportSection {
+  return {
+    id: 'focused-months',
+    title,
+    subtitle,
+    details: report.monthLuck.slice(0, 8).map((item, index) => ({
+      summary: getSignatureMonthSummary(item, report),
+      content: buildSignatureMonthContent(item, report),
+      open: index === 0
+    }))
+  };
+}
+
+function buildPremiumLoveSections(report: SajuReportData): ReportSection[] {
+  const bestMonthText = getFocusedBestMonthText(report);
+  const watchMonthText = getFocusedWatchMonthText(report);
+
+  return [
+    {
+      id: 'love-verdict',
+      title: '연애운 핵심 판정',
+      subtitle: '지금 사랑이 어디서 열리고 어디서 닫히는지 먼저 봅니다.',
+      callout: {
+        title: '연애운 한 줄',
+        body: `${report.customerName}님은 강한 고백보다 오래 흔들리지 않는 태도에 마음이 움직입니다. 좋아해도 먼저 관찰하고, 마음이 식으면 설명보다 거리로 답하는 흐름이 있습니다.`
+      },
+      paragraphs: [
+        `이 연애운은 “누가 나를 좋아하나”보다 ${report.customerName}님이 어떤 사람 앞에서 긴장을 풀고, 어떤 사람 앞에서 금방 지치는지를 먼저 봅니다.`,
+        `처음에는 상대의 가능성을 크게 봅니다. 그런데 답장 온도, 약속 태도, 돈 쓰는 방식이 흐리면 마음속에서 조용히 정리가 시작됩니다.`,
+        `좋은 인연은 말이 센 사람보다 일정하고 책임감 있는 사람입니다. 빠른 고백보다 바쁜 날에도 약속을 지키는 사람이 오래 갑니다.`
+      ],
+      cards: [
+        {
+          title: '끌리는 사람',
+          body: '자기 일이 있고, 말이 과하지 않으며, 바쁜 와중에도 약속을 지키는 사람에게 마음이 갑니다.',
+          tone: 'good'
+        },
+        {
+          title: '깨지는 패턴',
+          body: '좋아도 표현이 늦어 타이밍을 놓치거나, 참다가 한 번에 마음을 닫는 장면을 조심해야 합니다.',
+          tone: 'warn'
+        },
+        {
+          title: '연애 시작 신호',
+          body: '소개, 일 관련 연결, 반복적으로 마주치는 생활권에서 천천히 열리는 인연이 더 안정적입니다.'
+        },
+        {
+          title: '피해야 할 유형',
+          body: '연락은 뜨거운데 약속은 흐린 사람, 외로울 때만 찾는 사람, 돈 이야기를 피하는 사람입니다.',
+          tone: 'warn'
+        }
+      ]
+    },
+    {
+      id: 'love-contact',
+      title: '썸·연락 전략',
+      subtitle: '연락 빈도보다 관계가 실제로 앞으로 가는지 봅니다.',
+      details: [
+        {
+          summary: '먼저 연락해도 되는 때',
+          content: `상대가 날짜를 제안하거나, 바쁜 와중에도 짧게라도 답을 이어가거나, 작은 약속을 지킨 흔적이 있을 때입니다.\n\n이때는 긴 감정문보다 “이번 주 언제 가능해?”처럼 짧은 제안이 좋습니다.`,
+          open: true
+        },
+        {
+          summary: '기다려야 하는 때',
+          content: `상대 말은 따뜻한데 행동이 없고, 만남 약속이 계속 밀리고, 돈이나 시간을 쓰는 장면에서 뒤로 빠진다면 기다림이 길어질 수 있습니다.\n\n이때 더 잘해주면 관계가 풀리는 게 아니라, 내 자존감과 수면이 먼저 흔들립니다.`
+        },
+        {
+          summary: '소름 포인트',
+          content: `좋아하는데도 표현이 늦어서 상대가 먼저 지치는 패턴이 있습니다.\n\n반대로 마음이 식은 뒤에는 긴 대화를 해도 회복이 빠르지 않습니다. 그래서 초반에 작은 서운함을 너무 오래 묻어두면 안 됩니다.`
+        }
+      ]
+    },
+    buildFocusedMonthSection(report, '연애 월별 타이밍', `열리는 달은 ${bestMonthText}, 마음을 아껴야 할 달은 ${watchMonthText}입니다.`)
+  ];
+}
+
+function buildPremiumReunionSections(report: SajuReportData): ReportSection[] {
+  const bestMonthText = getFocusedBestMonthText(report);
+  const watchMonthText = getFocusedWatchMonthText(report);
+
+  return [
+    {
+      id: 'reunion-verdict',
+      title: '재회 가능성 핵심 판정',
+      subtitle: '미련인지, 다시 이어질 가능성인지, 다시 만나도 버틸 관계인지 나눕니다.',
+      callout: {
+        title: '재회운 한 줄',
+        body: '재회는 연락이 오는지보다, 다시 만났을 때 같은 문제를 반복하지 않을 구조가 있는지가 핵심입니다.'
+      },
+      paragraphs: [
+        `재회운은 감정 잔존도와 생활 가능성을 따로 봐야 합니다. 그리움은 남아도 다시 생활을 맞출 준비가 없으면 같은 자리에서 다시 깨집니다.`,
+        `${report.customerName}님은 미련이 남아도 자존심 때문에 먼저 길게 설명하지 않는 쪽으로 반응할 수 있습니다. 겉으로는 괜찮아 보여도 마음속에서는 계속 장면을 되감는 시간이 생깁니다.`,
+        `재회가 열리는 경우는 상대가 말이 아니라 태도를 바꿔서 돌아올 때입니다. 같은 사과, 같은 변명, 같은 회피라면 돌아가도 회복이 짧습니다.`
+      ],
+      cards: [
+        {
+          title: '연락 가능 신호',
+          body: '과거 이야기를 꺼내기보다 현재 생활, 일정, 안부를 자연스럽게 묻는 연락이 가능성 신호입니다.',
+          tone: 'good'
+        },
+        {
+          title: '아직 위험한 신호',
+          body: '외롭거나 술기운, 밤 시간에만 연락하는 흐름은 재회보다 감정 소비에 가깝습니다.',
+          tone: 'warn'
+        },
+        {
+          title: '재회 후 깨지는 이유',
+          body: '처음엔 반갑지만, 연락 텀과 책임 문제가 그대로면 예전보다 더 빨리 지칩니다.'
+        },
+        {
+          title: '멈춰야 할 기준',
+          body: '상대가 내 마음은 확인하려 하면서 본인의 행동 변화는 보이지 않을 때입니다.',
+          tone: 'warn'
+        }
+      ]
+    },
+    {
+      id: 'reunion-message',
+      title: '재회 연락 문장과 금지 문장',
+      subtitle: '감정 폭발보다 다시 대화가 열리는 문장 구조가 중요합니다.',
+      details: [
+        {
+          summary: '보내도 되는 문장',
+          content: `“잘 지내? 요즘 문득 생각나서 연락했어. 부담 주려는 건 아니고, 한번 안부 묻고 싶었어.”\n\n핵심은 사과 요구나 결론 압박이 아니라 대화 문을 작게 여는 것입니다.`,
+          open: true
+        },
+        {
+          summary: '보내면 안 되는 문장',
+          content: `“넌 왜 그때 그랬어?” “나만 힘들었어?” “다시 만날 생각 있어 없어?”처럼 결론을 밀어붙이는 문장은 상대의 방어를 키웁니다.\n\n재회운이 있어도 첫 문장이 심문처럼 느껴지면 문이 닫힙니다.`
+        },
+        {
+          summary: '재회 판단 기준',
+          content: `다시 만나도 되는 사람은 답장이 빠른 사람이 아니라, 과거의 문제를 피하지 않고 현재 행동을 바꾸는 사람입니다.\n\n${bestMonthText}에는 가볍게 문을 열 수 있고, ${watchMonthText}에는 감정 결론을 미루는 편이 낫습니다.`
+        }
+      ]
+    },
+    buildFocusedMonthSection(report, '재회 월별 타이밍', '전 연인 연락, 과거 감정, 다시 만남 가능성을 월별 사건성으로 나눠 봅니다.')
+  ];
+}
+
+function buildPremiumMarriageSections(report: SajuReportData): ReportSection[] {
+  const bestMonthText = getFocusedBestMonthText(report);
+
+  return [
+    {
+      id: 'marriage-verdict',
+      title: '결혼운 핵심 판정',
+      subtitle: '결혼 가능성, 배우자상, 생활 안정성을 감정과 현실로 나눠 봅니다.',
+      callout: {
+        title: '결혼운 한 줄',
+        body: '결혼은 설렘보다 생활 기준입니다. 돈, 가족 거리, 수면, 일의 속도가 맞는 사람이 오래 갑니다.'
+      },
+      paragraphs: [
+        `${report.customerName}님의 결혼운은 “언제 하느냐”보다 “누구와 생활이 무너지지 않느냐”가 더 중요합니다.`,
+        `좋은 배우자상은 말이 화려한 사람보다 일정, 돈, 가족 문제를 흐리지 않는 사람입니다. 갈등이 생겼을 때 회피하지 않고 다시 맞추는 태도가 핵심입니다.`,
+        `결혼을 서두르면 감정보다 책임이 먼저 커질 수 있습니다. 반대로 현실 조건을 너무 오래 미루면 좋은 인연도 결론 없이 지칠 수 있습니다.`
+      ],
+      cards: [
+        {
+          title: '배우자상',
+          body: '자기 일이 있고, 돈과 시간의 태도가 깨끗하며, 가족 문제에서 선을 그을 줄 아는 사람입니다.',
+          tone: 'good'
+        },
+        {
+          title: '결혼 적기',
+          body: `${bestMonthText} 전후에는 관계의 다음 단계를 현실적으로 이야기하기 좋습니다.`
+        },
+        {
+          title: '결혼 전 체크',
+          body: '주거, 저축, 가족 거리, 집안일, 갈등 후 대화 방식을 반드시 확인해야 합니다.'
+        },
+        {
+          title: '피해야 할 결혼',
+          body: '외로움 때문에 서두르는 결혼, 돈 이야기를 미루는 결혼, 가족 경계가 없는 결혼입니다.',
+          tone: 'warn'
+        }
+      ]
+    },
+    {
+      id: 'marriage-reality',
+      title: '결혼 현실 변수',
+      subtitle: '좋아하는 마음이 생활로 버틸 수 있는지 확인합니다.',
+      details: [
+        {
+          summary: '돈과 집',
+          content: `결혼운에서 돈은 로맨스를 깨는 요소가 아니라 생활을 지키는 기준입니다.\n\n저축 방식, 고정비, 부모 지원, 대출, 각자 쓰는 돈의 선을 확인해야 합니다.`,
+          open: true
+        },
+        {
+          summary: '가족과 거리',
+          content: `상대 가족과의 거리는 가까운지보다 경계가 있는지가 중요합니다.\n\n배우자가 내 편을 들어주는지, 갈등을 미루지 않고 조율하는지가 결혼 안정성을 좌우합니다.`
+        },
+        {
+          summary: '결혼 후 모습',
+          content: `결혼 후에는 감정 표현보다 생활 운영 능력이 만족도를 만듭니다.\n\n일정, 돈, 집안일을 함께 업데이트하는 사람이 맞고, 서운함을 쌓아두다 한 번에 폭발하는 방식은 줄여야 합니다.`
+        }
+      ]
+    },
+    buildFocusedMonthSection(report, '혼인·관계 월별 타이밍', '상견례, 동거, 혼인 결정, 가족 조율에 적합한 달과 조심할 달을 나눕니다.')
+  ];
+}
+
+function buildPremiumCareerSections(report: SajuReportData): ReportSection[] {
+  const bestMonthText = getFocusedBestMonthText(report);
+  const watchMonthText = getFocusedWatchMonthText(report);
+  const topTenGods = report.tenGods.slice(0, 2).map((item) => item.label).join('·') || '십성';
+
+  return [
+    {
+      id: 'career-verdict',
+      title: '직업운 핵심 판정',
+      subtitle: '직업 이름보다 오래 버티고 평가받는 일의 구조를 봅니다.',
+      callout: {
+        title: '직업운 한 줄',
+        body: '올해는 능력보다 결과물을 보이게 만드는 사람이 이깁니다.'
+      },
+      paragraphs: [
+        `${report.customerName}님은 ${report.dayMaster} 일간과 ${topTenGods} 흐름이 함께 작동합니다. 그래서 막연히 열심히 하는 일보다 기준을 세우고 설명하고 결과물로 보여주는 일이 맞습니다.`,
+        `맞는 일은 “시키는 대로 오래 버티는 일”보다 문제를 진단하고, 정리하고, 고객이나 조직이 이해할 수 있게 바꾸는 역할입니다.`,
+        `이직이나 창업은 감정으로 움직이면 위험합니다. 포트폴리오, 샘플, 가격, 수입 공백이 준비됐을 때 운이 실제 성과로 붙습니다.`
+      ],
+      cards: [
+        {
+          title: '추천 업종',
+          body: '분석·진단 컨설팅, 콘텐츠/교육, 서비스기획·PM, 상담형 상품, 고객관리·운영 개선, 리포트형 디지털 서비스가 잘 맞습니다.',
+          tone: 'good'
+        },
+        {
+          title: '맞는 역할',
+          body: '문제 정의, 구조 설계, 설명, 운영 기준 만들기, 고객 경험 개선처럼 보이지 않는 혼란을 정리하는 역할입니다.'
+        },
+        {
+          title: '피해야 할 일',
+          body: '역할이 매번 바뀌고, 책임만 늘고, 결과물이 남지 않는 일입니다. 좋은 회사라도 내 이름으로 남는 성과가 없으면 지칩니다.',
+          tone: 'warn'
+        },
+        {
+          title: '움직일 시기',
+          body: `${bestMonthText}에는 제안과 공개를 열고, ${watchMonthText}에는 퇴사·창업 결론을 미루는 편이 안전합니다.`
+        }
+      ]
+    },
+    {
+      id: 'career-roadmap',
+      title: '90일 커리어 로드맵',
+      subtitle: '직업운을 포트폴리오와 수익 구조로 바꾸는 실행 순서입니다.',
+      details: [
+        {
+          summary: '1~30일: 대표 문제 하나 고르기',
+          content: `“무엇을 할 수 있다”가 아니라 “어떤 문제를 해결한다”로 문장을 바꿉니다.\n\n예: 사주를 봅니다가 아니라, 올해 직업·돈·관계 선택 기준을 정리해드립니다.`,
+          open: true
+        },
+        {
+          summary: '31~60일: 샘플 결과물 만들기',
+          content: `포트폴리오는 화려한 이력보다 고객이 받게 될 결과 예시가 중요합니다.\n\n목차, 샘플 리포트, 가격표, FAQ, 환불 기준을 한 화면에 정리하세요.`
+        },
+        {
+          summary: '61~90일: 가격과 반복 구조 고정',
+          content: `단건 노동으로 끝내지 말고 기본 리포트, 프리미엄 리포트, 후속 질문, 월별 업데이트로 계단을 만드세요.\n\n직업운은 결과물이 반복될 때 돈으로 바뀝니다.`
+        }
+      ]
+    },
+    buildFocusedMonthSection(report, '직업 월별 타이밍', '이직, 창업, 제안, 포트폴리오 공개, 공부와 정비 시기를 월별로 나눕니다.')
+  ];
+}
+
+function buildPremiumWealthSections(report: SajuReportData): ReportSection[] {
+  const bestMonthText = getFocusedBestMonthText(report);
+  const watchMonthText = getFocusedWatchMonthText(report);
+
+  return [
+    {
+      id: 'wealth-verdict',
+      title: '금전운 핵심 판정',
+      subtitle: '돈이 들어오는 방식과 새는 장면을 먼저 분리합니다.',
+      callout: {
+        title: '금전운 한 줄',
+        body: '돈은 들어오는 것보다 남는 구조가 먼저입니다. 가격, 정산, 반복 구매, 환불 기준이 운을 지킵니다.'
+      },
+      paragraphs: [
+        `${report.customerName}님의 금전운은 한 방보다 누적형에 가깝습니다. 신뢰, 반복 고객, 소개, 다시 맡기는 구조에서 돈이 붙습니다.`,
+        `돈이 새는 장면은 사람 때문에 시작됩니다. 가까운 사이라 가격을 흐리고, 제공 범위를 넓혀주고, 나중에 혼자 피로와 비용을 떠안는 식입니다.`,
+        `투자는 빠른 수익보다 이해 가능한 구조가 먼저입니다. 누가 급하게 권한 것, 밤에 충동적으로 들어간 것, 손실을 인정하기 싫어 오래 들고 가는 방식은 맞지 않습니다.`
+      ],
+      cards: [
+        {
+          title: '돈 들어오는 방식',
+          body: '반복 고객, 소개, 신뢰 기반 상품, 정기 결제, 재구매 구조에서 돈이 들어옵니다.',
+          tone: 'good'
+        },
+        {
+          title: '돈 새는 방식',
+          body: '관계 지출, 새벽 결제, 무료 응대, 수정 요청 무제한, 지인 할인에서 돈과 체력이 같이 샙니다.',
+          tone: 'warn'
+        },
+        {
+          title: '투자 성향',
+          body: '분산과 기록, 이해 가능한 상품이 맞습니다. 분위기에 휩쓸리는 단기 매매는 손실 피로가 큽니다.'
+        },
+        {
+          title: '상승 시기',
+          body: `${bestMonthText}에는 가격 공개와 상품 제안이 좋고, ${watchMonthText}에는 지출 방어가 우선입니다.`
+        }
+      ]
+    },
+    {
+      id: 'wealth-system',
+      title: '돈이 남는 시스템',
+      subtitle: '금전운을 현실 계좌에 남기기 위한 운영 기준입니다.',
+      details: [
+        {
+          summary: '가격',
+          content: `가격은 착하게 보이려고 낮추는 순간 운이 새기 쉽습니다.\n\n기본가, 추가 질문, 수정 범위, 빠른 처리 옵션을 분리해야 남는 돈이 생깁니다.`,
+          open: true
+        },
+        {
+          summary: '정산',
+          content: `돈 약속은 친한 사람일수록 먼저 고정해야 합니다.\n\n입금일, 취소 기준, 환불 기준, 제공 범위를 남기면 관계도 덜 상합니다.`
+        },
+        {
+          summary: '30일 처방',
+          content: `1주차: 자동결제와 구독 정리\n\n2주차: 가격표와 제공 범위 고정\n\n3주차: 무료 응대 시간 제한\n\n4주차: 반복 구매 상품 하나 만들기`
+        }
+      ]
+    },
+    buildFocusedMonthSection(report, '금전 월별 타이밍', '돈을 열 달과 지킬 달, 투자·지출을 조심할 달을 사건성으로 나눕니다.')
+  ];
+}
+
+function buildFocusedPremiumReport(report: SajuReportData): SajuReportData {
+  const signatureRelationSection = buildSignatureRelationReadings(report);
+  const emotionalFlowSection = buildEmotionalFlowSection(report);
+  const signatureStrengthLine = buildSignatureStrengthLine(report);
+  const cautionGuidance = formatCautionElements(report);
+  const cautionScenes = buildCautionSceneBank(report);
+  const dominantLabel = report.tenGods[0]?.label || '주요 십성';
+  const secondLabel = report.tenGods[1]?.label || '보조 십성';
+  const categorySections =
+    report.kind === 'love'
+      ? buildPremiumLoveSections(report)
+      : report.kind === 'reunion'
+        ? buildPremiumReunionSections(report)
+        : report.kind === 'marriage'
+          ? buildPremiumMarriageSections(report)
+          : report.kind === 'career'
+            ? buildPremiumCareerSections(report)
+            : buildPremiumWealthSections(report);
+  const titleByKind: Partial<Record<SajuReportData['kind'], string>> = {
+    love: '연애운 프리미엄 리포트',
+    reunion: '재회운 프리미엄 리포트',
+    marriage: '결혼운 프리미엄 리포트',
+    career: '직업운 프리미엄 리포트',
+    wealth: '금전운 프리미엄 리포트'
+  };
+  const focusLabel = titleByKind[report.kind] || report.title;
+  const focusedReport: SajuReportData = {
+    ...report,
+    title: focusLabel,
+    heroNote: `${report.customerName}님의 원국, 대운, 세운, 월운을 ${focusLabel.replace(' 프리미엄 리포트', '')} 관점으로 재구성했습니다. 한 줄 운세가 아니라 실제 선택, 말투, 돈, 관계 장면으로 읽는 5만원대 상담형 리포트입니다.`,
+    summary: {
+      title: `${report.customerName}님의 ${focusLabel.replace(' 프리미엄 리포트', '')} 핵심 판정`,
+      analysis: [
+        signatureStrengthLine,
+        `현재 ${report.currentDayun.name} 대운의 실제 과제는 분명합니다. ${asSentence(report.currentDayun.focus)}`,
+        `십성에서는 ${dominantLabel}과 ${secondLabel}이 앞에 있어 ${describeTenGodDepth(dominantLabel)} ${describeTenGodDepth(secondLabel)}`,
+        `${cautionGuidance} 그래서 좋은 말보다 실제 일정, 답장 온도, 돈의 흐름, 수면과 체력을 같이 봐야 합니다.`
+      ],
+      advice: [
+        '이번 리포트는 좋다/나쁘다보다 “언제 열고 언제 멈출지”를 먼저 봅니다.',
+        '관계든 일이든 말보다 약속, 돈, 시간, 갈등 후 태도를 확인하세요.',
+        '좋은 운도 기준 없이 열면 피로가 되고, 약한 운도 기준을 세우면 손실을 줄입니다.'
+      ]
+    },
+    keyTakeaways: [
+      {
+        title: '핵심',
+        body: `${focusLabel.replace(' 프리미엄 리포트', '')}은 감정이나 기대만으로 보지 않고 원국, 대운, 월운의 실제 작동 장면으로 읽었습니다.`,
+        tone: 'good'
+      },
+      {
+        title: '강점',
+        body: `${dominantLabel} 흐름이 강하게 잡힐 때 ${report.customerName}님은 문제를 정리하고 상대가 이해할 수 있게 바꾸는 힘이 살아납니다.`
+      },
+      {
+        title: '주의',
+        body: cautionScenes[1],
+        tone: 'warn'
+      },
+      {
+        title: '시기',
+        body: `${getFocusedBestMonthText(report)}에는 열고, ${getFocusedWatchMonthText(report)}에는 무리한 결론을 늦추는 편이 좋습니다.`
+      }
+    ],
+    sections: [
+      ...categorySections,
+      emotionalFlowSection,
+      signatureRelationSection,
+      {
+        id: 'focused-ten-gods',
+        title: '십성 생활 장면 해석',
+        subtitle: '십성을 점수가 아니라 말투, 돈 쓰임, 책임 반응, 관계 거리로 읽습니다.',
+        details: report.tenGods.slice(0, 5).map((item, index) => ({
+          summary: `${item.label} ${item.value}점 · 실제 작동 장면`,
+          content: buildTenGodSceneDetail(item.label, report),
+          open: index < 2
+        }))
+      },
+      {
+        id: 'focused-prescription',
+        title: '프리미엄 실행 처방',
+        subtitle: '읽고 끝나는 리포트가 아니라 바로 바꿀 행동을 남깁니다.',
+        bullets: [
+          '오늘 결정할 일과 다음 달로 미룰 일을 분리합니다.',
+          '관계와 돈이 걸린 약속은 메시지로 남깁니다.',
+          '좋은 흐름이 들어오는 달에는 공개와 제안을 열고, 약한 달에는 정산과 수면을 먼저 지킵니다.',
+          '감정이 올라온 밤에는 이별, 퇴사, 투자, 큰 결제를 결정하지 않습니다.'
+        ]
+      }
+    ],
+    actionPlan: {
+      ...report.actionPlan,
+      title: `${focusLabel.replace(' 프리미엄 리포트', '')} 30일 실행 플랜`,
+      priorities: [
+        '1주차: 지금 가장 크게 흔드는 사람, 돈, 일, 수면 문제를 하나씩 적습니다.',
+        '2주차: 열어야 할 선택과 멈춰야 할 선택을 월운 기준으로 나눕니다.',
+        '3주차: 연락, 가격, 제공 범위, 약속 시간을 글로 고정합니다.',
+        '4주차: 남은 결과와 남은 피로를 비교해 다음 달 행동을 줄입니다.'
+      ],
+      dos: [
+        '좋아 보여도 일정과 돈을 먼저 확인하기',
+        '답장이 늦거나 마음이 흔들릴 때 하루 뒤 다시 판단하기',
+        '강한 달에는 공개하고 약한 달에는 정리하기',
+        '내 체력과 수면을 망가뜨리는 선택은 좋은 운이라도 줄이기'
+      ],
+      avoids: [
+        '외로움 때문에 관계를 열기',
+        '불안해서 큰 결제나 투자를 앞당기기',
+        '말뿐인 약속을 좋은 신호로 착각하기',
+        '피곤한 상태에서 마지막 결론 내리기'
+      ]
+    }
+  };
+
+  return polishRepeatedReportLanguage(focusedReport, cautionGuidance, cautionScenes);
+}
+
 function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
@@ -3604,6 +4067,10 @@ export default function Report() {
       return buildYearlyFortuneReportV2(expandedReport);
     }
 
+    if (['love', 'reunion', 'marriage', 'career', 'wealth'].includes(expandedReport.kind)) {
+      return buildFocusedPremiumReport(expandedReport);
+    }
+
     return buildExpertSatisfactionReport(expandedReport);
   }, [baseReport]);
   const isYearlyShowcase = report.serviceId === 'life-flow';
@@ -3726,7 +4193,9 @@ export default function Report() {
                 ? report.title
                 : report.serviceId === 'life-flow'
                   ? '신년운세 리포트'
-                  : '종합사주 리포트'}
+                  : report.kind === 'comprehensive'
+                    ? '종합사주 리포트'
+                    : report.title}
             </h1>
 
             {isYearlyShowcase && yearlyLead ? (

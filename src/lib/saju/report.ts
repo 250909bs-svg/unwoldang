@@ -1,6 +1,6 @@
 import type { ServiceId } from '../../api/mockData';
 
-export type ReportKind = 'comprehensive' | 'yearly' | 'love' | 'reunion' | 'marriage' | 'compatibility';
+export type ReportKind = 'comprehensive' | 'yearly' | 'love' | 'reunion' | 'marriage' | 'compatibility' | 'career' | 'wealth';
 type CardTone = 'default' | 'good' | 'warn';
 type FiveElement = '목' | '화' | '토' | '금' | '수';
 

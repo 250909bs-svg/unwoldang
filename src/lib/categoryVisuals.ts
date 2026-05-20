@@ -1,7 +1,9 @@
 import {
+  BriefcaseBusiness,
   Gem,
   Grid2x2,
   Heart,
+  PiggyBank,
   ScrollText,
   UsersRound,
   type LucideIcon
@@ -45,12 +47,26 @@ export const categoryVisuals: Record<ServiceCategoryId, CategoryVisual> = {
     tint: '#f6eee3',
     accent: '#b68a54',
     note: '배우자 흐름'
+  },
+  career: {
+    icon: BriefcaseBusiness,
+    tint: '#f4efe5',
+    accent: '#8f7655',
+    note: '직업·이직'
+  },
+  wealth: {
+    icon: PiggyBank,
+    tint: '#fff4cf',
+    accent: '#b48a38',
+    note: '재물·수입'
   }
 };
 
 export const homeShortcutCategories: ServiceCategoryId[] = [
   'general',
   'love',
+  'career',
+  'wealth',
   'compatibility',
   'marriage'
 ];
@@ -58,6 +74,8 @@ export const homeShortcutCategories: ServiceCategoryId[] = [
 export const highlightChips = [
   '종합사주',
   '연애운',
+  '직업운',
+  '금전운',
   '궁합',
   '결혼운',
   '카카오 로그인',

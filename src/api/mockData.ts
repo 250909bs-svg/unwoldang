@@ -7,12 +7,14 @@ export const serviceIds = [
   'match-couple',
   'match-destiny',
   'marriage-blueprint',
-  'marriage-timing'
+  'marriage-timing',
+  'career-reading',
+  'money-reading'
 ] as const;
 
 export type ServiceId = (typeof serviceIds)[number];
 
-export type ServiceCategoryId = 'all' | 'general' | 'love' | 'compatibility' | 'marriage';
+export type ServiceCategoryId = 'all' | 'general' | 'love' | 'compatibility' | 'marriage' | 'career' | 'wealth';
 
 export type ServiceTheme =
   | 'general'
@@ -141,6 +143,18 @@ export const serviceCategories: CategoryDefinition[] = [
     label: '결혼운',
     description: '혼인 적기와 배우자 흐름을 보는 실전 리포트',
     lead: '결혼 가능성과 안정감, 현실 체크 포인트를 함께 확인합니다.'
+  },
+  {
+    id: 'career',
+    label: '직업운',
+    description: '직업, 이직, 창업, 브랜딩, 포트폴리오를 보는 실전 리포트',
+    lead: '어떤 일을 해야 오래 버티고 돈으로 연결되는지 구체적으로 확인합니다.'
+  },
+  {
+    id: 'wealth',
+    label: '금전운',
+    description: '돈이 들어오는 방식과 새는 패턴을 보는 재물 리포트',
+    lead: '수입, 소비, 투자, 사업 구조를 현실적으로 정리합니다.'
   }
 ];
 
@@ -315,6 +329,44 @@ export const serviceCatalog: ServiceDefinition[] = [
     bullets: ['혼인 적기 분석', '결정이 필요한 구간', '관계 안정도 점검', '현실 조율 가이드'],
     process: ['시기별 운 흐름 분리', '움직이기 좋은 구간 추출', '주의 시기 표시', '결정 포인트 요약'],
     output: ['혼인 시기 카드', '타이밍 분석 리포트', '실전 조율 가이드', '현실 체크 메모']
+  },
+  {
+    id: 'career-reading',
+    category: 'career',
+    label: '운월선생 직업운 설계도',
+    advisor: '운월선생',
+    subtitle: '직업 적성, 이직·창업 타이밍, 포트폴리오와 브랜딩 방향까지 보는 실전 직업운 리포트',
+    teaser: '어떤 일을 해야 덜 지치고 오래 돈으로 연결되는지 보여드립니다.',
+    description:
+      '직업 이름 하나를 찍는 리포트가 아니라, 사주 구조와 대운을 바탕으로 어떤 역할, 업종, 일 방식에서 성과가 붙는지 분석합니다. 이직, 창업, 프리랜서, 브랜딩, 가격표와 포트폴리오까지 현실적인 실행 순서로 정리합니다.',
+    price: '59,000원',
+    accent: '#8f7655',
+    theme: 'career',
+    heroTag: 'CAREER',
+    badge: '직업운 대표',
+    spotlight: '진로, 이직, 창업, 브랜딩을 한 번에 보는 프리미엄 직업운',
+    bullets: ['직업 DNA 분석', '맞는 업종 TOP', '이직·창업 타이밍', '90일 커리어 실행안'],
+    process: ['원국 직업성 확인', '십성·월령 기반 역할 분석', '대운·월운 타이밍 점검', '포트폴리오·가격 전략 제안'],
+    output: ['직업운 리포트', '업종 추천표', '이직·창업 체크리스트', '90일 실행 로드맵']
+  },
+  {
+    id: 'money-reading',
+    category: 'wealth',
+    label: '운월선생 금전운 설계도',
+    advisor: '운월선생',
+    subtitle: '돈 들어오는 방식, 새는 지점, 투자·사업 성향과 정산 구조를 보는 프리미엄 금전운 리포트',
+    teaser: '돈이 어디서 들어오고 어디서 새는지, 올해 무엇을 지켜야 남는지 보여드립니다.',
+    description:
+      '금전운을 막연한 대박운으로 보지 않고 수입원, 소비 습관, 가격 책정, 정산, 투자 위험, 반복 수익 구조로 나눠 분석합니다. 대운과 월운을 함께 보며 돈을 열 시기와 지킬 시기를 구분합니다.',
+    price: '59,000원',
+    accent: '#b48a38',
+    theme: 'wealth',
+    heroTag: 'MONEY',
+    badge: '금전운 대표',
+    spotlight: '수입, 소비, 투자, 사업 구조를 현실적으로 보는 프리미엄 금전운',
+    bullets: ['재물 구조 분석', '돈 새는 패턴', '투자·사업 성향', '월별 금전 전략'],
+    process: ['재성·식상 흐름 확인', '대운의 돈 압력 분석', '소비·투자 위험 분류', '정산과 반복 수익 구조 제안'],
+    output: ['금전운 리포트', '수입원·지출 패턴 카드', '투자 주의표', '30일 돈 관리 처방']
   }
 ];
 
@@ -385,18 +437,38 @@ const marriageSections: SectionSeed[] = [
   { key: 'advice', title: '준비 포인트', summary: '결혼운을 현실로 연결하기 위한 준비 포인트를 제안합니다.' }
 ];
 
+const careerSections: SectionSeed[] = [
+  { key: 'dna', title: '직업 DNA', summary: '사주 원국에서 반복되는 일 처리 방식과 평가받는 역할을 봅니다.' },
+  { key: 'industry', title: '맞는 업종', summary: '업종명보다 오래 버티고 단가가 붙는 일의 구조를 분류합니다.' },
+  { key: 'timing', title: '이직·창업 시기', summary: '움직이기 좋은 달과 정리해야 할 달을 나눕니다.' },
+  { key: 'portfolio', title: '포트폴리오 전략', summary: '능력을 보이는 결과물, 가격표, 브랜딩 방향을 잡습니다.' },
+  { key: 'advice', title: '90일 실행안', summary: '직업운을 실제 행동으로 바꾸는 순서를 제안합니다.' }
+];
+
+const wealthSections: SectionSeed[] = [
+  { key: 'structure', title: '재물 구조', summary: '한 방형인지 누적형인지, 돈이 붙는 방식을 봅니다.' },
+  { key: 'leak', title: '돈 새는 패턴', summary: '감정 소비, 관계 지출, 투자 실수의 반복 장면을 짚습니다.' },
+  { key: 'income', title: '수입원 설계', summary: '월급, 사업, 부업, 반복 결제 중 맞는 구조를 분류합니다.' },
+  { key: 'investment', title: '투자·사업 주의점', summary: '하면 좋은 방식과 피해야 할 위험 방식을 나눕니다.' },
+  { key: 'advice', title: '30일 돈 처방', summary: '정산, 가격, 지출 기록을 실제 루틴으로 바꿉니다.' }
+];
+
 const sectionSeedByCategory: Record<Exclude<ServiceCategoryId, 'all'>, SectionSeed[]> = {
   general: generalSections,
   love: loveSections,
   compatibility: compatibilitySections,
-  marriage: marriageSections
+  marriage: marriageSections,
+  career: careerSections,
+  wealth: wealthSections
 };
 
 const categoryLead: Record<Exclude<ServiceCategoryId, 'all'>, string> = {
   general: '운월당의 종합사주 리포트는 한 줄 운세가 아니라 삶의 큰 결을 읽고, 지금 무엇을 우선해야 하는지 정리하는 방식으로 구성됩니다.',
   love: '운월당의 연애운 리포트는 상대를 단정하기보다 지금 관계의 온도와 감정의 방향을 현실적으로 읽어내는 데 집중합니다.',
   compatibility: '운월당의 궁합 리포트는 좋은 점과 어려운 점을 함께 보여주며, 실제 관계를 운영할 수 있는 힌트까지 정리해드립니다.',
-  marriage: '운월당의 결혼운 리포트는 감정과 현실을 함께 보며, 결혼의 가능성과 시기를 균형 있게 판단할 수 있도록 돕습니다.'
+  marriage: '운월당의 결혼운 리포트는 감정과 현실을 함께 보며, 결혼의 가능성과 시기를 균형 있게 판단할 수 있도록 돕습니다.',
+  career: '운월당의 직업운 리포트는 직업 이름을 찍는 대신, 어떤 역할과 구조에서 덜 지치고 더 오래 평가받는지 봅니다.',
+  wealth: '운월당의 금전운 리포트는 대박 예언이 아니라 돈이 들어오는 방식과 새는 지점을 현실적으로 나눠 보여줍니다.'
 };
 
 const categoryInsight: Record<
@@ -422,6 +494,16 @@ const categoryInsight: Record<
     currentMood: '결혼운은 감정만으로 움직이기보다 안정감과 현실성이 같이 올라올 때 가장 자연스럽게 풀립니다.',
     rightTiming: '서두르기보다 관계의 기반이 정리되는 시점에 맞춰 움직이면 훨씬 안정적인 선택이 됩니다.',
     caution: '불안 때문에 결정을 앞당기면 오히려 놓치지 않아도 될 변수에 흔들릴 수 있습니다.'
+  },
+  career: {
+    currentMood: '직업운은 지금 가진 능력을 밖에서 알아볼 수 있는 결과물로 바꿀 때 살아납니다.',
+    rightTiming: '이직이나 창업은 감정이 아니라 포트폴리오, 가격, 수입 공백이 정리될 때 움직이는 편이 안전합니다.',
+    caution: '좋아 보이는 일이라도 역할과 보상이 흐리면 실력보다 피로가 먼저 쌓입니다.'
+  },
+  wealth: {
+    currentMood: '금전운은 들어오는 돈보다 남는 돈의 구조를 잡을 때 체감이 커집니다.',
+    rightTiming: '수입을 열 시기와 지출을 막을 시기를 나누면 돈의 압박이 훨씬 줄어듭니다.',
+    caution: '감정이 올라온 밤의 결제, 지인 부탁, 이해하지 못한 투자가 가장 큰 손실 포인트입니다.'
   }
 };
 

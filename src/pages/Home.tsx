@@ -27,8 +27,8 @@ const mainCategories = [
   { target: 'love-reading', label: '연애운', icon: Heart, tint: '#fff0f5' },
   { target: 'marriage-blueprint', label: '결혼운', icon: Sparkles, tint: '#fff6f0' },
   { target: 'love-reunion', label: '재회운', icon: Heart, tint: '#fff6f8' },
-  { target: 'general-signature', label: '직업운', icon: BriefcaseBusiness, tint: '#f6f2ea' },
-  { target: 'life-flow', label: '금전운', icon: PiggyBank, tint: '#fff8e7' },
+  { target: 'career-reading', label: '직업운', icon: BriefcaseBusiness, tint: '#f6f2ea' },
+  { target: 'money-reading', label: '금전운', icon: PiggyBank, tint: '#fff8e7' },
   { path: '/tarot', label: '타로', icon: WalletCards, tint: '#fff1f5' }
 ] as const;
 
@@ -195,7 +195,7 @@ const homeDiscoverySections = [
     cards: [
       {
         id: 'wealth',
-        to: '/form/life-flow',
+        to: '/form/money-reading',
         image: illustrationDeck.sunlight,
         coverKicker: '운월선생',
         coverTitle: '재물비책',
@@ -204,7 +204,7 @@ const homeDiscoverySections = [
       },
       {
         id: 'career',
-        to: '/form/general-signature',
+        to: '/form/career-reading',
         image: illustrationDeck.moon,
         coverKicker: '운월선생',
         coverTitle: '직업비책',
