@@ -41,8 +41,8 @@ describe('saju core engine regression coverage', () => {
   it('produces opposite daeyun directions for male/female on the same birth', () => {
     const male = calcBazi(1990, 1, 1, 12, 30, 'solar', 'normal', 'male', false);
     const female = calcBazi(1990, 1, 1, 12, 30, 'solar', 'normal', 'female', false);
-    expect(male.forward).toBe(false);
-    expect(female.forward).toBe(true);
+    expect(male.forward).toBe(true);
+    expect(female.forward).toBe(false);
     expect(male.forward).not.toBe(female.forward);
   });
 
@@ -65,10 +65,21 @@ describe('saju core engine regression coverage', () => {
     let stem = bazi.m_gz.tg;
     let branch = bazi.m_gz.dz;
     for (let index = 0; index < rows.length; index += 1) {
-      stem = (stem + 1) % 10;
-      branch = (branch + 1) % 12;
+      stem = bazi.forward ? (stem + 1) % 10 : (stem + 9) % 10;
+      branch = bazi.forward ? (branch + 1) % 12 : (branch + 11) % 12;
       expect(rows[index].ganzhi).toBe(`${TG[stem]}${DZ[branch]}`);
     }
+  });
+
+  it('matches the API dayun sequence for the life-flow preview sample', () => {
+    const bazi = calcBazi(1992, 9, 9, 10, 24, 'solar', 'normal', 'female', false);
+    const rows = dayunRows(bazi);
+
+    expect(bazi.forward).toBe(true);
+    expect(rows[2].ganzhi).toBe('임자');
+    expect(rows[2].age).toBe('29세 ~ 38세');
+    expect(rows[3].ganzhi).toBe('계축');
+    expect(rows[3].age).toBe('39세 ~ 48세');
   });
 
   it('generates yearly luck rows as a continuous sexagenary sequence', () => {

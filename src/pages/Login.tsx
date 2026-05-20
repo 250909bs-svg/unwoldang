@@ -1,6 +1,7 @@
 import { Menu, MessageCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { buildKakaoAuthorizeUrl } from '../lib/auth';
 
 type LoginLocationState = {
@@ -10,7 +11,11 @@ type LoginLocationState = {
 
 export default function Login() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { loginDemo } = useAuth();
   const [loginError, setLoginError] = useState('');
+  const canUseLocalPreview =
+    import.meta.env.DEV && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
 
   const returnTo = useMemo(() => {
     const state = (location.state as LoginLocationState) || {};
@@ -38,6 +43,11 @@ export default function Login() {
     window.location.href = authorizeUrl;
   };
 
+  const handleLocalPreviewLogin = () => {
+    loginDemo('운월당 미리보기');
+    navigate(returnTo, { replace: true });
+  };
+
   return (
     <main className="login-visual-page">
       <div className="login-visual-shell">
@@ -61,6 +71,11 @@ export default function Login() {
               <MessageCircle size={18} fill="currentColor" />
               카카오로 로그인/가입
             </button>
+            {canUseLocalPreview ? (
+              <button type="button" className="login-local-preview-button" onClick={handleLocalPreviewLogin}>
+                로컬 미리보기로 바로 확인
+              </button>
+            ) : null}
             {loginError ? <p className="login-inline-error">{loginError}</p> : null}
           </div>
         </section>

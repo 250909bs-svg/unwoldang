@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type PropsWithChildren
@@ -25,11 +24,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-
-  useEffect(() => {
-    setUser(readStoredAuthUser());
-  }, []);
+  const [user, setUser] = useState<AuthUser | null>(() => readStoredAuthUser());
 
   const value = useMemo<AuthContextValue>(() => {
     const applyUser = (nextUser: AuthUser) => {

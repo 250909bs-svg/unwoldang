@@ -406,6 +406,322 @@ function getLuckAction(score: number) {
   return '무리한 결정보다 체력과 손실을 먼저 막을 때';
 }
 
+const BEST_MONTH_REASON_BY_MONTH: Record<number, string> = {
+  1: '공개운',
+  2: '정비운',
+  3: '기준 정리운',
+  4: '관계 조율운',
+  5: '협업 조율운',
+  6: '속도 조절운',
+  7: '점검운',
+  8: '정비 후 완성운',
+  9: '관계 선별운',
+  10: '확장운',
+  11: '정산운',
+  12: '마무리운'
+};
+
+function getBestMonthReason(item: SajuReportData['monthLuck'][number]) {
+  return BEST_MONTH_REASON_BY_MONTH[item.month] || `${getLuckPhase(item.score)} 활용운`;
+}
+
+function formatBestMonthReasonList(items: SajuReportData['monthLuck']) {
+  return items.map((item) => `${item.month}월 ${getBestMonthReason(item)}`).join(', ');
+}
+
+function formatElementLabels(items: Array<{ label: string }>) {
+  return items.map((item) => item.label).join('·');
+}
+
+function buildYearlyElementRealityLine(report: SajuReportData, currentYear?: SajuReportData['yearLuck'][number]) {
+  const values = report.fiveElements;
+  const maxValue = Math.max(...values.map((item) => item.value));
+  const strongestItems = values.filter((item) => item.value === maxValue && item.value > 0);
+  const missingItems = values.filter((item) => item.value === 0);
+  const visibleItems = values.filter((item) => item.value > 0);
+  const parsedYear = parsePillar(currentYear?.ganzhi || null);
+  const yearLabel = parsedYear && currentYear ? `${currentYear.year}년 ${parsedYear.stemHanja}${parsedYear.branchHanja}` : `${currentYear?.year || '올해'}`;
+  const yearElementLine = parsedYear
+    ? parsedYear.stemElement === parsedYear.branchElement
+      ? `${yearLabel} 세운에서 천간과 지지 모두 ${parsedYear.stemElement} 기운이 강하게 드러납니다`
+      : `${yearLabel} 세운에서 천간 ${parsedYear.stemElement}, 지지 ${parsedYear.branchElement} 기운이 함께 작동합니다`
+    : `${yearLabel} 세운과 대운에서 체감 오행이 다시 켜집니다`;
+
+  if (missingItems.length > 0 && strongestItems.length > 1) {
+    return `오행 표만 보면 ${formatElementLabels(missingItems)}은 비고, ${formatElementLabels(visibleItems)}는 겉으로 균등합니다. 그래서 원국 숫자만 놓고 ${strongestItems[0]?.label || '특정 오행'}가 가장 크다고 말하면 맞지 않습니다. 다만 ${yearElementLine}. 세운과 대운에서 다시 자극되는 기운이 실제 생활에서는 더 크게 체감됩니다.`;
+  }
+
+  if (strongestItems.length > 1) {
+    return `오행 표는 ${formatElementLabels(strongestItems)}가 같은 비중으로 잡힙니다. 한 오행이 혼자 가장 크다고 단정하기보다 월령, 지지의 뿌리, 대운과 세운에서 무엇이 다시 켜지는지를 봐야 합니다. ${yearElementLine}.`;
+  }
+
+  return `오행은 ${strongestItems[0]?.label || report.dayMasterElement} 기운이 눈에 띄지만, 결론은 숫자 하나로 끝내면 안 됩니다. 월령, 지지의 뿌리, 대운과 세운에서 어떤 기운이 다시 켜지는지가 실제 체감의 차이를 만듭니다. ${yearElementLine}.`;
+}
+
+function buildYearlyStrengthReading(report: SajuReportData) {
+  const monthParsed = parsePillar(report.pillars.month);
+  const hourParsed = parsePillar(report.pillars.hour);
+  const missingWood = report.fiveElements.some((item) => item.label === '목' && item.value === 0);
+  const hourSupportsFireEarth = Boolean(
+    hourParsed && [hourParsed.stemElement, hourParsed.branchElement].some((element) => element === '화' || element === '토')
+  );
+  const supportSource = hourSupportsFireEarth ? '시주와 원국 안의 화·토' : '원국 안의 화·토';
+
+  if (report.dayMasterElement === '토' && monthParsed?.branchElement === '금') {
+    return `${report.dayMaster} 일간은 ${report.pillars.month} 월령상 식상 금 기운이 강해 일간의 힘이 밖으로 빠져나갑니다.${missingWood ? ' 목이 비어 균형 감각도 흔들리기 쉽습니다.' : ''} 다만 ${supportSource}가 일간을 보완하므로 무조건 신약으로 단정하지 않습니다. ${report.strengthLabel} 판정은 약신약 또는 중화 쪽까지 열어두고, 실제 판단은 체력, 책임, 결과물의 지속력으로 봅니다.`;
+  }
+
+  return `${report.strengthLabel} 판정은 숫자처럼 딱 잘라 끝낼 문제가 아닙니다. 월령이 일간을 밀어주는지, 지지에 뿌리가 있는지, 대운에서 보완 기운이 들어오는지를 함께 봐야 합니다. 그래서 올해는 강하다/약하다보다 어떤 상황에서 체력과 책임이 먼저 흔들리는지를 보는 편이 정확합니다.`;
+}
+
+const REPORT_PILLAR_NAMES = {
+  year: '년지',
+  month: '월지',
+  day: '일지',
+  hour: '시지'
+} as const;
+
+function getReportBranchPieces(report: SajuReportData) {
+  return PILLAR_LABELS.map((pillar) => {
+    const parsed = parsePillar(report.pillars[pillar.key]);
+    return parsed
+      ? {
+          key: pillar.key,
+          label: REPORT_PILLAR_NAMES[pillar.key],
+          stem: parsed.stem,
+          branch: parsed.branch,
+          branchHanja: parsed.branchHanja,
+          branchElement: parsed.branchElement
+        }
+      : null;
+  }).filter((item): item is NonNullable<typeof item> => Boolean(item));
+}
+
+function findBranchPiece(report: SajuReportData, branch: string) {
+  return getReportBranchPieces(report).find((piece) => piece.branch === branch);
+}
+
+function hasReportBranches(report: SajuReportData, branches: string[]) {
+  const present = new Set(getReportBranchPieces(report).map((piece) => piece.branch));
+  return branches.every((branch) => present.has(branch));
+}
+
+function formatBranchLocation(piece?: ReturnType<typeof getReportBranchPieces>[number]) {
+  return piece ? `${piece.label} ${piece.branchHanja}` : '해당 지지';
+}
+
+function buildSignatureStrengthLine(report: SajuReportData) {
+  const month = parsePillar(report.pillars.month);
+  const hasFireRoot = getReportBranchPieces(report).some((piece) => piece.branchElement === '화') || /병|정/.test(Object.values(report.pillars).join(''));
+  const hasEarthRoot = getReportBranchPieces(report).some((piece) => piece.branchElement === '토') || /무|기/.test(Object.values(report.pillars).join(''));
+
+  if (report.dayMasterElement === '토' && month?.branchElement === '금') {
+    return `${report.dayMaster}토 일간이 ${report.pillars.month} 월령을 만나면 식상 금기가 강해져 힘이 밖으로 빠집니다. 그런데 ${hasFireRoot ? '丁·巳 같은 화의 온도' : '화의 보완'}와 ${hasEarthRoot ? '戊·己·토의 뿌리' : '토의 뿌리'}가 같이 있어 완전 신약으로 자르면 거칠어집니다. 정확히는 중화에서 약신약 사이, 차가운 금수 환경에서는 체감상 신약처럼 반응하는 구조입니다.`;
+  }
+
+  return `${report.strengthLabel} 판정은 한 단어로 끝내면 얕아집니다. 월령이 일간을 밀어주는지, 지지에 뿌리가 있는지, 대운에서 어떤 기운이 다시 켜지는지를 함께 봐야 실제 체감이 맞습니다.`;
+}
+
+function buildSignatureRelationReadings(report: SajuReportData): ReportSection {
+  const cards: NonNullable<ReportSection['cards']> = [];
+  const details: NonNullable<ReportSection['details']> = [];
+  const ja = findBranchPiece(report, '자');
+  const yu = findBranchPiece(report, '유');
+  const sa = findBranchPiece(report, '사');
+  const sin = findBranchPiece(report, '신');
+
+  if (hasReportBranches(report, ['자', '유'])) {
+    cards.push({
+      title: '子酉破 · 가까워진 뒤 거리두기',
+      body: `${formatBranchLocation(ja)}와 ${formatBranchLocation(yu)}의 子酉破는 단순한 관계 불화가 아닙니다. 처음엔 맞춰주다가도 약속, 말투, 답장 온도가 어긋나면 마음속에서 먼저 선을 긋는 패턴으로 나옵니다.`,
+      tone: 'warn'
+    });
+    details.push({
+      summary: '子酉破가 실제 생활에서 터지는 장면',
+      content: `겉으로는 “괜찮아”라고 말하지만 속으로는 이미 관계 평가가 끝난 상태가 반복될 수 있습니다.\n\n상대가 계속 작은 부탁을 하거나, 답장을 당연하게 기다리거나, 돈과 시간을 흐리면 어느 순간 답장이 짧아지고 연락을 피하게 됩니다.\n\n이 파는 사람을 오래 못 믿는다는 단정이 아니라, 가까워질수록 세부 태도를 날카롭게 보는 구조입니다.`,
+      open: true
+    });
+  }
+
+  if (hasReportBranches(report, ['사', '신'])) {
+    cards.push({
+      title: '巳申合刑 · 생각 과부하',
+      body: `${formatBranchLocation(sa)}와 ${formatBranchLocation(sin)}이 만나면 합처럼 끌리면서도 형처럼 피로가 생깁니다. 일은 멈췄는데 머리는 계속 돌아가고, 밤에 계획·걱정·계산이 한꺼번에 떠오르기 쉽습니다.`,
+      tone: 'warn'
+    });
+    details.push({
+      summary: '巳申 합형이 만드는 일·몸·관계 반응',
+      content: `좋은 아이디어가 갑자기 많아지고, 사람도 붙고, 할 일도 늘어납니다. 문제는 그 속도만큼 신경계가 쉬지 못한다는 점입니다.\n\n낮에는 담담히 처리하다가 밤에 머리가 계속 돌아가고, 작은 말 하나를 오래 곱씹고, 쉬는 날에도 일의 다음 수를 계산하는 식으로 나타납니다.\n\n이때 필요한 건 더 열심히가 아니라 업무 마감선, 답장 가능 시간, 수면 전 차단 루틴입니다.`,
+      open: true
+    });
+  }
+
+  if (hasReportBranches(report, ['신', '자'])) {
+    cards.push({
+      title: '申子 반합 · 돈과 이동의 물길',
+      body: `${formatBranchLocation(sin)}와 ${formatBranchLocation(ja)}의 반합은 수 기운을 살립니다. 사람, 정보, 돈의 흐름이 열릴 수 있지만 동시에 이동·연락·감정 소모도 같이 커집니다.`,
+      tone: 'good'
+    });
+    details.push({
+      summary: '申子 반합을 돈으로 쓰는 법',
+      content: `이 흐름은 혼자 조용히 앉아 있는 운이 아니라, 문의·소개·이동·정보가 돈과 연결되는 운입니다.\n\n다만 물길이 열리면 새는 곳도 생깁니다. 상담, 결제, 환불, 수정 요청, 재문의가 한꺼번에 들어올 수 있으니 “들어오는 돈”보다 “남는 돈”을 먼저 봐야 합니다.`,
+      open: true
+    });
+  }
+
+  if (yu) {
+    cards.push({
+      title: '월지 酉 도화 · 소개와 평판',
+      body: `월지 酉 도화는 단순히 매력이 있다는 말로 끝내면 약합니다. 소개, 후기, 평판, 말투, 결과물의 깔끔함이 사람을 끌어오는 통로가 됩니다. 다만 子酉破가 같이 있으면 끌림은 생겨도 유지에는 기준이 필요합니다.`,
+      tone: 'good'
+    });
+    details.push({
+      summary: '도화가 강할 때 고객이 체감하는 포인트',
+      content: `처음부터 과하게 튀는 매력보다 “깔끔하다, 믿을 만하다, 다시 맡기고 싶다”는 인상으로 도화가 작동합니다.\n\n연애에서도 사람은 붙지만, 상대의 연락 습관과 책임감이 불안정하면 빠르게 정이 떨어질 수 있습니다. 사업에서는 얼굴보다 후기, 샘플, 설명의 결이 매력 포인트가 됩니다.`,
+      open: true
+    });
+  }
+
+  if (cards.length === 0) {
+    cards.push({
+      title: '관계 구조',
+      body: '이 명식은 큰 충돌보다 월령, 대운, 십성의 조합으로 관계 피로가 생기는 쪽입니다. 사람을 넓히기보다 오래 남길 사람을 고르는 기준이 중요합니다.'
+    });
+  }
+
+  return {
+    id: 'signature-relation-events',
+    title: '합충형파 실제 사건 해석',
+    subtitle: '관계가 좋다/나쁘다가 아니라 어떤 장면에서 피로와 사건이 생기는지 봅니다.',
+    cards,
+    details
+  };
+}
+
+function getSignatureMonthScene(item: SajuReportData['monthLuck'][number], report: SajuReportData) {
+  const parsed = parsePillar(item.ganzhi);
+  const monthLabel = `${item.year}.${String(item.month).padStart(2, '0')}`;
+  const branch = parsed?.branch || '';
+  const stemElement = parsed?.stemElement || '천간';
+  const branchElement = parsed?.branchElement || '지지';
+  const dayunName = report.currentDayun.name;
+  const base = {
+    basis: `${monthLabel} ${item.ganzhi} 월운은 ${dayunName} 대운 위로 천간에는 ${stemElement} 기운, 지지에는 ${branchElement} 기운이 들어오는 달입니다.`,
+    event: '선택지가 늘지만 실제로 남는 것은 약속, 돈, 일정이 정리된 일입니다.',
+    money: '돈은 들어오는 흐름보다 빠져나가는 구멍을 먼저 확인해야 합니다.',
+    relation: '사람의 말보다 반복 행동과 약속 이행을 보세요.',
+    body: '수면과 소화, 목·어깨 피로가 먼저 신호를 줄 수 있습니다.',
+    action: '새로 벌리기보다 하나를 끝까지 마무리하세요.'
+  };
+
+  const byBranch: Record<string, Partial<typeof base>> = {
+    자: {
+      event: '子수가 들어오면 돈, 연락, 감정이 동시에 흔들립니다. 밤에 생각이 많아지고 답장을 미루거나 갑자기 거리를 두는 장면이 생기기 쉽습니다.',
+      money: '소액 결제, 즉흥 구매, 사람 때문에 쓰는 돈을 조심하세요.',
+      relation: '가까운 사람일수록 말투 하나가 크게 들립니다. 길게 설명하기보다 짧게 확인하는 편이 안전합니다.',
+      body: '야간 활동과 수면 질이 바로 컨디션을 흔듭니다.',
+      action: '밤 10시 이후 큰 결제와 관계 결론을 미루세요.'
+    },
+    축: {
+      event: '丑토는 쌓인 문제를 현실로 끌어냅니다. 미뤄둔 정산, 서류, 가족·조직 책임이 다시 올라올 수 있습니다.',
+      money: '새 매출보다 고정비와 미수금을 먼저 보세요.',
+      relation: '서운함을 감정으로 풀기보다 역할과 범위를 다시 적어야 합니다.',
+      body: '몸이 무거워지고 소화가 느려질 수 있습니다.',
+      action: '정산일, 마감일, 제공 범위를 다시 고정하세요.'
+    },
+    인: {
+      event: '寅목은 새 방향을 열지만 이 명식에서는 부족한 목을 자극합니다. 배우고 연결하고 제안하는 감각이 살아납니다.',
+      money: '새 상품 아이디어는 좋지만 바로 팔기보다 작은 테스트가 먼저입니다.',
+      relation: '소개나 협업 제안이 들어오면 상대의 실행 속도를 확인하세요.',
+      body: '시작 에너지는 올라오지만 과속하면 피로가 빨리 옵니다.',
+      action: '새 기획은 7일짜리 실험으로 쪼개세요.'
+    },
+    묘: {
+      event: '卯목은 관계 방향과 성장 욕구를 건드립니다. 연락을 다시 열거나 배우고 싶은 주제가 생기기 쉽습니다.',
+      money: '교육, 콘텐츠, 상담형 상품의 언어를 다듬기 좋습니다.',
+      relation: '좋은 사람처럼 보이는지보다 대화가 다음 행동으로 이어지는지 보세요.',
+      body: '눈 피로와 신경 예민함이 올라올 수 있습니다.',
+      action: '소개문, 프로필, 상품 설명을 새로 쓰세요.'
+    },
+    진: {
+      event: '辰토는 흩어진 것을 모으는 달입니다. 일, 돈, 사람을 한 번에 정리하고 싶어집니다.',
+      money: '반복 결제, 재구매, 패키지 구성을 검토하기 좋습니다.',
+      relation: '애매한 관계는 자연스럽게 거리가 생길 수 있습니다.',
+      body: '속이 답답하거나 몸이 둔해지면 쉬어야 합니다.',
+      action: '남길 일과 버릴 일을 표로 나누세요.'
+    },
+    사: {
+      event: '巳화가 들어오면 원국의 巳申 합형이 다시 켜질 수 있습니다. 머리가 빨라지고 공개·홍보 욕구가 올라오지만 생각 과부하도 같이 옵니다.',
+      money: '새 고객보다 기존 문의를 상품으로 전환하는 데 집중하세요.',
+      relation: '좋은 말만 믿지 말고 실제 일정과 입금 여부를 확인해야 합니다.',
+      body: '불면, 열감, 목·어깨 긴장이 올라올 수 있습니다.',
+      action: '공개 전 체크리스트를 만들고 밤에는 일을 닫으세요.'
+    },
+    오: {
+      event: '午화는 드러남과 표현을 키웁니다. 콘텐츠, 소개, 홍보, 발표에 힘이 실립니다.',
+      money: '가격을 숨기지 말고 보여주는 쪽이 낫습니다.',
+      relation: '호감 표현은 늦추지 말되 과한 약속은 피하세요.',
+      body: '체력은 올라오지만 과열되면 짜증이 늘 수 있습니다.',
+      action: '대표 결과물 하나를 밖으로 꺼내세요.'
+    },
+    미: {
+      event: '未토는 벌린 일을 고정합니다. 새 시작보다 이미 가진 것을 다듬어 자리 잡게 하는 달입니다.',
+      money: '고정 상품, 정기 결제, 재구매 구조를 만들기 좋습니다.',
+      relation: '가까운 사람과 책임 문제가 올라올 수 있습니다.',
+      body: '소화와 수면 리듬을 안정시키는 것이 먼저입니다.',
+      action: '가격표와 제공 범위를 확정하세요.'
+    },
+    신: {
+      event: '申금은 원국의 巳申 합형과 申子 반합을 동시에 건드립니다. 문의, 이동, 정보, 돈 흐름이 늘지만 머리가 쉬지 않을 수 있습니다.',
+      money: '고객은 늘 수 있지만 수정 요청과 응대 시간이 같이 늘어납니다.',
+      relation: '말 많은 사람보다 실제 결제와 약속을 지키는 사람을 보세요.',
+      body: '신경 과부하와 눈·어깨 피로를 조심하세요.',
+      action: '응대 시간과 수정 횟수를 먼저 제한하세요.'
+    },
+    유: {
+      event: '酉금은 월지 酉 도화를 다시 건드립니다. 소개, 평판, 후기, 이미지가 강해지는 달입니다.',
+      money: '후기와 샘플이 돈으로 바뀌기 쉽습니다.',
+      relation: '子酉破가 같이 작동하면 끌림은 생겨도 유지에서 피로가 올 수 있습니다.',
+      body: '예민함이 올라와 사소한 말투가 크게 들릴 수 있습니다.',
+      action: '후기 정리와 관계 경계선을 같이 잡으세요.'
+    },
+    술: {
+      event: '戌토는 화고를 품어 기존 결과물을 다시 데우는 달입니다. 새 고객보다 기존 신뢰 관계에서 큰 제안이나 재구매가 생기기 쉽습니다.',
+      money: '묵혀둔 상품, 지난 고객, 예전 문의를 다시 꺼내면 성과가 붙을 수 있습니다.',
+      relation: '오래 본 사람과 조건을 다시 맞추기 좋습니다.',
+      body: '과로하면 건조함과 긴장이 올라옵니다.',
+      action: '기존 결과물을 재정리해 다시 공개하세요.'
+    },
+    해: {
+      event: '亥수는 감정과 돈의 물길을 크게 엽니다. 사람 이야기를 들어주다 내 리듬이 흔들릴 수 있습니다.',
+      money: '상담·문의는 늘 수 있지만 무료 응대가 길어지면 손해입니다.',
+      relation: '연민으로 시작한 관계가 책임으로 바뀌지 않게 조심하세요.',
+      body: '수면, 부종, 무기력 신호를 가볍게 넘기지 마세요.',
+      action: '무료 상담 범위와 답변 시간을 정하세요.'
+    }
+  };
+
+  return { ...base, ...(byBranch[branch] || {}) };
+}
+
+function buildSignatureMonthContent(item: SajuReportData['monthLuck'][number], report: SajuReportData) {
+  const scene = getSignatureMonthScene(item, report);
+
+  return [
+    `명리 근거: ${scene.basis}`,
+    `사건성: ${scene.event}`,
+    `돈: ${scene.money}`,
+    `관계: ${scene.relation}`,
+    `몸 상태: ${scene.body}`,
+    `행동 기준: ${scene.action}`
+  ].join('\n\n');
+}
+
+function getSignatureMonthSummary(item: SajuReportData['monthLuck'][number], report: SajuReportData) {
+  const scene = getSignatureMonthScene(item, report);
+  return `${item.year}.${String(item.month).padStart(2, '0')} · ${getLuckPhase(item.score)} · ${scene.action.replace(/하세요\.?$/, '')}`;
+}
+
 function buildMyeongriClimate(report: SajuReportData) {
   const pillars = [report.pillars.year, report.pillars.month, report.pillars.day, report.pillars.hour || ''].join(' ');
   const monthBranch = report.pillars.month.slice(-1);
@@ -436,23 +752,39 @@ function buildMyeongriClimate(report: SajuReportData) {
   };
 }
 
-function describeTenGodDepth(label: string, report: SajuReportData) {
+function describeTenGodDepth(label: string) {
+  if (label.includes('비견')) {
+    return `${label}은 혼자 기준을 세우는 힘입니다. 애매한 지시 아래에서는 오히려 스트레스가 커지고, “그냥 알아서 해줘”라는 말보다 역할과 권한이 분명할 때 실력이 살아납니다. 피곤하면 도움을 청하기보다 혼자 끝내려 해서 표정이 굳고 답장이 짧아질 수 있습니다.`;
+  }
+  if (label.includes('겁재')) {
+    return `${label}은 경쟁자와 같은 판에 섰을 때 켜지는 힘입니다. 누가 내 몫을 흐리거나 공을 가져가려 하면 겉으론 참아도 속으로는 바로 선을 긋습니다. 잘 쓰면 독립성과 돌파력이 되지만, 감정이 앞서면 관계를 한 번에 끊는 식으로 나올 수 있습니다.`;
+  }
   if (label.includes('식') || label.includes('상')) {
-    return `${label}은 말, 콘텐츠, 설명, 상담, 설계 능력으로 드러납니다. ${report.dayMaster} 일간이 가진 기준을 고객이 이해할 수 있는 언어로 바꾸는 힘이라, 리포트·강의·상담·기획형 상품과 잘 맞습니다.`;
+    if (label.includes('식')) {
+      return `${label}은 말을 길게 늘리는 힘이 아니라 “이렇게 하면 됩니다”라고 정리해주는 힘입니다. 복잡한 문제를 순서, 예시, 결과물로 바꿀 때 신뢰가 붙습니다. 다만 피곤하면 설명을 포기하고 “알아서 판단해”처럼 차갑게 끊길 수 있어, 핵심 문장 하나를 남기는 습관이 중요합니다.`;
+    }
+
+    return `${label}은 답답한 구조를 그냥 넘기지 못하는 표현력입니다. 틀린 말, 비효율, 억지 규칙을 보면 속으로 바로 반박이 올라옵니다. 잘 쓰면 기획과 브랜딩의 칼이 되고, 거칠게 쓰면 말투가 세다는 인상을 남기니 공개 문장은 한 번 식혀서 내보내야 합니다.`;
   }
-  if (label.includes('재')) {
-    return `${label}은 돈 자체보다 시장, 고객, 거래, 선택지의 흐름을 읽는 감각입니다. 잘 쓰면 다중 수익과 판매 감각이 살아나지만, 무리하면 약속과 지출이 동시에 늘어납니다.`;
+  if (label.includes('편재')) {
+    return `${label}는 사람과 돈의 흐름을 빠르게 읽는 감각입니다. 분위기가 뜨면 기회도 빨리 잡지만, 그만큼 식사비, 이동비, 즉흥 결제도 같이 커질 수 있습니다. 돈은 들어오는데 쉬는 시간이 사라지는 장면을 조심해야 합니다.`;
   }
-  if (label.includes('비') || label.includes('겁')) {
-    return `${label}은 자기 기준과 독립성을 세우는 힘입니다. 장점으로 쓰이면 흔들리지 않는 중심이 되지만, 피곤할 때는 타인의 방식까지 내 기준에 맞추려는 압박으로 나타날 수 있습니다.`;
+  if (label.includes('정재')) {
+    return `${label}는 한 번 들어온 돈을 새지 않게 붙잡는 힘입니다. 정산일, 고정비, 반복 결제, 환불 기준처럼 작은 숫자를 챙길 때 강합니다. 다만 돈 이야기를 미루면 마음은 불편한데 입은 늦어져 손해를 떠안을 수 있습니다.`;
   }
-  if (label.includes('관')) {
-    return `${label}은 책임, 직함, 규칙, 사회적 신뢰와 연결됩니다. 계약, 심사, 제도, 직업 안정성이 중요한 선택일수록 이 기운을 섬세하게 봐야 합니다.`;
+  if (label.includes('편관')) {
+    return `${label}은 압박이 걸릴 때 집중력이 살아나는 힘입니다. 마감, 경쟁, 책임이 있으면 갑자기 눈빛이 달라집니다. 하지만 늘 전투 모드로 살면 몸이 먼저 굳고, 가까운 사람에게 말투가 날카롭게 나갈 수 있습니다.`;
   }
-  if (label.includes('인')) {
-    return `${label}은 공부, 보호, 자격, 문서, 회복의 힘입니다. 급하게 벌리는 일보다 준비와 검증을 거친 선택에서 신뢰가 살아납니다.`;
+  if (label.includes('정관')) {
+    return `${label}은 약속과 평판을 지키려는 힘입니다. 해야 할 일을 미루지 않는 대신, 책임이 애매한 자리에서는 남의 몫까지 떠안기 쉽습니다. 좋은 사람으로 보이려다 지치지 않으려면 처음부터 역할을 정확히 나눠야 합니다.`;
   }
-  return `${label}은 이 명식에서 반복되는 행동 방식과 선택 습관을 보여주는 십성입니다. 점수보다 어떤 장면에서 켜지는지를 봐야 실제 해석이 깊어집니다.`;
+  if (label.includes('편인')) {
+    return `${label}은 혼자 파고들어 답을 찾는 힘입니다. 남들이 대충 넘긴 자료를 붙잡고 밤에 계속 생각하는 식으로 작동합니다. 잘 쓰면 전문성이 되지만, 과하면 의심과 생각 과부하로 잠이 늦어집니다.`;
+  }
+  if (label.includes('정인')) {
+    return `${label}은 보호받고 확인받아야 마음이 놓이는 힘입니다. 공부, 자격, 검증, 안전한 울타리에서 안정됩니다. 다만 완벽히 준비될 때까지 미루면 좋은 타이밍을 놓칠 수 있어 작은 공개가 필요합니다.`;
+  }
+  return `${label}은 이 명식에서 자주 켜지는 생활 반응입니다. 점수보다 중요한 건 어떤 순간에 말투가 바뀌고, 언제 돈을 쓰고, 어느 관계에서 마음이 먼저 닫히는지입니다.`;
 }
 
 function formatCautionElements(report: SajuReportData) {
@@ -460,14 +792,117 @@ function formatCautionElements(report: SajuReportData) {
   const missing = report.cautiousElements.filter((element) => (report.fiveElements.find((item) => item.label === element)?.value || 0) === 0);
 
   if (active.length > 0 && missing.length > 0) {
-    return `${active.join(', ')} 기운은 강해질 때 속도와 부담을 만들 수 있고, ${missing.join(', ')} 기운은 과다가 아니라 부족할 때 관계 방향과 성장감이 비기 쉬운 자리입니다.`;
+    return `${active.join('·')} 쪽이 켜지면 연락, 돈, 이동이 한꺼번에 몰릴 수 있습니다. ${missing.join('·')} 쪽은 넘쳐서가 아니라 비어 있을 때 다음 단계 제안과 관계 방향이 흐려집니다.`;
   }
 
   if (missing.length > 0) {
-    return `${missing.join(', ')} 기운은 과다보다 결핍을 보완해야 하는 자리입니다. 관계의 방향, 다음 단계 제안, 성장 동선을 의식적으로 만들어야 합니다.`;
+    return `${missing.join('·')} 쪽은 넘침보다 공백이 문제입니다. 관계의 방향, 다음 단계 제안, 성장 동선을 의식적으로 만들어야 합니다.`;
   }
 
-  return `${active.join(', ')} 기운은 강해질 때 속도, 지출, 감정 반응이 같이 커질 수 있습니다.`;
+  return `${active.join('·')} 쪽이 강해질 때는 속도, 지출, 감정 반응이 같이 커질 수 있습니다.`;
+}
+
+function buildCautionSceneBank(report: SajuReportData) {
+  const active = report.cautiousElements.filter((element) => (report.fiveElements.find((item) => item.label === element)?.value || 0) > 0);
+  const missing = report.cautiousElements.filter((element) => (report.fiveElements.find((item) => item.label === element)?.value || 0) === 0);
+  const activeLabel = active.length ? active.join('·') : '압박이 큰 기운';
+  const missingLabel = missing.length ? missing.join('·') : '비어 있는 기운';
+  const activeSubject = active.length > 1 ? `${activeLabel} 라인이` : withSubjectParticle(activeLabel);
+  const missingSubject = missing.length > 1 ? `${missingLabel} 라인이` : withSubjectParticle(missingLabel);
+
+  return [
+    `${activeSubject} 강해지는 구간에는 문의와 일정이 같은 날 몰릴 수 있습니다. ${missingSubject} 비면 다음 단계 제안이 늦어져 좋은 사람을 만나도 관계가 멈춥니다.`,
+    `돈은 들어오는데 쉬는 시간이 사라질 수 있습니다. ${activeSubject} 과열되면 답장이 짧아지고, ${missingSubject} 약하면 마음은 있어도 표현이 늦어집니다.`,
+    `답장, 정산, 수정 요청이 한 번에 겹치면 집중이 흩어집니다. 이때는 더 친절해지려 하기보다 오늘 처리할 범위를 잘라야 합니다.`,
+    `사람은 늘어나는데 관계 피로도 같이 커질 수 있습니다. 좋아하는 마음이 있어도 피곤하면 먼저 설명하기보다 조용히 물러나는 쪽으로 반응합니다.`,
+    `밤에 판단하면 약속을 크게 잡거나 결제를 쉽게 열 수 있습니다. 다음 날 아침에도 같은 선택을 하고 싶은지 확인해야 손실이 줄어듭니다.`,
+    `${missingSubject} 비어 있을 때는 “좋아한다”는 마음이 행동으로 늦게 나옵니다. 그래서 상대는 기다리다 지치고, 본인은 뒤늦게 아쉬워하는 장면이 생길 수 있습니다.`
+  ];
+}
+
+function buildTenGodSceneDetail(label: string, report: SajuReportData) {
+  const core = describeTenGodDepth(label);
+
+  return `${core}\n\n생활 장면: 좋은 자리에서는 말이 많아지기보다 정리가 빨라집니다. “이건 여기까지, 이건 다음에”처럼 선을 그을 때 사람들이 ${report.customerName}님을 믿고 맡깁니다.\n\n감정 흐름: 좋아도 바로 표현하지 않고 먼저 관찰합니다. 마음이 식으면 다시 설득해도 회복이 오래 걸리지 않습니다. 겉으로는 차분해 보여도 속으로는 이미 결론을 내려놓는 편입니다.`;
+}
+
+function buildEmotionalFlowSection(report: SajuReportData): ReportSection {
+  return {
+    id: 'emotional-flow',
+    title: '감정 흐름 정밀 해석',
+    subtitle: '성격 설명이 아니라 마음이 움직이고 식고 닫히는 실제 순서를 봅니다.',
+    cards: [
+      {
+        title: '좋아해도 표현이 늦다',
+        body: `${report.customerName}님은 마음이 커질수록 더 조심스러워질 수 있습니다. 먼저 확신을 얻고 싶어서 표현을 아끼는데, 상대는 그 침묵을 관심 부족으로 읽을 수 있습니다.`,
+        tone: 'warn'
+      },
+      {
+        title: '식으면 회복이 빠르지 않다',
+        body: '한 번 마음이 식으면 감정이 다시 뜨겁게 돌아오기보다, 왜 식었는지를 차분히 확인하는 쪽으로 갑니다. 사과 한마디보다 이후 태도가 바뀌는지를 봅니다.'
+      },
+      {
+        title: '속으로 먼저 정리한다',
+        body: '겉으로는 큰소리 내지 않아도 마음속에서는 이미 관계를 정리해둔 뒤일 수 있습니다. 그래서 마지막 대화가 싸움이 아니라 아주 짧은 답장으로 끝나는 경우가 생깁니다.'
+      },
+      {
+        title: '피곤하면 말투가 차가워진다',
+        body: '컨디션이 떨어지면 감정을 설명할 힘이 줄어듭니다. 이때는 싫어서가 아니라 더 망치기 싫어서 답장을 미루고, 거리를 두고, 혼자 생각합니다.',
+        tone: 'warn'
+      }
+    ],
+    details: [
+      {
+        summary: '관계에서 제일 자주 반복되는 감정 순서',
+        content: `처음에는 상대의 장점과 가능성을 크게 봅니다.\n\n그다음 작은 약속, 말투, 돈 쓰는 방식, 답장 온도를 봅니다.\n\n여기서 어긋남이 반복되면 바로 화를 내기보다 속으로 거리를 둡니다.\n\n마지막에는 긴 설명보다 짧은 답장, 늦은 답장, 만남 회피로 마음이 빠져나옵니다.`,
+        open: true
+      }
+    ]
+  };
+}
+
+function polishRepeatedReportLanguage(report: SajuReportData, repeatedCaution: string, cautionScenes: string[]) {
+  let cautionIndex = 0;
+  let behaviorIndex = 0;
+  const behaviorAlternatives = ['지난 행동', '평소 태도', '약속을 지키는 방식', '돈과 시간의 쓰임', '갈등 뒤 돌아오는 말투'];
+
+  const replaceText = (text: string) => {
+    let next = text;
+
+    while (repeatedCaution && next.includes(repeatedCaution)) {
+      next = next.replace(repeatedCaution, cautionScenes[cautionIndex % cautionScenes.length]);
+      cautionIndex += 1;
+    }
+
+    while (next.includes('반복 행동')) {
+      next = next.replace('반복 행동', behaviorAlternatives[behaviorIndex % behaviorAlternatives.length]);
+      behaviorIndex += 1;
+    }
+
+    return next
+      .replace(/무엇을 쓰는 선택인지 먼저 확인하세요/g, '어느 칸이 먼저 무너지는지 보세요')
+      .replace(/상황에 따라 장점과 부담이 함께 드러날 수 있는 성향 축입니다\./g, '생활 속에서 말투, 돈, 약속 방식으로 바로 드러나는 축입니다.');
+  };
+
+  const walk = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      return replaceText(value);
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => walk(item));
+    }
+
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, walk(item)])
+      );
+    }
+
+    return value;
+  };
+
+  return walk(report) as SajuReportData;
 }
 
 function SectionBlock({
@@ -696,7 +1131,7 @@ function getConcernTopicProfile(question: string, report: SajuReportData) {
       '이 고민은 한 가지 감정으로 정리하기보다 여러 조건이 동시에 걸린 복합 질문입니다. 마음은 이미 답을 재촉하지만, 실제로는 돈, 관계, 일정, 체력 중 어디가 막혔는지 나눠 봐야 풀립니다.',
     sajuLink: `${report.dayMaster} 일간, ${report.strengthLabel}, ${report.currentDayun.name} 대운을 함께 보면 감정의 크기보다 유지 가능한 조건이 더 중요하게 들어옵니다. ${withObjectParticle(`${helpfulText} 기운`)} 생활에서 보완할수록 판단이 차분해집니다.`,
     resolution:
-      '오늘은 답을 하나로 정하기보다 조건표를 작게 만드세요. 지금 선택이 내 시간, 돈, 사람, 체력 중 무엇을 쓰게 만드는지 적으면 고민의 무게가 줄어듭니다.'
+      '오늘은 답을 하나로 정하기보다 선택을 네 칸으로 나누세요. 지금 선택이 내 시간, 돈, 사람, 체력 중 무엇을 쓰게 만드는지 적으면 고민의 무게가 줄어듭니다.'
   };
 }
 
@@ -1397,6 +1832,10 @@ function withTopicParticle(text: string) {
   return `${text}${hasFinalConsonant(text) ? '은' : '는'}`;
 }
 
+function withSubjectParticle(text: string) {
+  return `${text}${hasFinalConsonant(text) ? '이' : '가'}`;
+}
+
 function formatElementList(elements: string[]) {
   return Array.from(new Set(elements.filter(Boolean))).join('·');
 }
@@ -1943,6 +2382,668 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
   };
 }
 
+function getYearlyOpeningMetaphor(score?: number) {
+  if ((score || 0) >= 80) {
+    return '올해는 닫혀 있던 문이 한꺼번에 열리는 장마 뒤 햇빛 같은 해입니다. 사람도 돈도 움직이지만, 손에 잡히는 그릇이 없으면 금방 흘러갑니다.';
+  }
+
+  if ((score || 0) >= 68) {
+    return '올해는 얼어 있던 강이 서서히 녹는 해입니다. 멈춰 있던 연락, 제안, 돈의 길이 다시 움직입니다. 다만 성급히 뛰어들면 발이 빠지고, 순서를 기다리면 큰 판이 열립니다.';
+  }
+
+  if ((score || 0) >= 56) {
+    return '올해는 비 온 뒤 집 안을 다시 정리하는 해입니다. 겉으로 화려한 확장보다 오래 묵은 관계, 돈 습관, 일의 방식을 치우는 사람이 이깁니다.';
+  }
+
+  return '올해는 안개 낀 산길을 천천히 내려오는 해입니다. 급하게 뛰면 길을 잃고, 발밑을 확인하면 오히려 손실 없이 다음 판을 준비합니다.';
+}
+
+function getMonthBehaviorTheme(month: number) {
+  const themes = [
+    '시작은 작게 열고 약속은 반드시 글로 남기는 달',
+    '돈보다 신뢰를 먼저 쌓아야 하는 달',
+    '계약은 좋지만 역할이 흐린 동업은 피해야 하는 달',
+    '오래 미룬 관계와 지출 습관을 정리하는 달',
+    '전 연인, 과거 고객, 끊긴 연락이 다시 건드려지는 달',
+    '말투 하나로 관계 온도가 바뀌는 달',
+    '감정 폭발로 사람을 끊기 쉬운 달',
+    '기술, 공부, 포트폴리오를 다듬어야 하는 달',
+    '공개, 제안, 소개운이 살아나는 달',
+    '돈보다 자리 잡는 선택이 중요한 달',
+    '성과가 보여도 체력과 수면을 먼저 지켜야 하는 달',
+    '마무리와 정산을 끝내야 다음 해가 가벼워지는 달'
+  ];
+
+  return themes[(month - 1) % themes.length];
+}
+
+function getMonthlyMoneyLine(score: number) {
+  if (score >= 80) return '돈: 제안, 결제, 재구매가 붙기 쉽습니다. 단가를 낮추기보다 제공 범위를 또렷하게 보여주세요.';
+  if (score >= 68) return '돈: 수입 기회는 있지만 계산을 흐리면 남지 않습니다. 가격표, 정산일, 취소 조건을 먼저 고정하세요.';
+  if (score >= 56) return '돈: 새 투자보다 새는 돈을 막는 달입니다. 구독, 충동구매, 사람 때문에 쓰는 비용을 끊어야 합니다.';
+  return '돈: 큰 지출과 급한 투자는 피하세요. “이번만” 하고 나가는 돈이 반복 손실로 바뀝니다.';
+}
+
+function getMonthlyLoveLine(month: number, score: number) {
+  if ([5, 9, 11].includes(month)) {
+    return '연애: 과거 인연이나 애매한 연락이 다시 흔들 수 있습니다. 설렘보다 상대의 반복 행동을 보세요.';
+  }
+
+  if (score >= 75) return '연애: 새 만남과 소개가 열립니다. 단, 뜨거운 말보다 약속을 지키는 사람을 우선 보세요.';
+  if (score >= 60) return '연애: 관계를 서두르기보다 대화의 온도를 맞추는 달입니다. 긴 설명보다 짧은 확인 질문이 좋습니다.';
+  return '연애: 혼자 결론 내리기 쉬운 달입니다. 답장이 늦다고 바로 끝내지 말고 하루 뒤 다시 판단하세요.';
+}
+
+function getMonthlyHealthLine(score: number) {
+  if (score >= 75) return '건강: 움직임은 좋지만 과로가 붙기 쉽습니다. 일정이 늘면 수면 시간을 먼저 잠가야 합니다.';
+  if (score >= 60) return '건강: 소화, 어깨, 눈 피로처럼 일상 피로가 쌓이기 쉽습니다. 늦은 밤 결정을 줄이세요.';
+  return '건강: 새벽 생활과 야식이 멘탈을 흔듭니다. 몸이 무거운 날에는 약속을 줄이는 게 운을 지키는 일입니다.';
+}
+
+function buildYearlyMonthlyDetail(item: SajuReportData['monthLuck'][number], report: SajuReportData) {
+  const phase = getLuckPhase(item.score);
+  const action = getLuckAction(item.score);
+  const month = item.month;
+
+  return [
+    `총운: ${item.year}.${String(month).padStart(2, '0')}은 ${phase}입니다. ${getMonthBehaviorTheme(month)}입니다. ${item.ganzhi} 월운이 들어오면 마음은 빨라지지만 실제 결과는 약속, 돈, 일정이 정리될 때 붙습니다.`,
+    `사건성 있는 장면: ${month % 4 === 1 ? '끊긴 연락이나 미뤄진 제안이 다시 들어옵니다. 바로 반응하지 말고 조건부터 확인하세요.' : month % 4 === 2 ? '말실수 하나로 관계 온도가 바뀝니다. 긴 설명보다 짧은 확인이 낫습니다.' : month % 4 === 3 ? '감정 퇴사 욕구나 충동 결제가 올라옵니다. 새벽 결정은 특히 피하세요.' : '사람 정리가 강하게 들어옵니다. 떠나는 사람을 붙잡기보다 반복 패턴을 보세요.'}`,
+    getMonthlyMoneyLine(item.score),
+    getMonthlyLoveLine(month, item.score),
+    `인간관계: 말로는 괜찮다 해놓고 속으로 거리 두는 장면을 조심하세요. 누가 내 시간을 반복해서 쓰게 만드는지 보면 정리할 사람이 보입니다.`,
+    getMonthlyHealthLine(item.score),
+    `행동 팁: ${action} ${report.helpfulElements.join(', ')} 기운을 살리는 행동 하나를 정해서 7일만 반복하세요.`,
+    `피해야 할 행동: 감정이 올라온 상태에서 결제, 이직, 이별, 동업을 결정하지 마세요.`,
+    `중요한 포인트: 이 달의 핵심은 “좋아 보이는 선택”이 아니라 내 돈, 연락, 약속, 수면을 망가뜨리지 않는 선택입니다.`
+  ].join('\n\n');
+}
+
+function buildYearlyFortuneReportV2(report: SajuReportData): SajuReportData {
+  const targetYear = report.monthLuck[0]?.year || report.yearLuck[0]?.year || new Date().getFullYear();
+  const currentYear = report.yearLuck.find((item) => item.year === targetYear) || report.yearLuck[0];
+  const bestMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
+  const watchMonths = [...report.monthLuck].sort((left, right) => left.score - right.score).slice(0, 3);
+  const helpfulText = formatElementList(report.helpfulElements) || '보완 오행';
+  const cautiousText = formatElementList(report.cautiousElements) || '주의 오행';
+  const openingMetaphor = getYearlyOpeningMetaphor(currentYear?.score);
+  const bestMonthText = bestMonths.map((item) => `${item.month}월`).join(', ');
+  const watchMonthText = watchMonths.map((item) => `${item.month}월`).join(', ');
+  const elementRealityLine = buildYearlyElementRealityLine(report, currentYear);
+  const strengthReadingLine = buildYearlyStrengthReading(report);
+
+  const openingSection: ReportSection = {
+    id: 'yearly-opening',
+    title: `${targetYear}년 신년운세 오프닝`,
+    subtitle: '올해 전체 기운을 한 장면으로 먼저 잡습니다.',
+    callout: {
+      title: `${targetYear}년 한 줄 판정`,
+      body: currentYear
+        ? `${currentYear.headline}. ${openingMetaphor}`
+        : openingMetaphor
+    },
+    paragraphs: [
+      `${report.customerName}님에게 ${targetYear}년은 버티는 해가 아니라 덜어내야 열리는 해입니다. 오래 붙잡은 관계, 애매한 돈 약속, 끝이 흐린 일을 계속 들고 있으면 좋은 제안이 와도 손이 비어 있지 않습니다.`,
+      `올해 버려야 할 것은 “내가 아니면 안 된다”는 책임 과다입니다. 혼자 떠안고 피곤해진 뒤 갑자기 연락을 끊는 방식은 사람도 돈도 멀어지게 만듭니다.`,
+      `올해 잡아야 할 것은 가격, 약속, 일정, 역할의 선명함입니다. ${withTopicParticle(`${helpfulText} 기운`)} 살아날수록 돈은 한 방보다 반복에서 붙고, 사람은 말보다 책임을 지키는 쪽으로 남습니다.`
+    ],
+    cards: [
+      {
+        title: '올해 버릴 것',
+        body: '애매한 부탁, 끝없는 설명, 돈 이야기를 흐리는 관계, 피곤한데도 괜찮은 척하는 습관을 버려야 합니다.',
+        tone: 'warn'
+      },
+      {
+        title: '올해 잡을 것',
+        body: '정산일, 제공 범위, 만나는 기준, 수면 시간을 먼저 잡으세요. 올해 운은 감정보다 생활의 고정값에 붙습니다.',
+        tone: 'good'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '올해는 사람을 많이 만나는 해가 아니라, 돈과 시간을 흐리는 사람을 걸러내는 해입니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const natalCoreSection: ReportSection = {
+    id: 'yearly-natal-core',
+    title: '사주 원국 핵심 분석',
+    subtitle: '올해 운을 보기 전에 “내가 왜 이렇게 반복하는지”를 먼저 잡습니다.',
+    paragraphs: [
+      `${report.dayMaster} 일간은 겉으로는 담담해 보여도 안쪽에는 기준이 강합니다. 남 눈치 안 보는 척하지만 실제로는 평가, 약속, 결과물의 완성도에 예민하게 반응합니다.`,
+      elementRealityLine,
+      strengthReadingLine
+    ],
+    cards: [
+      {
+        title: '일간 성향',
+        body: `${report.dayMaster} 일간은 기준을 세우고 버티는 힘이 있습니다. 다만 기준이 흐린 사람과 일하면 피로가 빨리 쌓입니다.`,
+        tone: 'good'
+      },
+      {
+        title: '신강·신약',
+        body: strengthReadingLine
+      },
+      {
+        title: '용신·희신',
+        body: `${helpfulText} 기운이 올해의 보완축입니다. 이 기운은 색깔 놀이가 아니라 수면, 돈 기록, 약속 기준, 공간 정리로 써야 효과가 납니다.`,
+        tone: 'good'
+      },
+      {
+        title: '반복 실패 패턴',
+        body: '좋은 사람이라 믿고 범위를 열어주다가, 나중에 돈·시간·책임이 섞이면 갑자기 마음이 식습니다.',
+        tone: 'warn'
+      },
+      {
+        title: '인간관계 특징',
+        body: '처음엔 잘 받아주지만 상대가 계속 기대면 피로를 숨깁니다. 그러다 어느 날 답장이 짧아지고 마음속에서는 이미 정리합니다.'
+      },
+      {
+        title: '돈 들어오는 방식',
+        body: '한 방형보다 누적형입니다. 신뢰가 쌓인 사람, 반복 고객, 소개와 재구매에서 돈이 붙습니다.',
+        tone: 'good'
+      },
+      {
+        title: '스트레스 구조',
+        body: `${cautiousText} 기운이 과하게 건드려질 때 말투가 차가워지고 잠이 밀립니다. 몸이 무너지면 운도 같이 좁아집니다.`,
+        tone: 'warn'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '이 사주는 사람보다 구조를 믿을 때 돈이 붙습니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const yearlyMapSection: ReportSection = {
+    id: 'yearly-map',
+    title: `${targetYear}년 전체 운세 지도`,
+    subtitle: '대운과 세운이 만나는 지점을 돈, 사람, 이동, 문서, 정리운으로 나눠 봅니다.',
+    callout: {
+      title: '올해 핵심 시기',
+      body: `${bestMonthText || '강한 달'}에는 공개, 제안, 계약, 만남을 열고, ${watchMonthText || '약한 달'}에는 정산, 관계 정리, 수면 회복을 우선해야 합니다.`
+    },
+    paragraphs: [
+      `${targetYear}년 세운은 현재 ${report.currentDayun.name} 대운과 만나 선택지를 늘립니다. 선택지가 늘어난다는 건 좋은 일만 많아진다는 뜻이 아니라, 돈을 쓰게 만드는 사람과 돈을 벌게 만드는 사람이 동시에 들어온다는 뜻입니다.`,
+      `문서운은 계약서, 가격표, 신청서, 포트폴리오처럼 “눈에 보이는 증거”로 살아납니다. 말로만 정한 약속은 올해 손실로 바뀌기 쉽습니다.`,
+      `인간관계 정리운도 같이 있습니다. 멀어지는 사람을 억지로 붙잡지 말고, 반복해서 내 일정과 돈을 흐리게 만드는 사람부터 조용히 거리를 두세요.`
+    ],
+    cards: [
+      {
+        title: '변화수',
+        body: '멈춰 있던 일과 연락이 다시 움직입니다. 이동, 제안, 상품 수정, 역할 변경이 들어오면 무조건 거절하지 말고 조건부터 보세요.',
+        tone: 'good'
+      },
+      {
+        title: '귀인운',
+        body: '귀인은 갑자기 구해주는 사람이 아니라 내 기준을 알아보고 다시 맡기는 사람입니다. 꾸준히 본 사람, 약속을 지키는 고객, 조용한 소개가 귀인입니다.'
+      },
+      {
+        title: '이동수',
+        body: '장소 이동, 일의 포지션 이동, 고객층 이동이 생길 수 있습니다. 다만 불안해서 도망치듯 옮기면 같은 문제가 따라옵니다.',
+        tone: 'warn'
+      },
+      {
+        title: '문서운',
+        body: '계약, 신청, 가격표, 안내문, 포트폴리오가 돈으로 바뀝니다. 올해는 말 잘하는 사람보다 문서가 남는 사람이 이깁니다.',
+        tone: 'good'
+      },
+      {
+        title: '터지는 시기',
+        body: bestMonths[0]
+          ? `${bestMonths[0].month}월 전후에는 공개와 제안이 좋습니다. 반대로 ${watchMonths[0]?.month || '약한'}월 전후에는 감정적 결정을 피하세요.`
+          : '강한 달에는 밖으로 꺼내고, 약한 달에는 안쪽을 고치는 방식이 좋습니다.'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '올해 풀리는 사람은 운이 좋은 사람이 아니라, 약속과 돈을 흐리지 않는 사람입니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const monthlySection: ReportSection = {
+    id: 'month',
+    title: `${targetYear}년 월별 운세`,
+    subtitle: '총운, 돈, 연애, 인간관계, 건강, 행동 팁과 피해야 할 행동까지 월별로 봅니다.',
+    details: report.monthLuck.map((item, index) => ({
+      summary: `${item.year}.${String(item.month).padStart(2, '0')} · ${getLuckPhase(item.score)} · ${getMonthBehaviorTheme(item.month)}`,
+      content: buildYearlyMonthlyDetail(item, report),
+      open: index === 0
+    }))
+  };
+
+  const moneySection: ReportSection = {
+    id: 'yearly-money',
+    title: '재물운',
+    subtitle: '돈이 들어오는 방식, 새는 패턴, 투자 성향, 사업/직장 궁합을 현실적으로 봅니다.',
+    paragraphs: [
+      `${report.customerName}님은 “한 방형”보다 “누적형” 재물 구조입니다. 신뢰를 쌓고, 다시 맡기고, 소개가 이어지는 구조에서 돈이 남습니다.`,
+      `돈이 새는 장면은 늘 비슷합니다. 가까운 사람이라 거절하지 못하고, 가격을 흐리고, 제공 범위를 넓혀주다가 나중에 혼자 피로와 비용을 떠안습니다.`,
+      `투자는 빠른 수익보다 기록과 검증이 먼저입니다. 감정이 올라온 날, 누가 급하게 권한 투자, 이해하지 못한 상품은 올해 특히 피해야 합니다.`
+    ],
+    cards: [
+      {
+        title: '돈 들어오는 방식',
+        body: '반복 고객, 소개, 신뢰 기반 상품, 다시 확인할 수 있는 결과물에서 돈이 들어옵니다. 사람 운이 돈으로 바뀌는 사주입니다.',
+        tone: 'good'
+      },
+      {
+        title: '망하는 투자 스타일',
+        body: '남들이 벌었다는 말에 늦게 들어가고, 손실을 인정하기 싫어서 오래 들고 가는 방식은 맞지 않습니다.',
+        tone: 'warn'
+      },
+      {
+        title: '사업 vs 직장',
+        body: '직장에서는 기준을 세우는 역할, 사업에서는 진단·상담·리포트·교육형 상품이 유리합니다. 감정형 동업은 금물입니다.'
+      },
+      {
+        title: '상승 시기',
+        body: `${bestMonthText || '강한 달'}에는 가격 공개, 상품 출시, 제안서 발송이 좋습니다. 돈은 열린 달에 벌고 약한 달에 지켜야 남습니다.`,
+        tone: 'good'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '당신은 한 방형이 아니라 누적형 재물 구조입니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const riskSection: ReportSection = {
+    id: 'yearly-risk',
+    title: '올해 가장 위험한 선택',
+    subtitle: '망하는 선택은 늘 멋있게 보이고, 손실은 나중에 조용히 옵니다.',
+    callout: {
+      title: '올해 위험 신호',
+      body: '감정이 올라온 밤에 내린 결정은 올해 가장 비쌉니다. 퇴사, 투자, 연애, 동업, 큰 결제는 다음 날 오전에 다시 봐야 합니다.'
+    },
+    cards: [
+      {
+        title: '감정 퇴사',
+        body: '참다가 폭발해서 “나 그만둘래”가 올라옵니다. 문제는 회사를 나가는 게 아니라, 밖에서 팔 결과물 없이 나가는 것입니다. 퇴사는 포트폴리오와 현금 계획이 있을 때 선택입니다.',
+        tone: 'warn'
+      },
+      {
+        title: '급한 투자',
+        body: '누가 “이번 기회 놓치면 안 돼”라고 말할 때 가장 조심해야 합니다. 이해하지 못한 돈은 내 돈이 아니라 남의 말에 맡긴 돈입니다.',
+        tone: 'warn'
+      },
+      {
+        title: '외로울 때 시작한 연애',
+        body: '외로운 밤에 오는 연락은 따뜻해 보입니다. 하지만 약속, 현재 관계 상태, 돈 쓰는 태도를 확인하지 않으면 같은 불안이 반복됩니다.',
+        tone: 'warn'
+      },
+      {
+        title: '말뿐인 동업',
+        body: '친하니까 괜찮다는 말이 제일 위험합니다. 역할, 정산일, 수정 횟수, 책임 범위를 적지 않으면 관계와 돈이 같이 상합니다.',
+        tone: 'warn'
+      },
+      {
+        title: '새벽 결정',
+        body: '새벽에는 판단보다 감정이 큽니다. 결제, 장문 연락, 이별 통보, 투자 클릭은 아침 10시 이후로 미루세요.',
+        tone: 'warn'
+      },
+      {
+        title: '돈 흐린 관계',
+        body: '“이번만 도와줘”가 반복되는 관계는 운이 아니라 지출입니다. 좋은 사람 되려다 내 일정과 체력이 계속 빠져나갑니다.',
+        tone: 'warn'
+      }
+    ]
+  };
+
+  const opportunitySection: ReportSection = {
+    id: 'yearly-opportunity',
+    title: '올해 가장 강한 기회',
+    subtitle: '기회는 크게 오는 게 아니라, 반복 가능한 결과물로 바뀔 때 커집니다.',
+    paragraphs: [
+      `${bestMonthText || '점수가 높은 달'}에는 공개, 제안, 소개, 재구매가 열립니다. 이때 해야 할 일은 감으로 밀어붙이는 것이 아니라 가격표와 샘플 결과물을 먼저 보여주는 것입니다.`,
+      `올해 강한 기회는 말이 많은 사람보다 실행이 빠른 사람과 연결됩니다. 연락 텀이 일정하고, 돈 이야기를 피하지 않고, 약속을 바로 캘린더에 넣는 사람이 귀인입니다.`,
+      `기회가 왔을 때 바로 잡으려 하지 말고 “제공 범위, 마감일, 정산일, 수정 횟수” 네 가지를 확인하세요. 이 네 가지가 정리되면 운이 실제 돈으로 바뀝니다.`
+    ],
+    cards: [
+      {
+        title: '언제 열리는가',
+        body: `${bestMonthText || '강한 달'}에는 사람과 제안이 늘어납니다. 이때는 숨지 말고 샘플, 소개문, 가격표를 꺼내야 합니다.`,
+        tone: 'good'
+      },
+      {
+        title: '해야 할 행동',
+        body: '대표 상품 하나를 정하고, 결과 예시를 보여주고, 문의가 오면 가격표를 먼저 보내세요. 설명이 길어질수록 돈은 흐려집니다.',
+        tone: 'good'
+      },
+      {
+        title: '연결되는 사람',
+        body: '일정 정확한 사람, 실행 빠른 사람, 돈 이야기를 피하지 않는 사람, 내 시간을 존중하는 사람이 올해의 기회입니다.',
+        tone: 'good'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '올해 기회는 운 좋게 오는 게 아니라, 준비된 가격표를 보고 들어옵니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const peopleTypeSection: ReportSection = {
+    id: 'yearly-people-type',
+    title: '올해 귀인과 손실 부르는 사람',
+    subtitle: '사람을 많이 만나는 것보다 누구를 남길지 고르는 해입니다.',
+    cards: [
+      {
+        title: '올해 귀인 타입',
+        body: '말보다 실행이 빠른 사람, 일정이 정확한 사람, 연락 텀이 일정한 사람, 돈 이야기를 피하지 않는 사람입니다. 이 사람들은 큰말을 안 해도 결과를 남깁니다.',
+        tone: 'good'
+      },
+      {
+        title: '돈으로 이어지는 사람',
+        body: '내 결과물을 보고 다시 맡기거나 소개해 주는 사람입니다. 감정적으로 친한 사람보다 역할과 기대치가 분명한 사람이 돈을 가져옵니다.',
+        tone: 'good'
+      },
+      {
+        title: '손실 부르는 사람',
+        body: '급하게 친해지는 사람, 피해자 말투가 많은 사람, 계속 “이번만” 하는 사람, 말은 좋은데 실행이 없는 사람입니다. 처음엔 정이 가지만 결국 내 시간과 체력을 가져갑니다.',
+        tone: 'warn'
+      },
+      {
+        title: '관계 정리 기준',
+        body: '세 번 이상 같은 부탁을 하고, 돈과 시간을 흐리고, 미안하다는 말 뒤에 행동이 안 바뀌면 거리를 둬야 합니다.',
+        tone: 'warn'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '올해 사람은 호감이 아니라 약속 이행으로 걸러야 합니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const loveSection: ReportSection = {
+    id: 'yearly-love',
+    title: '연애운',
+    subtitle: '들어오는 사람, 시작 시기, 끊어야 할 유형, 재회와 결혼 포인트를 봅니다.',
+    paragraphs: [
+      `${targetYear}년 연애운은 강하게 끌리는 사람보다 생활이 무너지지 않는 사람을 골라야 열립니다. 처음부터 뜨거운 사람은 마음을 흔들지만, 오래 가는 사람은 약속과 말투가 일정합니다.`,
+      `들어오는 사람은 직업을 하나로 못 박기보다 일정 관리가 분명하고 자기 일이 있는 사람 쪽입니다. 외모는 화려함보다 단정함, 말투는 빠른 고백보다 꾸준한 확인으로 읽힙니다.`,
+      `재회운은 감정만 남아 있는지, 다시 생활을 맞출 수 있는지로 갈립니다. 전 연인 연락수가 강한 달에도 과거의 문제를 말로만 덮으면 같은 지점에서 다시 깨집니다.`
+    ],
+    cards: [
+      {
+        title: '연애 시작 시기',
+        body: bestMonths[1]
+          ? `${bestMonths[1].month}월 전후는 만남을 열기 좋습니다. 소개, 반복적으로 보는 자리, 일과 연결된 모임을 가볍게 열어보세요.`
+          : '강한 달에는 소개와 만남을 열고, 약한 달에는 관계 기준을 정리하세요.',
+        tone: 'good'
+      },
+      {
+        title: '끊어야 할 유형',
+        body: '말은 뜨거운데 약속이 자주 바뀌는 사람, 돈 이야기를 흐리는 사람, 전 연인과 경계가 애매한 사람은 피해야 합니다.',
+        tone: 'warn'
+      },
+      {
+        title: '바람·삼각관계 위험',
+        body: '감정 공백이 길어질 때 외부 자극에 흔들릴 수 있습니다. 외로울 때 시작한 관계는 반드시 상대의 현재 관계 상태부터 확인하세요.',
+        tone: 'warn'
+      },
+      {
+        title: '결혼운',
+        body: '결혼은 설렘보다 생활 기준입니다. 돈, 가족 거리, 수면, 일의 우선순위가 맞는 사람이 오래 갑니다.'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '좋아하는데도 표현이 늦어서 관계를 놓치는 타입입니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const careerSection: ReportSection = {
+    id: 'yearly-career',
+    title: '직업운',
+    subtitle: '이직, 승진, 창업, 공부, 프리랜서 적성과 하면 안 되는 방식을 봅니다.',
+    paragraphs: [
+      `${targetYear}년 직업운은 “어디로 갈까”보다 “내 능력을 어떤 결과물로 보이게 만들까”가 핵심입니다. 이력, 포트폴리오, 가격표, 샘플 결과물이 운을 받는 그릇입니다.`,
+      `이직운은 감정으로 퇴사하면 흔들립니다. 지금 직장이 싫어서 나가는 방식보다, 밖에서 팔릴 결과물을 만든 뒤 옮겨야 손실이 줄어듭니다.`,
+      `프리랜서와 1인 사업은 맞지만, 혼자 다 떠안는 방식은 맞지 않습니다. 상담, 제작, 결제, 고객 응대, 수정 범위를 나눠야 오래 갑니다.`
+    ],
+    cards: [
+      {
+        title: '승진·평가운',
+        body: '말보다 결과물이 남아야 평가가 붙습니다. 회의에서 잘 보이는 것보다 누가 봐도 남는 문서와 지표가 필요합니다.',
+        tone: 'good'
+      },
+      {
+        title: '창업운',
+        body: 'SNS 기반 부업, 리포트형 상품, 상담형 콘텐츠, 교육·가이드 상품이 유리합니다. 올해 동업은 역할과 정산을 먼저 적어야 합니다.'
+      },
+      {
+        title: '공부·시험운',
+        body: '새로운 공부보다 바로 상품이나 업무에 붙는 공부가 맞습니다. 자격증도 “어디에 팔 것인지”가 있어야 힘이 납니다.'
+      },
+      {
+        title: '하면 안 되는 방식',
+        body: '감정으로 퇴사, 준비 없는 창업, 말뿐인 동업, 가격 없는 서비스 시작은 금물입니다.',
+        tone: 'warn'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '올해 일운은 능력보다 결과물을 보이게 만드는 사람이 이깁니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const relationshipSection: ReportSection = {
+    id: 'yearly-relationship',
+    title: '인간관계 운',
+    subtitle: '귀인, 손절해야 할 관계, 가족·친구·직장 관계와 배신수를 봅니다.',
+    paragraphs: [
+      `올해 인간관계는 넓어지는 동시에 정리됩니다. 새로 들어오는 사람도 있지만, 예전처럼 다 받아주면 같은 피로가 반복됩니다.`,
+      `귀인은 화려하게 나타나는 사람이 아니라 약속을 지키고, 내 시간을 함부로 쓰지 않고, 돈과 역할을 분명히 하는 사람입니다.`,
+      `배신수는 누군가가 갑자기 나를 해친다는 뜻보다, 내가 흐린 약속을 방치했을 때 손실로 드러나는 장면에 가깝습니다.`
+    ],
+    cards: [
+      {
+        title: '귀인 들어오는 시기',
+        body: `${bestMonthText || '강한 달'}에는 소개, 협업, 재구매가 열립니다. 이미 신뢰가 있던 사람에게 먼저 제안하세요.`,
+        tone: 'good'
+      },
+      {
+        title: '손절해야 하는 관계',
+        body: '내 일정은 당연히 쓰면서 자기 책임은 흐리는 사람, 돈 이야기를 피하는 사람, 내 피로를 모르는 사람입니다.',
+        tone: 'warn'
+      },
+      {
+        title: '가족·친구 문제',
+        body: '가까운 사람일수록 더 분명해야 합니다. 가족과 친구에게도 돈, 시간, 부탁의 범위를 말로만 두지 마세요.'
+      },
+      {
+        title: '직장 인간관계',
+        body: '상사보다 애매한 동료 부탁이 피로를 만듭니다. 좋은 사람으로 보이려다가 업무 범위가 늘어나는 장면을 조심하세요.'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '혼자 버티는 시간이 길수록 인간관계를 정리해버립니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const healthSection: ReportSection = {
+    id: 'yearly-health',
+    title: '건강운',
+    subtitle: '공포가 아니라 수면, 스트레스, 과로 위험 달을 생활관리로 봅니다.',
+    paragraphs: [
+      `건강운은 질병 예언이 아니라 몸이 언제 운을 못 받는 그릇이 되는지를 보는 파트입니다. ${cautiousText} 기운이 건드려질 때 수면, 소화, 어깨·목, 눈 피로가 먼저 흔들릴 수 있습니다.`,
+      `올해 가장 조심할 것은 과로입니다. 일이 풀릴수록 잠을 줄이면 판단이 흐려지고, 말투가 차가워지고, 관계가 먼저 상합니다.`,
+      `야식과 새벽 생활은 운을 직접 흔듭니다. 몸이 무거운 날에는 중요한 결정을 미루는 게 맞습니다.`
+    ],
+    cards: [
+      {
+        title: '약한 부위',
+        body: '스트레스가 몸으로 내려오면 소화, 어깨·목, 눈 피로, 수면 질로 먼저 나타납니다. 증상이 있으면 의료 전문가 상담이 우선입니다.'
+      },
+      {
+        title: '과로 위험 달',
+        body: `${watchMonthText || '낮은 점수의 달'}에는 약속을 줄이고 회복 시간을 먼저 넣으세요. 운이 약한 달은 쉬어야 다음 달을 받습니다.`,
+        tone: 'warn'
+      },
+      {
+        title: '해결책',
+        body: '물 섭취, 아침 햇빛, 수면 시간 고정, 야식 줄이기. 이 네 가지가 올해 개운법보다 먼저입니다.',
+        tone: 'good'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '새벽 생활을 줄이면 운보다 먼저 말투가 부드러워집니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+
+  const luckActionSection: ReportSection = {
+    id: 'yearly-luck-action',
+    title: '개운법',
+    subtitle: '추상적인 조언이 아니라 오늘 바로 바꿀 수 있는 생활 가이드입니다.',
+    cards: [
+      {
+        title: '행운 색',
+        body: `${report.helpfulElements.includes('화') ? '따뜻한 아이보리, 코랄, 브릭 계열' : report.helpfulElements.includes('수') ? '네이비, 블랙, 차분한 블루 계열' : report.helpfulElements.includes('목') ? '그린, 올리브, 우드톤' : report.helpfulElements.includes('금') ? '화이트, 실버, 그레이' : '베이지, 브라운, 샌드톤'}을 가까이 두세요. 과한 포인트보다 자주 보는 물건에 쓰는 것이 좋습니다.`,
+        tone: 'good'
+      },
+      {
+        title: '피해야 하는 색',
+        body: `${report.cautiousElements.includes('화') ? '강한 레드와 과한 네온톤' : report.cautiousElements.includes('수') ? '무거운 블랙 일색' : report.cautiousElements.includes('목') ? '복잡한 초록 패턴' : report.cautiousElements.includes('금') ? '차가운 메탈 과다' : '무거운 흙색 과다'}은 피로할 때 더 답답하게 느껴질 수 있습니다.`,
+        tone: 'warn'
+      },
+      {
+        title: '숫자와 방향',
+        body: '중요한 일은 오전 7~11시 사이에 시작하세요. 방향은 책상 기준 남동쪽을 밝게 두고, 자주 쓰는 서류는 오른쪽 위에 모으세요.'
+      },
+      {
+        title: '음식과 향',
+        body: '따뜻한 물, 담백한 단백질, 너무 늦지 않은 저녁이 좋습니다. 향은 우디, 시트러스, 백단처럼 머리를 맑게 하는 계열이 맞습니다.'
+      },
+      {
+        title: '지갑과 인테리어',
+        body: '지갑은 낡은 영수증을 비우고, 침구는 너무 어두운 색보다 깨끗한 밝은 톤이 좋습니다. 남서 방향 조명을 밝게 두세요.'
+      },
+      {
+        title: '잘 맞는 사람 오행',
+        body: `${helpfulText} 기운을 가진 사람처럼 일정이 분명하고 말보다 행동이 반복되는 사람이 올해 귀인입니다. 말 많은 사람보다 약속 지키는 사람을 보세요.`
+      },
+      {
+        title: '운 좋아지는 루틴',
+        body: '아침 햇빛 10분, 지출 기록 3줄, 자기 전 휴대폰 20분 줄이기. 이 세 가지가 올해 가장 현실적인 개운법입니다.',
+        tone: 'good'
+      }
+    ]
+  };
+
+  const closingSection: ReportSection = {
+    id: 'yearly-closing',
+    title: '마지막 총정리',
+    subtitle: '올해를 어떻게 잡아야 다음 3년이 열리는지 정리합니다.',
+    callout: {
+      title: '올해의 결론',
+      body: `${targetYear}년은 버티는 해가 아닙니다. 정리할 것을 정리해야 다음 3년이 열립니다. 사람 하나, 선택 하나가 인생의 돈과 일정을 완전히 바꿀 수 있습니다.`
+    },
+    paragraphs: [
+      `올해 가장 위험한 것은 운이 없는 게 아니라, 좋은 기회와 피곤한 부탁을 구분하지 못하는 것입니다.`,
+      `돈은 반복에서 붙고, 사람은 약속에서 남고, 일은 결과물에서 커집니다. ${report.customerName}님은 이 세 가지를 잡을 때 올해가 살아납니다.`,
+      `마지막 기준은 단순합니다. 내 수면, 돈, 연락, 책임을 망가뜨리는 선택이면 아무리 좋아 보여도 올해의 길이 아닙니다.`
+    ]
+  };
+
+  return {
+    ...report,
+    heroNote: `${targetYear}년은 ${report.customerName}님에게 돈, 연락, 약속, 책임을 다시 고정하는 해입니다. 좋은 운을 기다리는 것보다 손에 남는 구조를 만드는 사람이 이깁니다.`,
+    summary: {
+      title: `${targetYear}년 신년운세 핵심 판정`,
+      analysis: [
+        openingMetaphor,
+        `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운을 같이 보면 올해는 넓히기보다 걸러내고, 감으로 버티기보다 가격·역할·일정을 고정해야 하는 해입니다.`,
+        `올해 버릴 것은 애매한 관계, 돈 이야기를 흐리는 약속, 내 체력을 갈아 넣는 책임입니다.`,
+        `올해 잡아야 할 것은 ${helpfulText} 기운을 살리는 생활 고정값입니다. 수면, 지출 기록, 상품 설명, 연락 기준을 잡으면 사람과 돈이 같이 붙습니다.`
+      ],
+      advice: [
+        `${bestMonthText || '강한 달'}에는 공개, 제안, 만남을 열고 ${watchMonthText || '약한 달'}에는 정산과 회복을 우선하세요.`,
+        '올해는 감정으로 퇴사, 이별, 동업, 큰 결제를 결정하지 마세요. 하루 뒤 다시 봐야 손실이 줄어듭니다.',
+        '돈은 가격표에서 지키고, 관계는 약속에서 지키고, 건강은 수면에서 지키세요.'
+      ]
+    },
+    keyTakeaways: [
+      {
+        title: '올해 한 줄',
+        body: currentYear?.headline || '정리할 것을 정리해야 다음 판이 열리는 해입니다.',
+        tone: 'good'
+      },
+      {
+        title: '버릴 것',
+        body: '애매한 부탁, 말뿐인 약속, 경계 없는 돈 관계, 피곤한데 괜찮은 척하는 습관입니다.',
+        tone: 'warn'
+      },
+      {
+        title: '잡을 것',
+        body: '가격표, 정산일, 연락 기준, 수면 시간, 반복 가능한 결과물입니다.',
+        tone: 'good'
+      },
+      {
+        title: '돈',
+        body: '한 방보다 누적입니다. 사람 운이 돈으로 바뀌려면 역할과 범위가 분명해야 합니다.'
+      },
+      {
+        title: '관계',
+        body: '올해 남길 사람은 말보다 약속을 지키는 사람입니다.'
+      },
+      {
+        title: '건강',
+        body: '새벽 생활을 줄이는 것이 가장 빠른 개운법입니다.',
+        tone: 'warn'
+      }
+    ],
+    sections: [
+      openingSection,
+      natalCoreSection,
+      yearlyMapSection,
+      monthlySection,
+      riskSection,
+      opportunitySection,
+      peopleTypeSection,
+      moneySection,
+      loveSection,
+      careerSection,
+      relationshipSection,
+      healthSection,
+      luckActionSection,
+      closingSection
+    ],
+    actionPlan: {
+      ...report.actionPlan,
+      title: `${targetYear}년 신년운세 실행 체크리스트`,
+      priorities: [
+        '1단계: 올해 끊을 관계, 줄일 지출, 버릴 일을 각각 하나씩 적습니다.',
+        '2단계: 가격표, 정산일, 제공 범위, 연락 가능 시간을 고정합니다.',
+        '3단계: 강한 달에는 공개와 제안을 열고, 약한 달에는 정산과 수면 회복을 먼저 합니다.',
+        '4단계: 매달 말 돈, 연락, 약속, 수면이 무너진 장면을 기록하고 다음 달 행동을 줄입니다.'
+      ],
+      dos: [
+        '중요한 약속은 메시지로 남기기',
+        '지출 기록을 하루 3줄만 쓰기',
+        '좋은 사람보다 약속 지키는 사람을 고르기',
+        '아침 햇빛과 수면 시간을 먼저 고정하기'
+      ],
+      avoids: [
+        '감정으로 퇴사, 이별, 동업 결정하기',
+        '돈 이야기를 미루고 좋은 관계라고 믿기',
+        '전 연인 연락에 바로 흔들리기',
+        '과로한 밤에 큰 결제나 투자 결정하기'
+      ]
+    }
+  };
+}
+
 function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
@@ -1954,6 +3055,7 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const helpfulText = report.helpfulElements.join(', ');
   const cautiousText = report.cautiousElements.join(', ');
   const cautionGuidance = formatCautionElements(report);
+  const cautionScenes = buildCautionSceneBank(report);
   const strongestLabel = strongestElement?.label || report.helpfulElements[0];
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
@@ -1964,6 +3066,8 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const lowYears = lifeGraphYears.filter((item) => item.score < 55);
   const firstHighYear = highYears[0] || lifeGraphYears[0];
   const firstLowYear = lowYears[0] || lifeGraphYears[lifeGraphYears.length - 1];
+  const signatureRelationSection = buildSignatureRelationReadings(report);
+  const signatureStrengthLine = buildSignatureStrengthLine(report);
   const careerMode =
     dominantLabel.includes('식') || dominantLabel.includes('상')
       ? '콘텐츠형, 설명형, 상담형, 교육형 상품'
@@ -1985,15 +3089,16 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
 
   const expertSummary = [
     `${report.customerName}님의 명식은 일간 ${report.dayMaster}, ${report.pillars.month} 월령, 현재 ${report.currentDayun.name} 대운을 같이 놓아야 결론이 또렷해집니다. ${climate.dayMaster} 그래서 이 사주는 단순히 “열심히 하면 된다”보다, 차가워진 판단을 어느 장면에서 데우고 어떤 관계에서 흘려보낼지를 보는 쪽이 정확합니다.`,
-    `${climate.monthBasis} ${climate.johu} 오행 표가 비슷해 보여도 월령을 얻은 기운과 지지에 뿌리내린 기운은 체감 무게가 다릅니다.`,
-    `${climate.wood} 이 부분이 약하면 사람을 싫어해서가 아니라, 관계의 방향이 흐릴 때 갑자기 피로가 올라옵니다. 그래서 애매한 약속, 말만 많은 제안, 끝이 보이지 않는 관계에서 먼저 지칩니다.`,
-    `십성에서는 ${dominantLabel}과 ${secondLabel}의 조합을 봐야 합니다. ${describeTenGodDepth(dominantLabel, report)} ${describeTenGodDepth(secondLabel, report)}`,
-    `${report.currentDayun.name} 대운은 "${report.currentDayun.focus}" 쪽을 강하게 건드립니다. 특히 재성이나 수 기운이 활성화되는 대운에서는 고객, 돈, 이동, 관계의 양이 늘 수 있지만, 그만큼 책임과 지출도 같이 따라옵니다. ${report.currentDayun.caution}`,
+    signatureStrengthLine,
+    `${climate.monthBasis} ${climate.johu} 이 명식은 차갑게 판단하는 힘이 장점이지만, 몸이 지치면 사람을 이해하기보다 먼저 정리하고 싶어집니다.`,
+    `${climate.wood} 이 부분이 약하면 사람을 싫어해서가 아니라, 관계의 방향이 흐릴 때 갑자기 피로가 올라옵니다. 상대 부탁을 받아주다가 어느 순간 답장이 짧아지고 혼자 거리를 두는 장면이 반복될 수 있습니다.`,
+    `십성에서는 ${dominantLabel}과 ${secondLabel}의 조합을 봐야 합니다. ${describeTenGodDepth(dominantLabel)} ${describeTenGodDepth(secondLabel)}`,
+    `${report.currentDayun.name} 대운은 돈 흐름과 인간관계 양을 키웁니다. 문의와 제안은 늘 수 있지만, 정산·응대·수정 요청이 동시에 몰리면 “일은 많은데 손에 남는 건 적다”는 느낌이 생길 수 있습니다. ${report.currentDayun.caution}`,
     currentYear
       ? `${currentYear.year}년은 "${currentYear.headline}"의 해로 읽힙니다. ${asSentence(currentYear.focus)} ${asSentence(currentYear.warning)} 이 해는 사건 하나를 맞히는 방식보다, 어떤 선택지가 실제로 사람·돈·일정의 변화를 부르는지 관찰해야 합니다.`
       : `${report.customerName}님에게 올해 필요한 태도는 빠른 결정보다 검증입니다. 감정적으로 끌리는 선택이라도 일정, 비용, 사람의 태도, 내 체력까지 확인한 뒤 움직일 때 손실이 줄어듭니다.`,
     bestMonth && watchMonth
-      ? `가까운 월운은 숫자 점수보다 단계로 보는 편이 안전합니다. ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}은 ${getLuckPhase(bestMonth.score)}라 ${getLuckAction(bestMonth.score)}이고, ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}은 ${getLuckPhase(watchMonth.score)}라 ${getLuckAction(watchMonth.score)}입니다.`
+      ? `가까운 월운은 점수보다 사건성으로 봐야 합니다. ${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')}은 ${getSignatureMonthScene(bestMonth, report).event} 반대로 ${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')}은 ${getSignatureMonthScene(watchMonth, report).event}`
       : `월운은 좋고 나쁨의 점수보다 확장기, 조율기, 정비기처럼 역할을 나눠 읽어야 합니다. 그래야 고객이 “왜 그 달에 그런 일이 생기는지”를 납득할 수 있습니다.`,
     `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${withTopicParticle(`${helpfulText} 기운`)} 살리고, ${cautionGuidance} 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
   ];
@@ -2057,18 +3162,83 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       };
     }
 
-    return {
-      ...section,
-      paragraphs: section.paragraphs?.map((paragraph, index) => {
-        const bases = [
-          `명리적으로는 ${report.pillars.month} 월령과 ${report.dayMaster} 일간의 관계를 함께 봐야 이 문장이 현실성을 얻습니다.`,
-          `${report.currentDayun.name} 대운에서는 같은 선택도 사람, 돈, 이동의 압력으로 체감될 수 있어 조건 확인이 중요합니다.`,
-          `${dominantLabel} 흐름이 강하게 켜질 때는 말보다 결과물, 반복 행동, 실제 비용에서 답이 드러납니다.`,
-          `${climate.johu}`
-        ];
-        return `${paragraph} ${bases[index % bases.length]}`;
-      })
-    };
+    if (section.id === 'month') {
+      return {
+        ...section,
+        title: '월운 사건성 리딩',
+        subtitle: '점수보다 그 달에 실제로 생길 수 있는 연락, 돈, 몸 상태, 관계 변화를 먼저 봅니다.',
+        details: report.monthLuck.map((item, index) => ({
+          summary: getSignatureMonthSummary(item, report),
+          content: buildSignatureMonthContent(item, report),
+          open: index === 0
+        }))
+      };
+    }
+
+    if (section.id === 'ten') {
+      return {
+        ...section,
+        title: '십성 생활 장면 해석',
+        subtitle: '십성은 점수표가 아니라 말투, 돈 쓰임, 책임 반응, 관계 거리로 드러납니다.',
+        details: report.tenGods.slice(0, 6).map((item, index) => ({
+          summary: `${item.label} ${item.value}점 · 실제 작동 장면`,
+          content: buildTenGodSceneDetail(item.label, report),
+          open: index < 2
+        }))
+      };
+    }
+
+    if (section.id === 'detailRel') {
+      return {
+        ...section,
+        title: '형·충·합·파 실제 해석',
+        subtitle: '추상적인 관계 조율이 아니라 연락, 신뢰, 피로, 손절 패턴으로 번역합니다.',
+        cards: signatureRelationSection.cards,
+        details: signatureRelationSection.details?.length ? signatureRelationSection.details : section.details
+      };
+    }
+
+    if (section.id === 'detailSal') {
+      const dohwaDetails = signatureRelationSection.details?.filter((detail) => detail.summary.includes('도화')) || [];
+
+      return {
+        ...section,
+        title: '도화와 평판 작동 방식',
+        subtitle: '매력 하나가 아니라 소개, 후기, 신뢰, 유지 피로까지 함께 봅니다.',
+        details: [
+          ...dohwaDetails,
+          ...(section.details || [])
+        ]
+      };
+    }
+
+    if (section.id === 'element') {
+      return {
+        ...section,
+        callout: {
+          title: '오행을 숫자만 보면 틀리는 이유',
+          body: `${signatureStrengthLine} ${climate.elementReading}`
+        },
+        paragraphs: [
+          signatureStrengthLine,
+          `이 명식은 금수 환경에서 판단과 계산이 빨라지지만, 피곤하면 말투가 차가워지고 관계를 먼저 정리하고 싶어집니다.`,
+          `목 기운이 비면 성장 방향과 관계 조율이 늦어져, 좋은 사람을 만나도 다음 단계 제안이 애매해질 수 있습니다.`
+        ],
+        details: section.details
+      };
+    }
+
+    if (section.id === 'fortune') {
+      return {
+        ...section,
+        callout: {
+          title: `${report.currentDayun.name} 대운 핵심`,
+          body: `${report.currentDayun.summary} ${report.currentDayun.caution}`
+        }
+      };
+    }
+
+    return section;
   });
 
   const myeongriBasisSection: ReportSection = {
@@ -2100,11 +3270,11 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       },
       {
         title: `${dominantLabel} 해석`,
-        body: describeTenGodDepth(dominantLabel, report)
+        body: describeTenGodDepth(dominantLabel)
       },
       {
         title: `${secondLabel} 해석`,
-        body: describeTenGodDepth(secondLabel, report)
+        body: describeTenGodDepth(secondLabel)
       }
     ],
     details: [
@@ -2319,7 +3489,9 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     ]
   };
 
-  return {
+  const emotionalFlowSection = buildEmotionalFlowSection(report);
+
+  const expertReport: SajuReportData = {
     ...report,
     heroNote: `${report.customerName}님의 원국, 대운, 세운, 월운, 질문 맥락을 함께 검토한 프리미엄 상담형 리포트입니다. 단순한 위로보다 실제 선택에 도움이 되는 근거와 행동 기준을 우선했습니다.`,
     summary: {
@@ -2369,6 +3541,8 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     sections: [
       lifeGraphSection,
       myeongriBasisSection,
+      signatureRelationSection,
+      emotionalFlowSection,
       eventTimelineSection,
       yongsinSection,
       careerDetailSection,
@@ -2403,6 +3577,8 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       '본 리포트는 입력값과 명리학적 해석을 바탕으로 한 상담형 콘텐츠이며, 질병 진단, 투자 판단, 법률 판단, 특정 사건의 단정 예언으로 사용해서는 안 됩니다.'
     ]
   };
+
+  return polishRepeatedReportLanguage(expertReport, cautionGuidance, cautionScenes);
 }
 
 export default function Report() {
@@ -2422,6 +3598,10 @@ export default function Report() {
 
     if (expandedReport.serviceId === 'concern-reading') {
       return buildConcernReadingReportV2(expandedReport);
+    }
+
+    if (expandedReport.serviceId === 'life-flow') {
+      return buildYearlyFortuneReportV2(expandedReport);
     }
 
     return buildExpertSatisfactionReport(expandedReport);
@@ -2541,7 +3721,12 @@ export default function Report() {
         <article className={isYearlyShowcase ? 'premium-report-paper yearly-report-paper' : 'premium-report-paper'}>
           <section className={isYearlyShowcase ? 'premium-report-cover yearly-report-cover' : 'premium-report-cover'}>
             <h1>
-              {report.customerName} {report.serviceId === 'concern-reading' ? report.title : '종합사주 리포트'}
+              {report.customerName}{' '}
+              {report.serviceId === 'concern-reading'
+                ? report.title
+                : report.serviceId === 'life-flow'
+                  ? '신년운세 리포트'
+                  : '종합사주 리포트'}
             </h1>
 
             {isYearlyShowcase && yearlyLead ? (
@@ -2593,13 +3778,15 @@ export default function Report() {
                           <strong>
                             {item.year}.{String(item.month).padStart(2, '0')}
                           </strong>
-                          <span>{getLuckPhase(item.score)}</span>
+                          <span>
+                            {getLuckPhase(item.score)} · {getBestMonthReason(item)}
+                          </span>
                         </div>
                       ))}
                     </div>
                     <p>
                       {monthlyHotMonths[0]
-                        ? `${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')}은 ${getLuckPhase(monthlyHotMonths[0].score)}로, 움직임을 열어보기 좋은 구간입니다.`
+                        ? `순서는 월운 점수와 사건성을 함께 본 결과입니다. ${formatBestMonthReasonList(monthlyHotMonths)}으로 읽습니다. ${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')}은 움직임을 가장 먼저 열어보기 좋은 구간입니다.`
                         : '월운 하이라이트를 구성 중입니다.'}
                     </p>
                   </article>

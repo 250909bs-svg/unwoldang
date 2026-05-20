@@ -3103,6 +3103,21 @@ body {
   transform: none;
 }
 
+.login-local-preview-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: #1f2a24;
+  color: #fffaf0;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 12px 22px rgba(31, 42, 36, 0.18);
+}
+
 .mobile-page-content {
   display: grid;
   gap: 14px;
@@ -9848,14 +9863,18 @@ body {
 }
 
 .yearly-focus-list-item strong {
+  flex-shrink: 0;
   margin: 0;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .yearly-focus-list-item span {
+  flex-shrink: 0;
   color: #7a5af8;
   font-size: 12px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .yearly-month-strip {
@@ -13601,10 +13620,10 @@ body {
   display: grid;
   justify-items: center;
   gap: 5px;
-  width: min(190px, 62vw);
+  width: min(320px, 86vw);
   min-height: 126px;
   margin: 8px auto 18px;
-  padding: 22px 18px;
+  padding: 22px 24px;
   border-radius: 999px;
   border: 1px solid rgba(126, 101, 65, 0.18);
   background:
@@ -13620,23 +13639,26 @@ body {
   color: #8c714d;
   font-size: 11px;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .premium-element-compass-core strong {
   color: #262923;
-  font-size: 20px;
+  font-size: clamp(17px, 4.4vw, 20px);
   line-height: 1.25;
   font-weight: 900;
   letter-spacing: -0.04em;
+  white-space: nowrap;
 }
 
 .premium-element-compass-core em {
-  max-width: 150px;
+  max-width: none;
   color: #6d6558;
-  font-size: 11px;
+  font-size: clamp(10px, 2.8vw, 11px);
   line-height: 1.5;
   font-style: normal;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .premium-element-compass .premium-element-medallions {
@@ -16667,5 +16689,156 @@ body {
 
   .admin-table a {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Yearly report readability reset: keep the special theme, but match the clean comprehensive report hierarchy. */
+
+.yearly-premium-page .premium-report-paper {
+  background: #fffdf8;
+}
+
+.yearly-premium-page .premium-report-cover h1 {
+  max-width: 560px;
+  color: #20242c;
+  font-size: clamp(27px, 4.4vw, 36px);
+  line-height: 1.24;
+  letter-spacing: -0.045em;
+}
+
+.yearly-premium-page .yearly-report-orbit {
+  gap: 10px;
+}
+
+.yearly-premium-page .yearly-report-orbit-lead {
+  padding: 17px;
+  border-radius: 22px;
+}
+
+.yearly-premium-page .yearly-report-orbit-lead strong {
+  margin-top: 10px;
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: -0.035em;
+}
+
+.yearly-premium-page .yearly-report-orbit-lead p,
+.yearly-premium-page .yearly-report-orbit-card p,
+.yearly-premium-page .yearly-focus-card p {
+  color: #3f4754;
+  font-size: 14px;
+  line-height: 1.76;
+  letter-spacing: -0.025em;
+  word-break: keep-all;
+}
+
+.yearly-premium-page .yearly-report-orbit-lead p,
+.yearly-premium-page .yearly-focus-card.emphasis p {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.yearly-premium-page .yearly-report-orbit-grid,
+.yearly-premium-page .yearly-focus-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.yearly-premium-page .yearly-report-orbit-card,
+.yearly-premium-page .yearly-focus-card {
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045);
+}
+
+.yearly-premium-page .yearly-report-orbit-card strong,
+.yearly-premium-page .yearly-focus-card strong {
+  color: #20242c;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+
+.yearly-premium-page .yearly-focus-card.emphasis strong,
+.yearly-premium-page .yearly-focus-card.emphasis .yearly-focus-label {
+  color: #ffffff;
+}
+
+.yearly-premium-page .yearly-report-kicker,
+.yearly-premium-page .yearly-focus-label,
+.yearly-premium-page .yearly-report-orbit-card span,
+.yearly-premium-page .yearly-focus-list-item span {
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.yearly-premium-page .premium-report-section {
+  padding: 28px 24px;
+  background: #fffdf8 !important;
+}
+
+.yearly-premium-page .premium-report-section h2 {
+  color: #20242c;
+  font-size: clamp(21px, 3.2vw, 27px);
+  line-height: 1.34;
+}
+
+.yearly-premium-page .premium-muted {
+  font-size: 13px;
+  line-height: 1.62;
+}
+
+.yearly-premium-page .premium-card {
+  padding: 17px 16px;
+  border-radius: 20px;
+}
+
+.yearly-premium-page .premium-card h3,
+.yearly-premium-page .premium-callout h3 {
+  color: #20242c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.yearly-premium-page .premium-callout h3 {
+  font-size: 15px;
+}
+
+.yearly-premium-page .premium-card p,
+.yearly-premium-page .premium-callout p,
+.yearly-premium-page .premium-prose p,
+.yearly-premium-page .premium-accordion-body p,
+.yearly-premium-page .premium-answer-card p {
+  color: #3f4754;
+  font-size: 14px;
+  line-height: 1.76;
+  letter-spacing: -0.025em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.yearly-premium-page .premium-accordion summary {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .yearly-premium-page .premium-report-section {
+    padding: 24px 18px;
+  }
+
+  .yearly-premium-page .yearly-report-orbit-lead strong {
+    font-size: 17px;
+  }
+
+  .yearly-premium-page .premium-card p,
+  .yearly-premium-page .premium-callout p,
+  .yearly-premium-page .premium-prose p,
+  .yearly-premium-page .premium-accordion-body p,
+  .yearly-premium-page .yearly-report-orbit-lead p,
+  .yearly-premium-page .yearly-report-orbit-card p,
+  .yearly-premium-page .yearly-focus-card p {
+    font-size: 13.5px;
+    line-height: 1.72;
   }
 }

@@ -264,10 +264,9 @@ export default function Form() {
   const step3Ready = Boolean(formData.q1.trim());
   const step4Ready = Boolean(formData.q2.trim());
   const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;
-  const isYearlyFlow = service.id === 'life-flow';
-  const isSignatureFlow = service.id === 'general-signature';
-  const isLoveReadingFlow = service.id === 'love-reading';
-  const isCinematicFlow = isSignatureFlow || isLoveReadingFlow;
+  const isYearlyFlow = false;
+  const isLoveReadingFlow = false;
+  const isCinematicFlow = true;
   const activeVisual = (isYearlyFlow ? yearlyStepVisuals : stepVisuals)[step];
   const _yearlySceneCopyDraft = {
     1: {
