@@ -266,7 +266,7 @@ export class DayUtil {
     getDaeyunInfo(gender: 'male' | 'female'): { start_age: number; forward: boolean; } {
         const yearGz = this.getYearGZ();
         const isYangYear = [0, 2, 4, 6, 8].includes(yearGz.tg);
-        const forward = (gender === 'male' && !isYangYear) || (gender === 'female' && isYangYear);
+        const forward = (gender === 'male' && isYangYear) || (gender === 'female' && !isYangYear);
 
         const astroYearTerms = this.getMajorSolarTermsForYear(this.astrologicalYear);
 

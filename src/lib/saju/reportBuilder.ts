@@ -770,30 +770,159 @@ function buildMonthLuck(
   });
 }
 
-type QuestionCategory = 'relationship' | 'money' | 'career' | 'timing' | 'caution' | 'health' | 'general';
+type QuestionCategory = 'crisis' | 'relationship' | 'money' | 'career' | 'timing' | 'caution' | 'health' | 'general';
+
+function isExistentialCrisisQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  return /왜살|살이유|사는이유|살아야할이유/.test(normalized);
+}
 
 function getQuestionCategory(question: string): QuestionCategory {
   const normalized = question.replace(/\s/g, '');
+  if (/살기싫|죽고싶|자살|극단|사라지고싶|끝내고싶|죽어버|못살겠|포기하고싶|목숨|해치고싶|왜살|살이유|사는이유|살아야할이유/.test(normalized)) {
+    return 'crisis';
+  }
   if (/연애|결혼|재회|상대|인연|배우자|궁합|썸|애정/.test(normalized)) return 'relationship';
-  if (/돈|재물|수익|매출|사업|투자|가격|결제|고가|상품/.test(normalized)) return 'money';
-  if (/일|직업|커리어|이직|창업|브랜드|콘텐츠|회사|진로/.test(normalized)) return 'career';
+  if (/돈|재물|수익|매출|사업|투자|가격|결제|고가|상품|월급|부업|벌이|빚|대출/.test(normalized)) return 'money';
+  if (/뭐먹고살|먹고살|벌어먹|돈벌|일|직업|커리어|이직|퇴사|취업|직무|업종|창업|브랜드|콘텐츠|회사|진로|적성|뭘해야|뭐해야/.test(normalized)) return 'career';
   if (/언제|시기|올해|내년|2026|2027|타이밍|기회/.test(normalized)) return 'timing';
   if (/조심|주의|위험|피해야|선택|고민|불안/.test(normalized)) return 'caution';
   if (/건강|잠|수면|체력|피로|몸|컨디션/.test(normalized)) return 'health';
   return 'general';
 }
 
+function hasHangulFinalConsonant(text: string) {
+  const hangul = text.replace(/[^\uAC00-\uD7A3]/g, '');
+  const last = hangul[hangul.length - 1];
+
+  if (!last) {
+    return false;
+  }
+
+  return (last.charCodeAt(0) - 0xac00) % 28 !== 0;
+}
+
+function getFriendlyAddressName(name: string) {
+  const cleaned = name.trim().replace(/\s+/g, '');
+  const blockedWords = ['테스트', '운월당', '고객', '사용자', '나', '저'];
+
+  if (!cleaned) {
+    return '당신';
+  }
+
+  const koreanOnly = cleaned.replace(/[^\uAC00-\uD7A3]/g, '');
+
+  if (blockedWords.includes(koreanOnly || cleaned)) {
+    return '당신';
+  }
+
+  if (koreanOnly.length >= 3) {
+    return koreanOnly.slice(1);
+  }
+
+  return koreanOnly || cleaned;
+}
+
+function getVocativeName(name: string) {
+  const friendlyName = getFriendlyAddressName(name);
+
+  if (friendlyName === '당신') {
+    return friendlyName;
+  }
+
+  return `${friendlyName}${hasHangulFinalConsonant(friendlyName) ? '아' : '야'}`;
+}
+
+function withKoreanObjectParticle(text: string) {
+  return `${text}${hasHangulFinalConsonant(text) ? '을' : '를'}`;
+}
+
+function withKoreanTopicParticle(text: string) {
+  return `${text}${hasHangulFinalConsonant(text) ? '은' : '는'}`;
+}
+
+function withKoreanSubjectParticle(text: string) {
+  return `${text}${hasHangulFinalConsonant(text) ? '이' : '가'}`;
+}
+
+function getCasualAddressParts(name: string) {
+  const friendlyName = getFriendlyAddressName(name);
+
+  if (friendlyName === '당신') {
+    return {
+      titleLead: '지금은',
+      opening: '지금 정말 많이 버거웠지.',
+      subject: '너는',
+      object: '너를',
+      aloneLine: '지금 혼자 있으면'
+    };
+  }
+
+  const vocativeName = getVocativeName(name);
+
+  return {
+    titleLead: `${vocativeName}, 지금은`,
+    opening: `${vocativeName}, 요즘 정말 많이 버거웠지.`,
+    subject: withKoreanTopicParticle(friendlyName),
+    object: withKoreanObjectParticle(friendlyName),
+    aloneLine: `${withKoreanSubjectParticle(friendlyName)} 지금 혼자 있으면`
+  };
+}
+
+function getDominantTenGodText(basis: DeterministicSajuBasis) {
+  return basis.tenGods
+    .slice(0, 2)
+    .map((item) => item.label)
+    .join('·') || '주요 십성';
+}
+
+function getCareerFitByTenGods(basis: DeterministicSajuBasis) {
+  const labels = basis.tenGods.slice(0, 4).map((item) => item.label);
+  const fits = new Set<string>();
+
+  if (labels.some((label) => label.includes('식') || label.includes('상'))) {
+    fits.add('콘텐츠 기획, 리포트 제작, 강의·교육, 말과 글로 결과물을 만드는 일');
+  }
+
+  if (labels.some((label) => label.includes('재'))) {
+    fits.add('상품 설계, 영업 전략, 고객관리, 중개·거래형 서비스');
+  }
+
+  if (labels.some((label) => label.includes('관'))) {
+    fits.add('운영관리, PM, 행정·프로세스 관리, 신뢰와 책임이 중요한 직무');
+  }
+
+  if (labels.some((label) => label.includes('인'))) {
+    fits.add('상담, 코칭, 연구, 문서화, 지식 기반 서비스');
+  }
+
+  if (labels.some((label) => label.includes('비') || label.includes('겁'))) {
+    fits.add('1인 브랜드, 독립 프로젝트, 자기 기준으로 판을 짜는 프리랜서형 업무');
+  }
+
+  if (!fits.size) {
+    fits.add('상담·분석·기획·운영처럼 기준을 세우고 문제를 정리해주는 일');
+  }
+
+  return Array.from(fits).slice(0, 4);
+}
+
 function buildCareerIndustryGuide(
   dayMaster: string,
   currentDayunName: string,
   helpfulText: string,
-  cautionGuidance: string
+  cautionGuidance: string,
+  basis: DeterministicSajuBasis
 ) {
+  const dominantTenGodText = getDominantTenGodText(basis);
+  const careerFits = getCareerFitByTenGods(basis);
+
   return [
-    `사주 흐름 기준 추천 업종 TOP 5: 1) 분석·진단 컨설팅, 2) 문서형 전문 서비스(리포트/가이드), 3) 교육·코칭형 비즈니스, 4) 서비스기획·PM·운영설계, 5) 신뢰 기반 B2B 고객관리/프로세스 개선.`,
-    `${dayMaster} 일간과 ${currentDayunName} 대운에서는 전문성을 눈에 보이는 결과물로 바꾸는 구조가 유리합니다. 단건 노동보다 패키지 상품(진단 + 실행안 + 피드백)으로 설계하세요.`,
-    `권장 포지션: 전략기획, 운영기획, 브랜드/콘텐츠 PM, 컨설턴트, 교육 콘텐츠 디렉터. 핵심은 “문제 정의 → 진단 → 실행 체크리스트” 3단계 표준화입니다.`,
-    `90일 실행: 1~2주 대표 서비스 1개 정의, 3~4주 가격표·샘플 결과물·소개문 완성, 5~8주 파일럿 고객 3명 검증, 9~12주 표준 프로세스 고정.`,
+    `결론부터 말하면, 이 명식은 “아무 일이나 오래 버티는 구조”보다 기준을 세우고 사람의 문제를 정리해 돈으로 바꾸는 쪽이 맞습니다. ${dayMaster} 일간은 판을 보고 구조를 잡는 힘이 있고, ${dominantTenGodText} 흐름은 그 기준을 말·문서·서비스로 꺼낼 때 수익성이 살아납니다.`,
+    `추천 업종과 역할은 ${careerFits.join(', ')}입니다. 직업명 하나보다 “상담·분석·기획·문서화·운영”이 들어가는 일을 우선 보세요.`,
+    `${currentDayunName} 대운에서는 들어오는 제안이 늘어도 기준이 없으면 피로가 먼저 쌓입니다. 단건 노동보다 진단, 결과물, 피드백, 재구매가 이어지는 패키지 수익 구조가 유리합니다.`,
+    `피해야 할 방식은 무한 수정, 감정노동이 많은 저가 상담, 말로만 정한 동업, 급한 영업직, 수익 모델 없는 콘텐츠 운영입니다. 잘 맞는 방식은 가격표가 있고, 제공 범위가 분명하고, 결과물이 파일이나 문서로 남는 일입니다.`,
+    `90일 실행은 선명해야 합니다. 1~2주 대표 서비스 1개 정의, 3~4주 샘플 결과물과 소개문 완성, 5~8주 파일럿 고객 3명 검증, 9~12주 반복 판매 구조로 고정하세요.`,
     `${helpfulText} 기운은 기록과 반복에서 강해집니다. ${cautionGuidance} 즉흥 확장보다 한 분야 선명화와 결과물 표준화가 커리어를 빠르게 끌어올립니다.`
   ];
 }
@@ -805,19 +934,41 @@ function buildQuestionResponse(
   relationshipLabel: string,
   currentDayunName: string,
   helpful: FiveElement[],
-  cautious: FiveElement[]
+  cautious: FiveElement[],
+  questionIndex = 0
 ) {
   const dayMaster = basis.dayMaster.stem;
-  const helpfulText = helpful.join(', ');
+  const helpfulText = helpful.join(', ') || '보완 오행';
   const cautionGuidance = formatElementGuidance(cautious, basis);
   const context = getRelationshipContextSentence(relationshipLabel);
 
-  if ((category as string) === 'career') {
-    const careerGuide = buildCareerIndustryGuide(dayMaster, currentDayunName, helpfulText, cautionGuidance);
+  if (category === 'crisis') {
+    const address = getCasualAddressParts(basis.input.name || '');
+    const dominantTenGodText = getDominantTenGodText(basis);
+    const isExistential = isExistentialCrisisQuestion(question) || questionIndex > 0;
+
+    return {
+      label: isExistential
+        ? `${address.titleLead} 인생 답을 혼자 결론내리면 안 돼`
+        : `${address.titleLead} 혼자 버티는 날이 아니야`,
+      analysis: isExistential
+        ? `${address.opening} “나 왜 살지”라는 말은 가벼운 질문이 아니라 몸과 마음이 한계까지 밀렸다는 신호야. ${dayMaster} 일간은 힘든 티를 바로 내기보다 속으로 오래 붙잡고, ${basis.pillars.month} 월령은 밤이 깊을수록 생각을 혼자 키우는 쪽이야. 여기에 ${currentDayunName} 대운과 ${dominantTenGodText} 흐름이 겹치면 돈, 사람, 책임, 잠 부족이 한꺼번에 몰려서 “내 편이 없다”는 느낌이 확 커질 수 있어. ${address.subject} 지금 인생 결론을 낼 상태가 아니야. 이 명식에서 지금 가장 먼저 살릴 건 큰 의미가 아니라 몸의 온도와 사람의 연결이야. 오늘은 답을 찾는 날이 아니라 사람 옆에 붙어 있어야 하는 날이야.`
+        : `${address.opening} 이 말은 그냥 운세 문장으로 넘길 말이 아니야. ${dayMaster} 일간은 힘든 티를 바로 내기보다 속으로 오래 붙잡는 쪽이고, ${basis.pillars.month} 월령은 생각이 밤에 더 깊어지는 구조를 만들어. 여기에 ${currentDayunName} 대운과 ${dominantTenGodText} 흐름이 겹치면 돈, 사람, 책임, 잠 부족이 한꺼번에 밀려오면서 “아무도 모르게 사라지고 싶다”는 식으로 마음이 닫힐 수 있어. 이건 의지가 약해서가 아니야. 지금 비어 있는 건 버틸 힘이 아니라 ${address.object} 붙잡아 줄 사람, 잠, 따뜻한 음식, 위험한 물건과의 거리야. 그러니까 오늘 결론은 하나야. 안전이 먼저야. 오늘은 혼자 있으면 안 돼.`,
+      advice: [
+        `${address.aloneLine} 문을 잠그고 버티지 말고, 가까운 사람 한 명에게 “나 지금 혼자 있으면 위험해. 같이 있어줘”라고 바로 보내.`,
+        '술, 약, 칼, 끈, 높은 곳, 차 키처럼 자신을 다치게 할 수 있는 물건과 장소에서 지금 바로 떨어져.',
+        '한국이면 자살예방 상담전화 109로 전화해. 지금 당장 위험하면 119나 112로 바로 전화해. 해외라면 현지 응급번호나 가까운 응급실로 가.',
+        `${helpfulText} 기운은 지금 “큰 결심”이 아니라 아주 작은 생활 회복으로 써야 해. 물 한 컵 마시기, 불 켜기, 침대 밖으로 나오기, 사람에게 연락하기. 오늘 목표는 인생 결론이 아니라 다음 10분을 안전하게 넘기는 거야.`
+      ]
+    };
+  }
+
+  if (category === 'career') {
+    const careerGuide = buildCareerIndustryGuide(dayMaster, currentDayunName, helpfulText, cautionGuidance, basis);
 
     return {
       label: '직업·커리어 질문 직답',
-      analysis: `질문 "${question}"은 지금 가진 능력을 어떤 업종과 역할에서 수익 구조로 바꿀지에 대한 질문입니다. ${dayMaster} 일간은 기준을 세우고 구조를 설계할 때 강점이 살아나며, ${currentDayunName} 대운에서는 전문성을 상품화하고 표준화할수록 커리어 성장이 빨라집니다.`,
+      analysis: `질문 "${question}"은 “무슨 직업 이름을 고를까”보다 “내 사주의 강점을 어디에 팔아야 덜 지치고 오래 벌 수 있을까”에 대한 질문입니다. ${dayMaster} 일간은 기준을 세우고 구조를 설계할 때 강점이 살아나며, ${currentDayunName} 대운에서는 전문성을 상품화하고 표준화할수록 커리어 성장이 빨라집니다.`,
       advice: careerGuide
     };
   }
@@ -847,18 +998,6 @@ function buildQuestionResponse(
         '새로운 수익원을 늘리기 전에 가격표, 제공 범위, 환불 기준, 고객 안내 문구를 먼저 고정하세요.',
         `${helpfulText} 기운은 기록과 비교, 반복 매출 구조를 통해 안정됩니다. 감으로 팔기보다 상품명을 분명히 나누면 설득력이 올라갑니다.`,
         `${cautionGuidance} 가까운 사람과의 돈 거래, 말로만 정한 동업, 즉흥 지출은 특히 조심하는 편이 좋습니다.`
-      ]
-    };
-  }
-
-  if ((category as string) === 'career') {
-    return {
-      label: '직업·커리어 질문 직답',
-      analysis: `질문 "${question}"은 지금 가진 능력을 어떻게 보이는 성과로 바꿀지에 대한 질문으로 읽힙니다. ${dayMaster} 일간은 기준을 세우고 구조를 잡을 때 강점이 드러나며, ${currentDayunName} 대운에서는 전문성을 문서, 포트폴리오, 상품으로 전환하는 흐름이 중요합니다.`,
-      advice: [
-        '가장 먼저 “내가 잘하는 일”이 아니라 “고객이 돈을 내고 맡기고 싶은 결과”로 문장을 바꿔 보세요.',
-        `${helpfulText} 기운을 살리려면 하루 단위 실행보다 주간 단위 산출물을 정하는 방식이 더 잘 맞습니다.`,
-        `커리어 전환은 ${cautionGuidance} 수입 공백과 역할 변화를 숫자로 확인한 뒤 움직이는 편이 좋습니다.`
       ]
     };
   }
@@ -933,7 +1072,8 @@ function buildQuestionAnswers(
         relationshipLabel,
         currentDayunName || basis.dayun[0]?.ganzhi || '현재 대운',
         helpful,
-        cautious
+        cautious,
+        index
       );
 
       return {

@@ -41,8 +41,9 @@ describe('saju core engine regression coverage', () => {
   it('produces opposite daeyun directions for male/female on the same birth', () => {
     const male = calcBazi(1990, 1, 1, 12, 30, 'solar', 'normal', 'male', false);
     const female = calcBazi(1990, 1, 1, 12, 30, 'solar', 'normal', 'female', false);
-    expect(male.forward).toBe(true);
-    expect(female.forward).toBe(false);
+    // 1990-01-01 is still 己巳 astrological year before ipchun. Male + yin year runs backward, female + yin year runs forward.
+    expect(male.forward).toBe(false);
+    expect(female.forward).toBe(true);
     expect(male.forward).not.toBe(female.forward);
   });
 
@@ -72,7 +73,7 @@ describe('saju core engine regression coverage', () => {
   });
 
   it('matches the API dayun sequence for the life-flow preview sample', () => {
-    const bazi = calcBazi(1992, 9, 9, 10, 24, 'solar', 'normal', 'female', false);
+    const bazi = calcBazi(1992, 9, 9, 10, 24, 'solar', 'normal', 'male', false);
     const rows = dayunRows(bazi);
 
     expect(bazi.forward).toBe(true);

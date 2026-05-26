@@ -65,14 +65,12 @@ export default function Checkout() {
   const confirmEndpoint = import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim();
   const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || '01000000000';
   const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
-  const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
-  const isLiveMisconfigured = isLiveHost && paymentMode === 'demo';
-  const isDemoPayment = paymentMode === 'demo' && !isLiveHost;
+  const isDemoPayment = paymentMode === 'demo';
   const canUsePortOneRuntime = Boolean(portOneStoreId && portOneChannelKey && confirmEndpoint && !isDemoPayment);
   const hasRequiredBirthInfo = Boolean(formData?.name && formData?.birthDate && (formData?.birthTime || formData?.isUnknownTime));
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());
-  const paymentReady = !isLiveMisconfigured && (isDemoPayment || canUsePortOneRuntime);
+  const paymentReady = isDemoPayment || canUsePortOneRuntime;
   const canSubmit = Boolean(
     agreeService &&
       agreePrivacy &&
@@ -105,9 +103,7 @@ export default function Checkout() {
 
     if (!canSubmit) {
       setError(
-        isLiveMisconfigured
-          ? '운영 도메인에서는 데모 결제를 사용할 수 없습니다.'
-          : !hasRequiredBirthInfo
+        !hasRequiredBirthInfo
             ? '사주 정보를 먼저 입력해 주세요.'
             : !hasTwoQuestions
               ? '질문 2개를 모두 입력해 주세요.'
@@ -322,7 +318,7 @@ export default function Checkout() {
               aria-disabled={!canSubmit && !isSubmitting}
             >
               <WalletCards size={17} />
-              <strong>{isSubmitting ? '처리 중' : '일반 결제'}</strong>
+              <strong>{isSubmitting ? '처리 중' : isDemoPayment ? '일반 결제 데모' : '일반 결제'}</strong>
             </button>
           </div>
 
@@ -370,7 +366,9 @@ export default function Checkout() {
           {error ? <div className="checkout-luxe-error">{error}</div> : null}
 
           <p className="checkout-luxe-safe-copy">
-            결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.
+            {isDemoPayment
+              ? '현재는 결제사 연동 전 데모 결제로 진행되며, 실제 결제 승인 없이 입력한 사주정보 기준 리포트를 확인할 수 있습니다.'
+              : '결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.'}
           </p>
         </section>
 

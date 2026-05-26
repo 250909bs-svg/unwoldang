@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { Download, Share2, User } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { clearPendingPayment } from '../lib/auth';
@@ -15,6 +15,49 @@ type ReportLocationState = {
   reportData?: SajuReportData;
 };
 
+const escapeHtmlText = (value: string) =>
+  value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+
+    return entities[character] || character;
+  });
+
+const createSafeReportFileName = (value: string) =>
+  value
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 90) || 'unwoldang-report';
+
+const getCurrentPageCssText = () => {
+  const collectedRules = Array.from(document.styleSheets)
+    .map((sheet) => {
+      try {
+        return Array.from((sheet as CSSStyleSheet).cssRules)
+          .map((rule) => rule.cssText)
+          .join('\n');
+      } catch {
+        return '';
+      }
+    })
+    .filter(Boolean)
+    .join('\n\n');
+
+  const inlineStyles = Array.from(document.querySelectorAll('style'))
+    .map((style) => style.textContent || '')
+    .filter(Boolean)
+    .join('\n\n');
+
+  return [collectedRules, inlineStyles].filter(Boolean).join('\n\n');
+};
+
 const PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
   name: '운월당',
   gender: 'female',
@@ -25,8 +68,8 @@ const PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
   isUnknownTime: false,
   relationshipStatus: 'single',
   relationshipDuration: 'under3',
-  q1: '지금 가장 조심해야 할 선택은 무엇인가요?',
-  q2: '올해 흐름에서 가장 강하게 잡아야 할 기회는 무엇인가요?'
+  q1: '지금 제 인생에서 가장 먼저 정리해야 할 흐름은 무엇인가요?',
+  q2: '재물운과 직업운 중 어떤 쪽에 집중해야 하나요?'
 };
 
 const PILLAR_LABELS = [
@@ -165,6 +208,36 @@ function SajuWonGukBoard({ report }: { report: SajuReportData }) {
         </div>
       </div>
 
+    </article>
+  );
+}
+
+function SajuWonGukReading({ report }: { report: SajuReportData }) {
+  const dominantLabel = report.tenGods[0]?.label || '주요 십성';
+  const secondLabel = report.tenGods[1]?.label || '보조 십성';
+  const monthPillar = report.pillars.month || '월주';
+  const dayPillar = report.pillars.day || '일주';
+  const hourText = report.pillars.hour ? `시주 ${report.pillars.hour}까지 함께 보면` : '태어난 시간이 비어 있으면';
+
+  return (
+    <article className="premium-card premium-wonguk-reading-card">
+      <span className="premium-wonguk-reading-kicker">원국 해설</span>
+      <h3>
+        {dayPillar} 일주와 {monthPillar} 월령을 먼저 봅니다
+      </h3>
+      <p>
+        {report.customerName}님의 원국은 성격표가 아니라 반복되는 선택 습관을 보는 지도입니다. 일간 {report.dayMaster}은
+        결정의 중심이고, {monthPillar} 월령은 사회에서 압박을 받는 방식입니다. 그래서 같은 질문도 월령과 일간을 같이 놓아야
+        실제 체감에 가까워집니다.
+      </p>
+      <p>
+        십성에서는 {dominantLabel}과 {secondLabel}이 앞에 보입니다. 이 조합은 말투, 책임 반응, 돈 쓰임, 관계 거리에서
+        먼저 드러납니다. {hourText} 생활 리듬과 감정 회복 방식까지 더 촘촘하게 읽을 수 있습니다.
+      </p>
+      <p>
+        현재 {report.currentDayun.name} 대운은 원국의 이 구조가 지금 현실에서 어디로 켜지는지를 보여줍니다. 그래서 아래
+        리포트의 조언은 단순 성격 설명이 아니라, 원국이 대운을 만났을 때 실제로 생기는 선택 장면을 기준으로 풀었습니다.
+      </p>
     </article>
   );
 }
@@ -865,6 +938,24 @@ function polishRepeatedReportLanguage(report: SajuReportData, repeatedCaution: s
   let cautionIndex = 0;
   let behaviorIndex = 0;
   const behaviorAlternatives = ['지난 행동', '평소 태도', '약속을 지키는 방식', '돈과 시간의 쓰임', '갈등 뒤 돌아오는 말투'];
+  const behaviorForms = [
+    {
+      source: '반복 행동을',
+      alternatives: ['지난 행동을', '평소 태도를', '약속을 지키는 방식을', '돈과 시간의 쓰임을', '갈등 뒤 돌아오는 말투를']
+    },
+    {
+      source: '반복 행동이',
+      alternatives: ['지난 행동이', '평소 태도가', '약속을 지키는 방식이', '돈과 시간의 쓰임이', '갈등 뒤 돌아오는 말투가']
+    },
+    {
+      source: '반복 행동은',
+      alternatives: ['지난 행동은', '평소 태도는', '약속을 지키는 방식은', '돈과 시간의 쓰임은', '갈등 뒤 돌아오는 말투는']
+    },
+    {
+      source: '반복 행동과',
+      alternatives: ['지난 행동과', '평소 태도와', '약속을 지키는 방식과', '돈과 시간의 쓰임과', '갈등 뒤 돌아오는 말투와']
+    }
+  ];
 
   const replaceText = (text: string) => {
     let next = text;
@@ -872,6 +963,13 @@ function polishRepeatedReportLanguage(report: SajuReportData, repeatedCaution: s
     while (repeatedCaution && next.includes(repeatedCaution)) {
       next = next.replace(repeatedCaution, cautionScenes[cautionIndex % cautionScenes.length]);
       cautionIndex += 1;
+    }
+
+    for (const form of behaviorForms) {
+      while (next.includes(form.source)) {
+        next = next.replace(form.source, form.alternatives[behaviorIndex % form.alternatives.length]);
+        behaviorIndex += 1;
+      }
     }
 
     while (next.includes('반복 행동')) {
@@ -1049,6 +1147,10 @@ function getConcernEvidenceItems(report: SajuReportData, index: number) {
 }
 
 function getConcernTopicLabel(question: string) {
+  if (isSelfHarmQuestion(question)) {
+    return '안전·위기';
+  }
+
   if (hasConcernKeyword(question, ['뭐하고', '직업', '일', '사업', '진로', '돈벌', '먹고', '살까'])) {
     return '일·진로';
   }
@@ -1075,6 +1177,16 @@ function getConcernTopicLabel(question: string) {
 function getConcernTopicProfile(question: string, report: SajuReportData) {
   const helpfulText = formatElementList(report.helpfulElements) || '균형 오행';
   const topic = getConcernTopicLabel(question);
+
+  if (topic === '안전·위기') {
+    return {
+      root:
+        '이 고민은 사주 풀이보다 안전 확보가 먼저인 신호입니다. 마음이 약해서가 아니라, 피로와 압박이 한꺼번에 몰려 혼자 버티는 시간이 위험해진 상태로 봐야 합니다.',
+      sajuLink: `${report.dayMaster} 일간과 ${report.currentDayun.name} 대운을 함께 보면 책임, 돈, 관계, 생활 리듬이 동시에 흔들릴 때 세상과 끊기고 싶은 감각이 올라올 수 있습니다. 하지만 이 해석은 원인을 설명하는 보조 자료일 뿐, 지금의 우선순위는 곧바로 사람과 기관에 연결되는 것입니다.`,
+      resolution:
+        '혼자 있지 말고 가까운 사람에게 지금 상태를 알리세요. 한국에서는 자살예방 상담전화 109, 긴급 상황은 119 또는 112로 바로 연락하는 것이 먼저입니다.'
+    };
+  }
 
   if (topic === '일·진로') {
     return {
@@ -1921,15 +2033,36 @@ function buildConcernDirectAnswer(
   const isLove = hasConcernKeyword(question, ['연애', '인연', '상대', '썸', '재회', '사랑']);
   const isMoney = hasConcernKeyword(question, ['돈', '재물', '투자', '수입', '매출', '가격']);
 
+  if (isSelfHarmQuestion(question)) {
+    const address = getCasualAddressParts(report.customerName);
+    const isExistential = isExistentialCrisisQuestion(question) || index > 0;
+
+    return {
+      ...qa,
+      title: isExistential
+        ? `고민 ${index + 1} 결론: ${address.titleLead} 인생 답을 혼자 결론내리면 안 돼`
+        : `고민 ${index + 1} 결론: ${address.titleLead} 혼자 버티는 날이 아니야`,
+      analysis: isExistential
+        ? `${address.opening} 이 고민은 “왜 살아야 하지”라는 말로 보이지만, 실제로는 몸과 마음이 한계까지 밀렸다는 신호야. ${report.dayMaster} 일간과 ${report.currentDayun.name} 대운을 같이 보면 책임, 돈, 관계, 피로가 한꺼번에 몰릴 때 생각이 혼자 깊어지고 세상과 끊기고 싶어지는 장면이 생겨. ${address.subject} 지금 인생 결론을 낼 상태가 아니야. 오늘은 의미를 찾기보다 사람 옆에 붙어 있어야 해.`
+        : `${address.opening} 이 고민은 운세로 맞히거나 단정할 문제가 아니야. ${report.dayMaster} 일간과 ${report.currentDayun.name} 대운을 보면 책임, 돈, 관계, 피로가 한꺼번에 몰릴 때 혼자 버티다가 세상과 끊기고 싶어지는 장면이 생겨. 하지만 지금 필요한 답은 “운이 좋다/나쁘다”가 아니라 ${address.object} 붙잡아 줄 사람과 안전한 공간이야. 오늘은 혼자 있으면 안 돼.`,
+      advice: [
+        `${address.aloneLine} 가까운 사람에게 “나 지금 혼자 있으면 위험해. 같이 있어줘”라고 바로 보내.`,
+        '술, 약, 칼, 끈, 높은 곳, 차 키처럼 자신을 다치게 할 수 있는 물건과 장소에서 지금 바로 떨어져.',
+        '한국이면 자살예방 상담전화 109로 전화해. 지금 당장 위험하면 119나 112로 바로 전화해. 해외라면 현지 응급번호나 가까운 응급실로 가.',
+        '오늘은 인생 결론을 내리는 날이 아니라 다음 10분을 안전하게 넘기는 날이야.'
+      ]
+    };
+  }
+
   if (isCareer) {
     return {
       ...qa,
       title: `고민 ${index + 1} 결론: 일과 진로`,
-      analysis: `결론부터 말하면, ${report.customerName}님은 완전한 조직 순응형보다 상담·분석·기획·콘텐츠화처럼 자신의 기준을 상품으로 만드는 일이 맞습니다. 특히 상담형 콘텐츠, 분석형 서비스, 가격표가 있는 지식판매, 반복형 온라인 상품, 예약형 리포트, 데이터 정리형 기획 업무와 잘 맞습니다. 실제 장면으로 보면 고객이 헷갈리는 정보를 표로 정리해주거나, 상대가 말로만 설명한 고민을 결론·근거·행동 순서로 바꿔주는 일에서 힘이 살아납니다. ${dominantTenGod} 흐름은 “남이 시킨 일을 오래 버티는 힘”보다 “내 기준으로 설명하고 설계하는 힘”으로 쓸 때 만족도가 커집니다.`,
+      analysis: `결론부터 말하면, ${report.customerName}님은 완전한 조직 순응형보다 상담·분석·기획·콘텐츠화처럼 자기 기준을 결과물로 보여주는 일이 맞습니다. 특히 자료 정리, 분석형 업무, 교육·설명, 운영 설계, 데이터 정리형 기획 업무와 잘 맞습니다. 실제 장면으로 보면 흩어진 정보를 표로 정리하거나, 말로만 떠도는 문제를 결론·근거·행동 순서로 바꿔주는 일에서 힘이 살아납니다. ${dominantTenGod} 흐름은 “남이 시킨 일을 오래 버티는 힘”보다 “내 기준으로 설명하고 설계하는 힘”으로 쓸 때 만족도가 커집니다.`,
       advice: [
-        '처음부터 큰 사업을 벌이기보다 2,900원 입문 상품, 9,900원 확장 상품, 프리미엄 리포트처럼 계단식 상품 구조가 맞습니다.',
+        '처음부터 큰 사업이나 큰 이직을 벌이기보다, 지금 가진 경험을 포트폴리오·성과 기록·업무 매뉴얼처럼 보이는 결과물로 바꾸는 게 먼저입니다.',
         '직업명으로 찾지 말고 상담형, 분석형, 기획형, 콘텐츠형, 운영형 중 어느 방식에서 덜 지치고 오래 설명할 수 있는지 먼저 보세요.',
-        '이번 달에는 팔 수 있는 결과물 하나를 정하고 가격, 제공 범위, 마감 시간, 수정 가능 횟수를 한 화면에 적어두세요.'
+        '이번 달에는 내가 돈을 받을 수 있는 역할 하나를 정하고 대가, 책임 범위, 마감 시간, 협업 기준을 한 화면에 적어두세요.'
       ]
     };
   }
@@ -3507,8 +3640,409 @@ function buildFocusedPremiumReport(report: SajuReportData): SajuReportData {
   return polishRepeatedReportLanguage(focusedReport, cautionGuidance, cautionScenes);
 }
 
+function isSelfHarmQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  return /살기싫|죽고싶|자살|극단|사라지고싶|끝내고싶|죽어버|못살겠|포기하고싶|목숨|해치고싶|왜살|살이유|사는이유|살아야할이유/.test(normalized);
+}
+
+function isExistentialCrisisQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  return /왜살|살이유|사는이유|살아야할이유/.test(normalized);
+}
+
+function getFriendlyAddressName(name: string) {
+  const cleaned = name.trim().replace(/\s+/g, '');
+  const blockedWords = ['테스트', '운월당', '고객', '사용자', '나', '저'];
+
+  if (!cleaned) {
+    return '당신';
+  }
+
+  const koreanOnly = cleaned.replace(/[^\uAC00-\uD7A3]/g, '');
+
+  if (blockedWords.includes(koreanOnly || cleaned)) {
+    return '당신';
+  }
+
+  if (koreanOnly.length >= 3) {
+    return koreanOnly.slice(1);
+  }
+
+  return koreanOnly || cleaned;
+}
+
+function getVocativeName(name: string) {
+  const friendlyName = getFriendlyAddressName(name);
+
+  if (friendlyName === '당신') {
+    return friendlyName;
+  }
+
+  return `${friendlyName}${hasFinalConsonant(friendlyName) ? '아' : '야'}`;
+}
+
+function getCasualAddressParts(name: string) {
+  const friendlyName = getFriendlyAddressName(name);
+
+  if (friendlyName === '당신') {
+    return {
+      vocative: '',
+      titleLead: '지금은',
+      opening: '지금 정말 많이 버거웠지.',
+      subject: '너는',
+      object: '너를',
+      aloneLine: '지금 혼자 있으면'
+    };
+  }
+
+  return {
+    vocative: getVocativeName(name),
+    titleLead: `${getVocativeName(name)}, 지금은`,
+    opening: `${getVocativeName(name)}, 요즘 정말 많이 버거웠지.`,
+    subject: withTopicParticle(friendlyName),
+    object: withObjectParticle(friendlyName),
+    aloneLine: `${withSubjectParticle(friendlyName)} 지금 혼자 있으면`
+  };
+}
+
+function isCareerQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  return /뭐먹고살|먹고살|벌어먹|돈벌|일|직업|커리어|이직|퇴사|취업|직무|업종|창업|브랜드|콘텐츠|회사|진로|적성|뭘해야|뭐해야/.test(normalized);
+}
+
+function isMoneyQuestion(question: string) {
+  return hasConcernKeyword(question, ['돈', '재물', '수입', '매출', '투자', '가격', '결제', '월급', '부업', '빚', '대출']);
+}
+
+function isLoveQuestion(question: string) {
+  return hasConcernKeyword(question, ['연애', '결혼', '재회', '상대', '인연', '배우자', '궁합', '썸', '사랑']);
+}
+
+function isCautionQuestion(question: string) {
+  return hasConcernKeyword(question, ['조심', '주의', '위험', '피해야', '실수', '후회', '손실', '망하는', '안해야']);
+}
+
+function isOpportunityQuestion(question: string) {
+  return hasConcernKeyword(question, ['기회', '잡아야', '성공', '풀리', '열리', '강하게', '상승', '확장']);
+}
+
+function isCleanupQuestion(question: string) {
+  return hasConcernKeyword(question, ['정리', '버려', '끊어', '내려놓', '먼저', '우선', '흐름']);
+}
+
+function isMoneyCareerQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  const hasMoney = /재물|돈|수입|매출|금전|부업|사업|수익/.test(normalized);
+  const hasCareer = /직업|직장|커리어|일|진로|업종|이직|퇴사|창업/.test(normalized);
+
+  return hasMoney && hasCareer;
+}
+
+function getSignatureCareerFields(report: SajuReportData) {
+  const labels = report.tenGods.slice(0, 4).map((item) => item.label);
+  const fields = new Set<string>();
+
+  if (labels.some((label) => label.includes('식') || label.includes('상'))) {
+    fields.add('콘텐츠 기획·자료 제작·강의·교육');
+  }
+
+  if (labels.some((label) => label.includes('재'))) {
+    fields.add('상품 설계·영업 전략·고객관리·중개형 서비스');
+  }
+
+  if (labels.some((label) => label.includes('관'))) {
+    fields.add('운영관리·PM·행정·프로세스 설계');
+  }
+
+  if (labels.some((label) => label.includes('인'))) {
+    fields.add('상담·코칭·연구·문서화·지식 서비스');
+  }
+
+  if (labels.some((label) => label.includes('비') || label.includes('겁'))) {
+    fields.add('1인 브랜드·독립 프로젝트·프리랜서형 업무');
+  }
+
+  if (!fields.size) {
+    fields.add('상담·분석·기획·운영처럼 기준을 세우고 문제를 정리해주는 일');
+  }
+
+  return Array.from(fields).slice(0, 4);
+}
+
+function getReportBasisText(report: SajuReportData) {
+  const hour = report.pillars.hour ? `시주 ${report.pillars.hour}` : '시주 미상';
+  const topTenGods = report.tenGods
+    .slice(0, 3)
+    .map((item) => `${item.label} ${item.value}점`)
+    .join(', ');
+  const elements = report.fiveElements.map((item) => `${item.label}${item.value}`).join('·');
+
+  return `${report.customerName}님의 입력값(${report.birthLabel})으로 잡힌 원국은 연주 ${report.pillars.year}, 월주 ${report.pillars.month}, 일주 ${report.pillars.day}, ${hour}입니다. 오행 분포는 ${elements}, 십성 상위는 ${topTenGods || dominantLabelFallback(report)}입니다.`;
+}
+
+function dominantLabelFallback(report: SajuReportData) {
+  return report.tenGods[0]?.label || '주요 십성';
+}
+
+function hasBranchPair(report: SajuReportData, left: string, right: string) {
+  const branches = [report.pillars.year, report.pillars.month, report.pillars.day, report.pillars.hour || '']
+    .map((pillar) => pillar.slice(-1))
+    .filter(Boolean);
+
+  return branches.includes(left) && branches.includes(right);
+}
+
+function getSignatureSharpPattern(report: SajuReportData) {
+  if (hasBranchPair(report, '子', '酉')) {
+    return '子酉 파가 보여서 사람을 오래 붙잡기보다, 피로가 쌓이면 답장이 짧아지고 마음속에서 먼저 정리하는 패턴이 강합니다.';
+  }
+
+  if (hasBranchPair(report, '巳', '申')) {
+    return '巳申 합형이 보여서 일이 멈춰도 머리가 계속 돌아가고, 밤에 정산·일정·사람 문제를 한꺼번에 생각하기 쉽습니다.';
+  }
+
+  const weakest = [...report.fiveElements].sort((left, right) => left.value - right.value)[0]?.label || report.cautiousElements[0] || '약한 오행';
+
+  return `${weakest} 기운이 약하게 잡혀서 마음만 앞서면 다음 단계, 관계 경계, 성장 방향이 흐려지기 쉽습니다.`;
+}
+
+function getDayunPressureText(report: SajuReportData) {
+  const dayunName = report.currentDayun.name;
+
+  if (/임|계|자|해|壬|癸|子|亥/.test(dayunName)) {
+    return '사람, 연락, 돈, 이동';
+  }
+
+  if (/갑|을|인|묘|甲|乙|寅|卯/.test(dayunName)) {
+    return '책임, 기준, 조직, 관계 경계';
+  }
+
+  if (/병|정|사|오|丙|丁|巳|午/.test(dayunName)) {
+    return '공개, 표현, 관심, 실행 속도';
+  }
+
+  if (/경|신|申|유|庚|辛|酉/.test(dayunName)) {
+    return '결과물, 말, 수정 요청, 평가';
+  }
+
+  return '책임, 일정, 고정비, 역할';
+}
+
+function getDayunDecisionRiskText(report: SajuReportData) {
+  const dayunName = report.currentDayun.name;
+
+  if (/임|계|자|해|壬|癸|子|亥/.test(dayunName)) {
+    return `${dayunName} 대운의 수 기운은 생각과 감정을 깊게 만들기 때문에 새벽 결제, 새벽 손절, 새벽 장문 메시지가 손실로 이어지기 쉽습니다.`;
+  }
+
+  if (/갑|을|인|묘|甲|乙|寅|卯/.test(dayunName)) {
+    return `${dayunName} 대운은 책임과 기준을 키우기 때문에 “내가 해야 하나” 싶은 일을 혼자 떠안기 쉽습니다. 맡기 전 역할, 돈, 마감부터 확인해야 합니다.`;
+  }
+
+  if (/병|정|사|오|丙|丁|巳|午/.test(dayunName)) {
+    return `${dayunName} 대운은 드러나는 힘을 키우기 때문에 공개, 말, 약속이 빨라집니다. 흥분한 상태에서 약속을 크게 잡으면 뒤처리가 부담으로 돌아옵니다.`;
+  }
+
+  return `${dayunName} 대운에서는 결과와 평가가 빨리 따라옵니다. 말로만 정한 일, 수정 범위 없는 일, 정산일 없는 일은 시작 전부터 잘라야 합니다.`;
+}
+
+function getSignatureMoneyCareerVerdict(report: SajuReportData) {
+  const hasWaterDayun = /임|계|자|해|壬|癸|子|亥/.test(report.currentDayun.name);
+
+  if (hasWaterDayun) {
+    return `현재 ${report.currentDayun.name} 대운은 재성 수 기운이 켜지는 구간이라 “돈”을 봐야 맞습니다. 다만 이 명식은 돈부터 좇으면 새고, 직업 구조를 잡으면 돈이 남습니다. 결론은 재물운보다 직업운, 정확히는 직업을 수익 구조로 바꾸는 쪽에 먼저 집중해야 합니다.`;
+  }
+
+  return `현재 ${report.currentDayun.name} 대운에서는 직업의 틀과 돈의 결과가 같이 움직입니다. 결론은 한쪽만 고르는 것이 아니라, 직업 방식을 먼저 정리해서 돈이 남는 구조를 만드는 쪽입니다.`;
+}
+
+function getSignatureBestIncomeModel(report: SajuReportData, fields: string[]) {
+  const topTenGod = report.tenGods[0]?.label || '';
+  const primaryField = fields[0] || '상담·분석·기획형 서비스';
+
+  if (topTenGod.includes('식') || topTenGod.includes('상')) {
+    return `가장 잘 맞는 수입 방식은 ${withObjectParticle(fields[0] || '콘텐츠·상담·분석형 업무')} 눈에 보이는 결과물로 남기는 것입니다. 말로만 잘하는 사람보다 제안서, 포트폴리오, 강의안, 분석표, 운영 매뉴얼처럼 “이 사람이 뭘 해냈는지” 바로 보이는 형태가 돈으로 바뀝니다.`;
+  }
+
+  if (topTenGod.includes('재')) {
+    return `가장 잘 맞는 수입 방식은 사람과 돈의 흐름을 읽고, 역할과 대가를 분명히 나누는 것입니다. 부탁을 먼저 받고 금액을 나중에 말하면 손해가 커지고, 범위와 보상을 먼저 정하면 재물운이 살아납니다.`;
+  }
+
+  if (topTenGod.includes('관')) {
+    return `가장 잘 맞는 수입 방식은 책임, 검수, 운영, 관리 역할을 맡아 안정적인 자리나 장기 프로젝트로 가져가는 것입니다. 한 번 크게 버는 일보다 신뢰가 쌓여 반복적으로 맡기는 일이 맞습니다.`;
+  }
+
+  return `가장 잘 맞는 수입 방식은 ${withObjectParticle(primaryField)} 자기 기준이 보이는 결과물로 만드는 것입니다. 회사 안에서는 보고서·기획안·운영표, 프리랜서나 사업에서는 포트폴리오·제안서·체크리스트가 돈을 부릅니다.`;
+}
+
+function buildSignatureQuestionAnswer(
+  qa: SajuReportData['questionAnswers'][number],
+  index: number,
+  report: SajuReportData,
+  dominantLabel: string,
+  bestMonth?: SajuReportData['monthLuck'][number],
+  watchMonth?: SajuReportData['monthLuck'][number]
+): SajuReportData['questionAnswers'][number] {
+  const question = qa.question || '';
+  const bestMonthText = bestMonth ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} ${getLuckPhase(bestMonth.score)}` : '운이 열리는 달';
+  const watchMonthText = watchMonth ? `${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')} ${getLuckPhase(watchMonth.score)}` : '무리하지 말아야 할 달';
+  const helpfulText = formatElementList(report.helpfulElements) || '보완 오행';
+  const cautionText = buildConcernCautionSentence(report.cautiousElements) || '과해지는 기운은 일정과 기록으로 늦춰야 합니다.';
+  const basisText = getReportBasisText(report);
+  const sharpPattern = getSignatureSharpPattern(report);
+
+  if (isSelfHarmQuestion(question)) {
+    const address = getCasualAddressParts(report.customerName);
+    const isExistential = isExistentialCrisisQuestion(question) || index > 0;
+    const crisisTitle = isExistential
+      ? `${address.titleLead} 인생 답을 혼자 결론내리면 안 돼`
+      : `${address.titleLead} 혼자 버티는 날이 아니야`;
+    const crisisAnalysis = isExistential
+      ? `${address.opening} “나 왜 살지”라는 말은 가벼운 질문이 아니라 몸과 마음이 한계까지 밀렸다는 신호야. ${report.dayMaster} 일간은 힘든 티를 바로 내기보다 속으로 오래 붙잡고, ${report.pillars.month} 월령은 밤이 깊을수록 생각을 혼자 키우는 쪽이야. 여기에 ${report.currentDayun.name} 대운과 ${dominantLabel} 흐름이 겹치면 돈, 사람, 책임, 잠 부족이 한꺼번에 몰려서 “내 편이 없다”는 느낌이 확 커질 수 있어. ${address.subject} 지금 인생 결론을 낼 상태가 아니야. 이 명식에서 지금 가장 먼저 살릴 건 큰 의미가 아니라 몸의 온도와 사람의 연결이야. 오늘은 답을 찾는 날이 아니라 사람 옆에 붙어 있어야 하는 날이야.`
+      : `${address.opening} 이 말은 그냥 푸념으로 넘길 말이 아니야. ${report.dayMaster} 일간은 힘든 티를 바로 내기보다 속으로 오래 붙잡는 쪽이고, ${report.pillars.month} 월령은 생각이 밤에 더 깊어지는 구조를 만들어. 여기에 ${report.currentDayun.name} 대운과 ${dominantLabel} 흐름이 겹치면 돈, 사람, 책임, 잠 부족이 한꺼번에 밀려오면서 “아무도 모르게 사라지고 싶다”는 식으로 마음이 닫힐 수 있어. 이건 의지가 약해서가 아니야. 지금 비어 있는 건 버틸 힘이 아니라 ${address.object} 붙잡아 줄 사람, 잠, 따뜻한 음식, 위험한 물건과의 거리야. 그러니까 오늘 결론은 하나야. 안전이 먼저야. 오늘은 혼자 있으면 안 돼.`;
+
+    return {
+      ...qa,
+      title: crisisTitle,
+      analysis: crisisAnalysis,
+      advice: [
+        `${address.aloneLine} 바로 가까운 사람에게 “나 지금 혼자 있으면 위험해. 같이 있어줘”라고 보내.`,
+        '술, 약, 칼, 끈, 높은 곳, 차 키처럼 자신을 다치게 할 수 있는 물건과 장소에서 지금 바로 떨어져.',
+        '한국이면 자살예방 상담전화 109로 전화해. 지금 당장 위험하면 119나 112로 바로 전화해. 해외라면 현지 응급번호나 가까운 응급실로 가.',
+        `${helpfulText} 기운은 지금 “큰 결심”이 아니라 아주 작은 생활 회복으로 써야 해. 물 한 컵 마시기, 불 켜기, 침대 밖으로 나오기, 사람에게 연락하기. 오늘 목표는 인생 결론이 아니라 다음 10분을 안전하게 넘기는 거야.`
+      ]
+    };
+  }
+
+  if (isMoneyCareerQuestion(question)) {
+    const fields = getSignatureCareerFields(report);
+    const incomeModel = getSignatureBestIncomeModel(report, fields);
+
+    return {
+      ...qa,
+      title: '재물운보다 직업운을 먼저 잡아야 돈이 남습니다',
+      analysis:
+        `${getSignatureMoneyCareerVerdict(report)} ${basisText} ${report.dayMaster} 일간은 판을 보고 기준을 세우는 쪽이고, ${report.pillars.month} 월령은 결과물, 말, 분석, 기획이 밖으로 드러나는 자리입니다. 여기에 ${dominantLabel} 흐름이 앞에 있으면 남 밑에서 시키는 대로 오래 버티는 것보다, 본인이 기준을 세워 “무엇을 해주고 얼마를 받을지”를 정할 때 돈이 붙습니다. ${sharpPattern}`,
+      advice: [
+        `1순위는 직업운입니다. 단, 취업운이 아니라 “내 전문성을 돈 받는 형태로 고정하는 직업운”입니다. 추천 축은 ${fields.join(', ')}입니다.`,
+        incomeModel,
+        `재물운은 투자 한 방보다 “내 일이 얼마짜리로 인정받는가”에서 갈립니다. 직장이라면 역할, 연봉 협상, 성과 기록을 분명히 남기고, 프리랜서나 사업이라면 단가, 제공 범위, 마감, 수정 횟수를 먼저 정해야 ${report.currentDayun.name} 대운의 ${getDayunPressureText(report)} 흐름이 실제 돈으로 남습니다.`,
+        '피해야 할 방식은 무한 수정, 말로만 정한 동업, 지인 할인, 감정노동 많은 저가 상담, 성과 기준 없는 반복 업무입니다. 이런 일은 바쁘게 만들지만 통장에 남기지 못합니다.',
+        `${bestMonthText}에는 내 실력이 보이는 결과물 하나를 밖으로 꺼내고, ${watchMonthText}에는 퇴사·투자·동업 같은 되돌리기 어려운 결정을 미루세요. 오늘은 “내가 돈을 받을 수 있는 역할” 1개를 정하고 대가, 범위, 마감, 책임선을 한 화면에 적는 게 먼저입니다.`
+      ]
+    };
+  }
+
+  if (isCareerQuestion(question)) {
+    const fields = getSignatureCareerFields(report);
+    const incomeModel = getSignatureBestIncomeModel(report, fields);
+
+    return {
+      ...qa,
+      title: '먹고사는 방식은 직업명이 아니라 결과물로 정해야 합니다',
+      analysis:
+        `${basisText} 결론부터 말하면, ${report.customerName}님은 남이 정한 틀 안에서 오래 버티는 일보다 “기준을 세우고, 복잡한 문제를 정리해서, 결과물로 보여주는 일”이 맞습니다. ${report.dayMaster} 일간은 판을 보고 구조를 잡는 힘이 강하고, ${report.pillars.month} 월령과 ${dominantLabel} 흐름은 말·문서·분석·상담·운영으로 실력이 드러날 때 돈이 붙는 쪽입니다. 현재 ${report.currentDayun.name} 대운에서는 제안과 사람은 늘 수 있지만, 가격과 제공 범위가 흐리면 일만 많고 남는 돈이 적어집니다.`,
+      advice: [
+        `우선순위 업종은 ${fields.join(', ')}입니다. 직업명 하나보다 상담형, 분석형, 기획형, 콘텐츠형, 운영형 중 어디서 덜 지치고 오래 설명할 수 있는지 보세요.`,
+        incomeModel,
+        '피해야 할 일은 무한 수정, 감정노동이 많은 저가 서비스, 말로만 정한 동업, 급한 영업직, 성과 기준이 없는 반복 업무입니다.',
+        `${bestMonthText}에는 내 실력이 보이는 결과물 하나를 밖으로 꺼내고, ${watchMonthText}에는 퇴사·투자·동업 같은 큰 결정을 미루세요.`,
+        '오늘 할 일은 하나입니다. 내가 돈을 받을 수 있는 역할 1개를 정하고 대가, 범위, 마감 시간, 책임선을 한 화면에 적으세요.'
+      ]
+    };
+  }
+
+  if (isMoneyQuestion(question)) {
+    return {
+      ...qa,
+      title: '돈은 들어오는 운보다 남는 구조가 먼저입니다',
+      analysis:
+        `질문 "${question}"은 돈이 생기느냐보다 어디서 새느냐를 봐야 합니다. ${report.currentDayun.name} 대운에서는 사람, 제안, 결제, 이동이 같이 늘 수 있지만 기준이 없으면 수입보다 피로가 먼저 남습니다. ${dominantLabel} 흐름은 가격표, 정산일, 제공 범위가 분명할 때 돈으로 바뀝니다.`,
+      advice: [
+        '가까운 사람 부탁, 급한 할인, 말로만 정한 정산은 돈을 새게 만듭니다.',
+        '투자보다 먼저 현금 방어, 고정비, 반복 매출, 환불 기준을 정리하세요.',
+        `${helpfulText} 기운은 기록과 반복에서 살아납니다. 하루 지출을 감정 소비, 관계 지출, 일 지출로 나눠 적으세요.`,
+        cautionText
+      ]
+    };
+  }
+
+  if (isLoveQuestion(question)) {
+    return {
+      ...qa,
+      title: '감정보다 반복 행동을 봐야 합니다',
+      analysis:
+        `질문 "${question}"은 상대 마음 하나를 맞히는 문제가 아닙니다. ${report.customerName}님은 좋아해도 표현이 늦고, 마음이 식으면 속으로 먼저 정리하는 쪽으로 반응하기 쉽습니다. ${report.dayMaster} 일간과 ${dominantLabel} 흐름에서는 끌림보다 연락 온도, 약속 이행, 갈등 후 회복 방식이 관계의 진짜 답입니다.`,
+      advice: [
+        '상대의 말보다 약속 시간, 답장 간격, 돈 쓰는 태도, 다툰 뒤 돌아오는 말투를 보세요.',
+        '불안해서 긴 설명을 보내면 관계가 무거워집니다. “언제 볼 수 있어?”처럼 짧고 확인 가능한 질문이 낫습니다.',
+        `${watchMonthText}에는 관계 결론을 몰아붙이지 말고, 내 마음이 어디서 식었는지 먼저 적어보세요.`,
+        `${helpfulText} 기운을 살리면 감정을 행동으로 옮기는 속도가 좋아집니다. 표현은 늦추지 말고 작게라도 남기세요.`
+      ]
+    };
+  }
+
+  if (isCautionQuestion(question)) {
+    return {
+      ...qa,
+      title: '지금 조심할 건 사람보다 흐린 약속입니다',
+      analysis:
+        `질문 "${question}"의 핵심은 겁을 먹으라는 뜻이 아니라, 어디서 손실이 생기는지 먼저 보라는 뜻입니다. ${report.dayMaster} 일간과 ${report.currentDayun.name} 대운, ${dominantLabel} 흐름을 같이 보면 위험은 큰 사건보다 작은 애매함에서 시작됩니다. 답장 늦은 사람을 믿고 일정을 비우거나, 가격을 말하지 못해 일을 먼저 해주거나, 피곤한 밤에 관계·퇴사·결제를 한 번에 결정하는 장면이 제일 위험합니다.`,
+      advice: [
+        '돈이 걸린 일은 “얼마, 언제, 어디까지”가 메시지로 남아야 합니다. 말로만 끝난 약속은 좋은 인연이 아니라 손실 후보입니다.',
+        '관계에서는 말보다 반복 행동을 보세요. 약속 시간, 답장 속도, 정산 태도, 미안하다고 한 뒤 실제로 바뀌는지를 확인해야 합니다.',
+        `${watchMonthText}에는 감정 퇴사, 급한 결제, 말뿐인 동업, 갑작스러운 손절을 피하세요.`,
+        `${helpfulText} 기운은 생활 기준으로 써야 합니다. 잠, 식사, 가격표, 일정표가 무너지면 좋은 운도 체감되지 않습니다.`
+      ]
+    };
+  }
+
+  if (isOpportunityQuestion(question)) {
+    return {
+      ...qa,
+      title: '올해 잡을 기회는 말보다 결과물이 남는 자리입니다',
+      analysis:
+        `질문 "${question}"은 운이 언제 오느냐보다, 왔을 때 무엇을 들고 있어야 잡히느냐가 핵심입니다. ${report.dayMaster} 일간은 막연한 기대보다 기준을 세우고 결과물을 보여줄 때 강해지고, ${dominantLabel} 흐름은 말·문서·상담·기획처럼 눈에 보이는 형태로 꺼낼수록 사람과 돈을 붙입니다. 올해 기회는 갑자기 인생이 바뀌는 한 방보다, 이미 쌓아둔 결과물이 사람 눈에 들어오는 방식으로 열립니다.`,
+      advice: [
+        `${bestMonthText}에는 샘플, 포트폴리오, 가격표, 소개문처럼 남에게 바로 보여줄 수 있는 결과물을 공개하세요.`,
+        '기회로 남는 사람은 말이 큰 사람이 아니라 일정이 정확하고 돈 이야기를 피하지 않는 사람입니다.',
+        '잡아야 할 일은 반복 판매가 가능한 일입니다. 한 번 하고 끝나는 노동보다 진단, 리포트, 후속 관리처럼 다시 팔 수 있는 구조가 좋습니다.',
+        `${watchMonthText}에는 더 벌려고 벌리는 선택보다 이미 들어온 문의, 미뤄둔 정산, 흐린 약속을 정리하는 쪽이 유리합니다.`
+      ]
+    };
+  }
+
+  if (isCleanupQuestion(question)) {
+    return {
+      ...qa,
+      title: '먼저 정리할 건 돈 안 남는 책임과 애매한 관계입니다',
+      analysis:
+        `${basisText} 지금 질문의 답은 “무엇을 더 할까”가 아니라 “무엇을 끊어야 내 운이 남을까”입니다. ${report.dayMaster} 일간은 기준을 세워야 편해지는 사주인데, ${report.currentDayun.name} 대운은 ${withObjectParticle(getDayunPressureText(report))} 한꺼번에 키웁니다. 그래서 지금 가장 먼저 정리해야 할 흐름은 사람 자체가 아니라 사람을 통해 들어오는 흐린 부탁, 정산 없는 책임, 끝없이 늘어지는 일정입니다. ${sharpPattern}`,
+      advice: [
+        '첫째, 돈 안 남는 책임을 정리하세요. 도와달라는 말에 먼저 움직이고 나중에 가격을 말하는 습관이 가장 빨리 새는 구멍입니다.',
+        '둘째, 답장만 빠르고 실행이 느린 사람을 걸러야 합니다. 약속 시간, 정산일, 수정 요청 횟수에서 계속 흐리는 사람은 인연이 아니라 피로입니다.',
+        `셋째, 밤에 커지는 결정을 낮으로 미루세요. ${getDayunDecisionRiskText(report)}`,
+        `${bestMonthText}에는 공개와 제안을 열어도 됩니다. 대신 ${watchMonthText}에는 새 일을 벌리기보다 미수금, 미뤄둔 답장, 애매한 약속, 잠 부족부터 정리하세요.`,
+        `오늘 바로 할 일은 세 가지입니다. 무료로 해주던 일 1개 중단하기, 가격표 1장 만들기, 답장 늦은 관계 1개를 더 이상 기다리지 않기. 이것이 ${report.customerName}님에게 지금 가장 먼저 정리할 흐름입니다.`
+      ]
+    };
+  }
+
+  return {
+    ...qa,
+    title: '질문을 실제 사건으로 쪼개야 답이 보입니다',
+    analysis:
+      `${basisText} 질문 "${question}"은 한 문장으로 보이지만 실제로는 돈, 관계, 일정, 체력 조건이 같이 묶인 질문입니다. ${report.dayMaster} 일간과 ${report.currentDayun.name} 대운에서는 빠른 결론보다 실제 사건을 나눠 보는 쪽이 정확합니다. ${sharpPattern} 지금 답답한 이유는 의지가 약해서가 아니라, 여러 조건이 엉켜 있는데 마음만 먼저 결론을 내리려 하기 때문입니다.`,
+    advice: [
+      '오늘은 답을 하나로 정하지 말고 돈, 사람, 일정, 체력 네 칸으로 나눠 적으세요.',
+      `${bestMonthText}에는 작은 실행을 열고, ${watchMonthText}에는 되돌리기 어려운 결정을 피하세요.`,
+      `${helpfulText} 기운은 생활에서 보완해야 실제 판단이 안정됩니다.`,
+      cautionText
+    ]
+  };
+}
+
 function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
-  const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
   const dominantTenGod = report.tenGods[0];
   const secondTenGod = report.tenGods[1];
@@ -3519,7 +4053,6 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
   const cautiousText = report.cautiousElements.join(', ');
   const cautionGuidance = formatCautionElements(report);
   const cautionScenes = buildCautionSceneBank(report);
-  const strongestLabel = strongestElement?.label || report.helpfulElements[0];
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
   const secondLabel = secondTenGod?.label || '보조 십성';
@@ -3566,19 +4099,11 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     `종합하면 이 사주의 핵심은 금수의 냉정함을 결과물과 계산력으로 쓰되, 화의 온도와 목의 방향성을 잃지 않는 것입니다. ${withTopicParticle(`${helpfulText} 기운`)} 살리고, ${cautionGuidance} 좋은 운이 자기계발 문장이 아니라 실제 생활 장면으로 내려옵니다.`
   ];
 
-  const expertQuestionAnswers = report.questionAnswers.map((qa, index) => ({
-    ...qa,
-    title: index === 0 ? `첫 번째 질문 핵심 판정: ${qa.title}` : `두 번째 질문 핵심 판정: ${qa.title}`,
-    analysis: `${qa.analysis} 이 답변의 명리 근거는 ${report.dayMaster} 일간, ${report.pillars.month} 월령, ${report.currentDayun.name} 대운, 그리고 ${dominantLabel} 흐름이 함께 만드는 현실 반응입니다. 좋다/나쁘다보다 먼저 볼 것은 실제 사건의 흔적입니다. 상대나 시장의 반응, 반복되는 지출, 약속을 지키는 속도, 내 체력의 남는 정도까지 보면 이 질문의 답이 훨씬 선명해집니다.`,
-    advice: [
-      `이 질문은 결론부터 정하지 말고 7일 안에 확인 가능한 행동 하나로 검증하세요. 연락, 제안서, 가격표, 일정표처럼 눈에 보이는 형태가 좋습니다.`,
-      `상대나 상황의 말보다 반복 행동을 보세요. 약속 시간, 답변 속도, 돈을 쓰는 방식, 책임을 나누는 태도가 실제 운의 방향을 보여줍니다.`,
-      `${bestMonth ? `${bestMonth.year}.${String(bestMonth.month).padStart(2, '0')} 전후에는 실행을 열고` : '운이 강한 구간에는 실행을 열고'}, ${watchMonth ? `${watchMonth.year}.${String(watchMonth.month).padStart(2, '0')} 전후에는 무리한 결정을 피하세요.` : '운이 약한 구간에는 무리한 결정을 피하세요.'}`,
-      `마지막 판단 기준은 “좋아 보이는가”가 아니라 “내 일정, 돈, 마음, 체력을 망가뜨리지 않고 지속 가능한가”입니다.`
-    ]
-  }));
+  const expertQuestionAnswers = report.questionAnswers.map((qa, index) =>
+    buildSignatureQuestionAnswer(qa, index, report, dominantLabel, bestMonth, watchMonth)
+  );
 
-  const expertSections = report.sections.map((section) => {
+  const expertSections = report.sections.filter((section) => !['saju', 'logic'].includes(section.id)).map((section) => {
     if (section.id === 'love') {
       return {
         ...section,
@@ -3703,51 +4228,6 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
 
     return section;
   });
-
-  const myeongriBasisSection: ReportSection = {
-    id: 'myeongri-basis',
-    title: '명리 근거 해설',
-    subtitle: '오행 숫자만 보지 않고 월령, 조후, 십성, 대운을 함께 읽습니다.',
-    callout: {
-      title: '왜 이 사주는 이렇게 읽히는가',
-      body: `${climate.monthBasis} ${climate.elementReading}`
-    },
-    cards: [
-      {
-        title: '월령과 계절감',
-        body: climate.monthBasis,
-        tone: 'good'
-      },
-      {
-        title: '조후와 화의 역할',
-        body: climate.johu,
-        tone: 'good'
-      },
-      {
-        title: '목 기운의 실제 의미',
-        body: climate.wood
-      },
-      {
-        title: '무토 일간의 체감',
-        body: climate.dayMaster
-      },
-      {
-        title: `${dominantLabel} 해석`,
-        body: describeTenGodDepth(dominantLabel)
-      },
-      {
-        title: `${secondLabel} 해석`,
-        body: describeTenGodDepth(secondLabel)
-      }
-    ],
-    details: [
-      {
-        summary: '오행 비율을 그대로 믿으면 안 되는 이유',
-        content: `오행 표는 입구일 뿐입니다. 같은 25%라도 월령을 얻었는지, 지지에 뿌리가 있는지, 천간에 드러났는지, 대운·세운에서 다시 자극되는지에 따라 체감은 완전히 달라집니다.\n\n그래서 운월당 리포트는 오행 숫자를 보여주되, 결론은 월령·조후·십성·대운을 함께 놓고 냅니다.`,
-        open: true
-      }
-    ]
-  };
 
   const lifeGraphSection: ReportSection = {
     id: 'life-graph',
@@ -3915,43 +4395,6 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     ]
   };
 
-  const expertCheckSection: ReportSection = {
-    id: 'expert-check',
-    title: '전문가 검증 포인트',
-    subtitle: '결론을 받아들이기 전에 함께 확인해야 할 근거를 따로 정리했습니다.',
-    callout: {
-      title: '왜 이 결론이 나왔는가',
-      body: `이 리포트는 입력한 생년월일, 출생시간, 원국, 오행 분포, 십성 흐름, ${report.currentDayun.name} 대운, 연운과 월운을 함께 놓고 해석합니다. 단정적인 사건 예언보다 실제 선택에 도움이 되는 판단 기준을 우선합니다.`
-    },
-    cards: [
-      {
-        title: '명식 근거',
-        body: `${report.dayMaster} 일간과 ${report.strengthLabel} 흐름을 중심으로, 강한 ${strongestLabel} 기운과 보완이 필요한 ${weakestLabel} 기운의 균형을 봅니다.`,
-        tone: 'good'
-      },
-      {
-        title: '운의 근거',
-        body: `${report.currentDayun.name} 대운은 ${report.currentDayun.focus} 쪽을 밀어주지만, ${report.currentDayun.caution}는 미리 관리해야 할 변수입니다.`
-      },
-      {
-        title: '현실 검증',
-        body: '좋은 운도 일정, 가격, 관계 태도, 체력 관리가 무너지면 체감되지 않습니다. 그래서 모든 조언은 행동으로 확인 가능한 기준으로 번역했습니다.'
-      },
-      {
-        title: '단정 금지',
-        body: '배우자, 질병, 사고, 투자 성과처럼 삶을 크게 흔드는 사건은 결과를 단언하지 않습니다. 대신 위험 신호와 선택 기준을 알려드립니다.',
-        tone: 'warn'
-      }
-    ],
-    details: [
-      {
-        summary: '고객이 다시 봐야 할 체크리스트',
-        content: `1. 지금 가장 강한 선택지가 내 체력을 망가뜨리지 않는가\n\n2. 돈이 들어오는 일인지, 돈이 남는 일인지 구분했는가\n\n3. 관계에서 말보다 반복 행동을 확인했는가\n\n4. 좋은 달에는 열고 약한 달에는 정리하는 리듬을 지키고 있는가`,
-        open: true
-      }
-    ]
-  };
-
   const emotionalFlowSection = buildEmotionalFlowSection(report);
 
   const expertReport: SajuReportData = {
@@ -4003,14 +4446,12 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     questionAnswers: expertQuestionAnswers,
     sections: [
       lifeGraphSection,
-      myeongriBasisSection,
       signatureRelationSection,
       emotionalFlowSection,
       eventTimelineSection,
       yongsinSection,
       careerDetailSection,
       relationshipPatternSection,
-      expertCheckSection,
       ...expertSections
     ],
     actionPlan: {
@@ -4078,6 +4519,12 @@ export default function Report() {
   const yearlyMomentum = report.yearLuck.slice(0, 3);
   const monthlyHotMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
   const [isTocOpen, setIsTocOpen] = useState(false);
+  const [htmlDownloadMessage, setHtmlDownloadMessage] = useState('');
+  const [htmlDownloadUrl, setHtmlDownloadUrl] = useState('');
+  const [htmlDownloadFileName, setHtmlDownloadFileName] = useState('');
+  const [isReportVideoMuted, setIsReportVideoMuted] = useState(true);
+  const reportVideoRef = useRef<HTMLVideoElement>(null);
+  const htmlDownloadUrlRef = useRef('');
 
   useEffect(() => {
     if (shouldBlockPreview) {
@@ -4104,6 +4551,28 @@ export default function Report() {
     });
     clearPendingPayment();
   }, [formData, orderId, paymentMethod, report, shouldBlockPreview]);
+
+  useEffect(
+    () => () => {
+      if (htmlDownloadUrlRef.current) {
+        URL.revokeObjectURL(htmlDownloadUrlRef.current);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    const video = reportVideoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    video.defaultMuted = true;
+    video.muted = true;
+    video.volume = 0;
+    setIsReportVideoMuted(true);
+  }, [reportCharacterVideo]);
 
   if (shouldBlockPreview) {
     return (
@@ -4154,6 +4623,199 @@ export default function Report() {
     }
 
     await navigator.clipboard?.writeText(window.location.href);
+  };
+
+  const forceMuteReportVideo = () => {
+    const video = reportVideoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    video.defaultMuted = true;
+    video.muted = true;
+    video.volume = 0;
+    setIsReportVideoMuted(true);
+  };
+
+  const handleToggleReportVideoAudio = async () => {
+    const video = reportVideoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    const nextMuted = !video.muted ? true : false;
+
+    video.defaultMuted = nextMuted;
+    video.muted = nextMuted;
+    video.volume = nextMuted ? 0 : 0.48;
+    setIsReportVideoMuted(nextMuted);
+
+    if (!nextMuted) {
+      try {
+        await video.play();
+      } catch {
+        setHtmlDownloadMessage('브라우저가 소리 재생을 막았어요. 영상 버튼을 한 번 더 눌러주세요.');
+        window.setTimeout(() => setHtmlDownloadMessage(''), 2800);
+      }
+    }
+  };
+
+  const handleDownloadHtmlReport = async () => {
+    const reportPaper = document.querySelector<HTMLElement>('.premium-report-paper');
+
+    if (!reportPaper) {
+      setHtmlDownloadMessage('리포트 본문을 찾지 못했어요. 페이지를 새로고침한 뒤 다시 눌러주세요.');
+      window.setTimeout(() => setHtmlDownloadMessage(''), 3200);
+      return;
+    }
+
+    const clonedPaper = reportPaper.cloneNode(true) as HTMLElement;
+
+    clonedPaper.querySelectorAll('[data-export-remove="true"]').forEach((element) => {
+      element.remove();
+    });
+
+    const fileBaseName = createSafeReportFileName(`${report.customerName}-${report.title}-${report.serialNumber}`);
+    const exportedAt = new Date().toLocaleString('ko-KR', { hour12: false });
+    const pageClassName = isYearlyShowcase ? 'premium-report-page yearly-premium-page export-html-page' : 'premium-report-page export-html-page';
+    const shellClassName = isYearlyShowcase ? 'premium-report-shell yearly-report-shell export-html-shell' : 'premium-report-shell export-html-shell';
+    const html = `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtmlText(`${report.customerName} ${report.title} - 운월당`)}</title>
+  <style>
+${getCurrentPageCssText()}
+
+body {
+  margin: 0;
+}
+
+.export-html-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(138, 114, 88, 0.18);
+  background: rgba(255, 252, 246, 0.94);
+  color: #2a2520;
+  font-family: inherit;
+  backdrop-filter: blur(14px);
+}
+
+.export-html-topbar strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.export-html-topbar span {
+  color: #756b5e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media print {
+  .export-html-topbar {
+    display: none !important;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="export-html-topbar">
+    <strong>${escapeHtmlText(report.customerName)} ${escapeHtmlText(report.title)}</strong>
+    <span>리포트 번호 ${escapeHtmlText(report.serialNumber)} · 저장일 ${escapeHtmlText(exportedAt)}</span>
+  </div>
+  <main class="${pageClassName}">
+    <div class="${shellClassName}">
+      ${clonedPaper.outerHTML}
+    </div>
+  </main>
+  <script>
+    document.querySelectorAll('[data-export-target]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var targetId = button.getAttribute('data-export-target');
+        var target = targetId ? document.getElementById(targetId) : null;
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const downloadFileName = `${fileBaseName}.html`;
+
+    if (htmlDownloadUrlRef.current) {
+      URL.revokeObjectURL(htmlDownloadUrlRef.current);
+    }
+
+    const filePicker = (
+      window as unknown as {
+        showSaveFilePicker?: (options: unknown) => Promise<{
+          createWritable: () => Promise<{
+            write: (data: Blob) => Promise<void>;
+            close: () => Promise<void>;
+          }>;
+        }>;
+      }
+    ).showSaveFilePicker;
+
+    if (filePicker) {
+      try {
+        const fileHandle = await filePicker({
+          suggestedName: downloadFileName,
+          types: [
+            {
+              description: 'HTML 리포트',
+              accept: {
+                'text/html': ['.html']
+              }
+            }
+          ]
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+        setHtmlDownloadUrl('');
+        setHtmlDownloadFileName(downloadFileName);
+        setHtmlDownloadMessage(`HTML 파일을 저장했어요: ${downloadFileName}`);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          setHtmlDownloadMessage('저장이 취소됐어요. 다시 누르면 HTML 파일로 저장할 수 있습니다.');
+          window.setTimeout(() => setHtmlDownloadMessage(''), 3200);
+          return;
+        }
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    htmlDownloadUrlRef.current = url;
+    setHtmlDownloadUrl(url);
+    setHtmlDownloadFileName(downloadFileName);
+
+    link.href = url;
+    link.download = downloadFileName;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    window.setTimeout(() => link.remove(), 500);
+
+    setHtmlDownloadMessage('HTML 파일을 준비했어요. 다운로드가 안 보이면 아래 “다운로드 다시 시도” 또는 “HTML 바로 보기”를 눌러주세요.');
   };
 
   const issueMailHref = `mailto:250909bs@gmail.com?subject=${encodeURIComponent(
@@ -4276,8 +4938,33 @@ export default function Report() {
 
           {report.serviceId === 'general-signature' || report.serviceId === 'concern-reading' ? (
             <section className="premium-report-character" aria-label="운월당 사주 리포트 캐릭터">
-              <video className="premium-report-character-video" src={reportCharacterVideo} autoPlay muted loop playsInline preload="metadata" />
+              <video
+                ref={reportVideoRef}
+                className="premium-report-character-video"
+                src={reportCharacterVideo}
+                autoPlay
+                muted={isReportVideoMuted}
+                loop
+                playsInline
+                preload="metadata"
+                onLoadedMetadata={forceMuteReportVideo}
+                onClick={() => {
+                  if (!isReportVideoMuted) {
+                    forceMuteReportVideo();
+                  }
+                }}
+              />
               <div className="premium-report-character-glow" aria-hidden="true" />
+              <button
+                type="button"
+                className="premium-report-video-audio-button"
+                onClick={handleToggleReportVideoAudio}
+                aria-label={isReportVideoMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+                data-export-remove="true"
+              >
+                {isReportVideoMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                <span>{isReportVideoMuted ? '소리 켜기' : '소리 끄기'}</span>
+              </button>
             </section>
           ) : null}
 
@@ -4308,7 +4995,13 @@ export default function Report() {
             {isTocOpen ? (
               <div className="premium-toc">
                 {tocItems.map((item) => (
-                  <button key={item.id} type="button" className="premium-toc-item" onClick={() => scrollToSection(item.id)}>
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="premium-toc-item"
+                    data-export-target={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                  >
                     <span className="premium-toc-label">{item.label}</span>
                     <span className="premium-toc-number">{item.number}</span>
                   </button>
@@ -4405,6 +5098,7 @@ export default function Report() {
             </div>
 
             <SajuWonGukBoard report={report} />
+            <SajuWonGukReading report={report} />
 
             <div className="premium-grid2 premium-glance-chart-grid">
               <ElementDistributionBoard report={report} />
@@ -4511,10 +5205,41 @@ export default function Report() {
                 <strong>결과가 이상하거나 오타가 있나요?</strong>
                 <p>리포트 번호와 함께 보내주시면 검수 기준에 따라 개선할 수 있습니다.</p>
               </div>
-              <a href={issueMailHref} className="app-black-button">
-                오타·불일치 신고
-              </a>
+              <div className="premium-report-support-actions">
+                <a href={issueMailHref} className="app-black-button">
+                  오타·불일치 신고
+                </a>
+                <button type="button" className="premium-html-download-button" onClick={handleDownloadHtmlReport} data-export-remove="true">
+                  <Download size={16} />
+                  HTML 다운로드
+                </button>
+                {htmlDownloadUrl ? (
+                  <>
+                    <a
+                      href={htmlDownloadUrl}
+                      download={htmlDownloadFileName || undefined}
+                      rel="noopener"
+                      className="premium-html-open-link"
+                      aria-label={`${htmlDownloadFileName} 다운로드 다시 시도`}
+                      data-export-remove="true"
+                    >
+                      다운로드 다시 시도
+                    </a>
+                    <a
+                      href={htmlDownloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="premium-html-open-link"
+                      aria-label={`${htmlDownloadFileName} HTML 바로 보기`}
+                      data-export-remove="true"
+                    >
+                      HTML 바로 보기
+                    </a>
+                  </>
+                ) : null}
+              </div>
             </div>
+            {htmlDownloadMessage ? <p className="premium-html-download-message">{htmlDownloadMessage}</p> : null}
           </section>
 
           <footer className="premium-report-footer">

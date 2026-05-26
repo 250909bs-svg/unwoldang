@@ -43,7 +43,8 @@ export default function PaymentCallback() {
     const pendingPayment = readPendingPayment();
     const paymentFlag = params.get('payment');
     const isMock = params.get('mock') === '1';
-    const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
+    const paymentMode = import.meta.env.VITE_PAYMENT_MODE ?? 'demo';
+    const allowMockPayment = paymentMode !== 'live';
     const paymentId = getFirstParam(params, ['paymentId', 'payment_id', 'orderId']);
     const txId = getFirstParam(params, ['txId', 'tx_id', 'transactionId']);
     const errorCode = params.get('code') || params.get('errorCode');
@@ -62,9 +63,9 @@ export default function PaymentCallback() {
     }
 
     if (isMock) {
-      if (isLiveHost) {
+      if (!allowMockPayment) {
         setView('error');
-        setMessage('운영 도메인에서는 데모 결제 결과를 사용할 수 없습니다. 실제 KG이니시스 결제로 다시 진행해 주세요.');
+        setMessage('실결제 모드에서는 데모 결제 결과를 사용할 수 없습니다. 실제 결제로 다시 진행해 주세요.');
         return;
       }
 
