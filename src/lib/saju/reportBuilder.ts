@@ -720,7 +720,7 @@ function buildYearLuck(
       headline: getYearLuckHeadline(item, score),
       summary: getYearLuckSummary(item, stem, branch, stemElement, branchElement, helpful),
       focus: getYearLuckFocus(item, helpful),
-      warning: `${cautionGuidance} 큰 결정은 하루 안에 끝내지 말고 내 돈, 일정, 사람, 체력 중 무엇을 쓰는 선택인지 먼저 확인하세요.`
+      warning: `${cautionGuidance} 큰 결정은 하루 안에 끝내지 말고 돈, 일정, 사람, 체력 중 어느 칸이 먼저 무너지는지 보세요.`
     };
   });
 }

@@ -471,12 +471,42 @@ function getLuckPhase(score: number) {
   return '회복기';
 }
 
+function getYearLuckPhase(item: SajuReportData['yearLuck'][number]) {
+  if (item.ganzhi === '병오') return '공개기';
+  if (item.ganzhi === '정미') return '현실화기';
+  if (item.ganzhi === '무신') return '검증기';
+  if (item.ganzhi === '기유') return '정산기';
+  if (item.ganzhi === '경술') return '고정기';
+  return getLuckPhase(item.score);
+}
+
 function getLuckAction(score: number) {
   if (score >= 82) return '준비한 결과물을 밖으로 꺼내고 사람의 반응을 확인할 때';
   if (score >= 70) return '제안, 협업, 이동, 홍보를 작게라도 열어볼 때';
   if (score >= 58) return '두 선택지를 비교하고 방향을 다듬을 때';
   if (score >= 45) return '돈, 일정, 관계 조건을 다시 맞출 때';
   return '무리한 결정보다 체력과 손실을 먼저 막을 때';
+}
+
+function getYearLuckAction(item: SajuReportData['yearLuck'][number]) {
+  if (item.ganzhi === '병오') return '준비한 결과물을 밖으로 꺼내고 사람의 반응을 확인할 때';
+  if (item.ganzhi === '정미') return '벌린 일을 고정하고 책임·고정비·생활 체력을 다시 맞출 때';
+  if (item.ganzhi === '무신') return '감이 아니라 숫자, 결과물, 정산 구조로 성과를 검증할 때';
+  if (item.ganzhi === '기유') return '평판, 후기, 반복 고객, 정산 기준을 세밀하게 다듬을 때';
+  if (item.ganzhi === '경술') return '역할과 책임을 고정하고 오래 갈 구조만 남길 때';
+  return getLuckAction(item.score);
+}
+
+function getYearEventTitle(item: SajuReportData['yearLuck'][number], index: number) {
+  if (item.ganzhi === '병오') return '성과 공개와 반응 확인';
+  if (item.ganzhi === '정미') return '정리, 고정, 현실화';
+  if (item.ganzhi === '무신') return '결과물 검증과 수익 구조 점검';
+  if (item.ganzhi === '기유') return '평판, 정산, 관계 선별';
+  if (item.ganzhi === '경술') return '책임 고정과 기반 재정비';
+
+  if (item.score >= 80) return '성과 공개와 관계 확장 가능성';
+  if (item.score < 55) return '정리, 거리두기, 재정비 가능성';
+  return index <= 1 ? '방향 조정과 선택지 비교' : '직업 방식과 돈의 흐름 재설계';
 }
 
 const BEST_MONTH_REASON_BY_MONTH: Record<number, string> = {
@@ -4238,8 +4268,8 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       body: `${report.customerName}님의 가까운 흐름은 ${firstHighYear?.year || '공개기'} 전후에 실행감이 살아나고, ${firstLowYear?.year || '정비기'} 전후에는 속도보다 정리와 회복이 중요해지는 모양입니다. 이 그래프는 사건을 단정하기보다 어느 해에 관계, 일, 돈의 압력이 먼저 켜지는지 보여줍니다.`
     },
     cards: lifeGraphYears.map((item) => ({
-      title: `${item.year}년 · ${getLuckPhase(item.score)}`,
-      body: `${item.headline}. ${item.ganzhi} 세운이 ${report.currentDayun.name} 대운과 만나 ${item.focus} 흐름을 자극합니다. 이 구간은 ${getLuckAction(item.score)}이며, ${item.warning}`,
+      title: `${item.year}년 · ${getYearLuckPhase(item)}`,
+      body: `${item.headline}. ${item.ganzhi} 세운이 ${report.currentDayun.name} 대운과 만납니다. ${asSentence(item.focus)} 이 구간은 ${getYearLuckAction(item)}입니다. ${asSentence(item.warning)}`,
       tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
     })),
     details: [
@@ -4256,18 +4286,11 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     title: '사건 타임라인',
     subtitle: '언제 무엇이 왜 움직일 수 있는지 시기별로 압축했습니다.',
     cards: lifeGraphYears.map((item, index) => {
-      const eventTitle =
-        item.score >= 80
-          ? '성과 공개와 관계 확장 가능성'
-          : item.score < 55
-            ? '정리, 거리두기, 재정비 가능성'
-            : index <= 1
-              ? '방향 조정과 선택지 비교'
-              : '직업 방식과 돈의 흐름 재설계';
+      const eventTitle = getYearEventTitle(item, index);
 
       return {
         title: `${item.year}년 · ${eventTitle}`,
-        body: `${item.ganzhi} 세운은 ${item.summary} 그래서 이 시기에는 ${item.focus}가 실제 사건의 중심이 되기 쉽습니다. 반대로 ${item.warning}를 무시하면 사람, 돈, 일정 중 하나에서 피로가 먼저 올라올 수 있습니다.`,
+        body: `${asSentence(item.summary)} 실제 사건으로는 ${withSubjectParticle(eventTitle)} 중심입니다. ${asSentence(item.focus)} ${asSentence(item.warning)}`,
         tone: item.score >= 80 ? 'good' : item.score < 55 ? 'warn' : undefined
       };
     }),
@@ -4275,9 +4298,9 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
       headers: ['시기', '발생 가능 장면', '왜 그런가', '대응'],
       rows: lifeGraphYears.map((item) => [
         `${item.year}년`,
-        getLuckPhase(item.score),
+        getYearLuckPhase(item),
         `${item.ganzhi} 흐름과 ${report.currentDayun.name} 대운의 결합`,
-        getLuckAction(item.score)
+        getYearLuckAction(item)
       ])
     }
   };
