@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { readPendingPayment, savePendingPayment, type PendingPayment } from '../lib/auth';
+import { getPortOneConfirmEndpoint, shouldUseDemoPayment } from '../lib/runtimeConfig';
 
 type CallbackView = 'loading' | 'fail' | 'error';
 
@@ -43,8 +44,7 @@ export default function PaymentCallback() {
     const pendingPayment = readPendingPayment();
     const paymentFlag = params.get('payment');
     const isMock = params.get('mock') === '1';
-    const paymentMode = import.meta.env.VITE_PAYMENT_MODE ?? 'demo';
-    const allowMockPayment = paymentMode !== 'live';
+    const allowMockPayment = shouldUseDemoPayment();
     const paymentId = getFirstParam(params, ['paymentId', 'payment_id', 'orderId']);
     const txId = getFirstParam(params, ['txId', 'tx_id', 'transactionId']);
     const errorCode = params.get('code') || params.get('errorCode');
@@ -90,7 +90,7 @@ export default function PaymentCallback() {
       return;
     }
 
-    const confirmEndpoint = import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim();
+    const confirmEndpoint = getPortOneConfirmEndpoint();
 
     if (!confirmEndpoint) {
       setView('error');

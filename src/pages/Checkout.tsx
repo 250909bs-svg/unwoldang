@@ -16,6 +16,7 @@ import {
   savePendingPayment
 } from '../lib/auth';
 import { requestPortOnePayment } from '../lib/portonePayments';
+import { getPortOneConfirmEndpoint, hasPortOneRuntimeConfig, shouldUseDemoPayment } from '../lib/runtimeConfig';
 
 type CheckoutState = {
   product?: string;
@@ -59,14 +60,13 @@ export default function Checkout() {
     () => buildAnalysisRequestPayload(service?.id || 'general-signature', formData || {}),
     [formData, service?.id]
   );
-  const paymentMode = import.meta.env.VITE_PAYMENT_MODE ?? 'demo';
   const portOneStoreId = import.meta.env.VITE_PORTONE_STORE_ID?.trim();
   const portOneChannelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY?.trim();
-  const confirmEndpoint = import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim();
+  const confirmEndpoint = getPortOneConfirmEndpoint();
   const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || '01000000000';
   const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
-  const isDemoPayment = paymentMode === 'demo';
-  const canUsePortOneRuntime = Boolean(portOneStoreId && portOneChannelKey && confirmEndpoint && !isDemoPayment);
+  const isDemoPayment = shouldUseDemoPayment();
+  const canUsePortOneRuntime = Boolean(hasPortOneRuntimeConfig() && !isDemoPayment);
   const hasRequiredBirthInfo = Boolean(formData?.name && formData?.birthDate && (formData?.birthTime || formData?.isUnknownTime));
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());

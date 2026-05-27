@@ -3,10 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import { consumePendingAuthState, decodeAuthState, getKakaoRedirectUri, sanitizeAuthReturnTo } from '../lib/auth';
+import { getKakaoTokenExchangeEndpoint } from '../lib/runtimeConfig';
 
 type CallbackStatus = 'loading' | 'error';
-
-const DEFAULT_KAKAO_EXCHANGE_ENDPOINT = 'https://unwoldang-report-api-pt76url4oa-du.a.run.app/api/auth/kakao/exchange';
 
 type KakaoExchangeResponse = {
   user?: {
@@ -85,7 +84,7 @@ export default function KakaoCallback() {
         return;
       }
 
-      const exchangeEndpoint = import.meta.env.VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT || DEFAULT_KAKAO_EXCHANGE_ENDPOINT;
+      const exchangeEndpoint = getKakaoTokenExchangeEndpoint();
 
       if (!exchangeEndpoint) {
         setStatus('error');

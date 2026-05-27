@@ -1,7 +1,10 @@
 import type { IntakeFormData, ServiceId } from '../api/mockData';
 import { buildAnalysisRequestPayload } from './analysisPayload';
+import { getAiReportEndpoint } from './runtimeConfig';
 import { PREMIUM_SAJU_PROMPT_VERSION, PREMIUM_SAJU_REPORT_MODE } from './saju/premiumReportPrompt';
 import type { SajuReportData } from './saju/report';
+
+export { getAiReportEndpoint } from './runtimeConfig';
 
 type AiReportResponse = {
   report?: SajuReportData;
@@ -16,10 +19,6 @@ function isReportShape(value: unknown): value is SajuReportData {
 
   const candidate = value as Partial<SajuReportData>;
   return Boolean(candidate.title && candidate.summary && Array.isArray(candidate.sections));
-}
-
-export function getAiReportEndpoint() {
-  return import.meta.env.VITE_REPORT_ENDPOINT?.trim() || import.meta.env.VITE_OPENAI_REPORT_ENDPOINT?.trim() || '';
 }
 
 function getAiReportTimeoutMs() {

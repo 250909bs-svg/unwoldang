@@ -4,6 +4,7 @@ import { findServiceById, type IntakeFormData, type ServiceId } from '../api/moc
 import MobileTopBar from '../components/MobileTopBar';
 import { readPendingPayment } from '../lib/auth';
 import { getAiReportEndpoint, requestAiReport } from '../lib/aiReport';
+import { getPaymentMode } from '../lib/runtimeConfig';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
 
@@ -59,7 +60,8 @@ export default function Loading() {
   const [analysisFinished, setAnalysisFinished] = useState(false);
   const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
   const hasAiEndpoint = Boolean(getAiReportEndpoint());
-  const paymentMode = import.meta.env.VITE_PAYMENT_MODE ?? 'demo';
+  const paymentMode = getPaymentMode();
+  const canRequestAiReport = hasAiEndpoint && Boolean(reportAccessToken);
   const isMissingLiveReportAccess =
     paymentMode === 'live' && hasAiEndpoint && !locationState?.reportData && !reportAccessToken;
   const previewReport = useMemo(() => {
@@ -81,7 +83,7 @@ export default function Loading() {
 
   const messages = useMemo(
     () =>
-      hasAiEndpoint
+      canRequestAiReport
         ? [
             `${service.advisor} 스타일로 프리미엄 리포트를 구성하고 있습니다.`,
             '입력한 사주 정보와 질문 2개를 바탕으로 AI 분석 결과를 생성하고 있습니다.',
@@ -94,7 +96,7 @@ export default function Loading() {
             '질문 2개와 사주 입력값을 묶어서 결과 구조를 정리하고 있습니다.',
             '분석이 거의 완료되었습니다. 결과 화면으로 이동합니다.'
           ],
-    [hasAiEndpoint, service.advisor]
+    [canRequestAiReport, service.advisor]
   );
 
   useEffect(() => {
@@ -108,6 +110,11 @@ export default function Loading() {
 
       if (isMissingLiveReportAccess) {
         setAnalysisNotice('결제 검증 정보가 확인되지 않아 리포트를 열 수 없습니다. 결제 화면에서 다시 진행해 주세요.');
+        setAnalysisFinished(true);
+        return;
+      }
+
+      if (!canRequestAiReport) {
         setAnalysisFinished(true);
         return;
       }
@@ -142,7 +149,7 @@ export default function Loading() {
     return () => {
       cancelled = true;
     };
-  }, [formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, reportAccessToken]);
+  }, [canRequestAiReport, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, reportAccessToken]);
 
   useEffect(() => {
     if (analysisFinished) {
