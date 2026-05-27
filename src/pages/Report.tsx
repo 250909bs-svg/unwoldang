@@ -3376,6 +3376,334 @@ function buildLoveOriginMatchSection(report: SajuReportData): ReportSection {
   };
 }
 
+function hasTopTenGod(report: SajuReportData, labels: string[]) {
+  return report.tenGods.slice(0, 4).some((item) => labels.some((label) => item.label.includes(label)));
+}
+
+function getLoveAffectionProfile(report: SajuReportData) {
+  const profiles: Record<string, { speed: string; expression: string; skinship: string; caution: string; capture: string }> = {
+    목: {
+      speed: '마음이 열리면 천천히 가까워지지만, 관계가 성장한다는 느낌이 없으면 금방 힘이 빠집니다.',
+      expression: '애정 표현은 말보다 챙김과 조언으로 나옵니다. 상대를 더 낫게 만들고 싶어 하는 방식입니다.',
+      skinship: '스킨십은 분위기보다 신뢰가 먼저입니다. 갑자기 밀고 들어오는 사람보다 자연스럽게 거리를 좁히는 사람이 맞습니다.',
+      caution: '상대가 내 조언을 간섭으로 받아들이면 서운함이 쌓입니다. 고치려 하기 전에 먼저 물어봐야 합니다.',
+      capture: '이 사주는 몸보다 마음의 방향이 맞을 때 애정이 오래 갑니다.'
+    },
+    화: {
+      speed: '처음 불이 붙으면 빠르게 가까워질 수 있습니다. 다만 뜨거운 시작일수록 현실 확인을 늦추면 후폭풍이 큽니다.',
+      expression: '애정 표현은 눈빛, 말투, 리액션에서 티가 납니다. 좋아하면 분위기를 만들고 상대를 웃게 하려 합니다.',
+      skinship: '스킨십은 감정 온도와 함께 올라갑니다. 다만 설렘이 강할수록 경계와 속도를 같이 확인해야 오래 갑니다.',
+      caution: '상대가 표현을 줄이면 바로 식었다고 느낄 수 있습니다. 감정 확인을 몰아붙이면 상대가 숨을 곳을 찾습니다.',
+      capture: '뜨거운 사람보다 뜨거운 마음을 오래 지키는 사람이 맞습니다.'
+    },
+    토: {
+      speed: '연애 시작은 느린 편입니다. 대신 마음이 열리면 쉽게 흔들리지 않고, 생활 안으로 사람을 들입니다.',
+      expression: '애정 표현은 밥, 시간, 이동, 챙김으로 나옵니다. 말보다 “내가 해줄게” 쪽에 가깝습니다.',
+      skinship: '스킨십은 안정감이 생긴 뒤 깊어집니다. 몸의 거리보다 마음의 안전이 먼저 풀려야 합니다.',
+      caution: '참다가 한 번에 닫는 흐름이 있습니다. 괜찮은 척 오래 하면 상대는 문제를 모른 채 지나갑니다.',
+      capture: '이 사주는 편안해진 뒤에야 진짜 애정이 깊어집니다.'
+    },
+    금: {
+      speed: '확신이 생기기 전에는 쉽게 다가가지 않습니다. 마음이 있어도 먼저 선을 확인하고 상대의 태도를 지켜봅니다.',
+      expression: '애정 표현은 깔끔하고 담백합니다. 과한 말보다 약속을 지키고 불편한 일을 줄여주는 식입니다.',
+      skinship: '스킨십은 선이 중요합니다. 예의와 동의가 분명한 사람에게 마음이 놓이고, 무례하게 빠른 사람에게는 바로 식습니다.',
+      caution: '표현이 적어 차갑게 보일 수 있습니다. 마음이 있다면 짧은 말이라도 남겨야 상대가 버팁니다.',
+      capture: '선을 지키는 애정이 이 사주의 마음을 가장 오래 붙잡습니다.'
+    },
+    수: {
+      speed: '천천히 스며드는 연애입니다. 처음부터 뜨겁기보다 대화가 깊어지며 마음이 열립니다.',
+      expression: '애정 표현은 긴 대화, 기억해주는 말, 조용한 배려로 나옵니다. 겉으로는 담담해도 속은 오래 움직입니다.',
+      skinship: '스킨십은 정서적 안전감과 같이 움직입니다. 마음이 불안하면 몸도 닫히고, 믿음이 생기면 깊게 가까워집니다.',
+      caution: '생각이 많아지면 혼자 해석하고 물러납니다. 확인하지 않은 상상이 관계를 늦게 갉아먹습니다.',
+      capture: '이 사주는 몸의 거리보다 마음을 꺼내도 안전한지가 먼저입니다.'
+    }
+  };
+
+  return profiles[report.dayMasterElement] || profiles.토;
+}
+
+function getLoveShadowProfile(report: SajuReportData) {
+  if (hasTopTenGod(report, ['비견', '겁재'])) {
+    return {
+      jealousy: '질투가 나도 바로 티 내기보다 표정과 말수가 먼저 줄어듭니다. 상대가 눈치 못 채면 “말해봤자 뭐해”로 넘어가며 마음속 점수가 깎입니다.',
+      obsession: '집착은 매달리는 방식보다 내 기준을 확인하려는 방식으로 나옵니다. 상대의 말과 행동이 맞는지 조용히 체크합니다.',
+      avoidance: '자존심이 건드려지면 먼저 굽히기 어렵습니다. 싸우는 순간 끝내진 않아도 마음속에서는 관계 종료 준비가 시작됩니다.',
+      test: '상대를 시험하려고 일부러 차갑게 구는 순간이 생길 수 있습니다. 이 테스트는 관계를 확인하는 게 아니라 상대를 지치게 만듭니다.'
+    };
+  }
+
+  if (hasTopTenGod(report, ['식신', '상관'])) {
+    return {
+      jealousy: '질투가 올라오면 말투가 먼저 날카로워집니다. 농담처럼 던진 말에 진심이 섞이고, 상대는 갑자기 분위기가 바뀐다고 느낍니다.',
+      obsession: '상대 반응을 계속 확인하고 싶어집니다. 답장이 짧으면 지난 대화까지 다시 읽으며 의미를 찾을 수 있습니다.',
+      avoidance: '상처받은 뒤에는 설명을 길게 하다가 어느 순간 말 자체를 멈춥니다. 말로 풀던 사람이 침묵하면 이미 많이 지친 상태입니다.',
+      test: '상대가 나를 얼마나 신경 쓰는지 보려고 일부러 답을 늦추거나 감정을 숨기는 장면을 조심해야 합니다.'
+    };
+  }
+
+  if (hasTopTenGod(report, ['편재', '정재'])) {
+    return {
+      jealousy: '질투는 비교에서 시작됩니다. 상대가 누구에게 시간과 돈을 쓰는지 보면서 내 위치를 계산하게 됩니다.',
+      obsession: '집착은 소유보다 확인 욕구에 가깝습니다. “나를 실제 우선순위에 두는가”를 소비, 일정, 이동에서 보려 합니다.',
+      avoidance: '현실성이 없다고 느끼면 마음을 줄입니다. 좋아해도 미래 그림이 안 보이면 먼저 에너지를 빼기 시작합니다.',
+      test: '상대가 나를 위해 어디까지 움직이는지 보려고 작은 부탁을 던질 수 있습니다. 반복되면 관계가 거래처럼 느껴집니다.'
+    };
+  }
+
+  if (hasTopTenGod(report, ['편관', '정관'])) {
+    return {
+      jealousy: '질투가 나도 품위를 지키려 합니다. 겉으론 괜찮은 척하지만 속으로는 상대의 선 넘는 행동을 정확히 기록합니다.',
+      obsession: '집착은 통제 욕구로 번질 수 있습니다. 관계가 불안하면 규칙, 확인, 약속을 더 강하게 요구하게 됩니다.',
+      avoidance: '상대가 책임을 피하면 마음이 급격히 식습니다. 사과보다 이후 행동이 없으면 다시 믿기 어렵습니다.',
+      test: '상대를 바로 몰아붙이기보다 책임지는 태도를 보는 시험이 생깁니다. 다만 말하지 않은 기준은 상대가 맞힐 수 없습니다.'
+    };
+  }
+
+  return {
+    jealousy: '질투가 나면 먼저 혼자 조용해집니다. 티를 내지 않으려 하지만, 속으로는 이미 여러 장면을 연결해 해석합니다.',
+    obsession: '집착은 생각의 반복으로 나타납니다. 상대 말 한 줄을 오래 붙잡고, 밤에 같은 장면을 계속 되감습니다.',
+    avoidance: '감정이 과해지면 설명보다 잠수를 택할 수 있습니다. 사라지고 싶은 게 아니라 더 말하면 무너질 것 같기 때문입니다.',
+    test: '상대가 나를 알아서 이해해주길 바라며 말하지 않는 시험을 할 수 있습니다. 하지만 침묵은 사랑을 확인해주지 못합니다.'
+  };
+}
+
+function buildLoveAffectionSection(report: SajuReportData): ReportSection {
+  const profile = getLoveAffectionProfile(report);
+
+  return {
+    id: 'love-affection-skinship',
+    title: '스킨십·애정표현 스타일',
+    subtitle: '노골적인 예측이 아니라 가까워지는 속도, 표현 방식, 몸과 마음의 안전감을 봅니다.',
+    callout: {
+      title: '애정표현 핵심',
+      body: profile.capture
+    },
+    paragraphs: [
+      `${report.customerName}님의 연애는 스킨십 자체보다 “내가 이 사람 앞에서 긴장을 풀 수 있는가”가 먼저입니다. 마음이 안전하지 않으면 몸의 거리도 쉽게 가까워지지 않습니다.`,
+      profile.speed,
+      profile.skinship
+    ],
+    cards: [
+      {
+        title: '먼저 다가가는 방식',
+        body: profile.expression,
+        tone: 'good'
+      },
+      {
+        title: '상대가 느끼는 나',
+        body: '겉으로는 담담해 보여도 실제로는 상대의 말투, 시선, 손길의 속도를 세밀하게 봅니다. 그래서 무례하게 빠른 사람보다 기다릴 줄 아는 사람에게 마음이 열립니다.'
+      },
+      {
+        title: '성적 긴장감이 생기는 순간',
+        body: '외모만 강한 사람보다, 내 말을 기억하고 다음 행동으로 보여주는 사람에게 끌림이 깊어집니다. 신뢰가 쌓이면 애정의 온도도 같이 올라갑니다.'
+      },
+      {
+        title: '주의점',
+        body: profile.caution,
+        tone: 'warn'
+      }
+    ]
+  };
+}
+
+function buildLoveShadowSection(report: SajuReportData): ReportSection {
+  const profile = getLoveShadowProfile(report);
+
+  return {
+    id: 'love-jealousy-avoidance',
+    title: '질투·집착·회피 성향',
+    subtitle: '좋은 말보다 실제 연애에서 문제를 만드는 그림자를 먼저 봅니다.',
+    callout: {
+      title: '팩폭 한 줄',
+      body: '이 사주는 상처받으면 바로 싸우기보다 마음속에서 관계 종료 준비를 먼저 합니다.'
+    },
+    cards: [
+      {
+        title: '질투가 올라올 때',
+        body: profile.jealousy,
+        tone: 'warn'
+      },
+      {
+        title: '집착이 생기는 방식',
+        body: profile.obsession
+      },
+      {
+        title: '회피와 잠수',
+        body: profile.avoidance,
+        tone: 'warn'
+      },
+      {
+        title: '상대 테스트',
+        body: profile.test,
+        tone: 'warn'
+      }
+    ],
+    details: [
+      {
+        summary: '망하는 장면을 실제로 풀면',
+        content: `처음엔 이해합니다.\n\n두 번째도 넘깁니다.\n\n그런데 같은 일이 반복되면 말투가 짧아지고, 확인만 하고, 먼저 대화를 이어가려 하지 않습니다.\n\n상대는 “갑자기 왜 그래?”라고 느끼지만, ${report.customerName}님 마음속에서는 이미 몇 번의 경고가 지나간 뒤입니다.`,
+        open: true
+      },
+      {
+        summary: '바로 고쳐야 할 습관',
+        content: '서운한 일을 끝까지 참았다가 한 번에 닫지 마세요. 작을 때 “이건 나는 불편해”라고 말해야 관계가 살아납니다. 침묵은 품위가 아니라 이별 예고가 될 수 있습니다.'
+      }
+    ]
+  };
+}
+
+function buildLoveBreakupPatternSection(report: SajuReportData): ReportSection {
+  const watchMonths = [...report.monthLuck].sort((left, right) => left.score - right.score).slice(0, 3);
+  const watchText = watchMonths.map((item) => `${item.year}.${String(item.month).padStart(2, '0')}`).join(', ');
+
+  return {
+    id: 'love-breakup-pattern',
+    title: '실제 이별 패턴',
+    subtitle: '언제 헤어지는지가 아니라 어떤 장면에서 마음이 닫히는지를 봅니다.',
+    callout: {
+      title: '이별 신호',
+      body: '말수가 줄고, 확인만 하고, 다음 약속을 먼저 잡지 않으면 이미 마음이 빠지고 있는 겁니다.'
+    },
+    paragraphs: [
+      `${report.customerName}님은 싸우는 순간 바로 끝내는 타입이라기보다, 실망이 누적된 뒤 조용히 출구를 찾는 흐름이 강합니다.`,
+      `헤어짐은 큰 사건 하나보다 작은 무시, 약속 변경, 답 없는 대화, 돈과 시간의 불균형이 반복될 때 시작됩니다.`,
+      watchText ? `${watchText} 전후에는 감정 결론을 서두르지 말고, 하루 뒤 다시 판단하는 편이 좋습니다.` : '약한 월운에는 감정 결론을 서두르지 않는 편이 좋습니다.'
+    ],
+    details: [
+      {
+        summary: '마음이 식는 5단계',
+        content: `1. 처음엔 상대의 사정을 이해합니다.\n\n2. 같은 문제가 반복되면 표정이 굳습니다.\n\n3. 연락을 봐도 바로 답하고 싶지 않습니다.\n\n4. 만남을 잡아도 기대보다 피로가 먼저 올라옵니다.\n\n5. 마지막에는 싸움보다 거리로 정리합니다.`,
+        open: true
+      },
+      {
+        summary: '붙잡아도 회복이 어려운 경우',
+        content: '상대가 사과는 하는데 같은 행동을 반복할 때, 내 기준을 예민함으로 몰 때, 중요한 이야기를 계속 미룰 때입니다. 이 경우는 그리움보다 피로가 더 빨리 돌아옵니다.'
+      },
+      {
+        summary: '살릴 수 있는 경우',
+        content: '상대가 변명보다 행동을 바꾸고, 다음 만남에서 같은 실수를 줄이며, 내 불편함을 가볍게 넘기지 않을 때입니다. 말보다 다음 행동이 회복의 증거입니다.'
+      }
+    ]
+  };
+}
+
+function getDohwaLoveText(report: SajuReportData) {
+  const branches = getReportBranchPieces(report).map((piece) => piece.branch);
+
+  if (branches.includes('유')) {
+    return {
+      title: '酉 도화 · 정돈된 매력',
+      body: '처음엔 차가워 보일 수 있지만, 가까워질수록 깔끔함과 생활감에서 매력이 살아납니다. 과한 애교보다 정돈된 말투, 단정한 스타일, 약속을 지키는 태도가 이성을 끌어옵니다.',
+      caution: '문제는 끌림보다 유지입니다. 상대가 흐리게 굴면 정이 빨리 떨어지고, 한번 식으면 다시 데우는 데 시간이 걸립니다.'
+    };
+  }
+
+  if (branches.includes('자')) {
+    return {
+      title: '子 도화 · 조용한 흡인력',
+      body: '말을 많이 하지 않아도 묘하게 시선이 가는 분위기가 있습니다. 밤의 대화, 메시지, 감정 공유에서 매력이 깊어집니다.',
+      caution: '상대 말을 오래 해석하다 혼자 결론 내리면 관계가 늦게 닫힙니다. 확인하지 않은 상상은 줄여야 합니다.'
+    };
+  }
+
+  if (branches.includes('오')) {
+    return {
+      title: '午 도화 · 밝은 존재감',
+      body: '표정, 리액션, 분위기에서 매력이 드러납니다. 함께 있을 때 공간이 밝아지는 느낌이 이성을 끌어옵니다.',
+      caution: '초반 설렘이 강한 만큼 현실 확인이 늦으면 실망도 큽니다. 뜨거운 말보다 반복되는 태도를 보세요.'
+    };
+  }
+
+  if (branches.includes('묘')) {
+    return {
+      title: '卯 도화 · 부드러운 호감',
+      body: '부드러운 말투, 배려, 자연스러운 친화력에서 인연이 붙습니다. 사람을 편안하게 만드는 분위기가 강점입니다.',
+      caution: '거절을 늦게 하면 애매한 관계가 길어집니다. 다정함과 가능성은 구분해야 합니다.'
+    };
+  }
+
+  return {
+    title: '생활 도화 · 오래 볼수록 살아나는 매력',
+    body: '첫눈에 압도하기보다 반복해서 볼수록 신뢰가 쌓이는 타입입니다. 말투, 시간 감각, 일하는 태도, 생활 정돈감에서 호감이 커집니다.',
+    caution: '초반에 너무 조용하면 상대가 마음을 못 읽을 수 있습니다. 짧은 표현 하나가 관계를 살립니다.'
+  };
+}
+
+function buildLoveDohwaAttractionSection(report: SajuReportData): ReportSection {
+  const dohwa = getDohwaLoveText(report);
+
+  return {
+    id: 'love-dohwa-attraction',
+    title: '도화·끌림 포인트',
+    subtitle: '사람이 왜 붙는지, 어떤 분위기에서 매력이 살아나는지 연애 기준으로 봅니다.',
+    callout: {
+      title: dohwa.title,
+      body: dohwa.body
+    },
+    cards: [
+      {
+        title: '처음 보이는 인상',
+        body: '너무 들이대는 매력보다 “생각보다 괜찮다”, “깔끔하다”, “다시 보고 싶다”는 식으로 천천히 남습니다.'
+      },
+      {
+        title: '가까워질수록 보이는 매력',
+        body: '생활이 무너지지 않는 모습, 말한 것을 지키는 모습, 자기 일을 해내는 모습에서 상대의 호감이 커집니다.',
+        tone: 'good'
+      },
+      {
+        title: '주의할 도화',
+        body: dohwa.caution,
+        tone: 'warn'
+      },
+      {
+        title: '캡처 한 줄',
+        body: '이 사주의 매력은 과한 애교보다 무너지지 않는 생활감에서 나옵니다.',
+        badge: 'SAVE'
+      }
+    ]
+  };
+}
+
+function buildLoveMarriageStructureSection(report: SajuReportData): ReportSection {
+  const bestMonthText = getFocusedBestMonthText(report);
+
+  return {
+    id: 'love-marriage-structure',
+    title: '연애가 결혼으로 가는 구조',
+    subtitle: '연애 기준과 결혼 기준은 다르게 봐야 합니다.',
+    callout: {
+      title: '결혼 판단',
+      body: '설레는 사람과 살 수 있는 사람은 다릅니다. 이 사주는 생활이 안정될 때 결혼 생각이 진짜로 들어옵니다.'
+    },
+    paragraphs: [
+      `${report.customerName}님은 감정만으로 결혼을 밀어붙이는 쪽보다, 상대와 함께 살 때 내 리듬이 무너지지 않는지를 봐야 합니다.`,
+      `연애에서는 끌림이 중요하지만 결혼에서는 돈 관리, 가족과의 거리, 집안일, 수면, 일의 우선순위가 더 크게 작동합니다.`,
+      `${bestMonthText} 전후에는 관계의 다음 단계를 이야기하기 좋습니다. 다만 분위기에 취해 결론을 내기보다 생활표를 같이 맞춰보는 편이 정확합니다.`
+    ],
+    cards: [
+      {
+        title: '결혼 가능한 사람',
+        body: '내 일을 존중하고, 가족 문제에서 선을 지키며, 돈과 집안일을 감정싸움으로 만들지 않는 사람입니다.',
+        tone: 'good'
+      },
+      {
+        title: '결혼 후 부딪히는 지점',
+        body: '표현 방식보다 역할 분담에서 부딪힙니다. 누가 무엇을 맡는지 흐리면 한쪽이 조용히 지칩니다.',
+        tone: 'warn'
+      },
+      {
+        title: '동거·결혼 전 확인',
+        body: '잠드는 시간, 주말 사용법, 청소 기준, 지출 기준, 부모님과의 거리, 화났을 때 대화 방식을 꼭 봐야 합니다.'
+      },
+      {
+        title: '놓치면 안 되는 사람',
+        body: '느리게 다가와도 말한 것을 고치고, 내 불편함을 가볍게 넘기지 않으며, 관계를 같이 운영하려는 사람입니다.',
+        tone: 'good'
+      }
+    ]
+  };
+}
+
 function buildPremiumLoveSections(report: SajuReportData): ReportSection[] {
   const bestMonthText = getFocusedBestMonthText(report);
   const watchMonthText = getFocusedWatchMonthText(report);
@@ -3417,6 +3745,11 @@ function buildPremiumLoveSections(report: SajuReportData): ReportSection[] {
       ]
     },
     buildLoveOriginMatchSection(report),
+    buildLoveAffectionSection(report),
+    buildLoveShadowSection(report),
+    buildLoveBreakupPatternSection(report),
+    buildLoveDohwaAttractionSection(report),
+    buildLoveMarriageStructureSection(report),
     {
       id: 'love-contact',
       title: '썸·연락 전략',
