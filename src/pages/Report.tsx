@@ -3227,6 +3227,155 @@ function buildFocusedMonthSection(report: SajuReportData, title: string, subtitl
   };
 }
 
+type LoveOriginElementProfile = {
+  label: string;
+  match: string;
+  person: string;
+  why: string;
+  places: string;
+  together: string;
+  danger: string;
+  capture: string;
+};
+
+const LOVE_ORIGIN_ELEMENT_PROFILES: Record<string, LoveOriginElementProfile> = {
+  목: {
+    label: '목(木)',
+    match: '甲·乙 일간이거나 일지·월지에 寅·卯가 살아 있는 사람',
+    person: '말을 예쁘게 하는 사람보다 “다음 단계를 같이 키우는 사람”입니다. 배움, 성장, 계획, 자기관리의 결이 있습니다.',
+    why: '관계가 애매하게 멈추지 않습니다. 같이 배우고 고치고 넓히는 힘이 생겨서, 좋아하는 마음이 실제 미래 계획으로 이어집니다.',
+    places: '강의, 스터디, 독서모임, 브랜딩·기획 세미나, 러닝·등산 모임, 식물이 있는 카페나 조용한 작업 공간에서 인연이 잘 열립니다.',
+    together: '새로운 수업 듣기, 산책하며 다음 달 계획 세우기, 책 한 권을 같이 읽고 이야기하기, 가벼운 여행 동선 짜기가 좋습니다.',
+    danger: '성장한다는 말만 많고 실제 생활은 바뀌지 않는 사람은 피해야 합니다. 꿈 이야기는 큰데 오늘의 행동이 없는 목 기운은 피로를 만듭니다.',
+    capture: '이 연애는 같이 자라는 사람을 만나야 마음이 늦게 식습니다.'
+  },
+  화: {
+    label: '화(火)',
+    match: '丙·丁 일간이거나 일지·월지에 巳·午가 살아 있는 사람',
+    person: '표현이 분명하고 표정이 살아 있는 사람입니다. 사랑을 숨기기보다 따뜻하게 보여주고, 분위기를 밝히는 힘이 있습니다.',
+    why: '차가워진 판단과 늦은 표현을 데워줍니다. 혼자 생각만 하다 멈추는 장면을 줄이고, 마음을 말로 꺼내게 만듭니다.',
+    places: '공연, 전시, 취미 클래스, 사진·영상 모임, 친구가 함께 있는 자리, SNS 콘텐츠나 뷰티·행사 관련 공간에서 접점이 생기기 쉽습니다.',
+    together: '전시 보기, 맛집 탐방, 사진 찍기, 짧은 당일치기, 기념일을 작게 챙기는 데이트가 관계 온도를 살립니다.',
+    danger: '초반 감정만 뜨겁고 생활 책임이 늦는 사람은 위험합니다. 불꽃은 큰데 다음 약속을 실제로 잡지 않는 사람은 오래 가지 않습니다.',
+    capture: '따뜻한 사람은 설렘을 주고, 성숙한 사람은 그 설렘을 생활로 남깁니다.'
+  },
+  토: {
+    label: '토(土)',
+    match: '戊·己 일간이거나 일지·월지에 辰·戌·丑·未가 단단하게 있는 사람',
+    person: '처음엔 느려 보여도 시간이 갈수록 믿음이 쌓이는 사람입니다. 말보다 생활, 지출, 책임감이 안정적으로 드러납니다.',
+    why: '관계가 흔들릴 때 중심을 잡아줍니다. 감정이 오르내려도 일상 리듬을 같이 지키기 때문에 불안이 빨리 커지지 않습니다.',
+    places: '지인 소개, 직장 근처, 동네 생활권, 운동센터, 요리·공방 클래스, 부동산·인테리어·식품처럼 생활 기반이 있는 공간이 좋습니다.',
+    together: '정기적으로 밥 먹기, 장보기, 집 정리, 저축 목표 세우기, 주말 루틴 만들기처럼 평범한 일을 같이 할 때 애정이 깊어집니다.',
+    danger: '고집만 세고 감정 표현이 너무 닫힌 사람은 답답합니다. 안정이라는 이름으로 변화를 거부하는 토 기운은 관계를 굳게 만듭니다.',
+    capture: '이 사주는 화려한 사람보다 매일 같은 자리로 돌아오는 사람에게 마음이 놓입니다.'
+  },
+  금: {
+    label: '금(金)',
+    match: '庚·辛 일간이거나 일지·월지에 申·酉가 선명한 사람',
+    person: '자기 기준이 있고 선을 지킬 줄 아는 사람입니다. 감정 표현은 담백해도 매너, 시간 감각, 일 처리에서 신뢰가 보입니다.',
+    why: '흐린 관계를 분명하게 만들어줍니다. 서로의 영역을 침범하지 않고, 필요한 말은 짧게 해주기 때문에 관계 피로가 줄어듭니다.',
+    places: '프로젝트, 협업, 직장 연결, 전문 모임, 금융·IT·디자인·컨설팅 행사, 소개를 통한 공식적인 자리에서 인연이 열리기 쉽습니다.',
+    together: '전시 보기, 운동 기록 만들기, 일정 정리, 포트폴리오나 작업물 피드백, 깔끔한 식사 데이트가 잘 맞습니다.',
+    danger: '기준은 있는데 배려가 없는 사람은 피해야 합니다. 맞는 말만 하고 마음을 돌보지 않는 금 기운은 상처를 남깁니다.',
+    capture: '선을 지키는 사람을 만나야 사랑이 불안이 아니라 신뢰가 됩니다.'
+  },
+  수: {
+    label: '수(水)',
+    match: '壬·癸 일간이거나 일지·월지에 子·亥가 살아 있는 사람',
+    person: '말수가 많지 않아도 생각이 깊고, 대화가 길어질수록 매력이 보이는 사람입니다. 정보, 글, 이동, 밤의 대화와 인연이 있습니다.',
+    why: '속마음을 안전하게 꺼내게 만듭니다. 판단받는 느낌보다 이해받는 느낌이 커져서, 오래 숨긴 감정이 조금씩 풀립니다.',
+    places: '온라인 커뮤니티, 글쓰기 모임, 스터디, 여행·이동 중 연결, 조용한 카페, 늦은 시간 대화가 이어지는 공간에서 접점이 생깁니다.',
+    together: '밤 산책, 카페에서 깊은 대화, 짧은 여행 계획, 영화 보고 감상 나누기, 서로의 고민을 조용히 들어주는 시간이 좋습니다.',
+    danger: '생각은 깊은데 결론을 계속 피하는 사람은 관계를 흐립니다. 침묵이 배려가 아니라 회피가 되는 수 기운은 불안을 키웁니다.',
+    capture: '깊은 사람은 좋지만, 깊기만 하고 돌아오지 않는 사람은 붙잡지 마세요.'
+  }
+};
+
+function getLoveOriginElementProfile(element?: string) {
+  return LOVE_ORIGIN_ELEMENT_PROFILES[element || ''] || LOVE_ORIGIN_ELEMENT_PROFILES.토;
+}
+
+function buildLoveOriginMatchSection(report: SajuReportData): ReportSection {
+  const dayPillar = parsePillar(report.pillars.day);
+  const monthPillar = parsePillar(report.pillars.month);
+  const hourPillar = parsePillar(report.pillars.hour);
+  const primaryElement = report.helpfulElements[0] || report.dayMasterElement;
+  const secondaryElement =
+    report.helpfulElements.find((element) => element !== primaryElement) || dayPillar?.branchElement || report.dayMasterElement;
+  const cautionElement = report.cautiousElements[0] || report.dayMasterElement;
+  const primary = getLoveOriginElementProfile(primaryElement);
+  const secondary = getLoveOriginElementProfile(secondaryElement);
+  const caution = getLoveOriginElementProfile(cautionElement);
+  const dayText = dayPillar
+    ? `${dayPillar.stemHanja}${dayPillar.branchHanja} 일주, 일지 ${dayPillar.branchHanja}(${dayPillar.branchElement})`
+    : `${report.pillars.day} 일주`;
+  const monthText = monthPillar
+    ? `${monthPillar.stemHanja}${monthPillar.branchHanja} 월령, 월지 ${monthPillar.branchHanja}(${monthPillar.branchElement})`
+    : `${report.pillars.month} 월령`;
+  const hourText = hourPillar
+    ? `시주 ${hourPillar.stemHanja}${hourPillar.branchHanja}는 생활 리듬과 사적인 습관까지 보여줍니다.`
+    : '출생 시간이 없거나 불명확하면 생활 리듬 궁합은 실제 만남에서 더 확인해야 합니다.';
+
+  return {
+    id: 'love-origin-match',
+    title: '나와 맞는 사주 원국의 사람',
+    subtitle: '일간 하나가 아니라 일지, 월지, 시주의 생활감까지 보고 인연상을 좁힙니다.',
+    callout: {
+      title: `${primary.label} 원국이 좋은 이유`,
+      body: primary.capture
+    },
+    paragraphs: [
+      `${report.customerName}님의 연애궁합은 ${dayText}와 ${monthText}을 같이 놓고 봐야 선명합니다. 일간은 내가 사랑을 받아들이는 방식이고, 일지는 가까운 관계에서 실제로 편한지 불편한지를 보여줍니다.`,
+      `그래서 상대를 볼 때 “무슨 띠냐”보다 원국 안에 어떤 오행이 살아 있는지를 먼저 봅니다. ${report.customerName}님에게는 ${primary.label} 기운이 살아 있는 사람, 보조로 ${secondary.label} 감각이 있는 사람이 관계를 덜 불안하게 만듭니다.`,
+      `${hourText} 연애가 오래 가려면 얼굴이나 직업보다 주말을 보내는 방식, 피곤할 때 말투, 돈을 쓰는 타이밍, 가족과 거리를 두는 방식이 맞아야 합니다.`
+    ],
+    cards: [
+      {
+        title: '만나야 할 원국',
+        body: `${primary.match}. 여기에 ${secondary.match}의 결이 함께 있으면 설렘과 생활감이 같이 살아납니다.`,
+        tone: 'good'
+      },
+      {
+        title: '그 사람이 좋은 이유',
+        body: primary.why
+      },
+      {
+        title: '어디서 만날 수 있나',
+        body: primary.places,
+        tone: 'good'
+      },
+      {
+        title: '같이 하면 좋은 것',
+        body: primary.together
+      },
+      {
+        title: '첫 만남에서 볼 장면',
+        body: '대화가 잘 통하는지보다 헤어질 때 다음 일정을 어떻게 잡는지 보세요. 마음이 있는 사람은 분위기보다 다음 행동을 남깁니다.'
+      },
+      {
+        title: '피해야 할 원국',
+        body: `${caution.danger} 특히 ${caution.label} 기운이 과한데 자기 성찰이 없는 사람은 초반 끌림과 후반 피로가 같이 옵니다.`,
+        tone: 'warn'
+      }
+    ],
+    details: [
+      {
+        summary: '원국 궁합은 이 순서로 봅니다',
+        content: `1. 일간: 상대가 사랑을 표현하는 기본 방식입니다.\n\n2. 일지: 둘이 가까워졌을 때 편한지, 피곤한지 보는 자리입니다.\n\n3. 월지: 사회생활, 일, 책임감, 평판 감각이 드러나는 자리입니다.\n\n4. 시주: 같이 살거나 자주 만났을 때 수면, 소비, 집안 습관, 사적인 리듬이 맞는지 보는 자리입니다.`,
+        open: true
+      },
+      {
+        summary: '현실에서 가장 잘 열리는 만남 루트',
+        content: `${primary.places}\n\n두 번째 루트는 ${secondary.places} 조건입니다. 소개를 받는다면 “조건 좋은 사람”보다 이 공간에서 자연스럽게 반복해서 볼 수 있는 사람을 우선 보세요. 운이 맞는 인연은 한 번에 강하게 치고 들어오기보다, 같은 생활 반경에서 자주 눈에 들어옵니다.`
+      },
+      {
+        summary: '관계를 오래 가게 만드는 데이트 방식',
+        content: `${primary.together}\n\n이 데이트가 좋은 이유는 감정만 쓰지 않고 두 사람의 생활 호흡을 확인하게 해주기 때문입니다. 밥 한 번 먹고 끝나는 관계보다, 같이 움직이고 정리하고 다음 계획을 남기는 관계가 오래 갑니다.`
+      }
+    ]
+  };
+}
+
 function buildPremiumLoveSections(report: SajuReportData): ReportSection[] {
   const bestMonthText = getFocusedBestMonthText(report);
   const watchMonthText = getFocusedWatchMonthText(report);
@@ -3242,13 +3391,13 @@ function buildPremiumLoveSections(report: SajuReportData): ReportSection[] {
       },
       paragraphs: [
         `이 연애운은 “누가 나를 좋아하나”보다 ${report.customerName}님이 어떤 사람 앞에서 긴장을 풀고, 어떤 사람 앞에서 금방 지치는지를 먼저 봅니다.`,
-        `처음에는 상대의 가능성을 크게 봅니다. 그런데 답장 온도, 약속 태도, 돈 쓰는 방식이 흐리면 마음속에서 조용히 정리가 시작됩니다.`,
-        `좋은 인연은 말이 센 사람보다 일정하고 책임감 있는 사람입니다. 빠른 고백보다 바쁜 날에도 약속을 지키는 사람이 오래 갑니다.`
+        `처음에는 상대의 가능성을 크게 봅니다. 그런데 답장 온도, 시간 쓰는 습관, 소비 감각이 흐리면 마음속에서 조용히 정리가 시작됩니다.`,
+        `좋은 인연은 말이 센 사람보다 생활이 일정하고 책임감 있는 사람입니다. 빠른 고백보다 바쁜 날에도 말한 시간을 실제로 맞추는 사람이 오래 갑니다.`
       ],
       cards: [
         {
           title: '끌리는 사람',
-          body: '자기 일이 있고, 말이 과하지 않으며, 바쁜 와중에도 약속을 지키는 사람에게 마음이 갑니다.',
+          body: '자기 일이 있고, 말이 과하지 않으며, 바쁜 와중에도 작은 시간을 실제로 내는 사람에게 마음이 갑니다.',
           tone: 'good'
         },
         {
@@ -3262,11 +3411,12 @@ function buildPremiumLoveSections(report: SajuReportData): ReportSection[] {
         },
         {
           title: '피해야 할 유형',
-          body: '연락은 뜨거운데 약속은 흐린 사람, 외로울 때만 찾는 사람, 돈 이야기를 피하는 사람입니다.',
+          body: '연락은 뜨거운데 만남은 계속 밀리는 사람, 외로울 때만 찾는 사람, 현실 이야기를 피하는 사람입니다.',
           tone: 'warn'
         }
       ]
     },
+    buildLoveOriginMatchSection(report),
     {
       id: 'love-contact',
       title: '썸·연락 전략',
