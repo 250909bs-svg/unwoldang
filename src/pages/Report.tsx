@@ -23,6 +23,10 @@ const createSafeReportFileName = (value: string) =>
     .replace(/^-|-$/g, '')
     .slice(0, 90) || 'unwoldang-report';
 
+const isMobileDownloadBrowser = () =>
+  typeof navigator !== 'undefined' &&
+  /Android|iPhone|iPad|iPod|SamsungBrowser|KAKAOTALK|NAVER|Line/i.test(navigator.userAgent);
+
 const getCurrentPageCssText = () => {
   const collectedRules = Array.from(document.styleSheets)
     .map((sheet) => {
@@ -4691,24 +4695,25 @@ export default function Report() {
   };
 
   const handleDownloadHtmlReport = async () => {
-    const reportPaper = document.querySelector<HTMLElement>('.premium-report-paper');
+    try {
+      const reportPaper = document.querySelector<HTMLElement>('.premium-report-paper');
 
-    if (!reportPaper) {
-      setHtmlDownloadMessage('리포트 본문을 찾지 못했어요. 페이지를 새로고침한 뒤 다시 눌러주세요.');
-      window.setTimeout(() => setHtmlDownloadMessage(''), 3200);
-      return;
-    }
+      if (!reportPaper) {
+        setHtmlDownloadMessage('리포트 본문을 찾지 못했어요. 페이지를 새로고침한 뒤 다시 눌러주세요.');
+        window.setTimeout(() => setHtmlDownloadMessage(''), 3200);
+        return;
+      }
 
-    const clonedPaper = reportPaper.cloneNode(true) as HTMLElement;
+      const clonedPaper = reportPaper.cloneNode(true) as HTMLElement;
 
-    clonedPaper.querySelectorAll('[data-export-remove="true"]').forEach((element) => {
-      element.remove();
-    });
+      clonedPaper.querySelectorAll('[data-export-remove="true"]').forEach((element) => {
+        element.remove();
+      });
 
-    const fileBaseName = createSafeReportFileName(`운월당-${report.serviceId}-리포트`);
-    const pageClassName = isYearlyShowcase ? 'premium-report-page yearly-premium-page export-html-page' : 'premium-report-page export-html-page';
-    const shellClassName = isYearlyShowcase ? 'premium-report-shell yearly-report-shell export-html-shell' : 'premium-report-shell export-html-shell';
-    const html = `<!doctype html>
+      const fileBaseName = createSafeReportFileName(`운월당-${report.serviceId}-리포트`);
+      const pageClassName = isYearlyShowcase ? 'premium-report-page yearly-premium-page export-html-page' : 'premium-report-page export-html-page';
+      const shellClassName = isYearlyShowcase ? 'premium-report-shell yearly-report-shell export-html-shell' : 'premium-report-shell export-html-shell';
+      const html = `<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
@@ -4778,70 +4783,108 @@ body {
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const downloadFileName = `${fileBaseName}.html`;
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const downloadFileName = `${fileBaseName}.html`;
+      const reportFile =
+        typeof File !== 'undefined' ? new File([blob], downloadFileName, { type: 'text/html;charset=utf-8' }) : null;
 
-    if (htmlDownloadUrlRef.current) {
-      URL.revokeObjectURL(htmlDownloadUrlRef.current);
-    }
-
-    const filePicker = (
-      window as unknown as {
-        showSaveFilePicker?: (options: unknown) => Promise<{
-          createWritable: () => Promise<{
-            write: (data: Blob) => Promise<void>;
-            close: () => Promise<void>;
-          }>;
-        }>;
+      if (htmlDownloadUrlRef.current) {
+        URL.revokeObjectURL(htmlDownloadUrlRef.current);
       }
-    ).showSaveFilePicker;
 
-    if (filePicker) {
-      try {
-        const fileHandle = await filePicker({
-          suggestedName: downloadFileName,
-          types: [
-            {
-              description: 'HTML 리포트',
-              accept: {
-                'text/html': ['.html']
+      const filePicker = (
+        window as unknown as {
+          showSaveFilePicker?: (options: unknown) => Promise<{
+            createWritable: () => Promise<{
+              write: (data: Blob) => Promise<void>;
+              close: () => Promise<void>;
+            }>;
+          }>;
+        }
+      ).showSaveFilePicker;
+
+      if (filePicker && !isMobileDownloadBrowser()) {
+        try {
+          const fileHandle = await filePicker({
+            suggestedName: downloadFileName,
+            types: [
+              {
+                description: 'HTML 리포트',
+                accept: {
+                  'text/html': ['.html']
+                }
               }
-            }
-          ]
-        });
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+            ]
+          });
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
 
-        setHtmlDownloadUrl('');
-        setHtmlDownloadFileName(downloadFileName);
-        setHtmlDownloadMessage(`HTML 파일을 저장했어요: ${downloadFileName}`);
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          setHtmlDownloadMessage('저장이 취소됐어요. 다시 누르면 HTML 파일로 저장할 수 있습니다.');
-          window.setTimeout(() => setHtmlDownloadMessage(''), 3200);
+          setHtmlDownloadUrl('');
+          setHtmlDownloadFileName(downloadFileName);
+          setHtmlDownloadMessage(`HTML 파일을 저장했어요: ${downloadFileName}`);
           return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            setHtmlDownloadMessage('저장이 취소됐어요. 다시 누르면 HTML 파일로 저장할 수 있습니다.');
+            window.setTimeout(() => setHtmlDownloadMessage(''), 3200);
+            return;
+          }
         }
       }
+
+      const url = URL.createObjectURL(blob);
+
+      htmlDownloadUrlRef.current = url;
+      setHtmlDownloadUrl(url);
+      setHtmlDownloadFileName(downloadFileName);
+
+      if (
+        reportFile &&
+        isMobileDownloadBrowser() &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [reportFile] })
+      ) {
+        try {
+          await navigator.share({
+            files: [reportFile],
+            title: '운월당 리포트',
+            text: '운월당 HTML 리포트입니다.'
+          });
+          setHtmlDownloadMessage(`HTML 파일 저장/공유창을 열었어요: ${downloadFileName}`);
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            setHtmlDownloadMessage('저장/공유가 취소됐어요. 아래 “다운로드 다시 시도”를 눌러 다시 받을 수 있습니다.');
+            window.setTimeout(() => setHtmlDownloadMessage(''), 4200);
+            return;
+          }
+        }
+      }
+
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = downloadFileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.position = 'fixed';
+      link.style.left = '-9999px';
+      link.style.top = '0';
+      link.style.width = '1px';
+      link.style.height = '1px';
+      link.style.opacity = '0';
+      document.body.appendChild(link);
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      window.setTimeout(() => link.remove(), 1000);
+
+      setHtmlDownloadMessage(
+        'HTML 다운로드를 요청했어요. 모바일에서 저장창이 안 뜨면 아래 “다운로드 다시 시도” 또는 “HTML 바로 보기”를 눌러주세요.'
+      );
+    } catch {
+      setHtmlDownloadMessage('HTML 파일 생성 중 오류가 났어요. 페이지를 새로고침한 뒤 다시 눌러주세요.');
+      window.setTimeout(() => setHtmlDownloadMessage(''), 4200);
     }
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-
-    htmlDownloadUrlRef.current = url;
-    setHtmlDownloadUrl(url);
-    setHtmlDownloadFileName(downloadFileName);
-
-    link.href = url;
-    link.download = downloadFileName;
-    link.rel = 'noopener';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    window.setTimeout(() => link.remove(), 500);
-
-    setHtmlDownloadMessage('HTML 파일을 준비했어요. 다운로드가 안 보이면 아래 “다운로드 다시 시도” 또는 “HTML 바로 보기”를 눌러주세요.');
   };
 
   const issueMailHref = `mailto:250909bs@gmail.com?subject=${encodeURIComponent(
