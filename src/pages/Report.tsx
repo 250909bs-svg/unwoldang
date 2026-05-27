@@ -15,19 +15,6 @@ type ReportLocationState = {
   reportData?: SajuReportData;
 };
 
-const escapeHtmlText = (value: string) =>
-  value.replace(/[&<>"']/g, (character) => {
-    const entities: Record<string, string> = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    };
-
-    return entities[character] || character;
-  });
-
 const createSafeReportFileName = (value: string) =>
   value
     .replace(/[\\/:*?"<>|]+/g, '-')
@@ -4551,6 +4538,14 @@ export default function Report() {
 
   useEffect(() => {
     if (shouldBlockPreview) {
+      return;
+    }
+
+    document.title = '운월당 리포트';
+  }, [shouldBlockPreview]);
+
+  useEffect(() => {
+    if (shouldBlockPreview) {
       navigate(`/form/${service.id}`, { replace: true });
     }
   }, [navigate, service.id, shouldBlockPreview]);
@@ -4595,6 +4590,16 @@ export default function Report() {
     video.muted = true;
     video.volume = 0;
     setIsReportVideoMuted(true);
+
+    const playMutedVideo = async () => {
+      try {
+        await video.play();
+      } catch {
+        // Mobile browsers may wait for the next ready event, so the video handlers try again.
+      }
+    };
+
+    void playMutedVideo();
   }, [reportCharacterVideo]);
 
   if (shouldBlockPreview) {
@@ -4700,8 +4705,7 @@ export default function Report() {
       element.remove();
     });
 
-    const fileBaseName = createSafeReportFileName(`${report.customerName}-${report.title}-${report.serialNumber}`);
-    const exportedAt = new Date().toLocaleString('ko-KR', { hour12: false });
+    const fileBaseName = createSafeReportFileName(`운월당-${report.serviceId}-리포트`);
     const pageClassName = isYearlyShowcase ? 'premium-report-page yearly-premium-page export-html-page' : 'premium-report-page export-html-page';
     const shellClassName = isYearlyShowcase ? 'premium-report-shell yearly-report-shell export-html-shell' : 'premium-report-shell export-html-shell';
     const html = `<!doctype html>
@@ -4709,7 +4713,7 @@ export default function Report() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtmlText(`${report.customerName} ${report.title} - 운월당`)}</title>
+  <title>운월당 리포트</title>
   <style>
 ${getCurrentPageCssText()}
 
@@ -4723,7 +4727,7 @@ body {
   z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 1px solid rgba(138, 114, 88, 0.18);
@@ -4753,8 +4757,7 @@ body {
 </head>
 <body>
   <div class="export-html-topbar">
-    <strong>${escapeHtmlText(report.customerName)} ${escapeHtmlText(report.title)}</strong>
-    <span>리포트 번호 ${escapeHtmlText(report.serialNumber)} · 저장일 ${escapeHtmlText(exportedAt)}</span>
+    <strong>운월당 리포트</strong>
   </div>
   <main class="${pageClassName}">
     <div class="${shellClassName}">
@@ -4871,19 +4874,8 @@ body {
 
       <div className={isYearlyShowcase ? 'premium-report-shell yearly-report-shell' : 'premium-report-shell'}>
         <article className={isYearlyShowcase ? 'premium-report-paper yearly-report-paper' : 'premium-report-paper'}>
-          <section className={isYearlyShowcase ? 'premium-report-cover yearly-report-cover' : 'premium-report-cover'}>
-            <h1>
-              {report.customerName}{' '}
-              {report.serviceId === 'concern-reading'
-                ? report.title
-                : report.serviceId === 'life-flow'
-                  ? '신년운세 리포트'
-                  : report.kind === 'comprehensive'
-                    ? '종합사주 리포트'
-                    : report.title}
-            </h1>
-
-            {isYearlyShowcase && yearlyLead ? (
+          {isYearlyShowcase && yearlyLead ? (
+            <section className="premium-report-cover yearly-report-cover">
               <div className="yearly-report-orbit">
                 <article className="yearly-report-orbit-lead">
                   <span className="yearly-report-kicker">2026 YEAR COMPASS</span>
@@ -4901,9 +4893,8 @@ body {
                   ))}
                 </div>
               </div>
-            ) : null}
-
-          </section>
+            </section>
+          ) : null}
 
           {isYearlyShowcase ? (
             <>
@@ -4969,8 +4960,14 @@ body {
                 muted={isReportVideoMuted}
                 loop
                 playsInline
-                preload="metadata"
+                preload="auto"
                 onLoadedMetadata={forceMuteReportVideo}
+                onLoadedData={() => {
+                  void reportVideoRef.current?.play().catch(() => undefined);
+                }}
+                onCanPlay={() => {
+                  void reportVideoRef.current?.play().catch(() => undefined);
+                }}
                 onClick={() => {
                   if (!isReportVideoMuted) {
                     forceMuteReportVideo();

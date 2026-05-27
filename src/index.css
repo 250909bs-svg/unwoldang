@@ -16706,6 +16706,85 @@ body {
     font-size: 22px;
   }
 
+  .premium-wonguk-board {
+    padding: 14px 10px 12px;
+    border-radius: 22px;
+  }
+
+  .premium-wonguk-frame {
+    padding: 10px 6px 9px;
+    border-radius: 18px;
+  }
+
+  .premium-wonguk-columns {
+    gap: 5px;
+  }
+
+  .premium-wonguk-column {
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .premium-wonguk-head {
+    min-height: 44px;
+  }
+
+  .premium-wonguk-head strong {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+
+  .premium-wonguk-head span {
+    font-size: 10px;
+  }
+
+  .premium-wonguk-chip {
+    width: 100%;
+    min-width: 0;
+    min-height: 72px;
+    padding: 7px 3px;
+    border-radius: 17px;
+  }
+
+  .premium-wonguk-chip::before {
+    inset: 5px;
+    border-radius: 13px;
+  }
+
+  .premium-wonguk-chip span,
+  .premium-wonguk-chip em {
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .premium-wonguk-chip strong {
+    font-size: clamp(27px, 8.6vw, 36px);
+    line-height: 0.98;
+  }
+
+  .premium-wonguk-column p {
+    font-size: 9px;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .premium-wonguk-element-strip {
+    gap: 5px;
+  }
+
+  .premium-wonguk-element-strip > div {
+    padding: 8px 4px 7px;
+    border-radius: 13px;
+  }
+
+  .premium-wonguk-element-strip span {
+    font-size: 9px;
+  }
+
+  .premium-wonguk-element-strip strong {
+    font-size: 15px;
+  }
+
   .premium-love-card-grid {
     grid-template-columns: 1fr;
     gap: 10px;
