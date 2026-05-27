@@ -92,7 +92,7 @@ export default function Loading() {
           ]
         : [
             `${service.advisor} 스타일로 기본 리포트를 구성하고 있습니다.`,
-            '아직 AI 결과 API가 연결되지 않아 내부 생성 로직으로 결과를 만들고 있습니다.',
+            '결제 상태와 입력값을 확인한 뒤 운월당 정밀 리포트를 구성하고 있습니다.',
             '질문 2개와 사주 입력값을 묶어서 결과 구조를 정리하고 있습니다.',
             '분석이 거의 완료되었습니다. 결과 화면으로 이동합니다.'
           ],
@@ -115,6 +115,7 @@ export default function Loading() {
       }
 
       if (!canRequestAiReport) {
+        setReportData(buildSajuReport(product || service.id, formData || LOADING_PREVIEW_FORM_DATA));
         setAnalysisFinished(true);
         return;
       }
@@ -149,7 +150,7 @@ export default function Loading() {
     return () => {
       cancelled = true;
     };
-  }, [canRequestAiReport, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, reportAccessToken]);
+  }, [canRequestAiReport, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, reportAccessToken, service.id]);
 
   useEffect(() => {
     if (analysisFinished) {
