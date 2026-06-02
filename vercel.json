@@ -21,7 +21,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://*.portone.io https://*.inicis.com https://*.kginicis.com"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.portone.io; connect-src 'self' https://*.run.app https://api.portone.io https://*.portone.io https://kauth.kakao.com https://kapi.kakao.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; media-src 'self' data: blob:; frame-src https://*.portone.io https://*.inicis.com https://*.kginicis.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://*.portone.io https://*.inicis.com https://*.kginicis.com"
         }
       ]
     },
@@ -40,6 +40,14 @@
     },
     {
       "source": "/my/:path*",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/login",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/form/:path*",
       "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     },
     {

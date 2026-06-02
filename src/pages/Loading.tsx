@@ -30,7 +30,7 @@ const LOADING_PILLARS = [
 const LOADING_PHASES = ['원국 계산', '오행 균형', '질문 해석', '리포트 완성'];
 
 const LOADING_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
-  name: '운월당',
+  name: '차민호',
   gender: 'female',
   calendar: 'solar',
   isLeapMonth: false,

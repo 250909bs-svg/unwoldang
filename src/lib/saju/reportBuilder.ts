@@ -1,4 +1,5 @@
 import { findServiceById, type IntakeFormData, type ServiceId } from '../../api/mockData';
+import { getReportCallName } from '../customerName';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from './deterministicBasis';
 import { calcBazi, tenGod } from './baziCalcs';
 import { BRANCH_ELEM, DZ, ELEMENT, TG, type EarthlyBranch, type HeavenlyStem } from './constants';
@@ -248,7 +249,7 @@ function formatElementGuidance(elements: FiveElement[], basis: DeterministicSaju
     return `${missing.join('·')} 쪽은 넘침보다 공백이 문제입니다. 관계 방향, 다음 단계 제안, 성장 동선이 늦어지지 않게 의식적으로 챙겨야 합니다.`;
   }
 
-  return `${active.join('·')} 쪽이 강하게 들어올 때는 속도, 지출, 감정 반응이 함께 커질 수 있습니다. 큰 결정은 돈, 일정, 사람, 체력으로 나눠 확인하는 편이 안전합니다.`;
+  return `${active.join(', ')} 기운이 강하게 들어올 때는 말, 지출, 일정이 한꺼번에 빨라질 수 있습니다. 결론을 미루라는 뜻이 아니라 돈·사람·마감 중 어디가 먼저 흔들리는지 따로 떼어 보라는 신호입니다.`;
 }
 
 function hasBatchim(value: string) {
@@ -581,7 +582,7 @@ function buildDayunPracticalTheme(
 
   return {
     summary: `${emphasis}이 더 중요해지는 시기입니다. 이 구간은 우연한 사건보다 선택의 순서, 사람을 쓰는 방식, 돈이 남는 구조가 결과 차이를 크게 만듭니다.`,
-    focus: `${basis.helpfulElements.join(', ')} 기운을 살리는 방식으로 ${isCurrent ? '현재 진행 중인 일의 기준과 가격, 관계의 역할 배치' : '다음 단계의 생활 기반과 수익 모델'}를 정교하게 다듬는 편이 정확합니다.`,
+    focus: `${isCurrent ? '현재 진행 중인 일의 기준과 가격, 관계의 역할 배치' : '다음 단계의 생활 기반과 수익 모델'}를 눈에 보이는 운영 규칙으로 다듬는 편이 정확합니다. ${basis.helpfulElements.join(', ')} 흐름은 추상적인 운보다 반복 가능한 생활 기준에서 체감됩니다.`,
     caution: `${caution}가 이번 대운 해석의 핵심 주의점입니다. 특히 감정이 앞선 약속, 검증 없는 확장, 문서 없는 금전 관계는 한 번 더 멈춰서 확인해야 합니다.`
   };
 }
@@ -720,7 +721,7 @@ function buildYearLuck(
       headline: getYearLuckHeadline(item, score),
       summary: getYearLuckSummary(item, stem, branch, stemElement, branchElement, helpful),
       focus: getYearLuckFocus(item, helpful),
-      warning: `${cautionGuidance} 큰 결정은 하루 안에 끝내지 말고 돈, 일정, 사람, 체력 중 어느 칸이 먼저 무너지는지 보세요.`
+      warning: `${cautionGuidance} 계약, 결제, 이직, 관계 정리는 바로 끝내지 말고 비용·사람·마감·체력 조건을 따로 적어 비교하세요.`
     };
   });
 }
@@ -764,7 +765,7 @@ function buildMonthLuck(
       ganzhi: `${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]}`,
       score,
       summary: `${date.getMonth() + 1}월은 ${stemElement}·${branchElement} 흐름이 강조되는 달입니다. 일과 관계 모두 ${score >= 70 ? '선택을 분명하게 가져갈수록' : '리듬을 정돈할수록'} 안정감이 높아집니다.`,
-      focus: `${helpful.join(', ')} 기운과 맞는 생활 루틴을 실제 시간표에 고정하는 편이 좋습니다. 고객, 연인, 가족과의 약속도 말로만 두지 말고 날짜, 금액, 역할을 남기면 흔들림이 줄어듭니다.`,
+      focus: `이번 달은 생활 리듬, 제공 범위, 우선순위 정리가 핵심입니다. 고객, 연인, 가족과의 약속도 말로만 두지 말고 일정과 역할을 남기면 흔들림이 줄어듭니다.`,
       warning: `${cautionGuidance} 무리해서 끌고 가는 달보다 덜어내서 선명해지는 달로 운영하세요.`
     };
   });
@@ -968,7 +969,7 @@ function buildQuestionResponse(
 
     return {
       label: '직업·커리어 질문 직답',
-      analysis: `질문 "${question}"은 “무슨 직업 이름을 고를까”보다 “내 사주의 강점을 어디에 팔아야 덜 지치고 오래 벌 수 있을까”에 대한 질문입니다. ${dayMaster} 일간은 기준을 세우고 구조를 설계할 때 강점이 살아나며, ${currentDayunName} 대운에서는 전문성을 상품화하고 표준화할수록 커리어 성장이 빨라집니다.`,
+      analysis: `질문 "${question}"은 직업 이름 하나를 맞히는 데서 끝나지 않고, 지금 가진 능력을 어떤 업종과 역할에서 돈이 남는 일로 바꿀지에 대한 질문입니다. ${dayMaster} 일간은 판단의 기준선이 분명할 때 흔들림이 줄고, ${currentDayunName} 대운에서는 전문성을 상품명, 가격표, 제공 범위로 바꿀수록 커리어 성장이 빨라집니다.`,
       advice: careerGuide
     };
   }
@@ -1020,7 +1021,7 @@ function buildQuestionResponse(
       analysis: `질문 "${question}"은 현재 흐름에서 무엇을 피해야 하는지에 초점이 있습니다. ${dayMaster} 일간은 기준이 서면 흔들림이 적습니다. ${cautionGuidance}`,
       advice: [
         '지금 가장 조심할 것은 사람 자체보다 기준 없는 약속입니다. 역할, 돈, 일정이 흐릿한 관계는 반드시 문서나 메시지로 남기세요.',
-        `${helpfulText} 기운을 살리면 감정이 정리되고, 선택지가 선명하게 좁혀집니다. 기록을 남기는 순간 운의 흐름도 관리 가능해집니다.`,
+        `${helpfulText} 흐름은 감정을 가라앉히고 선택지를 좁히는 데 도움을 줍니다. 기록을 남기는 순간 막연한 불안이 관리 가능한 일정으로 바뀝니다.`,
         '불안할수록 결론을 빨리 내고 싶어지지만, 이 사주는 한 박자 늦춘 판단이 오히려 더 큰 손실을 막습니다.'
       ]
     };
@@ -1043,7 +1044,7 @@ function buildQuestionResponse(
     analysis: `질문 "${question}"은 ${dayMaster} 일간의 판단 방식과 ${currentDayunName} 대운 흐름을 함께 봐야 더 정확합니다. ${context} 지금은 감정보다 기준, 기준보다 실행 순서를 어떻게 잡는지가 결과를 가릅니다.`,
     advice: [
       '먼저 질문을 “선택지 A와 B 중 무엇이 더 현실적인가”로 나누면 답이 훨씬 선명해집니다.',
-      `${helpfulText} 기운을 살리는 환경을 만들면 판단이 안정되고, 반복되는 고민의 핵심이 드러납니다.`,
+      `${helpfulText} 흐름과 맞는 환경을 만들면 판단이 안정되고, 반복되는 고민의 핵심이 더 빨리 드러납니다.`,
       `${cautionGuidance} 말과 지출을 줄이고, 중요한 결정은 기록으로 남긴 뒤 다시 확인하세요.`
     ]
   };
@@ -1403,7 +1404,7 @@ function buildSections(
       cards: [
         {
           title: '지금 가장 도움 되는 기운',
-          body: `${helpful.join(', ')} 기운을 살리는 선택이 현재 흐름을 가장 안정적으로 이끕니다. 이 기운은 생활 루틴, 일의 방식, 사람을 만나는 기준에 먼저 반영할수록 체감이 빠릅니다.`,
+          body: `${helpful.join(', ')} 흐름은 생활 루틴, 일의 방식, 사람을 만나는 기준에 먼저 반영될 때 안정감이 커집니다. 막연한 행운보다 반복 가능한 습관으로 써야 체감이 빠릅니다.`,
           tone: 'good',
           badge: 'HELPFUL'
         },
@@ -1455,7 +1456,7 @@ function buildSections(
         },
         {
           summary: '이번 리포트에서 주목해야 할 균형 포인트',
-          content: `${helpful.join(', ')} 기운을 살리되, ${cautionGuidance} 같은 일정이라도 공간, 시간, 사람의 배치를 바꾸면 체감 운이 크게 달라집니다.\n\n실제로는 거창한 개운법보다 수면 시간 고정, 지출 기록, 관계의 선 긋기, 업무 범위 명확화 같은 작은 기준이 더 강하게 작동합니다.`
+          content: `${helpful.join(', ')} 흐름은 몸과 환경이 받아줄 때 살아납니다. ${cautionGuidance} 같은 일정이라도 공간, 시간, 사람의 배치를 바꾸면 체감 운이 크게 달라집니다.\n\n실제로는 거창한 개운법보다 수면 시간 고정, 지출 기록, 관계의 선 긋기, 업무 범위 명확화 같은 작은 기준이 더 강하게 작동합니다.`
         }
       ]
     },
@@ -1675,7 +1676,7 @@ function buildSections(
         },
         {
           summary: '30일 연애 행동 미션',
-          content: `${loveProfile.checklist.join('\n\n')}\n\n지금 당장 해야 할 일은 더 많은 사람을 무작정 만나는 것이 아니라, 내 기준표를 만드는 것입니다. “나는 어떤 사람에게 편안한가, 어떤 사람에게 불안해지는가, 어떤 생활 기준은 절대 양보하기 어려운가”를 적어두면 만남의 질이 달라집니다. 특히 ${helpful.join(', ')} 기운을 살리는 장소와 루틴 안에서 만남을 만들 때 관계의 안정감이 높아집니다.`
+          content: `${loveProfile.checklist.join('\n\n')}\n\n지금 당장 해야 할 일은 더 많은 사람을 무작정 만나는 것이 아니라, 내 기준표를 만드는 것입니다. “나는 어떤 사람에게 편안한가, 어떤 사람에게 불안해지는가, 어떤 생활 기준은 절대 양보하기 어려운가”를 적어두면 만남의 질이 달라집니다. 특히 ${helpful.join(', ')} 흐름과 맞는 장소와 루틴 안에서 만남을 만들 때 관계의 안정감이 높아집니다.`
         }
       ]
     },
@@ -1690,7 +1691,7 @@ function buildSections(
       cards: [
         {
           title: '체력 관리 포인트',
-          body: `${cautionGuidance} 밤에 큰 결정을 내리는 습관은 줄이는 편이 좋습니다.`,
+          body: `${cautionGuidance} 밤에는 판단이 급해지기 쉬우니 결제, 계약, 관계 정리 같은 선택은 다음 날 다시 확인하는 편이 좋습니다.`,
           tone: 'warn'
         },
         {
@@ -1815,14 +1816,14 @@ function buildYearlySummary(customerName: string, serviceLabel: string, basis: D
   return {
     title: `${serviceLabel} 핵심 요약`,
     analysis: [
-      `${customerName}님의 기본 흐름은 ${basis.helpfulElements.join(', ')} 기운을 중심으로 기준을 세울 때 가장 안정적으로 살아납니다. 이 기운은 생각만으로 쓰기보다 생활 루틴, 일의 구조, 관계 기준에 내려앉을 때 체감이 커집니다.`,
-      `${basis.dayMaster.stem} 일간 성향은 구조와 기준이 분명해질수록 장점이 선명해집니다. ${cautionGuidance}`,
-      `현재 대운은 ${currentDayun.name} 흐름으로 읽히며, 지금은 넓히는 것보다 방향과 가격, 역할, 책임을 정교하게 설계하는 편이 더 정확합니다.`,
+      `${customerName}님의 기본 흐름은 ${basis.helpfulElements.join(', ')} 흐름이 생활 리듬과 일의 방식 안에 자리 잡을 때 안정감이 커집니다. 생각만 많을 때보다 몸이 따라오는 규칙을 만들 때 운이 더 잘 열립니다.`,
+      `${basis.dayMaster.stem} 일간은 기준이 분명할수록 장점이 살아납니다. ${cautionGuidance}`,
+      `현재 대운은 ${currentDayun.name} 흐름으로 읽히며, 지금은 판을 넓히기보다 가격, 역할, 책임, 마감선을 눈에 보이게 만드는 편이 더 정확합니다.`,
       `이번 결과는 ${serviceLabel} 기준으로 원국, 대운, 관계 맥락, 질문 2개를 한 번에 정리한 프리미엄 상담형 버전입니다.`
     ],
     advice: [
       `${basis.helpfulElements[0]} 기운과 맞는 생활 루틴을 먼저 안정시키세요.`,
-      '큰 결정보다 가격, 일정, 제공 범위가 반복되는 구조를 쌓는 방식이 더 잘 맞습니다.',
+      '중요한 선택은 가격, 역할, 일정, 책임 범위를 남긴 뒤 반복 가능한 구조로 옮기는 방식이 더 잘 맞습니다.',
       '질문과 연결된 관계나 일의 흐름은 감정만 보지 말고 일정, 돈, 책임, 체력 조건까지 함께 보세요.'
     ]
   };
@@ -1835,7 +1836,7 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
   const basis = providedBasis || buildDeterministicSajuBasis(serviceId, formData);
   const createdAt = new Date().toISOString();
   const serialNumber = createSerialNumber();
-  const customerName = formData.name?.trim() || '고객';
+  const customerName = getReportCallName(formData.name);
   const questionPreview = [formData.q1, formData.q2].filter((item): item is string => Boolean(item?.trim())).join(' / ');
   const birthLabel = `${formData.birthDate || '미입력'} / ${getTimeLabel(formData)} / ${getCalendarLabel(formData)} / ${getGenderLabel(formData)}`;
   const relationshipLabel = getRelationshipLabel(formData);
@@ -1908,8 +1909,8 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     gyeokguk: basis.gyeokguk,
     heroNote:
       kind === 'comprehensive'
-        ? `${customerName}님의 사주는 ${basis.helpfulElements.join(', ')} 기운을 중심으로 기준을 세우고, 그 기준을 반복 가능한 결과로 연결할 때 장점이 가장 선명해집니다.`
-        : `${customerName}님의 현재 흐름은 ${basis.helpfulElements.join(', ')} 기운을 살릴수록 결과가 부드럽게 이어지는 구조로 읽힙니다.`,
+        ? `${customerName}님의 사주는 생활 리듬, 일의 방식, 관계 기준이 한 방향으로 맞을 때 장점이 가장 선명해집니다. 기준을 세우는 데서 끝나지 않고 반복 가능한 결과로 옮길 때 만족도가 커집니다.`
+        : `${customerName}님의 현재 흐름은 필요한 기운을 생활과 선택 기준 안에 반영할수록 결과가 부드럽게 이어지는 구조로 읽힙니다.`,
     keyTakeaways: [
       {
         title: '일',

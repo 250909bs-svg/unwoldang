@@ -1,3 +1,5 @@
+import { getReportCallName } from '../lib/customerName';
+
 export const serviceIds = [
   'general-signature',
   'life-flow',
@@ -181,7 +183,7 @@ export const serviceCatalog: ServiceDefinition[] = [
   {
     id: 'life-flow',
     category: 'general',
-    label: '운월선생 인생 흐름 리포트',
+    label: '운월선생 신년운세',
     advisor: '운월선생',
     subtitle: '2026년 전체 흐름, 월별 운세, 재물·연애·직업·건강까지 한 번에 보는 신년운세 리포트',
     teaser: '올해 무엇을 버리고 무엇을 잡아야 돈과 사람이 붙는지 월별로 보여줍니다.',
@@ -221,7 +223,7 @@ export const serviceCatalog: ServiceDefinition[] = [
     category: 'love',
     label: '홍연아씨 연애운 리딩',
     advisor: '홍연아씨',
-    subtitle: '감정선과 들어오는 인연, 썸의 방향까지 섬세하게 읽는 카드형 연애 리포트',
+    subtitle: '감정선, 연락 온도, 들어오는 인연, 썸의 방향까지 섬세하게 읽는 연애 리포트',
     teaser: '지금 마음이 어느 방향으로 흐르는지, 누구와 맞닿는지 또렷하게 보여줍니다.',
     description:
       '썸, 시작 단계의 관계, 애매한 감정선이 답답할 때 선택하기 좋은 연애운 리포트입니다. 감정의 속도와 표현 방식, 상대와의 간격, 다가오는 인연의 분위기를 한 장씩 넘기듯 확인할 수 있도록 구성했습니다.',
@@ -231,9 +233,9 @@ export const serviceCatalog: ServiceDefinition[] = [
     heroTag: 'LOVE',
     badge: '연애 인기',
     spotlight: '썸의 기류와 들어오는 인연을 부드럽게 정리하는 인기 리포트',
-    bullets: ['감정선 분석', '들어오는 인연 포착', '관계 속도 진단', '실전 연락 팁'],
-    process: ['현재 감정 흐름 확인', '연애 패턴 분석', '인연 시기 정리', '질문 맞춤 조언 작성'],
-    output: ['연애운 요약 카드', '관계 흐름 분석', '실전 대화 포인트', '주의해야 할 패턴']
+    bullets: ['감정선 분석', '연락 온도 진단', '들어오는 인연 포착', '실전 관계 조언'],
+    process: ['현재 감정 흐름 확인', '연애 패턴 분석', '인연 시기 정리', '연락·고백·거리감 조언 작성'],
+    output: ['연애운 요약 카드', '연락 스타일 분석', '인연 루트와 시기', '주의해야 할 관계 패턴']
   },
   {
     id: 'love-reunion',
@@ -250,9 +252,9 @@ export const serviceCatalog: ServiceDefinition[] = [
     heroTag: 'REUNION',
     badge: '재회 집중',
     spotlight: '다시 이어질지, 정리할지를 현실적으로 보고 싶을 때 선택하는 리포트',
-    bullets: ['남은 감정 분석', '연락 가능성 확인', '재회 적기 체크', '정리해야 할 포인트'],
-    process: ['관계 거리감 분석', '감정 잔존도 확인', '재접촉 시기 체크', '실전 조언 도출'],
-    output: ['재회 분석 리포트', '감정 거리 카드', '연락 시기 체크', '주의 문장 정리']
+    bullets: ['남은 감정 분석', '연락 가능성 확인', '재접촉 적기 체크', '멈춰야 할 신호'],
+    process: ['관계 거리감 분석', '감정 잔존도 확인', '재접촉 시기 체크', '연락 문장과 거리 조절 조언'],
+    output: ['재회 분석 리포트', '감정 거리 카드', '재접촉 타이밍', '주의해야 할 연락 패턴']
   },
   {
     id: 'match-couple',
@@ -520,7 +522,7 @@ const buildSectionContent = (
   section: SectionSeed,
   formData?: Partial<IntakeFormData>
 ) => {
-  const customerName = formData?.name?.trim() || '고객';
+  const customerName = getReportCallName(formData?.name);
   const location = formData?.location?.trim() || '출생 지역 미입력';
   const firstQuestion =
     formData?.q1?.trim() || '지금 제 흐름에서 무엇을 가장 먼저 정리해야 하는지 알고 싶어요.';
@@ -556,7 +558,7 @@ export const buildMockReport = (
   formData?: Partial<IntakeFormData>
 ): SajuReport => {
   const service = findServiceById(serviceId);
-  const customerName = formData?.name?.trim() || '고객';
+  const customerName = getReportCallName(formData?.name);
   const sectionSeeds = sectionSeedByCategory[service.category];
   const createdAt = new Date().toISOString();
   const sections = sectionSeeds.map((section) => ({

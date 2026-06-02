@@ -25,7 +25,6 @@ const mainCategories = [
   { target: 'life-flow', label: '신년운세', icon: Sparkles, tint: '#f4efff' },
   { target: 'concern-reading', label: '고민풀이', icon: Sparkles, tint: '#eef7ff' },
   { target: 'love-reading', label: '연애운', icon: Heart, tint: '#fff0f5' },
-  { target: 'marriage-blueprint', label: '결혼운', icon: Sparkles, tint: '#fff6f0' },
   { target: 'love-reunion', label: '재회운', icon: Heart, tint: '#fff6f8' },
   { target: 'career-reading', label: '직업운', icon: BriefcaseBusiness, tint: '#f6f2ea' },
   { target: 'money-reading', label: '금전운', icon: PiggyBank, tint: '#fff8e7' },
@@ -45,11 +44,11 @@ const cardNewsSlides = [
   },
   {
     id: 'news-star-sign',
-    target: 'life-flow',
+    target: 'concern-reading',
     rank: 2,
-    kicker: '별자리 운세',
-    title: '별자리 운세 리딩',
-    subtitle: '다가오는 12개월 흐름과 월별 포인트 해석',
+    kicker: '고민풀이',
+    title: '운월당 고민풀이',
+    subtitle: '지금 고민 2개를 사주 구조와 대운으로 바로 정리',
     image: illustrationDeck.blossom,
     tone: 'rose'
   },
@@ -58,7 +57,7 @@ const cardNewsSlides = [
     target: 'match-couple',
     rank: 3,
     kicker: '궁합 연애운',
-    title: '천생연분 궁합운',
+    title: '월연도령 사주궁합',
     subtitle: '두 사람의 인연 강도 · 갈등 포인트 · 연애 궁합',
     image: illustrationDeck.red,
     tone: 'violet'
@@ -67,19 +66,19 @@ const cardNewsSlides = [
     id: 'news-monthly',
     target: 'life-flow',
     rank: 4,
-    kicker: '월별 운세',
-    title: '운둔의 월별 운세',
-    subtitle: '한 달 단위 운의 흐름과 선택 타이밍',
+    kicker: '신년운세',
+    title: '운월선생 신년운세',
+    subtitle: '다가오는 12개월 흐름과 월별 선택 타이밍',
     image: illustrationDeck.lantern,
     tone: 'amber'
   },
   {
     id: 'news-tarot-love',
-    target: 'love-reading',
+    target: 'marriage-blueprint',
     rank: 5,
-    kicker: '타로 연애 운세',
-    title: '타로 카드 연애 운세',
-    subtitle: '지금 상대 흐름 · 감정선 · 다가갈 타이밍',
+    kicker: '결혼운',
+    title: '청연부인 결혼운 설계도',
+    subtitle: '배우자 흐름 · 혼인 적기 · 현실 체크 포인트',
     image: illustrationDeck.sunlight,
     tone: 'emerald'
   }
@@ -129,19 +128,19 @@ const homeDiscoverySections = [
         id: 'general-signature',
         to: '/form/general-signature',
         image: illustrationDeck.moon,
-        coverKicker: '운월의 29금',
-        coverTitle: '절정비책',
-        title: '운월의 29금 절정비책',
-        summary: '내 사주 속 쾌락과 유혹의 비밀'
+        coverKicker: '운월선생',
+        coverTitle: '종합사주',
+        title: '운월선생 정통 종합사주',
+        summary: '인생 전반의 흐름과 선택 기준'
       },
       {
-        id: 'marriage-blueprint',
-        to: '/form/marriage-blueprint',
+        id: 'concern-reading',
+        to: '/form/concern-reading',
         image: illustrationDeck.sunlight,
-        coverKicker: '청월아씨',
-        coverTitle: '자녀사주',
-        title: '청월아씨 자녀사주',
-        summary: '아이 앞에 펼쳐진 운명의 지도'
+        coverKicker: '운월당',
+        coverTitle: '고민풀이',
+        title: '운월당 고민풀이',
+        summary: '지금 고민 2개를 바로 해석'
       },
       {
         id: 'life-flow',
@@ -164,27 +163,27 @@ const homeDiscoverySections = [
         to: '/form/life-flow',
         image: illustrationDeck.lantern,
         coverKicker: '청월아씨',
-        coverTitle: '정통사주',
-        title: '청월아씨 정통사주',
-        summary: '내 안에 펼쳐진 운명의 지도'
+        coverTitle: '신년운세',
+        title: '운월선생 신년운세',
+        summary: '올해와 내년의 흐름 지도'
       },
       {
         id: 'match-destiny',
         to: '/form/match-destiny',
         image: illustrationDeck.red,
-        coverKicker: '몽월소녀',
-        coverTitle: '가미두수',
-        title: '몽월소녀 자미두수',
-        summary: '지미두수로 보는 나의 운명'
+        coverKicker: '월연도령',
+        coverTitle: '운명궁합',
+        title: '월연도령 운명 궁합',
+        summary: '오래 갈 인연인지 보는 궁합'
       },
       {
-        id: 'life-flow-2026',
-        to: '/form/life-flow',
+        id: 'marriage-blueprint',
+        to: '/form/marriage-blueprint',
         image: illustrationDeck.blossom,
-        coverKicker: '월하소',
-        coverTitle: '2026비',
-        title: '월하소 2026비',
-        summary: '2026년 미리보기'
+        coverKicker: '청연부인',
+        coverTitle: '결혼운',
+        title: '청연부인 결혼운 설계도',
+        summary: '배우자 흐름과 혼인 준비'
       }
     ]
   },
@@ -198,9 +197,9 @@ const homeDiscoverySections = [
         to: '/form/money-reading',
         image: illustrationDeck.sunlight,
         coverKicker: '운월선생',
-        coverTitle: '재물비책',
-        title: '운월선생 재물비책',
-        summary: '돈이 붙는 시기와 기회 읽기'
+        coverTitle: '직업·재물',
+        title: '직업·재물 종합 분석',
+        summary: '일과 돈이 붙는 구조 읽기'
       },
       {
         id: 'career',
@@ -208,8 +207,8 @@ const homeDiscoverySections = [
         image: illustrationDeck.moon,
         coverKicker: '운월선생',
         coverTitle: '직업비책',
-        title: '운월선생 직업비책',
-        summary: '일, 승진, 이동운의 포인트'
+        title: '커리어 흐름 분석',
+        summary: '직업 방향과 일 스타일'
       },
       {
         id: 'marriage-timing',
