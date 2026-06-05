@@ -1,4 +1,4 @@
-export const CLOUD_RUN_API_BASE_URL = 'https://unwoldang-report-api-348612237380.asia-northeast3.run.app';
+export const CLOUD_RUN_API_BASE_URL = 'https://unwoldang-report-api-pt76url4oa-du.a.run.app';
 
 export const DEFAULT_REPORT_ENDPOINT = `${CLOUD_RUN_API_BASE_URL}/api/report`;
 export const DEFAULT_KAKAO_TOKEN_EXCHANGE_ENDPOINT = `${CLOUD_RUN_API_BASE_URL}/api/auth/kakao/exchange`;
