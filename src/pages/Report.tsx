@@ -4222,6 +4222,22 @@ function isLoveQuestion(question: string) {
   return hasConcernKeyword(question, ['연애', '결혼', '재회', '상대', '인연', '배우자', '궁합', '썸', '사랑']);
 }
 
+function isMoveLocationQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  const hasMoveIntent = /이사|거주|살곳|살지|집|동네|지역|강남|독산|역세권|월세|전세/.test(normalized);
+  const hasChoiceIntent = /어디|중에|둘중|갈까|가야|좋을까|낫|비교|추천/.test(normalized);
+
+  return hasMoveIntent && hasChoiceIntent;
+}
+
+function isLovePlaceQuestion(question: string) {
+  const normalized = question.replace(/\s/g, '');
+  const hasLoveIntent = /연애|인연|썸|만남|애인|여자친구|남자친구/.test(normalized);
+  const hasPlaceIntent = /어디|가면|장소|모임|소개|만날|동네|지역|생활권/.test(normalized);
+
+  return hasLoveIntent && hasPlaceIntent;
+}
+
 function isCautionQuestion(question: string) {
   return hasConcernKeyword(question, ['조심', '주의', '위험', '피해야', '실수', '후회', '손실', '망하는', '안해야']);
 }
@@ -4414,6 +4430,49 @@ function buildSignatureQuestionAnswer(
         '술, 약, 칼, 끈, 높은 곳, 차 키처럼 자신을 다치게 할 수 있는 물건과 장소에서 지금 바로 떨어져.',
         '한국이면 자살예방 상담전화 109로 전화해. 지금 당장 위험하면 119나 112로 바로 전화해. 해외라면 현지 응급번호나 가까운 응급실로 가.',
         `${helpfulText} 기운은 지금 “큰 결심”이 아니라 아주 작은 생활 회복으로 써야 해. 물 한 컵 마시기, 불 켜기, 침대 밖으로 나오기, 사람에게 연락하기. 오늘 목표는 인생 결론이 아니라 다음 10분을 안전하게 넘기는 거야.`
+      ]
+    };
+  }
+
+  if (isMoveLocationQuestion(question)) {
+    const mentionsGangnam = /강남/.test(question);
+    const mentionsDoksan = /독산/.test(question);
+    const directTitle =
+      mentionsGangnam && mentionsDoksan
+        ? '거주는 독산역, 활동은 강남으로 나누는 편이 더 현실적입니다'
+        : '이사는 설렘보다 고정비와 생활 리듬으로 골라야 합니다';
+    const directVerdict =
+      mentionsGangnam && mentionsDoksan
+        ? `${report.customerName}님 기준으로 둘 중 하나를 고르라면, 집은 독산역 쪽이 더 안정적이고 강남은 일·만남·브랜딩을 여는 활동지로 쓰는 편이 맞습니다.`
+        : `${report.customerName}님에게 이사는 “좋아 보이는 동네”보다 고정비, 이동 시간, 수면 리듬, 반복해서 만나는 사람의 질을 먼저 봐야 하는 선택입니다.`;
+
+    return {
+      ...qa,
+      title: directTitle,
+      analysis:
+        `${directVerdict} ${basisText} ${report.dayMaster} 일간은 생활 기반이 흔들리면 판단이 빨라지고, ${report.currentDayun.name} 대운에서는 돈 흐름과 이동성, 사람 만나는 양이 같이 늘어납니다. 그래서 강남처럼 자극과 기회가 많은 곳은 일과 소개를 열기에는 좋지만, 주거지로 잡으면 고정비와 피로가 먼저 올라올 수 있습니다. 독산역 쪽은 화려함은 약해도 출퇴근, 생활비, 수면, 반복 루틴을 잡기 쉬워 장기적으로 운을 담는 그릇이 됩니다.`,
+      advice: [
+        '결론: 지금 목적이 “안정적으로 살면서 돈을 남기는 것”이면 독산역이 우선입니다. 집값, 관리비, 교통, 수면 시간을 낮춰야 다음 선택지가 생깁니다.',
+        '강남은 버릴 곳이 아니라 “활동권”으로 쓰는 게 좋습니다. 미팅, 소개팅, 수업, 네트워킹, 상담, 촬영, 브랜딩은 강남에서 열고 집은 회복되는 곳으로 두세요.',
+        '독산역을 고를 때는 역까지 실제 도보 시간, 밤길, 헬스장·카페·식사 동선, 가산·구디·강남 이동 시간을 꼭 보세요. 이 네 가지가 맞으면 생활 리듬이 안정됩니다.',
+        '강남을 집으로 고를 수 있는 조건은 월 고정비를 내고도 6개월 현금 방어가 가능하고, 새벽 생활과 즉흥 지출을 스스로 끊을 수 있을 때입니다. 이 조건이 안 되면 기회보다 소모가 먼저 옵니다.',
+        `${bestMonthText}에는 집 후보를 직접 걸어보고, ${watchMonthText}에는 계약금·보증금처럼 되돌리기 어려운 결정을 서두르지 마세요. 최종 선택은 “돈, 이동, 수면, 사람” 네 칸이 모두 70점 이상인 곳입니다.`
+      ]
+    };
+  }
+
+  if (isLovePlaceQuestion(question)) {
+    return {
+      ...qa,
+      title: '연애는 번화가보다 반복해서 마주치는 생활권에서 열립니다',
+      analysis:
+        `질문 "${question}"의 답은 “어딜 한 번 가면 바로 생긴다”가 아니라, ${report.customerName}님이 자연스럽게 반복 출석할 수 있는 장소를 잡는 데 있습니다. ${report.dayMaster} 일간과 ${dominantLabel} 흐름에서는 처음 만난 순간의 뜨거움보다 약속을 지키는 태도, 생활 리듬, 말투의 안정감이 더 오래 갑니다. 그래서 즉흥 술자리보다 목적이 있는 모임, 운동, 수업, 지인 소개, 직장인 생활권에서 인연 체감이 큽니다.`,
+      advice: [
+        `1순위는 지인 소개입니다. ${report.customerName}님은 완전 낯선 만남보다 중간에 신뢰를 보증해주는 사람이 있을 때 마음을 열기 쉽습니다.`,
+        '장소로 보면 강남·신논현·선릉은 소개팅, 수업, 네트워킹처럼 만남을 여는 곳으로 좋습니다. 다만 술자리만 따라가면 관계가 가볍게 끝날 수 있으니 “운동, 강의, 독서, 일 관련 모임”처럼 목적이 있는 자리가 맞습니다.',
+        '독산역·가산·구로디지털단지 쪽은 직장인 생활권 인연을 보기 좋습니다. 퇴근 후 운동, 카페 작업, 스터디, 러닝 모임처럼 같은 시간대에 반복해서 보는 구조가 연애로 이어지기 쉽습니다.',
+        '피해야 할 곳은 새벽 술자리, 감정 소비가 큰 번개 모임, 답장은 빠른데 약속이 흐린 사람들입니다. 설렘이 있어도 일정과 책임이 흐리면 금방 피곤해집니다.',
+        `${bestMonthText}에는 소개팅과 새 모임을 열고, ${watchMonthText}에는 관계 결론을 몰아붙이지 마세요. 이번 달 할 일은 새 장소 하나를 정해 4주 연속 같은 시간에 나가는 것입니다.`
       ]
     };
   }
