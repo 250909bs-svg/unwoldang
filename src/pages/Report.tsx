@@ -2139,7 +2139,7 @@ function buildConcernDirectAnswer(
   };
 }
 
-function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
+function buildConcernReadingReportV2(report: SajuReportData, options: { preserveQuestionAnswers?: boolean } = {}): SajuReportData {
   if (report.serviceId !== 'concern-reading') {
     return report;
   }
@@ -2158,9 +2158,11 @@ function buildConcernReadingReportV2(report: SajuReportData): SajuReportData {
   const helpfulText = formatElementList(report.helpfulElements) || '균형 오행';
   const cautiousText = buildConcernCautionLabel(report.cautiousElements);
   const cautionSentence = buildConcernCautionSentence(report.cautiousElements);
-  const directAnswers = report.questionAnswers.map((qa, index) =>
-    buildConcernDirectAnswer(qa, index, report, dominantTenGod, bestMonthText, watchMonthText)
-  );
+  const directAnswers = options.preserveQuestionAnswers
+    ? report.questionAnswers
+    : report.questionAnswers.map((qa, index) =>
+        buildConcernDirectAnswer(qa, index, report, dominantTenGod, bestMonthText, watchMonthText)
+      );
   const tenGodRows = report.tenGods.slice(0, 8).map((item) => [
     item.label,
     String(item.value),
@@ -4669,7 +4671,7 @@ function getRelationDigest(report: SajuReportData) {
   return relationDetails.slice(0, 2).join('\n\n');
 }
 
-function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
+function buildExpertSatisfactionReport(report: SajuReportData, options: { preserveQuestionAnswers?: boolean } = {}): SajuReportData {
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
   const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const dominantTenGod = report.tenGods[0];
@@ -4742,9 +4744,11 @@ function buildExpertSatisfactionReport(report: SajuReportData): SajuReportData {
     `종합하면 이 사주의 핵심은 차분한 판단력을 결과물과 계산력으로 쓰되, 사람을 설득하는 온도와 다음 단계의 방향성을 놓치지 않는 것입니다. ${withTopicParticle(`${helpfulText} 기운`)} 생활 리듬과 상품 구조 안에서 쓰고, ${cautionGuidance} 그때 좋은 운이 말뿐인 위로가 아니라 실제 매출, 관계 안정, 체력 회복으로 내려옵니다.`
   ];
 
-  const expertQuestionAnswers = report.questionAnswers.map((qa, index) =>
-    buildSignatureQuestionAnswer(qa, index, report, dominantLabel, bestMonth, watchMonth)
-  );
+  const expertQuestionAnswers = options.preserveQuestionAnswers
+    ? report.questionAnswers
+    : report.questionAnswers.map((qa, index) =>
+        buildSignatureQuestionAnswer(qa, index, report, dominantLabel, bestMonth, watchMonth)
+      );
 
   const expertSections = report.sections.filter((section) => !['saju', 'logic'].includes(section.id)).map((section) => {
     if (section.id === 'love') {
@@ -5972,6 +5976,35 @@ function buildProductFocusedReport(report: SajuReportData): SajuReportData {
   };
 }
 
+function preserveGeneratedQuestionAnswers(report: SajuReportData, source: SajuReportData): SajuReportData {
+  const generatedAnswers = source.questionAnswers.filter(
+    (answer) => answer.question?.trim() && answer.analysis?.trim() && answer.advice?.length
+  );
+
+  if (generatedAnswers.length === 0) {
+    return report;
+  }
+
+  return {
+    ...report,
+    questionAnswers: generatedAnswers,
+    sections: report.sections.map((section) => {
+      if (!['concern-custom', 'focused-questions'].includes(section.id)) {
+        return section;
+      }
+
+      return {
+        ...section,
+        details: generatedAnswers.map((answer, index) => ({
+          summary: answer.title || `질문 ${index + 1}`,
+          content: `${answer.analysis}\n\n${answer.advice.join('\n')}`,
+          open: true
+        }))
+      };
+    })
+  };
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -5985,21 +6018,30 @@ export default function Report() {
   const reportCharacterVideo = reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
   const report = useMemo(() => {
+    const preserveAiQuestions = Boolean(reportData);
     const expandedReport = buildExpandedCoreReport(baseReport);
+    let nextReport: SajuReportData;
+
     if (expandedReport.serviceId === 'concern-reading') {
-      return buildConcernReadingReportV2(expandedReport);
+      nextReport = buildConcernReadingReportV2(expandedReport, { preserveQuestionAnswers: preserveAiQuestions });
+      return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
     }
 
     if (expandedReport.serviceId === 'life-flow') {
-      return buildProductFocusedReport(buildYearlyFortuneReportV2(expandedReport));
+      nextReport = buildProductFocusedReport(buildYearlyFortuneReportV2(expandedReport));
+      return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
     }
 
     if (['love', 'reunion', 'marriage', 'career', 'wealth'].includes(expandedReport.kind)) {
-      return buildProductFocusedReport(buildFocusedPremiumReport(expandedReport));
+      nextReport = buildProductFocusedReport(buildFocusedPremiumReport(expandedReport));
+      return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
     }
 
-    return buildProductFocusedReport(buildExpertSatisfactionReport(expandedReport));
-  }, [baseReport]);
+    nextReport = buildProductFocusedReport(
+      buildExpertSatisfactionReport(expandedReport, { preserveQuestionAnswers: preserveAiQuestions })
+    );
+    return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
+  }, [baseReport, reportData]);
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const pageCopy = getReportPageCopy(report);
   const yearlyLead = report.yearLuck[0];

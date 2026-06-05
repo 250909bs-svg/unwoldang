@@ -4268,6 +4268,16 @@ body {
   font-weight: 700;
 }
 
+.mobile-loading-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-loading-actions .app-black-button {
+  width: 100%;
+  max-width: 220px;
+}
+
 @media (max-width: 520px) {
   .app-container {
     max-width: 100%;

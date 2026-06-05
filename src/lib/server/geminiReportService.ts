@@ -412,6 +412,11 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Do not invent unsupported facts. If the chart does not support a precise claim, express it as a tendency, condition, or verification checklist.',
                   'For every major section, include four layers: myeongri basis, real-life scene, risk if mishandled, and one concrete next action.',
                   'Question answers must directly answer the customer question first, then explain the basis, then give a 7-day verification action. Avoid vague reassurance.',
+                  'For questionAnswers, do not classify the question into a fixed category template. Do not output generic titles such as "질문을 실제 사건으로 쪼개야 답이 보입니다" unless the customer actually asked for that method. The title must be a direct answer to the exact question.',
+                  'Keep each customer question exactly as provided, and answer only that question. If the customer compares named options, compare those exact options by money, commute, relationships, fatigue, and opportunity. If the customer asks where to meet love, give concrete meeting routes and places, not only relationship attitude advice.',
+                  'For location, moving, career-choice, dating-place, school, work, or neighborhood questions, never answer with abstract four-box advice only. Give a conditional recommendation first, then the saju basis, then a real-life checklist.',
+                  'Question answers must be different for each person. Use deterministicBasis, currentDayun, yearLuck/monthLuck, relationship status, and the exact words in customerInput.questions. Do not reuse a stock answer across users.',
+                  'If the exact question cannot be answered deterministically, say what can be read from the chart and what must be verified in reality. Still answer the practical choice directly with conditions.',
                   'Add life-graph style interpretation in the wording: year-by-year likely themes, why the timing appears, and what the customer should do in that period.',
                   'If baseReport.serviceId is life-flow, structure the yearly report as: opening, natal core analysis, yearly map, 12 monthly readings, money, love, career, relationships, health, luck actions, closing. Each month must include total luck, money, love, relationships, health, action tip, avoid action, and key point.',
                   'For life-flow yearly map: 2026 is 丙午 with strong fire in both stem and branch; 2027 is 丁未 with remaining fire fixed into earth, emphasizing consolidation and burden management; 2028 is 戊申, emphasizing metal, outputs, systems, settlement, and performance verification. Never reuse the same expansion sentence for these years.',
@@ -516,14 +521,20 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
   const deterministicBasis = buildDeterministicSajuBasis(serviceId, formData, verification);
   const fallbackReport = buildSajuReport(serviceId, formData, deterministicBasis);
 
-  let mergedReport = fallbackReport;
+  let draft: GeminiDraft | null = null;
 
   try {
-    const draft = await requestGeminiDraft(fallbackReport, deterministicBasis);
-    mergedReport = mergeGeminiDraft(fallbackReport, draft);
+    draft = await requestGeminiDraft(fallbackReport, deterministicBasis);
   } catch (geminiError) {
     console.error('Gemini report draft failed:', geminiError);
+    throw new ReportRequestError(502, 'Gemini 분석 생성에 실패했습니다. 기본 리포트로 대체하지 않고 다시 시도해 주세요.');
   }
+
+  if (!draft) {
+    throw new ReportRequestError(503, 'Gemini 분석 API가 설정되지 않았습니다. 기본 리포트로 대체하지 않습니다.');
+  }
+
+  const mergedReport = mergeGeminiDraft(fallbackReport, draft);
 
   return {
     provider: 'gemini',

@@ -59,6 +59,7 @@ export default function Loading() {
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
   const [analysisFinished, setAnalysisFinished] = useState(false);
   const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
   const hasAiEndpoint = Boolean(getAiReportEndpoint());
   const paymentMode = getPaymentMode();
   const canRequestAiReport = hasAiEndpoint && Boolean(reportAccessToken);
@@ -132,10 +133,11 @@ export default function Loading() {
       } catch (error) {
         if (!cancelled) {
           console.error('AI report request failed:', error);
+          setAnalysisFailed(true);
           setAnalysisNotice(
             error instanceof Error
               ? error.message
-              : 'AI 분석 응답이 지연되어 내부 리포트로 먼저 전환합니다.'
+              : 'AI 분석 생성에 실패했습니다. 결제 리포트는 기본 문장으로 대체하지 않고 다시 시도해야 합니다.'
           );
         }
       } finally {
@@ -158,14 +160,19 @@ export default function Loading() {
     }
 
     const fallbackTimer = window.setTimeout(() => {
-      setAnalysisNotice('AI 분석 응답이 예상보다 길어져 내부 리포트로 먼저 이동합니다.');
+      if (canRequestAiReport) {
+        setAnalysisFailed(true);
+        setAnalysisNotice('AI 분석 응답이 예상보다 길어졌습니다. 기본 리포트로 대체하지 않고 다시 시도해 주세요.');
+      } else {
+        setAnalysisNotice('분석 응답이 예상보다 길어져 내부 리포트로 먼저 이동합니다.');
+      }
       setAnalysisFinished(true);
     }, LOADING_FALLBACK_TIMEOUT_MS);
 
     return () => {
       window.clearTimeout(fallbackTimer);
     };
-  }, [analysisFinished]);
+  }, [analysisFinished, canRequestAiReport]);
 
   useEffect(() => {
     const progressTimer = window.setInterval(() => {
@@ -192,7 +199,7 @@ export default function Loading() {
   }, [analysisFinished, messages.length]);
 
   useEffect(() => {
-    if (!analysisFinished || progress < 100) {
+    if (!analysisFinished || analysisFailed || progress < 100) {
       return;
     }
 
@@ -227,7 +234,7 @@ export default function Loading() {
     return () => {
       window.clearTimeout(moveTimer);
     };
-  }, [analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, service.id, tabOrigin]);
+  }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, service.id, tabOrigin]);
 
   return (
     <main className="mobile-page-shell">
@@ -291,6 +298,13 @@ export default function Loading() {
             </div>
 
             {analysisNotice ? <p className="mobile-loading-notice">{analysisNotice}</p> : null}
+            {analysisFailed ? (
+              <div className="mobile-loading-actions">
+                <button type="button" className="app-black-button" onClick={() => window.location.reload()}>
+                  AI 분석 다시 시도
+                </button>
+              </div>
+            ) : null}
 
             <div className="saju-loading-progress">
               <div className="progress-track">
