@@ -71,6 +71,14 @@
       "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     }
   ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "unwoldang.com" }],
+      "destination": "https://www.unwoldang.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

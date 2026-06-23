@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://unwoldang.com').replace(/\/$/, '');
+const SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://www.unwoldang.com').replace(/\/$/, '');
 
 type RouteSeo = {
   title: string;

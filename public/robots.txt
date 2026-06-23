@@ -10,4 +10,4 @@ Disallow: /admin
 Disallow: /auth/
 Disallow: /payment/
 
-Sitemap: https://unwoldang.com/sitemap.xml
+Sitemap: https://www.unwoldang.com/sitemap.xml

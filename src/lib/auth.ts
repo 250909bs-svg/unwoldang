@@ -82,7 +82,7 @@ export const getKakaoRedirectUri = () => {
     return '';
   }
 
-  const canonicalOrigin = 'https://unwoldang.com';
+  const canonicalOrigin = 'https://www.unwoldang.com';
   const overrideOrigin = import.meta.env.VITE_KAKAO_REDIRECT_ORIGIN;
   const origin =
     overrideOrigin ||
