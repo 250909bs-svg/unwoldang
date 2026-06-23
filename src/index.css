@@ -2085,6 +2085,7 @@ body {
   display: grid;
   gap: 8px;
   color: #ffffff;
+  min-width: 0;
 }
 
 .home-cardnews-copy small {
@@ -2102,9 +2103,13 @@ body {
 
 .home-cardnews-copy h2 {
   margin: 0;
-  font-size: 44px;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(28px, 8vw, 36px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: keep-all;
 }
 
@@ -2164,13 +2169,19 @@ body {
   align-items: center;
   gap: 8px;
   padding: 0 6px;
+  min-width: 0;
 }
 
 .home-showcase-head strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   color: #525866;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .home-showcase-icon {
@@ -2201,9 +2212,10 @@ body {
 }
 
 .home-showcase-card {
-  flex: 0 0 min(136px, calc((100% - 16px) / 2.4));
+  flex: 0 0 min(156px, calc((100% - 16px) / 2.25));
   display: grid;
   gap: 8px;
+  min-width: 0;
   scroll-snap-align: start;
 }
 
@@ -2240,6 +2252,7 @@ body {
   z-index: 1;
   display: grid;
   gap: 3px;
+  min-width: 0;
   color: #ffffff;
 }
 
@@ -2251,9 +2264,13 @@ body {
 
 .home-showcase-cover-copy h3 {
   margin: 0;
+  max-width: 100%;
+  overflow: hidden;
   font-size: 25px;
   line-height: 0.96;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: keep-all;
 }
 
@@ -2261,13 +2278,18 @@ body {
   display: grid;
   gap: 3px;
   padding: 0 1px;
+  min-width: 0;
 }
 
 .home-showcase-meta strong {
+  max-width: 100%;
+  overflow: hidden;
   color: #111827;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .home-showcase-meta p {
@@ -2499,6 +2521,7 @@ body {
   display: grid;
   justify-items: center;
   gap: 8px;
+  min-width: 0;
   padding: 14px 8px;
   border-radius: 22px;
   background: linear-gradient(180deg, #ffffff 0%, #fbf8f3 100%);
@@ -2519,10 +2542,14 @@ body {
 }
 
 .live-category-card strong {
+  max-width: 100%;
+  overflow: hidden;
   color: #2a241e;
   font-size: 11px;
   font-weight: 850;
   letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .live-chip-strip {
@@ -2701,12 +2728,17 @@ body {
   display: grid;
   gap: 6px;
   flex: 1;
+  min-width: 0;
   padding: 14px;
 }
 
 .app-report-copy strong {
+  max-width: 100%;
+  overflow: hidden;
   font-size: 14px;
   line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-report-copy p {

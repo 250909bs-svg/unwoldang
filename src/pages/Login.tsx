@@ -1,8 +1,8 @@
 import { Menu, MessageCircle } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { buildKakaoAuthorizeUrl } from '../lib/auth';
+import { beginKakaoLogin, sanitizeAuthReturnTo } from '../lib/auth';
 
 type LoginLocationState = {
   returnTo?: string;
@@ -14,34 +14,37 @@ export default function Login() {
   const navigate = useNavigate();
   const { loginDemo } = useAuth();
   const [loginError, setLoginError] = useState('');
+  const autoStartRef = useRef(false);
   const canUseLocalPreview =
     import.meta.env.DEV && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
 
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const shouldAutoStartKakao = searchParams.get('kakao') === '1';
+
   const returnTo = useMemo(() => {
     const state = (location.state as LoginLocationState) || {};
-    return state.returnTo || '/my';
-  }, [location.state]);
+    return sanitizeAuthReturnTo(state.returnTo || searchParams.get('returnTo') || '/my');
+  }, [location.state, searchParams]);
 
   const handleKakaoLogin = () => {
-    if (window.location.hostname.endsWith('.vercel.app')) {
-      window.location.href = `https://unwoldang.com/login`;
+    const login = beginKakaoLogin(returnTo);
+
+    if (!login.ok) {
+      setLoginError(login.message);
       return;
     }
 
-    if (window.location.hostname === '127.0.0.1' && window.location.port === '5173') {
-      window.location.href = `${window.location.protocol}//localhost:5173/login`;
-      return;
-    }
-
-    const authorizeUrl = buildKakaoAuthorizeUrl(returnTo);
-
-    if (!authorizeUrl) {
-      setLoginError('카카오 REST API 키가 설정되지 않았습니다. 관리자에게 문의해 주세요.');
-      return;
-    }
-
-    window.location.href = authorizeUrl;
+    window.location.href = login.url;
   };
+
+  useEffect(() => {
+    if (!shouldAutoStartKakao || autoStartRef.current) {
+      return;
+    }
+
+    autoStartRef.current = true;
+    handleKakaoLogin();
+  }, [shouldAutoStartKakao, returnTo]);
 
   const handleLocalPreviewLogin = () => {
     loginDemo('운월당 미리보기');

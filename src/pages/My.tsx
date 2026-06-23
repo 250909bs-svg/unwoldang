@@ -2,7 +2,7 @@ import { ChevronRight, LogOut, Menu, MessageCircle, ScrollText, Sparkles } from 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { buildKakaoAuthorizeUrl } from '../lib/auth';
+import { beginKakaoLogin } from '../lib/auth';
 import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
 
 type ReplayPromo = {
@@ -77,14 +77,14 @@ function LoggedOutReplay() {
   const [loginError, setLoginError] = useState('');
 
   const handleKakaoLogin = () => {
-    const authorizeUrl = buildKakaoAuthorizeUrl('/my');
+    const login = beginKakaoLogin('/my');
 
-    if (!authorizeUrl) {
-      setLoginError('카카오 REST API 키가 설정되지 않았습니다. 관리자에게 문의해 주세요.');
+    if (!login.ok) {
+      setLoginError(login.message);
       return;
     }
 
-    window.location.href = authorizeUrl;
+    window.location.href = login.url;
   };
 
   return (

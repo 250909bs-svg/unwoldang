@@ -198,6 +198,62 @@ export const buildKakaoAuthorizeUrl = (returnTo: string) => {
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
 };
 
+export const buildLoginRoute = (returnTo: string, shouldAutoStart = false) => {
+  const params = new URLSearchParams({
+    returnTo: sanitizeAuthReturnTo(returnTo)
+  });
+
+  if (shouldAutoStart) {
+    params.set('kakao', '1');
+  }
+
+  return `/login?${params.toString()}`;
+};
+
+export const getKakaoLoginBridgeUrl = (returnTo: string) => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const safeReturnTo = sanitizeAuthReturnTo(returnTo);
+  const loginRoute = buildLoginRoute(safeReturnTo, true);
+
+  if (window.location.hostname === '127.0.0.1' && window.location.port === '5173') {
+    return `${window.location.protocol}//localhost:5173${loginRoute}`;
+  }
+
+  if (window.location.hostname.endsWith('.vercel.app')) {
+    return `https://www.unwoldang.com${loginRoute}`;
+  }
+
+  return null;
+};
+
+export const beginKakaoLogin = (returnTo: string) => {
+  const bridgeUrl = getKakaoLoginBridgeUrl(returnTo);
+
+  if (bridgeUrl) {
+    return {
+      ok: true as const,
+      url: bridgeUrl
+    };
+  }
+
+  const authorizeUrl = buildKakaoAuthorizeUrl(returnTo);
+
+  if (!authorizeUrl) {
+    return {
+      ok: false as const,
+      message: '카카오 REST API 키가 설정되지 않았습니다. 관리자에게 문의해 주세요.'
+    };
+  }
+
+  return {
+    ok: true as const,
+    url: authorizeUrl
+  };
+};
+
 export const buildPortOneRedirectUrl = () => {
   if (typeof window === 'undefined') {
     return '';
