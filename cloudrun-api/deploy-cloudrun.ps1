@@ -14,10 +14,16 @@ param(
   [string]$PortOneApiBaseUrl = "https://api.portone.io",
   [string]$ReportAccessSecretName = "REPORT_ACCESS_SECRET",
   [string]$ReportAccessTokenTtlMs = "1800000",
+  [string]$AuthAccessTokenTtlMs = "2592000000",
+  [string]$AdminAccessTokenTtlMs = "43200000",
   [string]$ReportRateLimitWindowMs = "60000",
   [string]$ReportRateLimitMax = "12",
   [string]$KakaoRestApiKey = "",
-  [string]$KakaoClientSecretName = ""
+  [string]$KakaoClientSecretName = "",
+  [string]$EnableFirestoreArchive = "true",
+  [string]$FirestoreProjectId = "",
+  [string]$FirestoreDatabaseId = "(default)",
+  [string]$AdminCredentialHash = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,12 +53,18 @@ Write-Host "Region  : $Region"
     $secretPairs += "KAKAO_CLIENT_SECRET=$($KakaoClientSecretName):latest"
   }
   $secretArg = $secretPairs -join ","
-  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|PORTONE_API_BASE_URL=$PortOneApiBaseUrl|REPORT_ACCESS_TOKEN_TTL_MS=$ReportAccessTokenTtlMs|REPORT_RATE_LIMIT_WINDOW_MS=$ReportRateLimitWindowMs|REPORT_RATE_LIMIT_MAX=$ReportRateLimitMax"
+  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|PORTONE_API_BASE_URL=$PortOneApiBaseUrl|REPORT_ACCESS_TOKEN_TTL_MS=$ReportAccessTokenTtlMs|AUTH_ACCESS_TOKEN_TTL_MS=$AuthAccessTokenTtlMs|ADMIN_ACCESS_TOKEN_TTL_MS=$AdminAccessTokenTtlMs|REPORT_RATE_LIMIT_WINDOW_MS=$ReportRateLimitWindowMs|REPORT_RATE_LIMIT_MAX=$ReportRateLimitMax|ENABLE_FIRESTORE_ARCHIVE=$EnableFirestoreArchive|FIRESTORE_DATABASE_ID=$FirestoreDatabaseId"
   if ($PortOneStoreId.Trim()) {
     $envVars = "$envVars|PORTONE_STORE_ID=$PortOneStoreId"
   }
   if ($KakaoRestApiKey.Trim()) {
     $envVars = "$envVars|KAKAO_REST_API_KEY=$KakaoRestApiKey"
+  }
+  if ($FirestoreProjectId.Trim()) {
+    $envVars = "$envVars|FIRESTORE_PROJECT_ID=$FirestoreProjectId"
+  }
+  if ($AdminCredentialHash.Trim()) {
+    $envVars = "$envVars|ADMIN_CREDENTIAL_HASH=$AdminCredentialHash"
   }
 
 Push-Location $root

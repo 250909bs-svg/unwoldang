@@ -8,6 +8,7 @@ import { getKakaoTokenExchangeEndpoint } from '../lib/runtimeConfig';
 type CallbackStatus = 'loading' | 'error';
 
 type KakaoExchangeResponse = {
+  authToken?: string;
   user?: {
     id?: string | number;
     nickname?: string;
@@ -37,7 +38,8 @@ const normalizeKakaoUser = (payload: KakaoExchangeResponse) => {
       id: String(payload.user.id || `kakao-${Date.now()}`),
       nickname: payload.user.nickname || '카카오 회원',
       email: payload.user.email,
-      avatar: payload.user.avatar
+      avatar: payload.user.avatar,
+      authToken: payload.authToken
     };
   }
 
@@ -45,7 +47,8 @@ const normalizeKakaoUser = (payload: KakaoExchangeResponse) => {
     id: String(payload.id || `kakao-${Date.now()}`),
     nickname: payload.nickname || payload.properties?.nickname || payload.kakao_account?.profile?.nickname || '카카오 회원',
     email: payload.email || payload.kakao_account?.email,
-    avatar: payload.profile_image || payload.properties?.profile_image || payload.kakao_account?.profile?.profile_image_url
+    avatar: payload.profile_image || payload.properties?.profile_image || payload.kakao_account?.profile?.profile_image_url,
+    authToken: payload.authToken
   };
 };
 

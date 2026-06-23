@@ -23,13 +23,20 @@ import {
   WalletCards,
   Zap
 } from 'lucide-react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { findServiceById, serviceCatalog, serviceCategories, type ServiceCategoryId, type ServiceId } from '../api/mockData';
 import { readStoredAuthUser } from '../lib/auth';
-import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
+import {
+  fetchAdminReportArchiveEntries,
+  mergeReportArchiveEntries,
+  readReportArchiveEntries,
+  type ReportArchiveEntry
+} from '../lib/reportArchive';
+import { getAdminLoginEndpoint } from '../lib/runtimeConfig';
 
 const ADMIN_SESSION_KEY = 'unwoldang.admin.session.v2';
+const ADMIN_ACCESS_TOKEN_KEY = 'unwoldang.admin.accessToken.v1';
 const ADMIN_CREDENTIAL_HASH = import.meta.env.VITE_LOCAL_ADMIN_CREDENTIAL_HASH || '';
 const ENABLE_CLIENT_ADMIN = import.meta.env.VITE_ENABLE_CLIENT_ADMIN === 'true';
 
@@ -1216,8 +1223,13 @@ export default function Admin() {
   const [adminPassword, setAdminPassword] = useState('');
   const [accessError, setAccessError] = useState('');
   const [activeView, setActiveView] = useState<AdminView>('overview');
+  const [adminAccessToken, setAdminAccessToken] = useState(
+    () => window.sessionStorage.getItem(ADMIN_ACCESS_TOKEN_KEY) || ''
+  );
   const [isUnlocked, setIsUnlocked] = useState(
-    () => (isLocalAdminHost() || ENABLE_CLIENT_ADMIN) && window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok'
+    () =>
+      Boolean(window.sessionStorage.getItem(ADMIN_ACCESS_TOKEN_KEY)) ||
+      ((isLocalAdminHost() || ENABLE_CLIENT_ADMIN) && window.sessionStorage.getItem(ADMIN_SESSION_KEY) === 'ok')
   );
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [customerFilter, setCustomerFilter] = useState<CustomerFilter>('all');
@@ -1225,8 +1237,9 @@ export default function Admin() {
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [reports, setReports] = useState(() => readReportArchiveEntries());
   const authUser = readStoredAuthUser();
+  const adminLoginEndpoint = getAdminLoginEndpoint();
   const isLocalOnlyMode = isLocalAdminHost();
-  const isAdminAvailable = isLocalOnlyMode || ENABLE_CLIENT_ADMIN;
+  const isAdminAvailable = isLocalOnlyMode || ENABLE_CLIENT_ADMIN || Boolean(adminLoginEndpoint);
   const realOrders = useMemo(() => reports.map(toAdminOrder), [reports]);
   const isSampleMode = realOrders.length === 0;
   const orders = useMemo(() => (realOrders.length ? realOrders : buildSampleOrders()), [realOrders]);
@@ -1297,11 +1310,68 @@ export default function Admin() {
     }
   ];
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadRemoteReports = async () => {
+      if (!isUnlocked || !adminAccessToken) {
+        return;
+      }
+
+      try {
+        const remoteReports = await fetchAdminReportArchiveEntries(adminAccessToken);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setReports(mergeReportArchiveEntries(remoteReports, readReportArchiveEntries()));
+      } catch {
+        // Keep the local archive or sample dashboard visible if the server admin API is not reachable.
+      }
+    };
+
+    void loadRemoteReports();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [adminAccessToken, isUnlocked]);
+
   const unlock = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     setIsCheckingAccess(true);
 
     try {
+      if (adminLoginEndpoint) {
+        const response = await fetch(adminLoginEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            adminId,
+            password: adminPassword
+          })
+        });
+        const payload = (await response.json().catch(() => null)) as {
+          adminAccessToken?: string;
+          message?: string;
+        } | null;
+
+        if (!response.ok || !payload?.adminAccessToken) {
+          throw new Error(payload?.message || '관리자 로그인에 실패했습니다.');
+        }
+
+        window.sessionStorage.setItem(ADMIN_ACCESS_TOKEN_KEY, payload.adminAccessToken);
+        window.sessionStorage.setItem(ADMIN_SESSION_KEY, 'ok');
+        setAdminAccessToken(payload.adminAccessToken);
+        setAdminPassword('');
+        setIsUnlocked(true);
+        setAccessError('');
+        return;
+      }
+
       const credentialHash = await hashAdminCredential(adminId, adminPassword);
 
       if (credentialHash === ADMIN_CREDENTIAL_HASH) {
@@ -1313,8 +1383,8 @@ export default function Admin() {
       }
 
       setAccessError('아이디 또는 비밀번호가 맞지 않습니다.');
-    } catch {
-      setAccessError('브라우저 보안 모듈을 사용할 수 없어 로그인할 수 없습니다.');
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : '관리자 로그인에 실패했습니다.');
     } finally {
       setIsCheckingAccess(false);
     }
@@ -1322,6 +1392,8 @@ export default function Admin() {
 
   const lockAdmin = () => {
     window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    window.sessionStorage.removeItem(ADMIN_ACCESS_TOKEN_KEY);
+    setAdminAccessToken('');
     setIsUnlocked(false);
     setAdminPassword('');
   };
@@ -1455,6 +1527,16 @@ export default function Admin() {
 
   const refresh = () => {
     setReports(readReportArchiveEntries());
+
+    if (adminAccessToken) {
+      void fetchAdminReportArchiveEntries(adminAccessToken)
+        .then((remoteReports) => {
+          setReports(mergeReportArchiveEntries(remoteReports, readReportArchiveEntries()));
+        })
+        .catch(() => {
+          setReports(readReportArchiveEntries());
+        });
+    }
   };
 
   if (!isAdminAvailable) {
@@ -1971,7 +2053,7 @@ export default function Admin() {
       <section className="admin-data-note">
         <Database size={16} />
         <p>
-          지금 화면은 {isSampleMode ? '샘플 데이터' : '현재 브라우저 저장 데이터'} 기준입니다. 실제 운영 데이터로 바꾸려면
+          지금 화면은 {isSampleMode ? '샘플 데이터' : adminAccessToken ? '서버 운영 데이터' : '현재 브라우저 저장 데이터'} 기준입니다. 실제 운영 데이터로 바꾸려면
           `analytics_events`, `orders`, `payments`, `users`, `reports`, `report_issues` 테이블과 서버 관리자 권한 검증을 연결하면 됩니다.
         </p>
       </section>

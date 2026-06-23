@@ -1,4 +1,4 @@
-﻿import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+﻿import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { generateGeminiSajuReport, ReportRequestError } from '../../src/lib/server/geminiReportService.ts';
 
@@ -7,9 +7,14 @@ const PORTONE_API_BASE_URL = (process.env.PORTONE_API_BASE_URL || 'https://api.p
 const KAKAO_TOKEN_ENDPOINT = 'https://kauth.kakao.com/oauth/token';
 const KAKAO_USER_ENDPOINT = 'https://kapi.kakao.com/v2/user/me';
 const REPORT_ACCESS_TOKEN_TTL_MS = Number(process.env.REPORT_ACCESS_TOKEN_TTL_MS || 30 * 60 * 1000);
+const AUTH_ACCESS_TOKEN_TTL_MS = Number(process.env.AUTH_ACCESS_TOKEN_TTL_MS || 30 * 24 * 60 * 60 * 1000);
+const ADMIN_ACCESS_TOKEN_TTL_MS = Number(process.env.ADMIN_ACCESS_TOKEN_TTL_MS || 12 * 60 * 60 * 1000);
 const REPORT_RATE_LIMIT_WINDOW_MS = Number(process.env.REPORT_RATE_LIMIT_WINDOW_MS || 60 * 1000);
 const REPORT_RATE_LIMIT_MAX = Number(process.env.REPORT_RATE_LIMIT_MAX || 12);
 const reportRateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+const FIRESTORE_DATABASE_ID = process.env.FIRESTORE_DATABASE_ID?.trim() || '(default)';
+const FIRESTORE_ARCHIVE_COLLECTION = process.env.FIRESTORE_ARCHIVE_COLLECTION?.trim() || 'reportArchives';
+let googleAccessTokenCache: { token: string; expiresAt: number } | null = null;
 
 class PaymentRequestError extends Error {
   status: number;
@@ -165,27 +170,68 @@ function safeEqual(left: string, right: string) {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 }
 
+function createSignedAccessToken(payload: Record<string, unknown>, ttlMs: number) {
+  const secret = getReportAccessSecret();
+  const now = Date.now();
+  const encodedPayload = toBase64Url(
+    JSON.stringify({
+      ...payload,
+      iat: now,
+      exp: now + ttlMs,
+      nonce: randomBytes(12).toString('hex')
+    })
+  );
+  const signature = signReportTokenPayload(encodedPayload, secret);
+
+  return `${encodedPayload}.${signature}`;
+}
+
+function verifySignedAccessToken(token: string, expectedPurpose: 'report' | 'user' | 'admin') {
+  const secret = getReportAccessSecret();
+  const [encodedPayload, signature] = token.split('.');
+
+  if (!encodedPayload || !signature) {
+    throw new ReportRequestError(401, 'Invalid access token.');
+  }
+
+  const expectedSignature = signReportTokenPayload(encodedPayload, secret);
+
+  if (!safeEqual(signature, expectedSignature)) {
+    throw new ReportRequestError(401, 'Invalid access token.');
+  }
+
+  let payload: any;
+
+  try {
+    payload = JSON.parse(fromBase64Url(encodedPayload));
+  } catch {
+    throw new ReportRequestError(401, 'Invalid access token.');
+  }
+
+  if (!payload?.exp || Number(payload.exp) < Date.now()) {
+    throw new ReportRequestError(401, 'Access token has expired.');
+  }
+
+  if (payload.purpose && payload.purpose !== expectedPurpose) {
+    throw new ReportRequestError(403, 'Access token purpose does not match this request.');
+  }
+
+  return payload;
+}
+
 function createReportAccessToken(input: {
   orderId: string;
   paymentId: string;
   productId?: string;
   amount: number;
 }) {
-  const secret = getReportAccessSecret();
-  const now = Date.now();
-  const payload = {
+  return createSignedAccessToken({
+    purpose: 'report',
     orderId: input.orderId,
     paymentId: input.paymentId,
     productId: input.productId,
-    amount: input.amount,
-    iat: now,
-    exp: now + REPORT_ACCESS_TOKEN_TTL_MS,
-    nonce: randomBytes(12).toString('hex')
-  };
-  const encodedPayload = toBase64Url(JSON.stringify(payload));
-  const signature = signReportTokenPayload(encodedPayload, secret);
-
-  return `${encodedPayload}.${signature}`;
+    amount: input.amount
+  }, REPORT_ACCESS_TOKEN_TTL_MS);
 }
 
 function getReportBearerToken(req: any, body: Record<string, unknown>) {
@@ -199,30 +245,7 @@ function getReportBearerToken(req: any, body: Record<string, unknown>) {
 }
 
 function verifyReportAccessToken(token: string) {
-  const secret = getReportAccessSecret();
-  const [encodedPayload, signature] = token.split('.');
-
-  if (!encodedPayload || !signature) {
-    throw new ReportRequestError(401, 'Invalid report access token.');
-  }
-
-  const expectedSignature = signReportTokenPayload(encodedPayload, secret);
-
-  if (!safeEqual(signature, expectedSignature)) {
-    throw new ReportRequestError(401, 'Invalid report access token.');
-  }
-
-  let payload: any;
-
-  try {
-    payload = JSON.parse(fromBase64Url(encodedPayload));
-  } catch {
-    throw new ReportRequestError(401, 'Invalid report access token.');
-  }
-
-  if (!payload?.exp || Number(payload.exp) < Date.now()) {
-    throw new ReportRequestError(401, 'Report access token has expired.');
-  }
+  const payload = verifySignedAccessToken(token, 'report');
 
   return payload as {
     orderId: string;
@@ -230,6 +253,69 @@ function verifyReportAccessToken(token: string) {
     productId?: string;
     amount: number;
   };
+}
+
+function createAuthAccessToken(user: { id: string; nickname?: string; email?: string }) {
+  return createSignedAccessToken(
+    {
+      purpose: 'user',
+      sub: user.id,
+      nickname: user.nickname,
+      email: user.email,
+      provider: 'kakao'
+    },
+    AUTH_ACCESS_TOKEN_TTL_MS
+  );
+}
+
+function getBearerToken(req: any) {
+  const authorization = String(req.headers.authorization || '');
+
+  if (!authorization.toLowerCase().startsWith('bearer ')) {
+    return '';
+  }
+
+  return authorization.slice(7).trim();
+}
+
+function verifyUserAccess(req: any) {
+  const token = getBearerToken(req);
+
+  if (!token) {
+    throw new ReportRequestError(401, 'Login access token is required.');
+  }
+
+  const payload = verifySignedAccessToken(token, 'user') as {
+    sub?: string;
+    nickname?: string;
+    email?: string;
+  };
+
+  if (!payload.sub) {
+    throw new ReportRequestError(401, 'Invalid login access token.');
+  }
+
+  return {
+    userId: String(payload.sub),
+    nickname: payload.nickname,
+    email: payload.email
+  };
+}
+
+function verifyAdminAccess(req: any) {
+  const token = getBearerToken(req);
+
+  if (!token) {
+    throw new ReportRequestError(401, 'Admin access token is required.');
+  }
+
+  const payload = verifySignedAccessToken(token, 'admin') as { sub?: string };
+
+  if (!payload.sub) {
+    throw new ReportRequestError(401, 'Invalid admin access token.');
+  }
+
+  return payload;
 }
 
 function assertReportAccess(req: any, body: Record<string, unknown>) {
@@ -467,14 +553,17 @@ async function exchangeKakaoLogin(body: Record<string, unknown>) {
     throw new KakaoAuthError(userResponse.status || 502, message);
   }
 
+  const user = {
+    id: String(userPayload.id || ''),
+    nickname: userPayload.properties?.nickname || userPayload.kakao_account?.profile?.nickname || '카카오 회원',
+    email: userPayload.kakao_account?.email,
+    avatar: userPayload.properties?.profile_image || userPayload.kakao_account?.profile?.profile_image_url
+  };
+
   return {
-    user: {
-      id: String(userPayload.id || ''),
-      nickname: userPayload.properties?.nickname || userPayload.kakao_account?.profile?.nickname || '카카오 회원',
-      email: userPayload.kakao_account?.email,
-      avatar: userPayload.properties?.profile_image || userPayload.kakao_account?.profile?.profile_image_url
-    },
+    user,
     provider: 'kakao',
+    authToken: createAuthAccessToken(user),
     connectedAt: new Date().toISOString()
   };
 }
@@ -504,6 +593,264 @@ async function readJsonBody(req: any) {
   } catch {
     throw new ReportRequestError(400, 'JSON 본문 형식이 올바르지 않습니다.');
   }
+}
+
+function getFirestoreProjectId() {
+  return (
+    process.env.FIRESTORE_PROJECT_ID?.trim() ||
+    process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
+    process.env.GCLOUD_PROJECT?.trim() ||
+    process.env.GCP_PROJECT?.trim() ||
+    ''
+  );
+}
+
+function assertFirestoreEnabled() {
+  const projectId = getFirestoreProjectId();
+
+  if (process.env.ENABLE_FIRESTORE_ARCHIVE !== 'true' || !projectId) {
+    throw new ReportRequestError(503, 'Server archive storage is not configured.');
+  }
+
+  return projectId;
+}
+
+function getArchiveDocumentId(userId: string, archiveId: string) {
+  return createHash('sha256').update(`${userId}:${archiveId}`).digest('hex');
+}
+
+function getTimestampValue(value?: unknown) {
+  const timestamp = typeof value === 'string' ? Date.parse(value) : NaN;
+
+  if (Number.isFinite(timestamp)) {
+    return new Date(timestamp).toISOString();
+  }
+
+  return new Date().toISOString();
+}
+
+function readFirestoreString(document: any, fieldName: string) {
+  const value = document?.fields?.[fieldName];
+
+  return typeof value?.stringValue === 'string' ? value.stringValue : '';
+}
+
+function parseFirestoreArchive(document: any) {
+  const entryJson = readFirestoreString(document, 'entryJson');
+
+  if (!entryJson) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(entryJson);
+  } catch {
+    return null;
+  }
+}
+
+async function getGoogleAccessToken() {
+  const staticToken = process.env.FIRESTORE_ACCESS_TOKEN?.trim();
+
+  if (staticToken) {
+    return staticToken;
+  }
+
+  const now = Date.now();
+
+  if (googleAccessTokenCache && googleAccessTokenCache.expiresAt > now + 60 * 1000) {
+    return googleAccessTokenCache.token;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3000);
+
+  try {
+    const response = await fetch(
+      'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
+      {
+        headers: {
+          'Metadata-Flavor': 'Google'
+        },
+        signal: controller.signal
+      }
+    );
+    const payload = (await response.json().catch(() => null)) as { access_token?: string; expires_in?: number } | null;
+
+    if (!response.ok || !payload?.access_token) {
+      throw new ReportRequestError(503, 'Firestore access token could not be issued.');
+    }
+
+    googleAccessTokenCache = {
+      token: payload.access_token,
+      expiresAt: now + Math.max(60, Number(payload.expires_in || 3600) - 60) * 1000
+    };
+
+    return googleAccessTokenCache.token;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function firestoreRequest(path: string, init: any = {}) {
+  const projectId = assertFirestoreEnabled();
+  const accessToken = await getGoogleAccessToken();
+  const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/${encodeURIComponent(
+    FIRESTORE_DATABASE_ID
+  )}/documents${path}`;
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      ...(init.headers || {})
+    }
+  });
+  const payload = (await response.json().catch(() => null)) as any;
+
+  if (!response.ok) {
+    const message = payload?.error?.message || payload?.message || 'Firestore request failed.';
+    throw new ReportRequestError(response.status || 502, message);
+  }
+
+  return payload;
+}
+
+function normalizeArchiveEntry(rawValue: unknown) {
+  const raw = rawValue && typeof rawValue === 'object' ? (rawValue as Record<string, any>) : null;
+
+  if (!raw) {
+    throw new ReportRequestError(400, 'Archive entry is required.');
+  }
+
+  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : '';
+  const productId = typeof raw.productId === 'string' && raw.productId.trim() ? raw.productId.trim() : '';
+  const reportData = raw.reportData && typeof raw.reportData === 'object' ? raw.reportData : null;
+
+  if (!id || !productId || !reportData) {
+    throw new ReportRequestError(400, 'Archive entry is incomplete.');
+  }
+
+  return {
+    ...raw,
+    id,
+    productId,
+    orderId: typeof raw.orderId === 'string' ? raw.orderId.trim() : undefined,
+    customerName: typeof raw.customerName === 'string' && raw.customerName.trim() ? raw.customerName.trim() : '운월당 회원',
+    title: typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : '운월당 리포트',
+    subtitle: typeof raw.subtitle === 'string' ? raw.subtitle.trim() : '',
+    createdAt: getTimestampValue(raw.createdAt),
+    paymentMethod: typeof raw.paymentMethod === 'string' ? raw.paymentMethod.trim() : undefined
+  };
+}
+
+function assertArchiveReportToken(entry: Record<string, any>, body: Record<string, unknown>) {
+  if (process.env.REQUIRE_REPORT_TOKEN_FOR_ARCHIVE === 'false') {
+    return;
+  }
+
+  const reportToken = getOptionalString(body, 'reportAccessToken');
+
+  if (!reportToken) {
+    throw new ReportRequestError(401, 'Report access token is required for archive save.');
+  }
+
+  const payload = verifyReportAccessToken(reportToken);
+
+  if (payload.orderId && entry.orderId && payload.orderId !== entry.orderId) {
+    throw new ReportRequestError(403, 'Report token does not match this archive order.');
+  }
+
+  if (payload.productId && entry.productId && payload.productId !== entry.productId) {
+    throw new ReportRequestError(403, 'Report token does not match this archive product.');
+  }
+}
+
+async function saveReportArchiveForUser(user: { userId: string }, body: Record<string, unknown>) {
+  const entry = normalizeArchiveEntry(body.entry);
+  assertArchiveReportToken(entry, body);
+  const docId = getArchiveDocumentId(user.userId, entry.id);
+  const entryJson = JSON.stringify(entry);
+
+  if (entryJson.length > 900_000) {
+    throw new ReportRequestError(413, 'Archive entry is too large.');
+  }
+
+  await firestoreRequest(`/${encodeURIComponent(FIRESTORE_ARCHIVE_COLLECTION)}/${docId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      fields: {
+        userId: { stringValue: user.userId },
+        archiveId: { stringValue: entry.id },
+        orderId: { stringValue: entry.orderId || '' },
+        productId: { stringValue: entry.productId },
+        customerName: { stringValue: entry.customerName },
+        title: { stringValue: entry.title },
+        paymentMethod: { stringValue: entry.paymentMethod || '' },
+        createdAt: { timestampValue: entry.createdAt },
+        entryJson: { stringValue: entryJson }
+      }
+    })
+  });
+
+  return entry;
+}
+
+async function queryReportArchives(whereUserId?: string) {
+  const structuredQuery: any = {
+    from: [{ collectionId: FIRESTORE_ARCHIVE_COLLECTION }],
+    limit: 200
+  };
+
+  if (whereUserId) {
+    structuredQuery.where = {
+      fieldFilter: {
+        field: { fieldPath: 'userId' },
+        op: 'EQUAL',
+        value: { stringValue: whereUserId }
+      }
+    };
+  }
+
+  const rows = await firestoreRequest(':runQuery', {
+    method: 'POST',
+    body: JSON.stringify({ structuredQuery })
+  });
+
+  const entries = Array.isArray(rows)
+    ? rows.map((row) => parseFirestoreArchive(row.document)).filter(Boolean)
+    : [];
+
+  return entries
+    .sort((left: any, right: any) => Date.parse(right.createdAt || '') - Date.parse(left.createdAt || ''))
+    .slice(0, 100);
+}
+
+async function loginAdmin(body: Record<string, unknown>) {
+  const configuredHash = process.env.ADMIN_CREDENTIAL_HASH?.trim();
+
+  if (!configuredHash) {
+    throw new ReportRequestError(503, 'ADMIN_CREDENTIAL_HASH is not configured.');
+  }
+
+  const adminId = getRequiredString(body, 'adminId');
+  const password = getRequiredString(body, 'password');
+  const inputHash = createHash('sha256').update(`${adminId}:${password}`).digest('hex');
+
+  if (!safeEqual(inputHash, configuredHash)) {
+    throw new ReportRequestError(401, 'Admin id or password is incorrect.');
+  }
+
+  return {
+    adminAccessToken: createSignedAccessToken(
+      {
+        purpose: 'admin',
+        sub: adminId
+      },
+      ADMIN_ACCESS_TOKEN_TTL_MS
+    ),
+    expiresInMs: ADMIN_ACCESS_TOKEN_TTL_MS
+  };
 }
 
 const server = createServer(async (req, res) => {
@@ -578,6 +925,68 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && (url.pathname === '/archive/reports' || url.pathname === '/api/archive/reports')) {
+    try {
+      const user = verifyUserAccess(req);
+      const entries = await queryReportArchives(user.userId);
+      sendJson(res, 200, {
+        entries,
+        storage: 'firestore'
+      });
+    } catch (error) {
+      const status = error instanceof ReportRequestError ? error.status : 500;
+      const message = error instanceof Error ? error.message : '리포트 보관함 조회 중 오류가 발생했습니다.';
+      sendJson(res, status, { message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && (url.pathname === '/archive/reports' || url.pathname === '/api/archive/reports')) {
+    try {
+      const user = verifyUserAccess(req);
+      const body = (await readJsonBody(req)) as Record<string, unknown>;
+      const entry = await saveReportArchiveForUser(user, body);
+      sendJson(res, 200, {
+        ok: true,
+        entry
+      });
+    } catch (error) {
+      const status = error instanceof ReportRequestError ? error.status : 500;
+      const message = error instanceof Error ? error.message : '리포트 보관함 저장 중 오류가 발생했습니다.';
+      sendJson(res, status, { message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && (url.pathname === '/admin/login' || url.pathname === '/api/admin/login')) {
+    try {
+      const body = (await readJsonBody(req)) as Record<string, unknown>;
+      const payload = await loginAdmin(body);
+      sendJson(res, 200, payload);
+    } catch (error) {
+      const status = error instanceof ReportRequestError || error instanceof PaymentRequestError ? error.status : 500;
+      const message = error instanceof Error ? error.message : '관리자 로그인 처리 중 오류가 발생했습니다.';
+      sendJson(res, status, { message });
+    }
+    return;
+  }
+
+  if (req.method === 'GET' && (url.pathname === '/admin/reports' || url.pathname === '/api/admin/reports')) {
+    try {
+      verifyAdminAccess(req);
+      const entries = await queryReportArchives();
+      sendJson(res, 200, {
+        entries,
+        storage: 'firestore'
+      });
+    } catch (error) {
+      const status = error instanceof ReportRequestError ? error.status : 500;
+      const message = error instanceof Error ? error.message : '관리자 리포트 조회 중 오류가 발생했습니다.';
+      sendJson(res, status, { message });
+    }
+    return;
+  }
+
   sendJson(res, 404, {
     message: '지원하지 않는 경로입니다.',
     routes: [
@@ -585,7 +994,11 @@ const server = createServer(async (req, res) => {
       'POST /api/report',
       'POST /report',
       'POST /api/payments/portone/confirm',
-      'POST /api/auth/kakao/exchange'
+      'POST /api/auth/kakao/exchange',
+      'GET /api/archive/reports',
+      'POST /api/archive/reports',
+      'POST /api/admin/login',
+      'GET /api/admin/reports'
     ]
   });
 });

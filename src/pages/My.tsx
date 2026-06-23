@@ -3,7 +3,13 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { beginKakaoLogin } from '../lib/auth';
-import { readReportArchiveEntries, type ReportArchiveEntry } from '../lib/reportArchive';
+import {
+  fetchRemoteReportArchiveEntries,
+  mergeReportArchiveEntries,
+  readReportArchiveEntries,
+  writeReportArchiveEntries,
+  type ReportArchiveEntry
+} from '../lib/reportArchive';
 
 type ReplayPromo = {
   title: string;
@@ -166,16 +172,41 @@ function LoggedInReplay() {
   const [recentReports, setRecentReports] = useState(() => readReportArchiveEntries());
 
   useEffect(() => {
+    let isCancelled = false;
     const syncReports = () => setRecentReports(readReportArchiveEntries());
+    const syncRemoteReports = async () => {
+      syncReports();
+
+      if (!user?.authToken) {
+        return;
+      }
+
+      try {
+        const remoteReports = await fetchRemoteReportArchiveEntries(user.authToken);
+
+        if (isCancelled) {
+          return;
+        }
+
+        const mergedReports = mergeReportArchiveEntries(readReportArchiveEntries(), remoteReports);
+        writeReportArchiveEntries(mergedReports);
+        setRecentReports(mergedReports);
+      } catch {
+        // Local archive remains available when the server archive is temporarily unavailable.
+      }
+    };
+
+    void syncRemoteReports();
 
     window.addEventListener('focus', syncReports);
     window.addEventListener('storage', syncReports);
 
     return () => {
+      isCancelled = true;
       window.removeEventListener('focus', syncReports);
       window.removeEventListener('storage', syncReports);
     };
-  }, []);
+  }, [user?.authToken]);
 
   return (
     <main className="my-replay-page">

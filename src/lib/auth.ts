@@ -10,6 +10,7 @@ export interface AuthUser {
   email?: string;
   avatar?: string;
   provider: AuthProviderType;
+  authToken?: string;
   connectedAt: string;
 }
 

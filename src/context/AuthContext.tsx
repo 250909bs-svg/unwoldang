@@ -44,6 +44,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           email: payload.email,
           avatar: payload.avatar,
           provider: payload.provider || 'kakao',
+          authToken: payload.authToken,
           connectedAt: payload.connectedAt || new Date().toISOString()
         }),
       logout: () => {

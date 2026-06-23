@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
-import { clearPendingPayment } from '../lib/auth';
-import { saveReportArchiveEntry } from '../lib/reportArchive';
+import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
+import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 
@@ -6074,7 +6074,7 @@ export default function Report() {
       return;
     }
 
-    saveReportArchiveEntry({
+    const archiveEntry = {
       id: `${report.serviceId}:${orderId || report.serialNumber}`,
       orderId: orderId || report.serialNumber,
       productId: report.serviceId,
@@ -6085,9 +6085,21 @@ export default function Report() {
       paymentMethod,
       formData,
       reportData: report
-    });
+    };
+
+    saveReportArchiveEntry(archiveEntry);
+
+    const authUser = readStoredAuthUser();
+
+    if (authUser?.authToken && reportAccessToken) {
+      void saveRemoteReportArchiveEntry(archiveEntry, {
+        authToken: authUser.authToken,
+        reportAccessToken
+      });
+    }
+
     clearPendingPayment();
-  }, [formData, orderId, paymentMethod, report, shouldBlockPreview]);
+  }, [formData, orderId, paymentMethod, report, reportAccessToken, shouldBlockPreview]);
 
   useEffect(
     () => () => {
