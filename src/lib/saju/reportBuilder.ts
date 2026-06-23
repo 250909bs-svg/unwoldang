@@ -928,6 +928,273 @@ function buildCareerIndustryGuide(
   ];
 }
 
+const PREMIUM_QUESTION_MIN_ANALYSIS_CHARS = 300;
+const PREMIUM_QUESTION_ADVICE_COUNT = 10;
+
+function getCurrentDayunName(
+  basis: DeterministicSajuBasis,
+  formData?: Partial<IntakeFormData>,
+  explicitDayunName?: string
+) {
+  if (explicitDayunName) {
+    return explicitDayunName;
+  }
+
+  const currentDayun = formData
+    ? basis.dayun.find((row) => {
+        const currentAge = computeCurrentAge(formData);
+        const range = parseAgeRange(row.age);
+        return currentAge >= range.start && currentAge <= range.end;
+      })
+    : undefined;
+
+  return currentDayun?.ganzhi || basis.dayun[0]?.ganzhi || '현재 대운';
+}
+
+function getQuestionTextLength(text: string) {
+  return text.replace(/\s/g, '').length;
+}
+
+function getPremiumCustomerLabel(basis: DeterministicSajuBasis) {
+  const friendlyName = getFriendlyAddressName(basis.input.name || '');
+  return friendlyName === '당신' ? '이 고객' : `${friendlyName}님`;
+}
+
+function summarizeFiveElementsForQuestion(basis: DeterministicSajuBasis) {
+  return basis.fiveElements.map((item) => `${item.label}${item.value}`).join('·');
+}
+
+function getTopTenGodsForQuestion(basis: DeterministicSajuBasis) {
+  return basis.tenGods
+    .slice(0, 3)
+    .map((item) => `${item.label} ${item.value}`)
+    .join(', ') || '주요 십성';
+}
+
+function getQuestionIntent(question: string, category: QuestionCategory) {
+  const normalized = question.replace(/\s/g, '');
+
+  if (/이사|거주|동네|지역|역세권|강남|독산|집|방|오피스텔|아파트/.test(normalized)) {
+    return '이동·거주 선택';
+  }
+
+  if (/어디.*연애|연애.*어디|만날|소개|장소|인연/.test(normalized)) {
+    return '연애 만남 경로';
+  }
+
+  if (category === 'career') return '직업·커리어 선택';
+  if (category === 'money') return '돈·사업 구조';
+  if (category === 'relationship') return '관계·연애 판단';
+  if (category === 'timing') return '시기·타이밍 판단';
+  if (category === 'health') return '생활 리듬 판단';
+  if (category === 'caution') return '주의점·선택 기준';
+
+  return '종합 고민 판단';
+}
+
+function extractQuestionOptions(question: string) {
+  const beforeMiddle = question.split(/중|중에|중에서|vs|VS|또는|아니면/)[0] || question;
+  const cleaned = beforeMiddle
+    .replace(/[?？!！.,]/g, ' ')
+    .replace(/\b(Q|q)\b/g, ' ')
+    .replace(/나|저|내가|제가|이사|거주|동네|지역|어디|가는게|가면|할수있어|할 수 있어|좋을까|좋아|중/g, ' ');
+
+  const options = cleaned
+    .split(/\s+|,|\/|·|랑|하고|과|와|및/)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2 && !/질문|고민|선택/.test(item));
+
+  return Array.from(new Set(options)).slice(0, 4);
+}
+
+function buildQuestionDirectAnswer(question: string, category: QuestionCategory, basis: DeterministicSajuBasis) {
+  const normalized = question.replace(/\s/g, '');
+  const options = extractQuestionOptions(question);
+  const careerFits = getCareerFitByTenGods(basis);
+
+  if (/이사|거주|동네|지역|역세권|집|방/.test(normalized) && options.length >= 2) {
+    return `결론부터 말하면 ${options.join('·')} 중에서는 “돈과 체력 유지가 되는 쪽”을 1순위로 두고, 그다음 사람·기회가 열리는지를 봐야 합니다. ${options[0]}은 노출과 기회, ${options[1]}은 고정비와 생활 안정이라는 식으로 비교하면 답이 선명해집니다.`;
+  }
+
+  if (/어디.*연애|연애.*어디|만날|소개|인연/.test(normalized)) {
+    return '결론부터 말하면 낯선 헌팅식 만남보다 지인 소개, 반복 방문하는 취미 공간, 일과 연결된 모임, 생활권 안에서 얼굴이 익는 장소가 더 잘 맞습니다.';
+  }
+
+  if (category === 'career') {
+    return `결론부터 말하면 완전한 조직 소모형보다 ${careerFits.join(', ')}처럼 자기 기준을 결과물로 바꾸는 일이 더 맞습니다.`;
+  }
+
+  if (category === 'money') {
+    return '결론부터 말하면 한 번 크게 버는 판보다 가격표, 재구매, 소개, 정산 기준이 남는 반복 수익 구조가 더 안정적으로 맞습니다.';
+  }
+
+  if (category === 'relationship') {
+    return '결론부터 말하면 감정의 크기보다 연락 리듬, 약속 이행, 갈등 후 회복 속도가 맞는 사람을 봐야 오래 갑니다.';
+  }
+
+  if (category === 'timing') {
+    return '결론부터 말하면 바로 크게 움직이기보다 7일 검증, 30일 실행, 90일 고정 순서로 가는 선택이 손실을 줄입니다.';
+  }
+
+  return '결론부터 말하면 답을 하나로 찍기보다 돈, 사람, 시간, 체력 조건이 동시에 버티는 선택을 현실적인 답으로 봐야 합니다.';
+}
+
+function buildPremiumQuestionTitle(answer: QuestionAnswerBlock, category: QuestionCategory) {
+  const prefix = answer.title.match(/^\d+\./)?.[0] || '';
+  const normalized = answer.question.replace(/\s/g, '');
+  const options = extractQuestionOptions(answer.question);
+
+  if (category === 'crisis' || category === 'career' || category === 'money' || category === 'timing' || category === 'health') {
+    return answer.title;
+  }
+
+  if (/이사|거주|동네|지역|역세권|집|방/.test(normalized) && options.length >= 2) {
+    return `${prefix} ${options.join('·')}는 돈·이동·기회로 비교해야 합니다`.trim();
+  }
+
+  if (/어디.*연애|연애.*어디|만날|소개|인연/.test(normalized)) {
+    return `${prefix} 반복해서 얼굴이 익는 생활권 만남이 맞습니다`.trim();
+  }
+
+  if (answer.title.includes('종합 질문 직답')) {
+    return `${prefix} 돈·사람·시간·체력이 같이 버티는 답을 봐야 합니다`.trim();
+  }
+
+  return answer.title;
+}
+
+function buildPremiumQuestionAnalysis(
+  answer: QuestionAnswerBlock,
+  basis: DeterministicSajuBasis,
+  category: QuestionCategory,
+  currentDayunName: string,
+  helpfulText: string,
+  cautionGuidance: string
+) {
+  const customerLabel = getPremiumCustomerLabel(basis);
+  const intent = getQuestionIntent(answer.question, category);
+  const directAnswer = buildQuestionDirectAnswer(answer.question, category, basis);
+  const fiveElementText = summarizeFiveElementsForQuestion(basis);
+  const tenGodText = getTopTenGodsForQuestion(basis);
+  const options = extractQuestionOptions(answer.question);
+  const optionLine = options.length >= 2
+    ? `이번 질문의 핵심 선택지는 ${options.join('·')}로 보이므로, 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
+    : '이 질문은 막연한 운세가 아니라 실제 행동으로 확인해야 답이 선명해지는 유형입니다.';
+
+  return `${directAnswer} ${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다. 오행은 ${fiveElementText}, 십성 상위 흐름은 ${tenGodText}입니다. 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${helpfulText} 기운은 판단을 현실에 붙이는 힘으로 쓰고, ${cautionGuidance} 이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.`;
+}
+
+function buildCrisisSafetyAnalysis(answer: QuestionAnswerBlock, basis: DeterministicSajuBasis, currentDayunName: string) {
+  const address = getCasualAddressParts(basis.input.name || '');
+  const dominantTenGodText = getDominantTenGodText(basis);
+
+  return `${answer.analysis}\n\n${address.opening} "${answer.question}" 같은 말이 나올 때는 사주로 길게 따지는 것보다 안전을 먼저 잡아야 해. ${basis.dayMaster.stem} 일간과 ${basis.pillars.month} 월령은 힘든 마음을 바로 꺼내기보다 안쪽에 오래 쌓아 둘 수 있고, ${currentDayunName} 대운과 ${dominantTenGodText} 흐름이 겹치면 책임, 돈, 사람 문제가 한 번에 몰린 것처럼 느껴질 수 있어. 그래도 오늘 할 일은 인생 전체를 판단하는 게 아니야. 사람 있는 곳으로 이동하고, 위험한 물건에서 떨어지고, 109·119·112처럼 바로 연결되는 도움을 붙이는 거야.`;
+}
+
+function getPremiumQuestionAdvice(
+  answer: QuestionAnswerBlock,
+  basis: DeterministicSajuBasis,
+  category: QuestionCategory,
+  currentDayunName: string,
+  helpfulText: string,
+  cautionGuidance: string
+) {
+  if (category === 'crisis') {
+    const address = getCasualAddressParts(basis.input.name || '');
+
+    return [
+      `${address.aloneLine} 지금 바로 가까운 사람 한 명에게 “나 혼자 있으면 위험해. 같이 있어줘”라고 보내.`,
+      '위험한 물건, 높은 곳, 차 키, 술, 약에서 몸을 먼저 떼고 불이 켜진 사람 있는 공간으로 가.',
+      '한국이면 자살예방 상담전화 109, 당장 위험하면 119나 112로 바로 연락해.',
+      '오늘은 인생 결론을 내리는 날이 아니라 다음 10분을 안전하게 넘기는 날로 잡아.',
+      '물 한 컵, 따뜻한 음식, 휴대폰 충전, 문 열어두기처럼 몸을 붙잡는 행동부터 해.',
+      '혼자 누워서 생각을 더 밀고 가지 말고, 통화가 어렵다면 “지금 말 못 해도 옆에 있어줘”라고 문자로 남겨.',
+      '밤에는 생각이 더 커질 수 있으니 침대 안에서 결론을 만들지 말고 거실, 편의점, 응급실처럼 사람이 있는 곳으로 이동해.',
+      '돈, 일, 관계 문제는 내일 종이에 다시 나눠도 늦지 않아. 지금은 문제 해결보다 위험 차단이 먼저야.',
+      `${helpfulText} 기운은 거창한 결심이 아니라 불 켜기, 씻기, 사람에게 연락하기처럼 몸을 살리는 작은 순서로 써.`,
+      '이 감정이 반복되면 병원, 상담센터, 지역 정신건강복지센터를 예약해. 약해져서가 아니라 혼자 들기엔 너무 무거운 짐이라 도움을 붙이는 거야.'
+    ].map((item, index) => `${index + 1}. ${item}`);
+  }
+
+  const question = answer.question;
+  const intent = getQuestionIntent(question, category);
+  const directAnswer = buildQuestionDirectAnswer(question, category, basis);
+  const options = extractQuestionOptions(question);
+  const optionText = options.length >= 2 ? `${options.join('·')} 각각` : '선택지 각각';
+  const customerLabel = getPremiumCustomerLabel(basis);
+  const careerFits = getCareerFitByTenGods(basis).join(', ');
+  const isDatingPlace = /어디.*연애|연애.*어디|만날|소개|인연/.test(question.replace(/\s/g, ''));
+  const isMoving = /이사|거주|동네|지역|역세권|집|방/.test(question.replace(/\s/g, ''));
+
+  const placeGuide = isDatingPlace
+    ? '장소는 지인 소개, 반복 수업, 운동·스터디, 동네 카페, 업무권 모임처럼 같은 사람을 여러 번 볼 수 있는 곳으로 잡으세요.'
+    : isMoving
+      ? `${optionText}을 평일 출근 시간, 평일 밤, 주말 낮에 직접 걸어 보면서 소음, 이동, 생활 편의, 귀가 피로를 확인하세요.`
+      : '현장은 말로 듣는 곳이 아니라 실제 돈, 사람, 일정이 움직이는 장소에서 확인하세요.';
+
+  return [
+    `${directAnswer}`,
+    `${customerLabel}의 명리 근거는 ${basis.dayMaster.stem} 일간, ${basis.pillars.month} 월령, ${currentDayunName} 대운입니다. 이 조합은 감정적 확신보다 실제 유지 조건을 먼저 봐야 답이 안정됩니다.`,
+    `언제 움직일지: 오늘 바로 결론내리지 말고 7일 동안 ${intent}과 관련된 돈, 시간, 체력, 사람 반응을 하루 한 줄씩 기록하세요.`,
+    `어디서 확인할지: ${placeGuide}`,
+    `어떻게 판단할지: 메모앱에 ${optionText}의 장점 3개, 단점 3개, 숨은 비용 3개를 적고 “한 달 뒤에도 버틸 수 있는가”로 비교하세요.`,
+    `누구와 상의할지: 감정적으로 편드는 사람보다 실제 계약, 이동, 돈, 관계를 냉정하게 봐줄 사람 1명에게만 먼저 보여 주세요.`,
+    `돈과 일 기준: 직업·수익 질문이라면 추천 업종은 ${careerFits}이며, 수익 구조는 단건 노동보다 가격표, 제공 범위, 결과물, 재구매가 남는 방식으로 설계하는 편이 좋습니다.`,
+    `관계 기준: 상대나 주변 사람의 말보다 약속 시간, 답장 간격, 돈 쓰는 태도, 피곤할 때의 말투처럼 반복 행동을 보세요. 이 부분이 맞아야 오래 갑니다.`,
+    `피해야 할 방식: ${cautionGuidance} 특히 밤에 감정이 올라온 상태에서 계약, 이사, 고백, 퇴사, 큰 결제를 한 번에 결정하지 마세요.`,
+    `최종 결론 규칙: ${helpfulText} 기운이 살아나는 선택은 몸이 덜 지치고, 기록이 남고, 다음 약속이 선명합니다. 7일 기록에서 돈·사람·체력 중 2개 이상이 편한 쪽을 우선 답으로 잡으세요.`
+  ].map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`);
+}
+
+export function strengthenQuestionAnswerQuality(
+  answer: QuestionAnswerBlock,
+  basis: DeterministicSajuBasis,
+  options: {
+    formData?: Partial<IntakeFormData>;
+    helpful?: FiveElement[];
+    cautious?: FiveElement[];
+    currentDayunName?: string;
+    questionIndex?: number;
+  } = {}
+): QuestionAnswerBlock {
+  const category = getQuestionCategory(answer.question);
+  const helpful = options.helpful?.length ? options.helpful : basis.helpfulElements;
+  const cautious = options.cautious?.length ? options.cautious : basis.cautiousElements;
+  const helpfulText = helpful.join(', ') || '보완 오행';
+  const cautionGuidance = formatElementGuidance(cautious, basis);
+  const currentDayunName = getCurrentDayunName(basis, options.formData, options.currentDayunName);
+  const premiumAnalysis = buildPremiumQuestionAnalysis(
+    answer,
+    basis,
+    category,
+    currentDayunName,
+    helpfulText,
+    cautionGuidance
+  );
+  const analysis = category === 'crisis'
+    ? getQuestionTextLength(answer.analysis) >= PREMIUM_QUESTION_MIN_ANALYSIS_CHARS
+      ? answer.analysis
+      : buildCrisisSafetyAnalysis(answer, basis, currentDayunName)
+    : getQuestionTextLength(answer.analysis) >= PREMIUM_QUESTION_MIN_ANALYSIS_CHARS
+      ? answer.analysis
+      : `${answer.analysis}\n\n${premiumAnalysis}`;
+  const existingAdvice = answer.advice
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, PREMIUM_QUESTION_ADVICE_COUNT);
+  const advice = existingAdvice.length >= PREMIUM_QUESTION_ADVICE_COUNT
+    ? existingAdvice.map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`)
+    : getPremiumQuestionAdvice(answer, basis, category, currentDayunName, helpfulText, cautionGuidance);
+
+  return {
+    ...answer,
+    question: answer.question,
+    title: buildPremiumQuestionTitle(answer, category),
+    analysis,
+    advice
+  };
+}
+
 function buildQuestionResponse(
   question: string,
   category: QuestionCategory,
@@ -1083,7 +1350,14 @@ function buildQuestionAnswers(
         analysis: response.analysis,
         advice: response.advice
       };
-    });
+    })
+    .map((answer, index) => strengthenQuestionAnswerQuality(answer, basis, {
+      formData,
+      helpful,
+      cautious,
+      currentDayunName: currentDayunName || basis.dayun[0]?.ganzhi || '현재 대운',
+      questionIndex: index
+    }));
 }
 
 function buildActionPlan(

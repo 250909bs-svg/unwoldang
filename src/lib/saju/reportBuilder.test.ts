@@ -30,6 +30,7 @@ describe('saju report question answers', () => {
     expect(answer.analysis).toContain('월령');
     expect(answer.advice.join('\n')).toContain('109');
     expect(answer.advice.join('\n')).not.toContain('하세요');
+    expect(answer.advice).toHaveLength(10);
   });
 
   it('treats existential crisis wording as a safety-first answer', () => {
@@ -66,5 +67,30 @@ describe('saju report question answers', () => {
     expect(answer.analysis).toContain('직업 이름');
     expect(answer.advice.join('\n')).toContain('추천 업종');
     expect(answer.advice.join('\n')).toContain('수익 구조');
+    expect(answer.analysis.replace(/\s/g, '').length).toBeGreaterThanOrEqual(300);
+    expect(answer.advice).toHaveLength(10);
+    expect(answer.advice[0]).toMatch(/^1\./);
+    expect(answer.advice[9]).toMatch(/^10\./);
+  });
+
+  it('keeps exact customer questions and expands choice/place answers in detail', () => {
+    const q1 = '나 이사 강남 독산역 중에 어디로 가는게 좋을까 ?';
+    const q2 = '나 연애 어디가면 할 수있어 ?';
+    const report = buildSajuReport('concern-reading', makeFormData({ q1, q2 }));
+    const [moveAnswer, loveAnswer] = report.questionAnswers;
+
+    expect(moveAnswer.question).toBe(q1);
+    expect(loveAnswer.question).toBe(q2);
+
+    for (const answer of report.questionAnswers) {
+      expect(answer.analysis.replace(/\s/g, '').length).toBeGreaterThanOrEqual(300);
+      expect(answer.advice).toHaveLength(10);
+      expect(answer.advice[0]).toMatch(/^1\./);
+      expect(answer.advice[9]).toMatch(/^10\./);
+    }
+
+    expect(`${moveAnswer.analysis}\n${moveAnswer.advice.join('\n')}`).toContain('강남');
+    expect(`${moveAnswer.analysis}\n${moveAnswer.advice.join('\n')}`).toContain('독산역');
+    expect(loveAnswer.advice.join('\n')).toContain('지인 소개');
   });
 });

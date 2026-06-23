@@ -1,5 +1,5 @@
 import type { IntakeFormData, ServiceId } from '../../api/mockData';
-import { buildDeterministicSajuBasis } from '../saju/deterministicBasis';
+import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from '../saju/deterministicBasis';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
 import {
   buildPremiumSajuPromptContext,
@@ -16,7 +16,7 @@ import {
   type ReportSection,
   type SajuReportData
 } from '../saju/report';
-import { buildSajuReport } from '../saju/reportBuilder';
+import { buildSajuReport, strengthenQuestionAnswerQuality } from '../saju/reportBuilder';
 
 type RelationshipStatus = IntakeFormData['relationshipStatus'] | null | undefined;
 type RelationshipDuration = IntakeFormData['relationshipDuration'] | null | undefined;
@@ -251,7 +251,23 @@ function mergeGeminiDraft(base: SajuReportData, draft?: GeminiDraft | null): Saj
   };
 }
 
-function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: ReturnType<typeof buildDeterministicSajuBasis>) {
+function strengthenMergedQuestionAnswers(
+  report: SajuReportData,
+  deterministicBasis: DeterministicSajuBasis,
+  formData: Partial<IntakeFormData>
+): SajuReportData {
+  return {
+    ...report,
+    questionAnswers: report.questionAnswers.map((answer, index) =>
+      strengthenQuestionAnswerQuality(answer, deterministicBasis, {
+        formData,
+        questionIndex: index
+      })
+    )
+  };
+}
+
+function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: DeterministicSajuBasis) {
   const partialSchema = {
     type: 'OBJECT',
     properties: {
@@ -421,6 +437,9 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Do not invent unsupported facts. If the chart does not support a precise claim, express it as a tendency, condition, or verification checklist.',
                   'For every major section, include four layers: myeongri basis, real-life scene, risk if mishandled, and one concrete next action.',
                   'Question answers must directly answer the customer question first, then explain the basis, then give a 7-day verification action. Avoid vague reassurance.',
+                  'Each questionAnswers analysis must be at least 300 Korean characters and must read like a paid one-on-one consultation, not a short summary.',
+                  'Each questionAnswers advice array must contain exactly 10 concrete numbered items. Cover conclusion, myeongri basis, when, where, how, who to involve, money/time/fatigue criteria, 7-day verification, what to avoid, and the final decision rule.',
+                  'For each customer question, answer 1 to 10 in detail enough that the customer understands when, where, how, and with whom to act. Do not end with only abstract saju tendencies.',
                   'For questionAnswers, do not classify the question into a fixed category template. Do not output generic titles such as "질문을 실제 사건으로 쪼개야 답이 보입니다" unless the customer actually asked for that method. The title must be a direct answer to the exact question.',
                   'Keep each customer question exactly as provided, and answer only that question. If the customer compares named options, compare those exact options by money, commute, relationships, fatigue, and opportunity. If the customer asks where to meet love, give concrete meeting routes and places, not only relationship attitude advice.',
                   'For location, moving, career-choice, dating-place, school, work, or neighborhood questions, never answer with abstract four-box advice only. Give a conditional recommendation first, then the saju basis, then a real-life checklist.',
@@ -543,7 +562,7 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
     throw new ReportRequestError(503, 'Gemini 분석 API가 설정되지 않았습니다. 기본 리포트로 대체하지 않습니다.');
   }
 
-  const mergedReport = mergeGeminiDraft(fallbackReport, draft);
+  const mergedReport = strengthenMergedQuestionAnswers(mergeGeminiDraft(fallbackReport, draft), deterministicBasis, formData);
 
   return {
     provider: 'gemini',
