@@ -172,11 +172,20 @@ function mergeQuestionAnswers(baseAnswers: QuestionAnswerBlock[], draftAnswers?:
     return baseAnswers;
   }
 
-  return baseAnswers.map((answer, index) => ({
-    ...answer,
-    ...draftAnswers[index],
-    advice: draftAnswers[index]?.advice?.filter(Boolean) || answer.advice
-  }));
+  return baseAnswers.map((answer, index) => {
+    const draft = draftAnswers[index];
+
+    if (!draft) {
+      return answer;
+    }
+
+    return {
+      ...answer,
+      title: draft.title || answer.title,
+      analysis: draft.analysis || answer.analysis,
+      advice: draft.advice?.filter(Boolean) || answer.advice
+    };
+  });
 }
 
 function mergeActionPlan(base: ActionPlan, draft?: Partial<ActionPlan>): ActionPlan {

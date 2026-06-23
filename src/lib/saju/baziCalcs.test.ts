@@ -6,6 +6,8 @@ import {
   dayunRows,
   fiveElementDistribution,
   getDayMasterElement,
+  getPillarLabels,
+  getTwelveYunseong,
   seunRows,
   tenGodDistribution,
   usefulElements
@@ -81,6 +83,37 @@ describe('saju core engine regression coverage', () => {
     expect(rows[2].age).toBe('29세 ~ 38세');
     expect(rows[3].ganzhi).toBe('계축');
     expect(rows[3].age).toBe('39세 ~ 48세');
+  });
+
+  it('locks the golden sample pillars, elements, and twelve yunseong values', () => {
+    const bazi = calcBazi(1992, 9, 9, 10, 24, 'solar', 'normal', 'male', false);
+    const pillars = getPillarLabels(bazi);
+    const elements = fiveElementDistribution(bazi.y_gz, bazi.m_gz, bazi.d_gz, bazi.h_gz);
+
+    expect(pillars).toEqual({
+      year: '임신',
+      month: '기유',
+      day: '무자',
+      hour: '정사'
+    });
+    expect(elements).toEqual({
+      목: 0,
+      화: 2,
+      토: 2,
+      금: 2,
+      수: 2
+    });
+    expect({
+      year: getTwelveYunseong(bazi.d_gz.tg, bazi.y_gz.dz),
+      month: getTwelveYunseong(bazi.d_gz.tg, bazi.m_gz.dz),
+      day: getTwelveYunseong(bazi.d_gz.tg, bazi.d_gz.dz),
+      hour: bazi.h_gz ? getTwelveYunseong(bazi.d_gz.tg, bazi.h_gz.dz) : null
+    }).toEqual({
+      year: '병',
+      month: '사',
+      day: '태',
+      hour: '건록'
+    });
   });
 
   it('generates yearly luck rows as a continuous sexagenary sequence', () => {
