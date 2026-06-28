@@ -62,18 +62,9 @@ function AppRoutes() {
 function AppShell() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isWideAppRoute = location.pathname.startsWith('/form/');
 
   return (
-    <div
-      className={[
-        'app-container',
-        isAdminRoute ? 'admin-app-container' : '',
-        !isAdminRoute && isWideAppRoute ? 'wide-app-container' : ''
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
+    <div className={isAdminRoute ? 'app-container admin-app-container' : 'app-container'}>
       <AppRoutes />
     </div>
   );

@@ -1806,18 +1806,6 @@ body {
   box-shadow: none;
 }
 
-.app-container.wide-app-container {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: #ffffff;
-  box-shadow: none;
-}
-
-.wide-app-container .bottom-tabbar {
-  display: none;
-}
-
 .site-nav {
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid #eef1f4;
@@ -17387,133 +17375,6 @@ body {
   .search-popular-card {
     min-height: 72px;
   }
-
-  .intake-story-page {
-    min-height: 100vh;
-    min-height: 100dvh;
-    overflow-y: auto;
-  }
-
-  .intake-story-frame {
-    width: min(1040px, 100%);
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
-    grid-template-rows: auto minmax(0, 1fr);
-    column-gap: 24px;
-    align-items: end;
-    padding: 22px 22px 120px;
-  }
-
-  .intake-story-topbar {
-    grid-column: 1 / -1;
-  }
-
-  .intake-story-copy {
-    align-self: stretch;
-    display: grid;
-    align-items: end;
-    max-width: none;
-    margin-top: 0;
-    padding: 0;
-  }
-
-  .intake-story-hero-art {
-    width: 100%;
-    height: min(68dvh, 620px);
-    margin: 0;
-    border-radius: 28px;
-  }
-
-  .intake-story-panel {
-    align-self: end;
-    max-height: calc(100dvh - 118px);
-    margin-top: 0;
-    overflow-y: auto;
-    border-radius: 28px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-    scrollbar-width: thin;
-  }
-
-  .signature-video-flow-page .intake-story-frame {
-    width: min(1040px, 100%);
-    max-width: 1040px;
-    min-height: 100vh;
-    min-height: 100dvh;
-    margin: 0 auto;
-    padding: 22px 22px 80px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
-    grid-template-rows: auto minmax(0, 1fr);
-    column-gap: 24px;
-    align-items: start;
-    overflow: visible;
-  }
-
-  .signature-video-flow-page .intake-story-topbar {
-    position: relative;
-    grid-column: 1 / -1;
-    width: auto;
-    padding: 0;
-  }
-
-  .signature-video-flow-page .intake-story-copy {
-    position: relative;
-    inset: auto;
-    display: grid;
-    align-self: stretch;
-    align-items: start;
-    max-width: none;
-    margin: 0;
-    padding: 40px 0 0;
-  }
-
-  .signature-video-flow-page .signature-intake-hero-art,
-  .signature-video-flow-page .intake-story-hero-art {
-    width: 100%;
-    height: min(68dvh, 620px);
-    margin: 0;
-    border-radius: 28px;
-  }
-
-  .signature-video-flow-page .intake-story-panel {
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    transform: none;
-    align-self: start;
-    width: 100%;
-    max-height: calc(100dvh - 118px);
-    margin: 40px 0 0;
-    padding: 18px;
-    border-radius: 28px;
-  }
-
-  .signature-video-flow-page .intake-story-field > span,
-  .signature-video-flow-page .intake-story-field-head > span {
-    font-size: 13px;
-  }
-
-  .signature-video-flow-page .intake-story-field input,
-  .signature-video-flow-page .intake-story-select-wrap select,
-  .signature-video-flow-page .intake-story-question-card textarea {
-    font-size: 16px;
-  }
-
-  .signature-video-flow-page .intake-story-pill,
-  .signature-video-flow-page .intake-story-chip,
-  .signature-video-flow-page .intake-story-suggestion {
-    min-height: 34px;
-    font-size: 12px;
-  }
-
-  .signature-video-flow-page .intake-story-secondary,
-  .signature-video-flow-page .intake-story-primary {
-    min-height: 50px;
-    font-size: 14px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -17521,6 +17382,10 @@ body {
   textarea,
   select {
     font-size: 16px !important;
+  }
+
+  .app-container:has(.intake-story-page) .bottom-tabbar {
+    display: none;
   }
 
   .search-page-shell,
