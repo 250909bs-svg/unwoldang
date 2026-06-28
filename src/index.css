@@ -1814,6 +1814,10 @@ body {
   box-shadow: none;
 }
 
+.wide-app-container .bottom-tabbar {
+  display: none;
+}
+
 .site-nav {
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid #eef1f4;
@@ -17438,11 +17442,12 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     margin: 0 auto;
-    padding: 22px 22px 120px;
+    padding: 22px 22px 80px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
     grid-template-rows: auto minmax(0, 1fr);
     column-gap: 24px;
+    align-items: start;
     overflow: visible;
   }
 
@@ -17458,10 +17463,10 @@ body {
     inset: auto;
     display: grid;
     align-self: stretch;
-    align-items: end;
+    align-items: start;
     max-width: none;
     margin: 0;
-    padding: 0;
+    padding: 40px 0 0;
   }
 
   .signature-video-flow-page .signature-intake-hero-art,
@@ -17478,10 +17483,10 @@ body {
     right: auto;
     bottom: auto;
     transform: none;
-    align-self: end;
+    align-self: start;
     width: 100%;
     max-height: calc(100dvh - 118px);
-    margin: 0;
+    margin: 40px 0 0;
     padding: 18px;
     border-radius: 28px;
   }
@@ -17583,7 +17588,8 @@ body {
 
   .signature-video-flow-page .intake-story-panel {
     width: min(390px, calc(100% - 24px));
-    max-height: calc(100dvh - 136px);
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 92px);
     padding: 15px;
     scroll-padding-bottom: 128px;
   }
