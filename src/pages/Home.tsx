@@ -18,6 +18,10 @@ import { readStoredAuthUser } from '../lib/auth';
 
 const illustrationDeck = {
   generalSaju: '/home-general-saju-card.png',
+  yearlyFortune: '/home-yearly-fortune-card.png',
+  concernReading: '/home-concern-reading-card.png',
+  loveReading: '/home-love-reading-card.png',
+  loveReunion: '/home-love-reunion-card.png',
   sunlight: '/intake-sunlight-girl.png',
   red: '/intake-beauty-red.png',
   moon: '/intake-night-blue.png',
@@ -59,43 +63,43 @@ const cardNewsSlides = [
     tone: 'indigo'
   },
   {
-    id: 'news-star-sign',
-    target: 'concern-reading',
-    rank: 2,
-    kicker: '고민풀이',
-    title: '운월당 고민풀이',
-    subtitle: '지금 고민 2개를 사주 구조와 대운으로 바로 정리',
-    image: illustrationDeck.blossom,
-    tone: 'rose'
-  },
-  {
-    id: 'news-compatibility',
-    target: 'match-couple',
-    rank: 3,
-    kicker: '궁합 연애운',
-    title: '월연도령 사주궁합',
-    subtitle: '두 사람의 인연 강도 · 갈등 포인트 · 연애 궁합',
-    image: illustrationDeck.red,
-    tone: 'violet'
-  },
-  {
-    id: 'news-monthly',
+    id: 'news-yearly',
     target: 'life-flow',
-    rank: 4,
+    rank: 2,
     kicker: '신년운세',
     title: '운월선생 신년운세',
     subtitle: '다가오는 12개월 흐름과 월별 선택 타이밍',
-    image: illustrationDeck.lantern,
+    image: illustrationDeck.yearlyFortune,
     tone: 'amber'
   },
   {
-    id: 'news-tarot-love',
-    target: 'marriage-blueprint',
+    id: 'news-concern',
+    target: 'concern-reading',
+    rank: 3,
+    kicker: '고민풀이',
+    title: '운월당 고민풀이',
+    subtitle: '지금 고민 2개를 사주 구조와 대운으로 바로 정리',
+    image: illustrationDeck.concernReading,
+    tone: 'rose'
+  },
+  {
+    id: 'news-love',
+    target: 'love-reading',
+    rank: 4,
+    kicker: '연애운',
+    title: '운월당 연애운',
+    subtitle: '끌림과 인연 흐름, 관계의 속도를 함께 분석',
+    image: illustrationDeck.loveReading,
+    tone: 'violet'
+  },
+  {
+    id: 'news-reunion',
+    target: 'love-reunion',
     rank: 5,
-    kicker: '결혼운',
-    title: '청연부인 결혼운 설계도',
-    subtitle: '배우자 흐름 · 혼인 적기 · 현실 체크 포인트',
-    image: illustrationDeck.sunlight,
+    kicker: '재회운',
+    title: '운월당 재회운',
+    subtitle: '다시 이어질 가능성과 연락 타이밍을 정리',
+    image: illustrationDeck.loveReunion,
     tone: 'emerald'
   }
 ] as const;
@@ -109,7 +113,7 @@ const homeDiscoverySections = [
       {
         id: 'love-reading',
         to: '/form/love-reading',
-        image: illustrationDeck.blossom,
+        image: illustrationDeck.loveReading,
         coverKicker: '홍연아씨',
         coverTitle: '연애비책',
         title: '홍연아씨 연애비책',
@@ -118,7 +122,7 @@ const homeDiscoverySections = [
       {
         id: 'love-reunion',
         to: '/form/love-reunion',
-        image: illustrationDeck.moon,
+        image: illustrationDeck.loveReunion,
         coverKicker: '홍연아씨',
         coverTitle: '재회비책',
         title: '홍연아씨 재회비책',
@@ -152,7 +156,7 @@ const homeDiscoverySections = [
       {
         id: 'concern-reading',
         to: '/form/concern-reading',
-        image: illustrationDeck.sunlight,
+        image: illustrationDeck.concernReading,
         coverKicker: '운월당',
         coverTitle: '고민풀이',
         title: '운월당 고민풀이',
@@ -161,7 +165,7 @@ const homeDiscoverySections = [
       {
         id: 'life-flow',
         to: '/form/life-flow',
-        image: illustrationDeck.lantern,
+        image: illustrationDeck.yearlyFortune,
         coverKicker: '운월선생',
         coverTitle: '월별운세',
         title: '운월선생 월별운세',
@@ -177,7 +181,7 @@ const homeDiscoverySections = [
       {
         id: 'life-flow',
         to: '/form/life-flow',
-        image: illustrationDeck.lantern,
+        image: illustrationDeck.yearlyFortune,
         coverKicker: '청월아씨',
         coverTitle: '신년운세',
         title: '운월선생 신년운세',
@@ -388,10 +392,10 @@ export default function Home() {
                 state={{ tabOrigin: '/' }}
                 className={
                   slide.offset === 0
-                    ? `home-cardnews-card active tone-${slide.tone}${slide.id === 'news-general' ? ' poster-card' : ''}`
+                    ? `home-cardnews-card active tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
                     : slide.offset === 1
-                      ? `home-cardnews-card next tone-${slide.tone}${slide.id === 'news-general' ? ' poster-card' : ''}`
-                      : `home-cardnews-card tail tone-${slide.tone}${slide.id === 'news-general' ? ' poster-card' : ''}`
+                      ? `home-cardnews-card next tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
+                      : `home-cardnews-card tail tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
                 }
                 aria-hidden={slide.offset !== 0}
                 tabIndex={slide.offset === 0 ? 0 : -1}
@@ -463,7 +467,7 @@ export default function Home() {
                     <Link key={card.id} to={card.to} state={{ tabOrigin: '/' }} className="home-showcase-card">
                       <article
                         className={
-                          card.id === 'general-signature'
+                          card.image.startsWith('/home-')
                             ? 'home-showcase-cover poster-cover'
                             : 'home-showcase-cover'
                         }
