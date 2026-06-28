@@ -235,7 +235,9 @@ export default function Tarot() {
               <span className="sparkle six">✧</span>
             </div>
 
-            <img src="/tarot-lucky-amulet.png" alt="운월당 타로 마스코트" className="tarot-lounge-mascot" />
+            <div className="tarot-lounge-mascot-orb">
+              <img src="/tarot-lucky-amulet.png" alt="운월당 타로 마스코트" className="tarot-lounge-mascot" />
+            </div>
 
             <div className="tarot-lounge-copy">
               <h1>운월당 타로운세 ✧</h1>
@@ -286,15 +288,22 @@ export default function Tarot() {
                     {deck.map((cardId, index) => {
                       const card = TAROT_CARDS[cardId];
                       const revealing = phase === 'revealing' && revealingCardId === cardId;
+                      const pressed = revealing || selectedCardId === cardId;
 
                       return (
                         <button
                           key={`${cardId}-${index}`}
                           type="button"
-                          className={revealing ? `tarot-master-card ${modeMeta.accentClass} revealing` : `tarot-master-card ${modeMeta.accentClass}`}
+                          className={
+                            revealing
+                              ? `tarot-master-card ${modeMeta.accentClass} revealing selected`
+                              : `tarot-master-card ${modeMeta.accentClass}`
+                          }
                           style={{ ['--card-index' as string]: index } as CSSProperties}
                           onClick={() => handleCardPick(cardId)}
                           disabled={phase === 'revealing'}
+                          aria-label={`${modeMeta.label} ${index + 1}번 카드 선택`}
+                          aria-pressed={pressed}
                         >
                           <span className="tarot-master-card-glow" />
                           <span className="tarot-master-card-back">
