@@ -2406,12 +2406,27 @@ body {
   filter: saturate(1.08) contrast(1.06);
 }
 
+.home-cardnews-card.poster-card .home-cardnews-image {
+  object-position: center bottom;
+  transform: scale(1);
+  filter: saturate(1.04) contrast(1.04);
+}
+
 .home-cardnews-overlay {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(circle at 50% 105%, rgba(255, 0, 136, 0.34) 0%, transparent 42%),
     linear-gradient(180deg, rgba(8, 12, 24, 0.03) 0%, rgba(8, 12, 24, 0.66) 100%);
+}
+
+.home-cardnews-card.poster-card .home-cardnews-overlay {
+  background: linear-gradient(180deg, rgba(4, 8, 18, 0.02) 0%, rgba(4, 8, 18, 0.12) 100%);
+}
+
+.home-cardnews-card.poster-card .home-cardnews-rank,
+.home-cardnews-card.poster-card .home-cardnews-copy {
+  display: none;
 }
 
 .home-cardnews-card.tone-rose .home-cardnews-overlay {

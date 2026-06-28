@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { readStoredAuthUser } from '../lib/auth';
 
 const illustrationDeck = {
+  generalSaju: '/home-general-saju-card.png',
   sunlight: '/intake-sunlight-girl.png',
   red: '/intake-beauty-red.png',
   moon: '/intake-night-blue.png',
@@ -54,7 +55,7 @@ const cardNewsSlides = [
     kicker: '종합사주',
     title: '운월 정통 종합사주',
     subtitle: '타고난 흐름 · 일 · 관계 · 재물 운세 종합 분석',
-    image: illustrationDeck.moon,
+    image: illustrationDeck.generalSaju,
     tone: 'indigo'
   },
   {
@@ -387,10 +388,10 @@ export default function Home() {
                 state={{ tabOrigin: '/' }}
                 className={
                   slide.offset === 0
-                    ? `home-cardnews-card active tone-${slide.tone}`
+                    ? `home-cardnews-card active tone-${slide.tone}${slide.id === 'news-general' ? ' poster-card' : ''}`
                     : slide.offset === 1
-                      ? `home-cardnews-card next tone-${slide.tone}`
-                      : `home-cardnews-card tail tone-${slide.tone}`
+                      ? `home-cardnews-card next tone-${slide.tone}${slide.id === 'news-general' ? ' poster-card' : ''}`
+                      : `home-cardnews-card tail tone-${slide.tone}${slide.id === 'news-general' ? ' poster-card' : ''}`
                 }
                 aria-hidden={slide.offset !== 0}
                 tabIndex={slide.offset === 0 ? 0 : -1}
