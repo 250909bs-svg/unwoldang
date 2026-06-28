@@ -3,14 +3,18 @@ import {
   Gem,
   Heart,
   BriefcaseBusiness,
+  Menu as MenuIcon,
+  MessageCircle,
   PiggyBank,
   ScrollText,
   Sparkles,
   User,
-  WalletCards
+  WalletCards,
+  X
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { readStoredAuthUser } from '../lib/auth';
 
 const illustrationDeck = {
   sunlight: '/intake-sunlight-girl.png',
@@ -19,6 +23,17 @@ const illustrationDeck = {
   lantern: '/intake-lantern-night.png',
   blossom: '/intake-blossom-girl.png'
 } as const;
+
+const homeMenuItems = [
+  { label: '사주풀이', to: '/menu' },
+  { label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
+  { label: '심리테스트', to: '/test' },
+  { label: '타로', to: '/tarot' },
+  { label: '마이페이지', to: '/my' }
+] as const;
+
+const supportMailHref =
+  'mailto:250909bs@gmail.com?subject=%EC%9A%B4%EC%9B%94%EB%8B%B9%20%EB%AC%B8%EC%9D%98';
 
 const mainCategories = [
   { target: 'general-signature', label: '종합사주', icon: ScrollText, tint: '#fff6df' },
@@ -225,6 +240,15 @@ const homeDiscoverySections = [
 
 export default function Home() {
   const [activeCardNewsIndex, setActiveCardNewsIndex] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(() => readStoredAuthUser());
+  const menuNickname = authUser?.nickname?.trim() || '운월당 회원';
+  const menuStatusLabel = authUser
+    ? authUser.provider === 'kakao'
+      ? '카카오 로그인'
+      : '테스트 로그인'
+    : '로그인 전';
+  const menuAvatar = authUser?.avatar || illustrationDeck.sunlight;
   const visibleCardNews = cardNewsSlides
     .map((slide, index) => ({
       ...slide,
@@ -240,6 +264,39 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const syncAuthUser = () => setAuthUser(readStoredAuthUser());
+
+    window.addEventListener('focus', syncAuthUser);
+    window.addEventListener('storage', syncAuthUser);
+
+    return () => {
+      window.removeEventListener('focus', syncAuthUser);
+      window.removeEventListener('storage', syncAuthUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeWithEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [menuOpen]);
+
   return (
     <main className="app-home-shell">
       <div className="app-mobile-shell">
@@ -249,11 +306,77 @@ export default function Home() {
           </Link>
 
           <div className="app-header-actions">
-            <Link to="/my" className="app-profile-button" aria-label="마이페이지">
+            <button
+              type="button"
+              className="app-menu-button"
+              aria-label="운월당 메뉴 열기"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(true)}
+            >
+              <MenuIcon size={18} strokeWidth={2.35} />
+            </button>
+            <button
+              type="button"
+              className="app-profile-button"
+              aria-label="운월당 메뉴 열기"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(true)}
+            >
               <User size={17} strokeWidth={2.2} />
-            </Link>
+            </button>
           </div>
         </header>
+
+        {menuOpen ? (
+          <div className="home-menu-overlay" role="presentation" onClick={() => setMenuOpen(false)}>
+            <aside
+              className="home-menu-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="운월당 메뉴"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="home-menu-profile">
+                <span className="home-menu-avatar" aria-hidden="true">
+                  <img src={menuAvatar} alt="" />
+                </span>
+                <div className="home-menu-profile-copy">
+                  <strong>{menuNickname}</strong>
+                  <span>{menuStatusLabel}</span>
+                </div>
+                <button
+                  type="button"
+                  className="home-menu-close"
+                  aria-label="메뉴 닫기"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <X size={18} strokeWidth={2.35} />
+                </button>
+              </div>
+
+              <nav className="home-menu-list" aria-label="운월당 주요 메뉴">
+                {homeMenuItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    state={'state' in item ? item.state : undefined}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="home-menu-contact">
+                <a href={supportMailHref} className="home-menu-kakao">
+                  <MessageCircle size={15} fill="currentColor" strokeWidth={2.2} />
+                  <span>카카오톡 문의</span>
+                </a>
+                <p>운영시간 평일 09:00~18:00</p>
+              </div>
+            </aside>
+          </div>
+        ) : null}
 
         <section className="home-cardnews-wrap" aria-label="상단 카드뉴스">
           <div className="home-cardnews-stage">
