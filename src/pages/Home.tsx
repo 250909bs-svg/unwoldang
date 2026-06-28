@@ -255,18 +255,6 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="report-tab-row">
-          <button type="button" className="report-tab active">
-            운세
-          </button>
-          <button type="button" className="report-tab">
-            연애·궁합
-          </button>
-          <button type="button" className="report-tab">
-            돈·직업
-          </button>
-        </section>
-
         <section className="home-cardnews-wrap" aria-label="상단 카드뉴스">
           <div className="home-cardnews-stage">
             {visibleCardNews.map((slide) => (
