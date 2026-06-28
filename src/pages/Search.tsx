@@ -142,13 +142,15 @@ export default function Search() {
         </section>
 
         <section className="search-section">
-          <h2>{query ? '검색 결과' : '실시간 인기'}</h2>
+          <h2>{query ? '검색 결과' : '실시간 인기순'}</h2>
           {results.length ? (
             <div className="search-popular-stack">
               {results.map((product, index) => (
                 <Link key={product.id} to={product.to} state={{ tabOrigin: '/search' }} className="search-popular-card">
-                  <img src={product.image} alt={product.title} />
                   <span className="search-popular-rank">{index + 1}</span>
+                  <span className="search-popular-image">
+                    <img src={product.image} alt={product.title} />
+                  </span>
                   <strong>{product.title}</strong>
                 </Link>
               ))}

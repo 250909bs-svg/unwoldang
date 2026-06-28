@@ -1978,8 +1978,8 @@ body {
 .search-page-shell {
   min-height: 100vh;
   padding: 0 0 108px;
-  background: #050506;
-  color: #ffffff;
+  background: #ffffff;
+  color: #111827;
 }
 
 .search-page-inner {
@@ -1997,7 +1997,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 4px 0 18px;
-  background: linear-gradient(180deg, #050506 0%, rgba(5, 5, 6, 0.96) 82%, rgba(5, 5, 6, 0) 100%);
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.96) 82%, rgba(255, 255, 255, 0) 100%);
 }
 
 .search-back-button,
@@ -2011,7 +2011,7 @@ body {
 .search-back-button {
   width: 30px;
   height: 40px;
-  color: #ffffff;
+  color: #111827;
 }
 
 .search-input-box {
@@ -2020,8 +2020,8 @@ body {
   gap: 8px;
   padding: 0 9px 0 12px;
   border-radius: 10px;
-  background: #1e1f21;
-  color: #b9bec7;
+  background: #f2f4f7;
+  color: #667085;
 }
 
 .search-input-box input {
@@ -2031,22 +2031,22 @@ body {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #ffffff;
+  color: #111827;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0;
 }
 
 .search-input-box input::placeholder {
-  color: #a1a8b3;
+  color: #98a2b3;
 }
 
 .search-input-box button {
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: #111827;
+  background: #111827;
+  color: #ffffff;
 }
 
 .search-section {
@@ -2057,7 +2057,7 @@ body {
 
 .search-section h2 {
   margin: 0;
-  color: #ffffff;
+  color: #111827;
   font-size: 17px;
   font-weight: 900;
   letter-spacing: 0;
@@ -2073,72 +2073,77 @@ body {
   min-height: 38px;
   padding: 0 15px;
   border-radius: 999px;
-  background: #242528;
-  color: #ffffff;
+  background: #f2f4f7;
+  color: #111827;
   font-size: 14px;
   font-weight: 900;
 }
 
 .search-popular-stack {
   display: grid;
-  gap: 10px;
+  gap: 9px;
 }
 
 .search-popular-card {
   position: relative;
-  display: block;
-  height: 156px;
+  display: grid;
+  grid-template-columns: 34px 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  min-height: 88px;
+  padding: 9px 12px 9px 8px;
   overflow: hidden;
+  border: 1px solid #edf0f4;
   border-radius: 16px;
-  background: #242528;
-  color: #ffffff;
+  background: #ffffff;
+  color: #111827;
   text-decoration: none;
-  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
 }
 
-.search-popular-card img {
+.search-popular-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #f6f7f9;
+}
+
+.search-popular-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  filter: saturate(1.05) contrast(1.05);
-  transform: scale(1.01);
+  object-fit: contain;
+  object-position: center;
+  filter: saturate(1.03) contrast(1.02);
 }
 
 .search-popular-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.12) 45%, rgba(0, 0, 0, 0.72) 100%);
+  content: none;
 }
 
 .search-popular-rank {
-  position: absolute;
-  left: 14px;
-  bottom: 16px;
-  z-index: 1;
-  color: #ffffff;
-  font-size: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  color: #111827;
+  font-size: 22px;
   font-weight: 900;
-  line-height: 0.82;
-  text-shadow: 0 5px 16px rgba(0, 0, 0, 0.42);
+  line-height: 1;
 }
 
 .search-popular-card strong {
-  position: absolute;
-  right: 16px;
-  bottom: 17px;
-  left: 58px;
-  z-index: 1;
   overflow: hidden;
-  color: #ffffff;
-  font-size: 22px;
+  color: #111827;
+  font-size: 16px;
   font-weight: 900;
-  line-height: 1.08;
+  line-height: 1.28;
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 0 5px 16px rgba(0, 0, 0, 0.42);
 }
 
 .search-empty-state {
@@ -2146,21 +2151,21 @@ body {
   gap: 6px;
   min-height: 130px;
   place-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid #edf0f4;
   border-radius: 16px;
-  background: #151619;
+  background: #f8fafc;
   text-align: center;
 }
 
 .search-empty-state strong {
-  color: #ffffff;
+  color: #111827;
   font-size: 15px;
   font-weight: 900;
 }
 
 .search-empty-state p {
   margin: 0;
-  color: #9aa2af;
+  color: #667085;
   font-size: 12px;
   font-weight: 700;
 }
