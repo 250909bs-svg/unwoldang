@@ -1,4 +1,4 @@
-import { Menu, MessageCircle } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -65,14 +65,13 @@ export default function Login() {
           </Link>
         </header>
 
-        <section className="login-visual-hero" aria-label="카카오 로그인">
-          <img src="/intake-night-blue.png" alt="" className="login-visual-image" />
+        <section className="login-visual-hero login-poster-hero" aria-label="카카오 로그인">
+          <img src="/my-kakao-login-hero.png" alt="운월당 카카오 로그인 안내" className="login-visual-image" />
           <div className="login-visual-gradient" />
 
-          <div className="login-visual-action-card">
-            <button type="button" className="login-kakao-main-button" onClick={handleKakaoLogin}>
-              <MessageCircle size={18} fill="currentColor" />
-              카카오로 로그인/가입
+          <div className="login-visual-action-card login-poster-action-card">
+            <button type="button" className="login-kakao-main-button login-kakao-poster-button" onClick={handleKakaoLogin} aria-label="카카오로 시작하기">
+              <span>카카오로 시작하기</span>
             </button>
             {canUseLocalPreview ? (
               <button type="button" className="login-local-preview-button" onClick={handleLocalPreviewLogin}>

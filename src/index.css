@@ -3565,6 +3565,92 @@ body {
   box-shadow: 0 12px 22px rgba(31, 42, 36, 0.18);
 }
 
+.login-poster-hero {
+  min-height: auto;
+  overflow: visible;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(17, 24, 39, 0.08);
+}
+
+.login-poster-hero .login-visual-image {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 28px;
+}
+
+.login-poster-hero .login-visual-gradient {
+  display: none;
+}
+
+.login-poster-action-card {
+  left: 12%;
+  right: 12%;
+  bottom: clamp(40px, 11vw, 48px);
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.login-kakao-main-button.login-kakao-poster-button {
+  min-height: clamp(50px, 13vw, 58px);
+  border-radius: 22px;
+  background: rgba(255, 232, 18, 0.02);
+  color: transparent;
+  font-size: 0;
+  box-shadow: none;
+}
+
+.login-kakao-main-button.login-kakao-poster-button:hover {
+  background: rgba(255, 232, 18, 0.12);
+  box-shadow: 0 0 0 4px rgba(255, 232, 18, 0.18);
+}
+
+.login-kakao-main-button.login-kakao-poster-button:focus-visible {
+  outline: 3px solid rgba(35, 31, 32, 0.88);
+  outline-offset: 3px;
+}
+
+.login-kakao-poster-button span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.login-poster-action-card .login-local-preview-button {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  right: 0;
+  margin-top: 0;
+  min-height: 40px;
+  border-radius: 16px;
+  background: rgba(31, 42, 36, 0.9);
+  box-shadow: 0 10px 22px rgba(31, 42, 36, 0.16);
+}
+
+.login-poster-action-card .login-inline-error {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  width: min(320px, 88vw);
+  transform: translateX(-50%);
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 28px rgba(185, 28, 28, 0.12);
+}
+
 .mobile-page-content {
   display: grid;
   gap: 14px;
