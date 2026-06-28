@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Test from './pages/Test';
 import FaceAI from './pages/FaceAI';
+import Search from './pages/Search';
 import Tarot from './pages/Tarot';
 import Detail from './pages/Detail';
 import Form from './pages/Form';
@@ -35,6 +36,7 @@ function AppRoutes() {
         <Route path="/menu" element={<Menu />} />
         <Route path="/test" element={<Test />} />
         <Route path="/test/face-ai" element={<FaceAI />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/tarot" element={<Tarot />} />
         <Route path="/my" element={<My />} />
         <Route path="/admin" element={<Admin />} />

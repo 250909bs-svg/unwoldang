@@ -1,6 +1,4 @@
 import {
-  ChevronRight,
-  Clock3,
   Flame,
   Gem,
   Heart,
@@ -8,7 +6,6 @@ import {
   PiggyBank,
   ScrollText,
   Sparkles,
-  TrendingUp,
   User,
   WalletCards
 } from 'lucide-react';
@@ -84,69 +81,6 @@ const cardNewsSlides = [
     subtitle: '배우자 흐름 · 혼인 적기 · 현실 체크 포인트',
     image: illustrationDeck.sunlight,
     tone: 'emerald'
-  }
-] as const;
-
-const liveTopProducts = [
-  {
-    id: 'concern-reading',
-    rank: 1,
-    label: '고민풀이',
-    title: '운월당 고민풀이',
-    subtitle: '지금 고민 2개를 사주로 바로 정리',
-    price: '2,900원',
-    badge: '첫 구매 1위',
-    trend: '+38%',
-    image: illustrationDeck.sunlight,
-    tone: 'sand'
-  },
-  {
-    id: 'general-signature',
-    rank: 2,
-    label: '종합사주',
-    title: '운월선생 정통 종합사주',
-    subtitle: '일·돈·관계·대운까지 한 번에',
-    price: '79,000원',
-    badge: '대표 상품',
-    trend: '+31%',
-    image: illustrationDeck.moon,
-    tone: 'ink'
-  },
-  {
-    id: 'love-reading',
-    rank: 3,
-    label: '연애운',
-    title: '홍연아씨 연애운 리딩',
-    subtitle: '연락 온도와 들어오는 인연 분석',
-    price: '49,000원',
-    badge: '여성 인기',
-    trend: '+27%',
-    image: illustrationDeck.blossom,
-    tone: 'rose'
-  },
-  {
-    id: 'love-reunion',
-    rank: 4,
-    label: '재회운',
-    title: '홍연아씨 재회 가능성',
-    subtitle: '다시 이어질 흐름과 멈출 신호',
-    price: '55,000원',
-    badge: '상담 전환',
-    trend: '+19%',
-    image: illustrationDeck.red,
-    tone: 'ruby'
-  },
-  {
-    id: 'money-reading',
-    rank: 5,
-    label: '금전운',
-    title: '운월선생 금전운 설계도',
-    subtitle: '돈 들어오는 방식과 새는 구조',
-    price: '59,000원',
-    badge: '남성 인기',
-    trend: '+16%',
-    image: illustrationDeck.lantern,
-    tone: 'gold'
   }
 ] as const;
 
@@ -331,46 +265,6 @@ export default function Home() {
           <button type="button" className="report-tab">
             돈·직업
           </button>
-        </section>
-
-        <section className="home-live-top5" aria-label="실시간 인기 TOP 5">
-          <div className="home-live-top5-head">
-            <div>
-              <span className="home-live-eyebrow">
-                <TrendingUp size={13} />
-                실시간 인기순
-              </span>
-              <h1>지금 가장 많이 보는 운세 TOP 5</h1>
-            </div>
-            <span className="home-live-timestamp">
-              <Clock3 size={13} />
-              방금 업데이트
-            </span>
-          </div>
-
-          <div className="home-live-top5-list">
-            {liveTopProducts.map((product) => (
-              <Link
-                key={product.id}
-                to={`/form/${product.id}`}
-                state={{ tabOrigin: '/' }}
-                className={`home-live-product tone-${product.tone}`}
-              >
-                <span className="home-live-rank">{product.rank}</span>
-                <img src={product.image} alt={product.title} className="home-live-thumb" />
-                <span className="home-live-copy">
-                  <small>{product.label} · {product.badge}</small>
-                  <strong>{product.title}</strong>
-                  <em>{product.subtitle}</em>
-                </span>
-                <span className="home-live-side">
-                  <b>{product.price}</b>
-                  <i>{product.trend}</i>
-                </span>
-                <ChevronRight className="home-live-arrow" size={17} />
-              </Link>
-            ))}
-          </div>
         </section>
 
         <section className="home-cardnews-wrap" aria-label="상단 카드뉴스">

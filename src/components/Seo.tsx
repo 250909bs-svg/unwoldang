@@ -27,6 +27,12 @@ const routeSeo: Record<string, RouteSeo> = {
     keywords: '운월당 전체 리포트, 사주 카테고리, 종합사주, 연애운, 궁합, 결혼운, 재회운',
     image: '/intake-beauty-red.png'
   },
+  '/search': {
+    title: '운월당 검색 | 실시간 인기 사주 리포트',
+    description: '운월당에서 종합사주, 연애운, 재물운, 결혼운, 궁합 리포트를 검색하고 실시간 인기 운세를 확인하세요.',
+    keywords: '운월당 검색, 사주 검색, 실시간 인기 사주, 연애운 검색, 재물운 검색, 궁합 검색',
+    image: '/intake-night-blue.png'
+  },
   '/tarot': {
     title: '운월당 타로 | 연애운·재회운·결혼운 카드 리딩',
     description: '연애운, 재회운, 결혼운을 신비로운 카드 리딩으로 확인하는 운월당 타로 서비스입니다.',
