@@ -2362,7 +2362,7 @@ body {
 
 .home-cardnews-stage {
   position: relative;
-  height: clamp(440px, 122vw, 560px);
+  height: clamp(560px, 145vw, 760px);
 }
 
 .home-cardnews-card {
@@ -2407,7 +2407,7 @@ body {
 }
 
 .home-cardnews-card.poster-card .home-cardnews-image {
-  object-position: center bottom;
+  object-position: center center;
   transform: scale(1);
   filter: saturate(1.04) contrast(1.04);
 }
@@ -2629,6 +2629,23 @@ body {
   object-fit: cover;
   object-position: center top;
   transform: scale(1.015);
+}
+
+.home-showcase-cover.poster-cover {
+  background: #090b12;
+}
+
+.home-showcase-cover.poster-cover .home-showcase-cover-image {
+  object-position: center center;
+  transform: scale(1);
+}
+
+.home-showcase-cover.poster-cover .home-showcase-cover-overlay {
+  background: linear-gradient(180deg, rgba(6, 8, 16, 0.02) 0%, rgba(6, 8, 16, 0.16) 100%);
+}
+
+.home-showcase-cover.poster-cover .home-showcase-cover-copy {
+  display: none;
 }
 
 .home-showcase-cover-overlay {

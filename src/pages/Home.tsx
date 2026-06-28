@@ -143,7 +143,7 @@ const homeDiscoverySections = [
       {
         id: 'general-signature',
         to: '/form/general-signature',
-        image: illustrationDeck.moon,
+        image: illustrationDeck.generalSaju,
         coverKicker: '운월선생',
         coverTitle: '종합사주',
         title: '운월선생 정통 종합사주',
@@ -461,7 +461,13 @@ export default function Home() {
                 <div className="home-showcase-rail">
                   {section.cards.map((card) => (
                     <Link key={card.id} to={card.to} state={{ tabOrigin: '/' }} className="home-showcase-card">
-                      <article className="home-showcase-cover">
+                      <article
+                        className={
+                          card.id === 'general-signature'
+                            ? 'home-showcase-cover poster-cover'
+                            : 'home-showcase-cover'
+                        }
+                      >
                         <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
                         <div className="home-showcase-cover-overlay" />
                         <div className="home-showcase-cover-copy">
