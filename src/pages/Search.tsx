@@ -142,7 +142,10 @@ export default function Search() {
         </section>
 
         <section className="search-section">
-          <h2>{query ? '검색 결과' : '실시간 인기순'}</h2>
+          <div className="search-section-title-row">
+            <h2>{query ? '검색 결과' : '실시간 인기순'}</h2>
+            {!query ? <span className="search-live-badge">LIVE</span> : null}
+          </div>
           {results.length ? (
             <div className="search-popular-stack">
               {results.map((product, index) => (
