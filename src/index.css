@@ -7074,6 +7074,35 @@ body {
   overflow: hidden;
 }
 
+.test-lab-simple-hero {
+  grid-template-columns: minmax(0, 1fr) 156px;
+  min-height: 178px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(255, 214, 226, 0.78), transparent 32%),
+    radial-gradient(circle at 18% 88%, rgba(224, 231, 255, 0.86), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fff8fb 52%, #f7f8ff 100%);
+}
+
+.test-lab-banner.test-lab-simple-hero h1 {
+  align-self: center;
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.test-lab-simple-hero .test-lab-hero-character {
+  width: 156px;
+  height: 132px;
+  justify-self: end;
+  align-self: center;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.74);
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 18px 34px rgba(172, 115, 164, 0.13);
+}
+
 .test-lab-hero-character {
   width: 112px;
   height: 144px;

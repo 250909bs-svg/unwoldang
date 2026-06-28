@@ -103,38 +103,15 @@ const testItems: TestItem[] = [
 ];
 
 export default function Test() {
-  const featuredKeywords = ['AI 관상', '연애 심리', '궁합 테스트', '행운 지수'];
-
   return (
     <main className="mobile-page-shell">
       <div className="mobile-page-card">
         <MobileTopBar title="심리테스트" backTo="/" backLabel="홈" />
 
         <section className="mobile-page-content test-lab-page">
-          <section className="test-lab-banner">
-            <div className="test-lab-brand-mark">
-              <span className="test-lab-brand-orbit orbit-a" />
-              <span className="test-lab-brand-orbit orbit-b" />
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <span className="test-lab-badge-chip">운월당 AI 테스트</span>
-              <h1>
-                AI가 분석하는
-                <br />
-                나만의 특별한 테스트들
-              </h1>
-              <p>얼굴, 손금, 심리까지 실제 운월당 테스트 화면처럼 가볍게 들어와 바로 체험할 수 있게 정리했습니다.</p>
-            </div>
-            <img src="/test-star-character.png" alt="" className="test-lab-hero-character" />
-          </section>
-
-          <section className="test-lab-marquee" aria-label="추천 테스트 키워드">
-            {featuredKeywords.map((keyword, index) => (
-              <span key={keyword} className="test-lab-marquee-chip" style={{ ['--chip-index' as string]: index } as CSSProperties}>
-                {keyword}
-              </span>
-            ))}
+          <section className="test-lab-banner test-lab-simple-hero">
+            <h1>심리테스트</h1>
+            <img src="/test-dreamy-stars.png" alt="" className="test-lab-hero-character" />
           </section>
 
           <section className="test-lab-section">
