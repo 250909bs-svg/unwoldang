@@ -42,7 +42,7 @@ const searchProducts: SearchProduct[] = [
   {
     id: 'match-couple',
     title: '월연도령 사주궁합',
-    image: '/intake-beauty-red.png',
+    image: '/home-match-couple-card.png',
     to: '/form/match-couple',
     keywords: ['궁합', '커플', '상대', '결혼궁합', '속궁합', '연인', '배우자']
   },

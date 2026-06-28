@@ -22,6 +22,7 @@ const illustrationDeck = {
   concernReading: '/home-concern-reading-card.png',
   loveReading: '/home-love-reading-card.png',
   loveReunion: '/home-love-reunion-card.png',
+  matchCouple: '/home-match-couple-card.png',
   sunlight: '/intake-sunlight-girl.png',
   red: '/intake-beauty-red.png',
   moon: '/intake-night-blue.png',
@@ -131,7 +132,7 @@ const homeDiscoverySections = [
       {
         id: 'match-couple',
         to: '/form/match-couple',
-        image: illustrationDeck.red,
+        image: illustrationDeck.matchCouple,
         coverKicker: '월연도령',
         coverTitle: '궁합비책',
         title: '월연도령 사주궁합',
@@ -190,7 +191,7 @@ const homeDiscoverySections = [
       {
         id: 'match-destiny',
         to: '/form/match-destiny',
-        image: illustrationDeck.red,
+        image: illustrationDeck.matchCouple,
         coverKicker: '월연도령',
         coverTitle: '운명궁합',
         title: '월연도령 운명 궁합',
