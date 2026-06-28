@@ -6592,21 +6592,21 @@ body {
   padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
   border-radius: 0;
   border: 0;
-  border-top: 1px solid #e8edf2;
-  box-shadow: 0 -10px 26px rgba(15, 23, 42, 0.06);
-  background: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid #eef0f3;
+  box-shadow: 0 -10px 26px rgba(15, 23, 42, 0.045);
+  background: rgba(255, 255, 255, 0.99);
 }
 
 .bottom-tab {
   min-height: 58px;
   border-radius: 18px;
+  color: #98a2b3;
 }
 
 .bottom-tab.active {
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.72), transparent 55%),
-    linear-gradient(180deg, #fef2f4 0%, #fff7f8 100%);
+  background: #f8fafc;
   color: #111827;
+  box-shadow: inset 0 0 0 1px #eef2f7;
 }
 
 .mobile-topbar {
@@ -13072,17 +13072,15 @@ body {
 .my-replay-page {
   min-height: 100vh;
   padding: 0 14px 96px;
-  background:
-    radial-gradient(520px 300px at 50% -120px, rgba(255, 118, 155, 0.16), transparent 64%),
-    linear-gradient(180deg, #f2f2f1 0%, #ececeb 100%);
-  color: #242424;
+  background: #ffffff;
+  color: #111827;
 }
 
 .my-replay-login-page {
   padding-bottom: 86px;
   background:
-    radial-gradient(520px 300px at 50% -120px, rgba(255, 238, 222, 0.9), transparent 70%),
-    linear-gradient(180deg, #efefed 0%, #f6f4ef 100%);
+    radial-gradient(520px 300px at 50% -120px, rgba(248, 250, 252, 0.95), transparent 70%),
+    #ffffff;
 }
 
 .my-replay-header {
@@ -13095,12 +13093,12 @@ body {
   width: min(430px, 100%);
   margin: 0 auto;
   padding: 15px 4px 12px;
-  background: linear-gradient(180deg, rgba(242, 242, 241, 0.94) 0%, rgba(242, 242, 241, 0.76) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 100%);
   backdrop-filter: blur(12px);
 }
 
 .my-replay-login-page .my-replay-header {
-  background: linear-gradient(180deg, rgba(239, 239, 237, 0.94) 0%, rgba(239, 239, 237, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 100%);
 }
 
 .my-replay-logo,
@@ -13122,11 +13120,11 @@ body {
   height: 21px;
   place-items: center;
   border-radius: 6px;
-  background: #ff493a;
+  background: #111827;
   color: #ffffff;
   font-size: 11px;
   font-weight: 900;
-  box-shadow: 0 8px 18px rgba(255, 73, 58, 0.2);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
 .my-replay-logo strong {
@@ -13138,8 +13136,10 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 14px;
-  color: #2b2d31;
-  background: rgba(255, 255, 255, 0.38);
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
 }
 
 .my-login-hero,
@@ -13308,14 +13308,14 @@ body {
 
 .my-replay-content {
   display: grid;
-  gap: 22px;
+  gap: 18px;
   padding-top: 10px;
 }
 
 .my-replay-title {
   display: grid;
   gap: 8px;
-  padding: 4px 4px 0;
+  padding: 8px 4px 2px;
 }
 
 .my-replay-title span,
@@ -13328,10 +13328,10 @@ body {
 
 .my-replay-title h1 {
   margin: 0;
-  color: #242424;
-  font-size: 22px;
+  color: #111827;
+  font-size: 24px;
   line-height: 1.32;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
 }
 
 .my-replay-title p {
@@ -13347,10 +13347,10 @@ body {
   gap: 11px;
   min-height: 168px;
   padding: 24px 18px;
-  border-radius: 5px;
-  background: rgba(239, 239, 237, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.44);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
 }
 
 .my-empty-avatar {
@@ -13389,16 +13389,80 @@ body {
   gap: 12px;
 }
 
+.my-report-archive-section {
+  padding: 14px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
+}
+
 .my-section-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
+.my-archive-toggle {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 0;
+  background: transparent;
+  color: #111827;
+  text-align: left;
+}
+
+.my-archive-toggle-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 15px;
+  background: #f8fafc;
+  color: #111827;
+  border: 1px solid #edf1f5;
+}
+
+.my-archive-toggle-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.my-archive-toggle-copy strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-archive-toggle-copy em {
+  color: #8a9099;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.my-archive-chevron {
+  color: #98a2b3;
+  transition: transform 0.18s ease;
+}
+
+.my-archive-chevron.open {
+  transform: rotate(180deg);
+}
+
 .my-report-replay-list,
 .my-promo-list {
   display: grid;
-  gap: 13px;
+  gap: 10px;
 }
 
 .my-report-replay-card {
@@ -13406,13 +13470,13 @@ body {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  min-height: 72px;
-  padding: 13px 13px;
-  border-radius: 17px;
-  background: rgba(255, 255, 255, 0.78);
-  color: #242424;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 14px 28px rgba(31, 35, 45, 0.06);
+  min-height: 78px;
+  padding: 13px;
+  border-radius: 18px;
+  background: #f9fafb;
+  color: #111827;
+  border: 1px solid #edf1f5;
+  box-shadow: none;
 }
 
 .my-report-icon {
@@ -13430,6 +13494,7 @@ body {
   color: #1f2937;
   font-size: 14px;
   line-height: 1.35;
+  word-break: keep-all;
 }
 
 .my-report-replay-card p {
@@ -13438,29 +13503,65 @@ body {
   font-size: 12px;
 }
 
+.my-report-summary {
+  min-width: 0;
+}
+
+.my-report-summary em {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-report-arrow {
+  color: #a3abb7;
+}
+
+.my-archive-expand-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: 2px;
+  border-radius: 14px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .my-promo-banner {
   position: relative;
-  min-height: 88px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
   align-items: center;
+  gap: 12px;
+  min-height: 88px;
+  padding: 10px;
   overflow: hidden;
-  border-radius: 7px;
-  color: #ffffff;
-  background: var(--promo-tone);
-  box-shadow: 0 12px 24px rgba(30, 30, 30, 0.08);
-  isolation: isolate;
+  border-radius: 20px;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .my-promo-banner img {
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: 58%;
-  height: 100%;
+  position: static;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
   object-fit: cover;
   object-position: center 28%;
-  z-index: -2;
-  filter: saturate(1.08) contrast(1.04);
-  transform: scale(1.05);
+  filter: saturate(1.04) contrast(1.02);
+  transform: none;
   transition: transform 0.28s ease;
 }
 
@@ -13469,56 +13570,55 @@ body {
 }
 
 .my-promo-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--promo-tone) 88%, #111827) 0%, color-mix(in srgb, var(--promo-tone) 70%, transparent) 48%, rgba(17, 24, 39, 0.1) 100%),
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.32), transparent 28%);
+  display: none;
 }
 
 .my-promo-copy {
   display: grid;
   gap: 2px;
-  padding: 14px 14px 14px 18px;
+  min-width: 0;
+  padding: 0;
 }
 
 .my-promo-copy span {
   width: fit-content;
   padding: 2px 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.86);
+  background: #f6f7f9;
+  color: #8a9099;
   font-size: 10px;
   font-weight: 800;
 }
 
 .my-promo-copy strong {
-  font-size: 25px;
-  line-height: 1.05;
-  font-weight: 950;
-  letter-spacing: -0.08em;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .my-promo-copy p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
+  color: #7b8491;
   font-size: 11px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .my-promo-banner em {
-  position: absolute;
-  left: 18px;
-  bottom: 8px;
+  position: static;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--promo-tone);
+  background: #f8fafc;
+  color: #111827;
   font-size: 9px;
   font-style: normal;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .my-logout-button {
@@ -13531,8 +13631,8 @@ body {
   padding: 0 14px;
   border-radius: 999px;
   color: #8a9099;
-  background: rgba(255, 255, 255, 0.52);
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: #ffffff;
+  border: 1px solid #eef0f3;
   font-size: 12px;
   font-weight: 800;
 }

@@ -1,4 +1,4 @@
-import { FlaskConical, Home, Search, User, WalletCards } from 'lucide-react';
+import { Archive, FlaskConical, Home, Search, WalletCards } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
@@ -28,9 +28,9 @@ const navItems = [
   },
   {
     to: '/my',
-    label: '마이',
+    label: '보관함',
     match: (pathname: string) => pathname.startsWith('/my') || pathname.startsWith('/login'),
-    icon: User
+    icon: Archive
   }
 ] as const;
 

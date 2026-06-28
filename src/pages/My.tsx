@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, Menu, MessageCircle, ScrollText, Sparkles } from 'lucide-react';
+import { Archive, ChevronDown, ChevronRight, LogOut, Menu, MessageCircle, ScrollText, Sparkles } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -64,6 +64,20 @@ const replayPromos: ReplayPromo[] = [
   }
 ];
 
+function formatArchiveDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '날짜 미상';
+  }
+
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+}
+
 function MyReplayHeader() {
   return (
     <header className="my-replay-header">
@@ -127,6 +141,8 @@ function EmptyArchive() {
 }
 
 function ReportReplayCard({ report }: { report: ReportArchiveEntry }) {
+  const dateLabel = formatArchiveDate(report.createdAt);
+
   return (
     <Link
       to={`/report/${report.productId}`}
@@ -141,13 +157,14 @@ function ReportReplayCard({ report }: { report: ReportArchiveEntry }) {
       <span className="my-report-icon">
         <ScrollText size={17} />
       </span>
-      <div>
+      <div className="my-report-summary">
         <strong>{report.title}</strong>
         <p>
-          {report.customerName} · {new Date(report.createdAt).toLocaleDateString('ko-KR')}
+          {report.customerName}님 · {dateLabel}
         </p>
+        {report.subtitle ? <em>{report.subtitle}</em> : null}
       </div>
-      <ChevronRight size={18} />
+      <ChevronRight size={18} className="my-report-arrow" />
     </Link>
   );
 }
@@ -170,6 +187,10 @@ function PromoBanner({ promo }: { promo: ReplayPromo }) {
 function LoggedInReplay() {
   const { user, logout } = useAuth();
   const [recentReports, setRecentReports] = useState(() => readReportArchiveEntries());
+  const [archiveOpen, setArchiveOpen] = useState(true);
+  const [showAllReports, setShowAllReports] = useState(false);
+  const visibleReports = showAllReports ? recentReports : recentReports.slice(0, 4);
+  const hiddenReportCount = Math.max(recentReports.length - 4, 0);
 
   useEffect(() => {
     let isCancelled = false;
@@ -214,22 +235,48 @@ function LoggedInReplay() {
 
       <section className="my-replay-content">
         <div className="my-replay-title">
-          <span>내 운세 다시 보기</span>
-          <h1>{user?.nickname || '운월당'}님의 리포트 보관함</h1>
-          <p>카카오 로그인 상태에서는 구매한 리포트를 이 화면에서 다시 확인할 수 있어요.</p>
+          <span>REPORT ARCHIVE</span>
+          <h1>{user?.nickname || '운월당'}님의 보관함</h1>
+          <p>구매하거나 생성한 사주 리포트를 한곳에 모아두고 다시 볼 수 있어요.</p>
         </div>
 
         {recentReports.length ? (
-          <section className="my-report-archive-section">
-            <div className="my-section-label">
-              <Sparkles size={15} />
-              내가 본 사주 리포트
-            </div>
-            <div className="my-report-replay-list">
-              {recentReports.slice(0, 8).map((report) => (
-                <ReportReplayCard key={report.id} report={report} />
-              ))}
-            </div>
+          <section className={archiveOpen ? 'my-report-archive-section open' : 'my-report-archive-section'}>
+            <button
+              type="button"
+              className="my-archive-toggle"
+              aria-expanded={archiveOpen}
+              onClick={() => setArchiveOpen((prev) => !prev)}
+            >
+              <span className="my-archive-toggle-icon">
+                <Archive size={17} />
+              </span>
+              <span className="my-archive-toggle-copy">
+                <strong>내가 본 사주</strong>
+                <em>{recentReports.length}개 리포트 보관 중</em>
+              </span>
+              <ChevronDown className={archiveOpen ? 'my-archive-chevron open' : 'my-archive-chevron'} size={18} />
+            </button>
+
+            {archiveOpen ? (
+              <>
+                <div className="my-report-replay-list">
+                  {visibleReports.map((report) => (
+                    <ReportReplayCard key={report.id} report={report} />
+                  ))}
+                </div>
+
+                {hiddenReportCount ? (
+                  <button
+                    type="button"
+                    className="my-archive-expand-button"
+                    onClick={() => setShowAllReports((prev) => !prev)}
+                  >
+                    {showAllReports ? '간단히 접기' : `전체 ${recentReports.length}개 펼치기`}
+                  </button>
+                ) : null}
+              </>
+            ) : null}
           </section>
         ) : (
           <EmptyArchive />
