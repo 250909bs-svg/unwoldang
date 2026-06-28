@@ -1,6 +1,5 @@
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
-import Menu from './pages/Menu';
 import Test from './pages/Test';
 import FaceAI from './pages/FaceAI';
 import Search from './pages/Search';
@@ -33,7 +32,7 @@ function AppRoutes() {
       <Seo />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/menu" element={<Menu />} />
+        <Route path="/menu" element={<Navigate to="/" replace />} />
         <Route path="/test" element={<Test />} />
         <Route path="/test/face-ai" element={<FaceAI />} />
         <Route path="/search" element={<Search />} />

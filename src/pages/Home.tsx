@@ -25,7 +25,7 @@ const illustrationDeck = {
 } as const;
 
 const homeMenuItems = [
-  { label: '사주풀이', to: '/menu' },
+  { label: '종합사주', to: '/form/general-signature', state: { tabOrigin: '/' } },
   { label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
   { label: '심리테스트', to: '/test' },
   { label: '타로', to: '/tarot' },
