@@ -1,4 +1,4 @@
-import { Archive, ChevronDown, ChevronRight, LogOut, Menu, MessageCircle, ScrollText, Sparkles } from 'lucide-react';
+import { Archive, ChevronDown, ChevronRight, LogOut, Menu, ScrollText, Sparkles } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -113,13 +113,12 @@ function LoggedOutReplay() {
 
       <section className="my-login-hero">
         <div className="my-login-portrait-wrap">
-          <img src="/intake-night-blue.png" alt="" className="my-login-portrait" />
+          <img src="/my-kakao-login-hero.png" alt="운월당 카카오 로그인 안내" className="my-login-portrait" />
         </div>
 
         <div className="my-login-benefit-card">
-          <button type="button" className="my-kakao-button" onClick={handleKakaoLogin}>
-            <MessageCircle size={17} fill="currentColor" />
-            카카오로 로그인/가입
+          <button type="button" className="my-kakao-button my-kakao-poster-button" onClick={handleKakaoLogin} aria-label="카카오로 시작하기">
+            카카오로 시작하기
           </button>
           {loginError ? <p className="my-login-error">{loginError}</p> : null}
         </div>
