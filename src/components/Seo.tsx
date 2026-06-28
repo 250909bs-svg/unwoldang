@@ -27,12 +27,6 @@ const routeSeo: Record<string, RouteSeo> = {
     keywords: '운월당 전체 리포트, 사주 카테고리, 종합사주, 연애운, 궁합, 결혼운, 재회운',
     image: '/intake-beauty-red.png'
   },
-  '/dreams': {
-    title: 'AI 라키 꿈해몽 | 운월당',
-    description: '꿈의 상징과 현재 흐름을 함께 읽는 운월당 AI 라키 꿈해몽 서비스입니다.',
-    keywords: '꿈해몽, AI 꿈해몽, 꿈풀이, 운월당 AI라키',
-    image: '/test-dreamy-stars.png'
-  },
   '/tarot': {
     title: '운월당 타로 | 연애운·재회운·결혼운 카드 리딩',
     description: '연애운, 재회운, 결혼운을 신비로운 카드 리딩으로 확인하는 운월당 타로 서비스입니다.',

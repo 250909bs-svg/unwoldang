@@ -1,4 +1,4 @@
-import { FlaskConical, Home, Moon, Sparkles, User } from 'lucide-react';
+import { FlaskConical, Home, User, WalletCards } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
@@ -15,16 +15,10 @@ const navItems = [
     icon: FlaskConical
   },
   {
-    to: '/dreams',
-    label: 'AI라키',
-    match: (pathname: string) => pathname.startsWith('/dreams'),
-    icon: Moon
-  },
-  {
     to: '/tarot',
     label: '타로',
     match: (pathname: string) => pathname.startsWith('/tarot'),
-    icon: Sparkles
+    icon: WalletCards
   },
   {
     to: '/my',
