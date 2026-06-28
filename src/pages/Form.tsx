@@ -440,7 +440,6 @@ export default function Form() {
                   value={formData.name}
                   onChange={(event) => updateField('name', event.target.value.slice(0, 12))}
                   placeholder="이름을 입력해 주세요"
-                  autoFocus
                 />
               </label>
 
@@ -616,7 +615,6 @@ export default function Form() {
                   value={formData.q1}
                   onChange={(event) => updateField('q1', event.target.value.slice(0, 180))}
                   placeholder="예: 지금 제 인생에서 가장 먼저 정리해야 할 흐름은 무엇인가요?"
-                  autoFocus
                 />
                 <div className="intake-story-question-meta">
                   <span>구체적인 질문일수록 결과 문장이 더 선명해집니다.</span>
@@ -649,7 +647,6 @@ export default function Form() {
                   value={formData.q2}
                   onChange={(event) => updateField('q2', event.target.value.slice(0, 180))}
                   placeholder="예: 앞으로 3개월 안에 움직이면 좋은 시기는 언제인가요?"
-                  autoFocus
                 />
                 <div className="intake-story-question-meta">
                   <span>질문 1과 다른 방향의 질문이면 리포트 폭이 더 넓어집니다.</span>
