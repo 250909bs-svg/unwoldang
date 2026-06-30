@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://www.unwoldang.com').replace(/\/$/, '');
+const SHARE_PREVIEW_IMAGE = '/share-preview.png';
 
 type RouteSeo = {
   title: string;
@@ -15,7 +16,7 @@ const defaultSeo: RouteSeo = {
   description:
     '운월당은 만세력 기반 종합사주, 신년운세, 연애운, 결혼운, 재회운, 궁합, 타로 리포트를 제공하는 프리미엄 운세 서비스입니다.',
   keywords: '운월당, 사주, 종합사주, 신년운세, 연애운, 결혼운, 재회운, 궁합, 타로, 운세, 만세력',
-  image: '/intake-night-blue.png'
+  image: SHARE_PREVIEW_IMAGE
 };
 
 const routeSeo: Record<string, RouteSeo> = {
@@ -172,7 +173,7 @@ export default function Seo() {
     const seo = routeSeo[path] ?? defaultSeo;
     const shouldNoIndex = noIndexPaths.has(path) || noIndexPrefixes.some((prefix) => path.startsWith(prefix));
     const canonicalUrl = `${SITE_URL}${path === '/' ? '/' : path}`;
-    const imageUrl = `${SITE_URL}${seo.image ?? defaultSeo.image}`;
+    const imageUrl = `${SITE_URL}${SHARE_PREVIEW_IMAGE}`;
 
     document.title = seo.title;
     setMeta('description', seo.description);
@@ -190,6 +191,9 @@ export default function Seo() {
     setMeta('og:description', seo.description, 'property');
     setMeta('og:url', canonicalUrl, 'property');
     setMeta('og:image', imageUrl, 'property');
+    setMeta('og:image:width', '1200', 'property');
+    setMeta('og:image:height', '630', 'property');
+    setMeta('og:image:alt', '운월당 공유 이미지', 'property');
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', seo.title);
     setMeta('twitter:description', seo.description);
