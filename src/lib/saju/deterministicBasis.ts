@@ -17,11 +17,12 @@ import {
   getTwelveYunseong,
   getZodiacAnimal,
   seunRows,
+  tenGod,
   summarizeStrength,
   tenGodDistribution,
   usefulElements
 } from './baziCalcs';
-import { DZ, TG } from './constants';
+import { DZ, HIDDEN_STEMS, TG } from './constants';
 
 function normalizeBirthDate(value?: string) {
   if (!value) {
@@ -73,6 +74,80 @@ function mapTenGods(distribution: Record<string, number>) {
     .map(([label, value]) => ({ label, value }));
 }
 
+const STEM_HANJA: Record<string, string> = {
+  갑: '甲',
+  을: '乙',
+  병: '丙',
+  정: '丁',
+  무: '戊',
+  기: '己',
+  경: '庚',
+  신: '辛',
+  임: '壬',
+  계: '癸'
+};
+
+const BRANCH_HANJA: Record<string, string> = {
+  자: '子',
+  축: '丑',
+  인: '寅',
+  묘: '卯',
+  진: '辰',
+  사: '巳',
+  오: '午',
+  미: '未',
+  신: '申',
+  유: '酉',
+  술: '戌',
+  해: '亥'
+};
+
+const PILLAR_ORDER = [
+  ['년주', 'year', 'y_gz'],
+  ['월주', 'month', 'm_gz'],
+  ['일주', 'day', 'd_gz'],
+  ['시주', 'hour', 'h_gz']
+] as const;
+
+function formatHanjaPillar(pillar: string | null) {
+  if (!pillar) return null;
+  const [stem, branch] = [...pillar];
+  return `${STEM_HANJA[stem] || stem}${BRANCH_HANJA[branch] || branch}`;
+}
+
+function buildVisibleTenGods(bazi: ReturnType<typeof calcBazi>, pillarLabels: ReturnType<typeof getPillarLabels>) {
+  return PILLAR_ORDER.flatMap(([label, key, baziKey]) => {
+    const pillar = bazi[baziKey];
+    const pillarLabel = pillarLabels[key];
+
+    if (!pillar || !pillarLabel) {
+      return [];
+    }
+
+    const stem = TG[pillar.tg];
+    const branch = DZ[pillar.dz];
+    const mainHiddenStem = HIDDEN_STEMS[branch]?.[HIDDEN_STEMS[branch].length - 1];
+    const branchMainStem = mainHiddenStem === undefined ? '-' : TG[mainHiddenStem];
+    const stemTenGod = tenGod(bazi.d_gz.tg, pillar.tg);
+    const branchTenGod = mainHiddenStem === undefined ? '미상' : tenGod(bazi.d_gz.tg, mainHiddenStem);
+    const stemHanja = STEM_HANJA[stem] || stem;
+    const branchHanja = BRANCH_HANJA[branch] || branch;
+
+    return [{
+      pillar: label,
+      stem,
+      stemHanja,
+      stemTenGod,
+      branch,
+      branchHanja,
+      branchMainStem,
+      branchTenGod,
+      reading: `${stemHanja} ${stemTenGod} / ${branchHanja} ${branchTenGod}`,
+      pillarHanja: formatHanjaPillar(pillarLabel)
+    }];
+  });
+}
+
 export type DeterministicSajuBasis = ReturnType<typeof buildDeterministicSajuBasis>;
 
 export function buildDeterministicSajuBasis(
@@ -97,6 +172,7 @@ export function buildDeterministicSajuBasis(
   const dayBranchInfo = describeDayBranch(dayBranch);
   const fiveElements = fiveElementDistribution(bazi.y_gz, bazi.m_gz, bazi.d_gz, bazi.h_gz);
   const tenGods = tenGodDistribution(bazi);
+  const visibleTenGods = buildVisibleTenGods(bazi, pillarLabels);
   const dominantTenGods = getDominantTenGod(tenGods);
   const [strengthRatio, strengthLabel, strengthReasons] = daymasterStrength(bazi);
   const [helpfulElements, cautiousElements] = usefulElements(dayMasterElement, strengthLabel);
@@ -167,6 +243,9 @@ export function buildDeterministicSajuBasis(
     calendarVerification,
     fiveElements: mapFiveElements(fiveElements),
     tenGods: mapTenGods(tenGods),
+    visibleTenGods,
+    tenGodBasisNote:
+      '겉글자 기준은 천간과 지지의 대표 기운을 분리해 본 값입니다. 십성 분포 점수는 지장간 포함 기준이므로 숫자와 겉글자 표기가 다르게 보일 수 있습니다.',
     dominantTenGods,
     yunseong,
     shensha,

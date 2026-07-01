@@ -79,6 +79,34 @@ export interface ActionPlan {
   unluckyDays: { day: number; reason: string }[];
 }
 
+export interface VisibleTenGodReading {
+  pillar: string;
+  stem: string;
+  stemHanja: string;
+  stemTenGod: string;
+  branch: string;
+  branchHanja: string;
+  branchMainStem: string;
+  branchTenGod: string;
+  reading: string;
+}
+
+export interface ReportQualityScoreItem {
+  label: string;
+  score: number;
+  max: number;
+}
+
+export interface ReportQualityAudit {
+  score: number;
+  status: 'pass' | 'warn';
+  items: ReportQualityScoreItem[];
+  warnings: string[];
+  repeatedSentences: string[];
+  bannedTerms: string[];
+  typoSignals: string[];
+}
+
 export interface SajuReportData {
   serviceId: ServiceId;
   kind: ReportKind;
@@ -110,6 +138,8 @@ export interface SajuReportData {
   };
   fiveElements: Array<{ label: FiveElement; value: number; color: string }>;
   tenGods: Array<{ label: string; value: number }>;
+  visibleTenGods: VisibleTenGodReading[];
+  tenGodBasisNote: string;
   metaGrid: Array<{ label: string; value: string }>;
   summary: {
     title: string;
@@ -121,4 +151,5 @@ export interface SajuReportData {
   yearLuck: YearLuckItem[];
   monthLuck: MonthLuckItem[];
   actionPlan: ActionPlan;
+  qualityAudit: ReportQualityAudit;
 }

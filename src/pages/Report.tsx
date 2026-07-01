@@ -1135,7 +1135,7 @@ function SectionBlock({
             <details key={`${section.id}-${detail.summary}`} className="premium-accordion" open={detail.open}>
               <summary>
                 <span>{detail.summary}</span>
-                <span className="premium-details-hint">열기/닫기</span>
+                <span className="premium-details-hint">자세히 보기</span>
               </summary>
               <div className="premium-accordion-body">
                 {detail.content.split('\n\n').map((paragraph, index) => (
@@ -4763,22 +4763,22 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
           {
             title: '끌리는 사람의 공통점',
             body: '차분해 보이지만 자기 기준이 있고, 말보다 행동으로 신뢰를 주는 사람에게 마음이 움직이기 쉽습니다. 다만 무심함과 안정감을 혼동하면 기다림이 길어질 수 있습니다.',
-            badge: 'attraction'
+            badge: '끌림'
           },
           {
             title: '오래 가는 관계 조건',
             body: '연락 빈도보다 약속을 지키는 태도, 감정 표현보다 생활 배려가 중요합니다. 서로의 하루를 방해하지 않으면서도 필요한 순간에는 분명히 곁에 있는 사람이 잘 맞습니다.',
-            badge: 'long-term'
+            badge: '장기 인연'
           },
           {
             title: '관계가 흔들리는 지점',
             body: '상대가 애매하게 굴 때 바로 결론을 내리거나, 반대로 너무 오래 참다가 한 번에 끊어내는 패턴을 조심해야 합니다. 감정이 커질수록 확인 질문을 짧고 분명하게 하는 편이 좋습니다.',
-            badge: 'caution'
+            badge: '주의'
           },
           {
             title: '30일 행동',
             body: '새로운 만남은 반복적으로 마주치는 생활권, 지인 소개, 일과 연결된 자리에서 열기 좋습니다. 연락은 길게 설명하기보다 약속 가능한 날짜와 구체적인 제안을 먼저 던지세요.',
-            badge: 'action'
+            badge: '실행'
           }
         ],
         details: [
@@ -6628,7 +6628,7 @@ body {
             <details className="premium-accordion" open>
               <summary>
                 <span>실천 과제</span>
-                <span className="premium-details-hint">열기/닫기</span>
+                <span className="premium-details-hint">자세히 보기</span>
               </summary>
               <div className="premium-accordion-body">
                 <ul className="premium-list">
@@ -6717,7 +6717,7 @@ body {
             <details className="premium-accordion" open>
               <summary>
                 <span>우선순위 3가지</span>
-                <span className="premium-details-hint">열기/닫기</span>
+                <span className="premium-details-hint">자세히 보기</span>
               </summary>
               <div className="premium-accordion-body">
                 <ul className="premium-list">

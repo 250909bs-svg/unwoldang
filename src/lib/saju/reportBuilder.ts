@@ -3,6 +3,7 @@ import { getReportCallName } from '../customerName';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from './deterministicBasis';
 import { calcBazi, tenGod } from './baziCalcs';
 import { BRANCH_ELEM, DZ, ELEMENT, TG, type EarthlyBranch, type HeavenlyStem } from './constants';
+import { scoreReportQuality } from './reportQuality';
 import type {
   ActionPlan,
   FortuneWindow,
@@ -79,6 +80,16 @@ const ELEMENT_COLORS: Record<FiveElement, string> = {
   토: '#c8a66a',
   금: '#94a3b8',
   수: '#63a4ff'
+};
+
+const EMPTY_QUALITY_AUDIT: SajuReportData['qualityAudit'] = {
+  score: 0,
+  status: 'warn',
+  items: [],
+  warnings: ['품질 검수 전 상태입니다.'],
+  repeatedSentences: [],
+  bannedTerms: [],
+  typoSignals: []
 };
 
 const HIDDEN_STEMS_KO: Record<string, string[]> = {
@@ -593,15 +604,23 @@ function formatGanzhiHanja(stem: HeavenlyStem, branch: EarthlyBranch) {
 
 function getYearLuckHeadline(item: DeterministicSajuBasis['seun'][number], score: number) {
   if (item.ganzhi === '병오') {
-    return '丙午년, 화 기운이 강하게 드러나는 해';
+    return '丙午년, 공개와 검증이 동시에 열리는 해';
   }
 
   if (item.ganzhi === '정미') {
-    return '丁未년, 정리와 현실화가 중요한 해';
+    return '丁未년, 관계 확장과 현실화가 맞물리는 해';
   }
 
   if (item.ganzhi === '무신') {
-    return '戊申년, 결과를 숫자와 구조로 검증하는 해';
+    return '戊申년, 구조 조정과 성과 검증의 해';
+  }
+
+  if (item.ganzhi === '기유') {
+    return '己酉년, 반복 수익과 평판 고정의 해';
+  }
+
+  if (item.ganzhi === '경술') {
+    return '庚戌년, 재정비와 기준 재설정의 해';
   }
 
   return score >= 80
@@ -624,15 +643,23 @@ function getYearLuckSummary(
   const ganzhiHanja = formatGanzhiHanja(stem, branch);
 
   if (item.ganzhi === '병오') {
-    return `${item.year}년은 ${ganzhiHanja}년, 천간과 지지 모두 화 기운이 강하게 드러나는 해입니다. 공개, 표현, 실행의 온도가 올라가지만 준비 없이 조급하게 열면 체력과 돈이 먼저 소모됩니다.`;
+    return `${item.year}년은 ${ganzhiHanja}년, 준비한 것을 밖으로 꺼내고 시장 반응을 확인하는 해입니다. 공개 자체보다 검증이 중요하므로 상품, 관계, 제안을 작게 열고 실제 반응을 숫자와 기록으로 남겨야 합니다.`;
   }
 
   if (item.ganzhi === '정미') {
-    return `${item.year}년은 ${ganzhiHanja}년입니다. 화 기운은 남아 있지만 未토가 들어오므로 ${item.year - 1}년처럼 계속 확장만 보는 해가 아니라, 벌린 일을 정리하고 고정하며 현실 부담을 관리하는 해로 읽습니다.`;
+    return `${item.year}년은 ${ganzhiHanja}년입니다. 사람과 일이 늘어날 수 있지만, 핵심은 무리한 확장이 아니라 관계를 현실 조건으로 정착시키는 데 있습니다. 약속, 역할, 비용, 체력 배분을 정리해야 좋은 연결이 오래 갑니다.`;
   }
 
   if (item.ganzhi === '무신') {
-    return `${item.year}년은 ${ganzhiHanja}년입니다. 기회를 더 늘리는 말보다 결과물, 시스템, 정산, 성과 검증이 강해지는 해입니다. 숫자로 남는지, 반복 가능한 구조인지 확인해야 합니다.`;
+    return `${item.year}년은 ${ganzhiHanja}년입니다. 벌린 판에서 무엇이 실제 성과로 남는지 검증하는 해입니다. 고객 반응, 정산, 반복 구매, 업무 시간을 숫자로 확인하고 수익이 남지 않는 구조는 과감히 줄여야 합니다.`;
+  }
+
+  if (item.ganzhi === '기유') {
+    return `${item.year}년은 ${ganzhiHanja}년입니다. 평판, 후기, 반복 고객, 정산 기준이 고정되는 해로 읽습니다. 새로움보다 신뢰 축적이 중요하므로 결과물의 품질과 응대 기준을 안정적으로 유지해야 합니다.`;
+  }
+
+  if (item.ganzhi === '경술') {
+    return `${item.year}년은 ${ganzhiHanja}년입니다. 지나온 흐름을 다시 정리하고 오래 가져갈 기준만 남기는 해입니다. 역할, 책임, 지출, 건강 루틴을 재설정하면 다음 단계의 기반이 단단해집니다.`;
   }
 
   return `${item.year}년은 ${ganzhiHanja}년, ${stemElement}·${branchElement} 흐름이 들어오면서 ${
@@ -644,18 +671,50 @@ function getYearLuckSummary(
 
 function getYearLuckFocus(item: DeterministicSajuBasis['seun'][number], helpful: FiveElement[]) {
   if (item.ganzhi === '병오') {
-    return '준비한 결과물을 밖으로 꺼내고 반응을 확인하세요. 다만 공개 전에 가격, 일정, 제공 범위를 먼저 적어두어야 화 기운이 과속으로 새지 않습니다.';
+    return '대표 결과물을 작게 공개하고 반응을 검증하세요. 가격, 일정, 제공 범위를 먼저 적어두면 관심이 몰려도 흔들리지 않습니다.';
   }
 
   if (item.ganzhi === '정미') {
-    return '새 판을 계속 벌리기보다 이미 시작한 일을 고정하는 쪽이 중요합니다. 계약, 고정비, 책임 범위, 생활 체력을 정리해야 남은 화 기운이 현실 성과로 굳습니다.';
+    return '새 연결을 받되 관계와 일의 조건을 현실화하세요. 계약, 고정비, 책임 범위, 생활 체력을 정리해야 좋은 인연이 부담으로 변하지 않습니다.';
   }
 
   if (item.ganzhi === '무신') {
-    return '감으로 좋다는 말보다 숫자와 구조로 검증해야 합니다. 매출, 정산, 반복 고객, 포트폴리오, 업무 시스템이 실제로 남는지 확인하는 해입니다.';
+    return '감으로 좋다는 말보다 숫자와 구조로 검증해야 합니다. 매출, 정산, 반복 고객, 포트폴리오, 업무 시간이 실제로 남는지 확인하세요.';
+  }
+
+  if (item.ganzhi === '기유') {
+    return '반복 수익과 평판을 고정하세요. 후기 정리, 고객 응대 기준, 재구매 상품, 정산일을 선명하게 만들수록 성과가 오래 갑니다.';
+  }
+
+  if (item.ganzhi === '경술') {
+    return '남길 것과 줄일 것을 다시 정하세요. 지출, 업무 범위, 관계 경계, 건강 루틴을 재설정하면 다음 흐름을 받을 공간이 생깁니다.';
   }
 
   return `${helpful.join(', ')} 기운을 살리려면 말로 넘긴 약속을 실제 일정, 가격, 제공 범위로 내려놓아야 합니다. 새 일을 늘리기 전에 이미 잡은 일에서 돈과 신뢰가 남는지 보세요.`;
+}
+
+function getYearLuckWarning(item: DeterministicSajuBasis['seun'][number], cautionGuidance: string) {
+  if (item.ganzhi === '병오') {
+    return '관심이 올라오는 만큼 성급한 약속과 즉흥 결제가 따라오기 쉽습니다. 공개 전에는 가격, 수정 횟수, 마감일을 먼저 고정하세요.';
+  }
+
+  if (item.ganzhi === '정미') {
+    return '사람과 일이 늘어나는 해에는 좋은 관계도 체력 부담이 될 수 있습니다. 약속을 받기 전에 이동 시간, 고정비, 책임 범위를 확인하세요.';
+  }
+
+  if (item.ganzhi === '무신') {
+    return '성과 검증의 해에는 감정적으로 아까운 일도 정리 대상이 됩니다. 매출은 있는데 시간이 남지 않는 구조라면 가격이나 제공 범위를 조정하세요.';
+  }
+
+  if (item.ganzhi === '기유') {
+    return '평판이 고정되는 해에는 작은 응대 실수도 오래 남을 수 있습니다. 상담 기록, 환불 기준, 고객 안내 문구를 표준화하세요.';
+  }
+
+  if (item.ganzhi === '경술') {
+    return '재정비의 해에는 오래 끌던 관계와 비용 구조를 다시 보게 됩니다. 감정으로 끊기보다 남길 기준과 줄일 기준을 문서로 나누세요.';
+  }
+
+  return `${cautionGuidance} 계약, 결제, 이직, 관계 정리는 바로 끝내지 말고 비용·사람·마감·체력 조건을 따로 적어 비교하세요.`;
 }
 
 function mapCurrentAndNextDayun(
@@ -685,11 +744,12 @@ function mapCurrentAndNextDayun(
     const caution = cautious.includes(stemElement) || cautious.includes(branchElement) ? '속도 조절과 기준 유지' : '무리한 확장 자제';
     const tenGodReading = describeDayunTenGodFlow(row, basis);
     const practicalTheme = buildDayunPracticalTheme(row, basis, isCurrent, emphasis, caution);
+    const displayName = formatGanzhiHanja(stem as HeavenlyStem, branch as EarthlyBranch);
 
     return {
-      name: row.ganzhi,
+      name: displayName,
       range: row.age,
-      summary: `${row.ganzhi} 대운은 ${tenGodReading}. ${practicalTheme.summary}`,
+      summary: `${displayName}(${row.ganzhi}) 대운은 ${tenGodReading}. ${practicalTheme.summary}`,
       focus: practicalTheme.focus,
       caution: practicalTheme.caution
     };
@@ -721,7 +781,7 @@ function buildYearLuck(
       headline: getYearLuckHeadline(item, score),
       summary: getYearLuckSummary(item, stem, branch, stemElement, branchElement, helpful),
       focus: getYearLuckFocus(item, helpful),
-      warning: `${cautionGuidance} 계약, 결제, 이직, 관계 정리는 바로 끝내지 말고 비용·사람·마감·체력 조건을 따로 적어 비교하세요.`
+      warning: getYearLuckWarning(item, cautionGuidance)
     };
   });
 }
@@ -1012,6 +1072,14 @@ function buildQuestionDirectAnswer(question: string, category: QuestionCategory,
   const options = extractQuestionOptions(question);
   const careerFits = getCareerFitByTenGods(basis);
 
+  if (/회사|퇴사|이직|직장|계속다녀|계속다닐|다녀도|그만둘|그만둬/.test(normalized)) {
+    return '결론부터 말하면 바로 퇴사가 답은 아닙니다. 회사 안에서 시장 반응을 검증하고, 사이드로 대표 상품과 가격표를 만든 뒤 3개월 반복 문의나 매출 흐름이 확인될 때 독립 쪽으로 움직이는 순서가 맞습니다.';
+  }
+
+  if (/사업|창업|부업|브랜드|상품|팔아|판매|런칭|론칭/.test(normalized)) {
+    return '결론부터 말하면 큰 사업을 한 번에 여는 방식보다 대표 상품 1개, 명확한 가격표, 제공 범위, 환불 기준, 후속 질문권까지 갖춘 작은 유료 상품으로 시작하는 편이 맞습니다.';
+  }
+
   if (/이사|거주|동네|지역|역세권|집|방/.test(normalized) && options.length >= 2) {
     return `결론부터 말하면 ${options.join('·')} 중에서는 “돈과 체력 유지가 되는 쪽”을 1순위로 두고, 그다음 사람·기회가 열리는지를 봐야 합니다. ${options[0]}은 노출과 기회, ${options[1]}은 고정비와 생활 안정이라는 식으로 비교하면 답이 선명해집니다.`;
   }
@@ -1076,12 +1144,13 @@ function buildPremiumQuestionAnalysis(
   const directAnswer = buildQuestionDirectAnswer(answer.question, category, basis);
   const fiveElementText = summarizeFiveElementsForQuestion(basis);
   const tenGodText = getTopTenGodsForQuestion(basis);
+  const visibleTenGodText = basis.visibleTenGods.map((item) => `${item.pillar} ${item.reading}`).join(', ');
   const options = extractQuestionOptions(answer.question);
   const optionLine = options.length >= 2
     ? `이번 질문의 핵심 선택지는 ${options.join('·')}로 보이므로, 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
     : '이 질문은 막연한 운세가 아니라 실제 행동으로 확인해야 답이 선명해지는 유형입니다.';
 
-  return `${directAnswer} ${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다. 오행은 ${fiveElementText}, 십성 상위 흐름은 ${tenGodText}입니다. 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${helpfulText} 기운은 판단을 현실에 붙이는 힘으로 쓰고, ${cautionGuidance} 이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.`;
+  return `${directAnswer} ${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다. 오행은 ${fiveElementText}, 지장간 포함 십성 상위 흐름은 ${tenGodText}입니다. 겉글자 기준으로는 ${visibleTenGodText}처럼 읽어 숫자표와 해석 기준을 분리합니다. 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${helpfulText} 기운은 판단을 현실에 붙이는 힘으로 쓰고, ${cautionGuidance} 이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.`;
 }
 
 function buildCrisisSafetyAnalysis(answer: QuestionAnswerBlock, basis: DeterministicSajuBasis, currentDayunName: string) {
@@ -1125,12 +1194,44 @@ function getPremiumQuestionAdvice(
   const careerFits = getCareerFitByTenGods(basis).join(', ');
   const isDatingPlace = /어디.*연애|연애.*어디|만날|소개|인연/.test(question.replace(/\s/g, ''));
   const isMoving = /이사|거주|동네|지역|역세권|집|방/.test(question.replace(/\s/g, ''));
+  const isCompanyQuestion = /회사|퇴사|이직|직장|계속다녀|계속다닐|다녀도|그만둘|그만둬/.test(question.replace(/\s/g, ''));
+  const isBusinessQuestion = /사업|창업|부업|브랜드|상품|팔아|판매|런칭|론칭/.test(question.replace(/\s/g, ''));
 
   const placeGuide = isDatingPlace
     ? '장소는 지인 소개, 반복 수업, 운동·스터디, 동네 카페, 업무권 모임처럼 같은 사람을 여러 번 볼 수 있는 곳으로 잡으세요.'
     : isMoving
       ? `${optionText}을 평일 출근 시간, 평일 밤, 주말 낮에 직접 걸어 보면서 소음, 이동, 생활 편의, 귀가 피로를 확인하세요.`
       : '현장은 말로 듣는 곳이 아니라 실제 돈, 사람, 일정이 움직이는 장소에서 확인하세요.';
+
+  if (isCompanyQuestion) {
+    return [
+      `${directAnswer}`,
+      `${customerLabel}의 ${basis.dayMaster.stem} 일간은 기준과 책임을 중요하게 보므로, 감정이 지친 날 바로 퇴사 결론을 내리면 뒤에서 돈과 체력 부담이 커질 수 있습니다.`,
+      `${currentDayunName} 대운에서는 회사 밖 기회도 열리지만 먼저 검증해야 합니다. 회사 안에서는 맡은 일 중 고객 반응, 문서화, 운영 개선, 상담·분석 능력이 드러나는 업무를 따로 기록하세요.`,
+      `30일 안에 할 일은 대표 상품 후보 1개를 정하고, 누구의 어떤 문제를 해결하는지 한 문장으로 쓰는 것입니다. 직업명보다 해결 문제를 먼저 잡아야 합니다.`,
+      `가격 기준은 무료 조언, 기본 상품, 프리미엄 상품, 후속 질문권으로 나누세요. 가격표가 없으면 재물운이 들어와도 시간만 쓰고 돈이 남지 않습니다.`,
+      `3개월 판단 기준은 문의 10건, 유료 결제 3건, 반복 요청 1건, 작업 후 체력 회복 가능 여부입니다. 네 가지 중 두 가지 이상이 확인되면 독립 준비를 넓혀도 됩니다.`,
+      `퇴사 전에는 생활비 3~6개월, 고정비 목록, 세금·보험, 장비비, 광고비를 따로 적으세요. 돈을 벌 수 있다는 느낌보다 버틸 수 있는 기간이 먼저입니다.`,
+      `피해야 할 방식은 감정적으로 사표부터 내는 것, 지인 요청을 무료로 계속 받는 것, 동업 조건을 말로만 정하는 것입니다. 좋은 기회라도 문서가 없으면 피로가 커집니다.`,
+      `누구와 상의할지는 중요합니다. 위로만 해주는 사람보다 실제 매출, 계약, 세금, 고객 응대를 겪어본 사람에게 검토를 받으세요.`,
+      `최종 답은 “회사냐 퇴사냐”가 아니라 “회사 안에서 검증한 내 상품이 밖에서도 돈을 내는가”입니다. 그 검증이 되기 전까지는 회사가 안전망, 검증 뒤에는 회사가 선택지가 됩니다.`
+    ].map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`);
+  }
+
+  if (isBusinessQuestion) {
+    return [
+      `${directAnswer}`,
+      `${customerLabel}의 원국은 말과 글, 분석, 기준 정리, 고객 문제를 구조화하는 방식에서 수익성이 살아납니다. 그래서 막연한 창업보다 상담형 분석 서비스, 개인 맞춤 리포트, 지식 상품, 운영 진단형 상품이 잘 맞습니다.`,
+      `첫 상품은 넓게 만들지 마세요. “30분 상담”, “프리미엄 리포트”, “후속 질문권”처럼 고객이 받는 결과와 시간이 분명해야 결제가 쉬워집니다.`,
+      `가격 구조는 입문 상품, 본 상품, 고가 상품, 재구매 상품으로 나누세요. 예를 들면 2,900원 유입, 9,900원 주력, 34,900원 심층, 월간 점검권처럼 계단을 만들어야 합니다.`,
+      `제공 범위는 반드시 고정해야 합니다. 분석 범위, 질문 개수, 수정 여부, 답변 시간, 환불 기준을 결제 전에 보여주면 클레임이 줄어듭니다.`,
+      `30일 실행은 상품명 1개, 상세페이지 1개, 샘플 결과 1개, 결제 전 안내문 1개를 완성하는 것입니다. 이 네 가지가 없으면 광고를 켜도 구매가 새기 쉽습니다.`,
+      `90일 실행은 파일럿 고객 10명 반응 수집, 반복 질문 유형 정리, 가격 조정, 후속 상품 연결입니다. 이때 후기보다 더 중요한 것은 “어디서 막혀서 이탈했는가”입니다.`,
+      `피해야 할 동업은 역할이 흐린 동업입니다. 누가 제작, 고객 응대, 정산, 광고, CS를 맡는지 정하지 않으면 좋은 인연도 금전 갈등으로 변할 수 있습니다.`,
+      `${helpfulText} 기운은 사업에서 운영 체계와 신뢰로 써야 하고, ${cautionGuidance} 그래서 확장보다 정산표, 고객 기록, 응대 템플릿이 먼저입니다.`,
+      `최종 답은 작은 유료 상품을 먼저 팔아보는 것입니다. 무료 반응은 칭찬을 주지만, 유료 결제는 방향을 알려줍니다. 3개월 동안 돈을 낸 고객의 질문을 모으면 다음 상품 목차가 보입니다.`
+    ].map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`);
+  }
 
   return [
     `${directAnswer}`,
@@ -1175,14 +1276,12 @@ export function strengthenQuestionAnswerQuality(
     ? getQuestionTextLength(answer.analysis) >= PREMIUM_QUESTION_MIN_ANALYSIS_CHARS
       ? answer.analysis
       : buildCrisisSafetyAnalysis(answer, basis, currentDayunName)
-    : getQuestionTextLength(answer.analysis) >= PREMIUM_QUESTION_MIN_ANALYSIS_CHARS
-      ? answer.analysis
-      : `${answer.analysis}\n\n${premiumAnalysis}`;
+    : premiumAnalysis;
   const existingAdvice = answer.advice
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, PREMIUM_QUESTION_ADVICE_COUNT);
-  const advice = existingAdvice.length >= PREMIUM_QUESTION_ADVICE_COUNT
+  const advice = category === 'crisis' && existingAdvice.length >= PREMIUM_QUESTION_ADVICE_COUNT
     ? existingAdvice.map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`)
     : getPremiumQuestionAdvice(answer, basis, category, currentDayunName, helpfulText, cautionGuidance);
 
@@ -1405,11 +1504,22 @@ function buildPillarTable(basis: DeterministicSajuBasis) {
     const branch = [...pillar][1];
     return HIDDEN_STEMS_KO[branch]?.join(', ') || '-';
   };
+  const displayPillar = (pillar: string | null) => {
+    if (!pillar) return '미상';
+    const [stem, branch] = [...pillar] as [HeavenlyStem, EarthlyBranch];
+    return `${formatGanzhiHanja(stem, branch)}(${pillar})`;
+  };
 
   return {
     headers: ['구분', '년주', '월주', '일주', '시주'],
     rows: [
-      ['천간/지지', basis.pillars.year, basis.pillars.month, basis.pillars.day, basis.pillars.hour || '미상'],
+      [
+        '천간/지지',
+        displayPillar(basis.pillars.year),
+        displayPillar(basis.pillars.month),
+        displayPillar(basis.pillars.day),
+        displayPillar(basis.pillars.hour)
+      ],
       ['지장간', hidden(basis.pillars.year), hidden(basis.pillars.month), hidden(basis.pillars.day), hidden(basis.pillars.hour)],
       ['해석 포인트', '배경과 집안 흐름', '환경과 성장 구간', '내면 중심축', basis.pillars.hour ? '생활 리듬과 습관' : '시간 미입력']
     ]
@@ -1680,13 +1790,13 @@ function buildSections(
           title: '지금 가장 도움 되는 기운',
           body: `${helpful.join(', ')} 흐름은 생활 루틴, 일의 방식, 사람을 만나는 기준에 먼저 반영될 때 안정감이 커집니다. 막연한 행운보다 반복 가능한 습관으로 써야 체감이 빠릅니다.`,
           tone: 'good',
-          badge: 'HELPFUL'
+          badge: '보완 기운'
         },
         {
           title: '특히 조심할 기운',
           body: `${cautionGuidance} 급한 결론보다 기준표를 만들고 한 번 더 비교하는 방식이 안전합니다.`,
           tone: 'warn',
-          badge: 'CAUTION'
+          badge: '주의 기운'
         }
       ]
     },
@@ -1856,61 +1966,61 @@ function buildSections(
           title: '내가 끌리는 사람',
           body: loveProfile.drawnTo,
           tone: 'good',
-          badge: 'ATTRACTION'
+          badge: '끌림'
         },
         {
           title: '실제로 오래 가는 사람',
           body: loveProfile.longTermType,
           tone: 'good',
-          badge: 'LONG-TERM'
+          badge: '장기 인연'
         },
         {
           title: '상대가 느끼는 나',
           body: loveProfile.perceivedStyle,
-          badge: 'MIRROR'
+          badge: '상대 시선'
         },
         {
           title: '연애가 흔들리는 패턴',
           body: loveProfile.failingPattern,
           tone: 'warn',
-          badge: 'PATTERN'
+          badge: '반복 패턴'
         },
         {
           title: '만나게 될 사람의 얼굴 분위기',
           body: loveProfile.spouseFace,
-          badge: 'FACE MOOD'
+          badge: '인상'
         },
         {
           title: '인연이 닿기 쉬운 직업군',
           body: loveProfile.jobField,
-          badge: 'CAREER'
+          badge: '직업군'
         },
         {
           title: '만남이 열리는 루트',
           body: loveProfile.meetingRoute,
-          badge: 'ROUTE'
+          badge: '만남 경로'
         },
         {
           title: '연락 스타일',
           body: loveProfile.contactStyle,
-          badge: 'CONTACT'
+          badge: '연락'
         },
         {
           title: '숨겨진 연애 욕구',
           body: loveProfile.hiddenNeed,
-          badge: 'NEED'
+          badge: '속마음'
         },
         {
           title: '결혼 후 모습',
           body: loveProfile.marriedLife,
           tone: 'good',
-          badge: 'MARRIAGE'
+          badge: '결혼'
         },
         {
           title: '놓치면 안 되는 사람',
           body: loveProfile.dontMiss,
           tone: 'good',
-          badge: 'KEEP'
+          badge: '붙잡을 인연'
         },
         {
           title: '피해야 할 사람',
@@ -2020,14 +2130,26 @@ function buildSections(
       id: 'ten',
       title: '십성 심층 분석',
       subtitle: '대인관계, 사회성, 역할 감각을 읽는 영역',
-      details: tenGods.slice(0, 6).map((item, index) => ({
-        summary: `${item.label} ${item.value}점`,
-        content:
-          index === 0
-            ? `${item.label} 기운이 가장 앞에 와 있다는 뜻은 사회적인 얼굴과 성과 방식이 이 축을 통해 드러난다는 의미입니다. 이 기운은 사람들에게 “저 사람은 이런 역할을 해준다”는 인상을 남기는 핵심 단서입니다.`
-            : `${item.label} 기운은 상황에 따라 장점과 부담이 함께 드러날 수 있는 성향 축입니다. 중요한 건 이 기운을 어떤 역할과 구조에 배치하느냐입니다. 점수가 높다고 무조건 좋거나 낮다고 부족한 것이 아니라, 현재 대운과 실제 환경에서 쓰임이 맞을 때 강점이 됩니다.`,
-        open: index < 2
-      }))
+      details: [
+        {
+          summary: '겉글자 기준 십성',
+          content: `${basis.visibleTenGods.map((item) => `${item.pillar}: ${item.reading}`).join('\n\n')}\n\n이 표는 천간과 지지의 대표 기운을 분리해서 보는 기준입니다. 겉으로 드러난 성향, 사회적 역할, 관계에서 바로 체감되는 반응을 읽을 때 사용합니다.`,
+          open: true
+        },
+        {
+          summary: '지장간 포함 기준 안내',
+          content: `${basis.tenGodBasisNote}\n\n지장간 포함 점수는 겉글자 하나만 세는 방식이 아니라 지지 안에 숨어 있는 기운까지 함께 봅니다. 그래서 같은 명식이라도 “겉으로 보이는 역할”과 “속에서 실제로 움직이는 힘”이 다르게 표현될 수 있습니다.`,
+          open: true
+        },
+        ...tenGods.slice(0, 6).map((item, index) => ({
+          summary: `${item.label} ${item.value}점 · 지장간 포함 기준`,
+          content:
+            index === 0
+              ? `${item.label} 기운이 가장 앞에 와 있다는 뜻은 사회적인 얼굴과 성과 방식이 이 축을 통해 드러난다는 의미입니다. 이 기운은 사람들에게 “저 사람은 이런 역할을 해준다”는 인상을 남기는 핵심 단서입니다.`
+              : `${item.label} 기운은 상황에 따라 장점과 부담이 함께 드러날 수 있는 성향 축입니다. 중요한 건 이 기운을 어떤 역할과 구조에 배치하느냐입니다. 점수가 높다고 무조건 좋거나 낮다고 부족한 것이 아니라, 현재 대운과 실제 환경에서 쓰임이 맞을 때 강점이 됩니다.`,
+          open: index < 2
+        }))
+      ]
     },
     {
       id: 'detail12',
@@ -2086,19 +2208,20 @@ function buildSections(
 
 function buildYearlySummary(customerName: string, serviceLabel: string, basis: DeterministicSajuBasis, currentDayun: FortuneWindow) {
   const cautionGuidance = formatElementGuidance(basis.cautiousElements as FiveElement[], basis);
+  const visibleTenGodText = basis.visibleTenGods.map((item) => `${item.pillar} ${item.reading}`).join(', ');
 
   return {
     title: `${serviceLabel} 핵심 요약`,
     analysis: [
-      `${customerName}님의 기본 흐름은 ${basis.helpfulElements.join(', ')} 흐름이 생활 리듬과 일의 방식 안에 자리 잡을 때 안정감이 커집니다. 생각만 많을 때보다 몸이 따라오는 규칙을 만들 때 운이 더 잘 열립니다.`,
-      `${basis.dayMaster.stem} 일간은 기준이 분명할수록 장점이 살아납니다. ${cautionGuidance}`,
-      `현재 대운은 ${currentDayun.name} 흐름으로 읽히며, 지금은 판을 넓히기보다 가격, 역할, 책임, 마감선을 눈에 보이게 만드는 편이 더 정확합니다.`,
-      `이번 결과는 ${serviceLabel} 기준으로 원국, 대운, 관계 맥락, 질문 2개를 한 번에 정리한 프리미엄 상담형 버전입니다.`
+      `${customerName}님의 핵심은 “더 많이 벌리는 것”이 아니라 들어온 기회와 관계를 내 구조로 남기는 데 있습니다. ${basis.dayMaster.stem} 일간은 기준이 분명할수록 강해지고, 기준이 흐리면 사람·돈·일정을 혼자 떠안는 쪽으로 피로가 쌓입니다.`,
+      `원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 고정해 읽었습니다. 겉글자 십성은 ${visibleTenGodText}이며, 숫자 분포는 지장간 포함 기준으로 따로 봅니다.`,
+      `현재 대운은 ${currentDayun.name} 흐름입니다. 지금은 감정적 확장보다 가격표, 정산일, 제공 범위, 역할 분리, 회복 루틴을 먼저 고정할수록 돈과 관계가 남습니다.`,
+      `명리적으로는 월령, 조후, 십성, 대운을 함께 봐야 합니다. ${cautionGuidance} 그래서 좋은 운을 기다리는 방식보다 실제 선택 기준을 좁히는 방식이 더 정확합니다.`
     ],
     advice: [
-      `${basis.helpfulElements[0]} 기운과 맞는 생활 루틴을 먼저 안정시키세요.`,
-      '중요한 선택은 가격, 역할, 일정, 책임 범위를 남긴 뒤 반복 가능한 구조로 옮기는 방식이 더 잘 맞습니다.',
-      '질문과 연결된 관계나 일의 흐름은 감정만 보지 말고 일정, 돈, 책임, 체력 조건까지 함께 보세요.'
+      '오늘 할 일: 가장 중요한 선택 하나를 돈, 일정, 사람, 체력 네 칸으로 나눠 적으세요.',
+      '7일 안에 할 일: 말로만 정한 약속을 가격, 역할, 마감, 수정 횟수로 문서화하세요.',
+      '30일 안에 할 일: 반복해서 팔 수 있는 대표 상품 또는 대표 선택지 하나만 남기고 나머지는 보류하세요.'
     ]
   };
 }
@@ -2163,7 +2286,7 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     basis.cautiousElements as FiveElement[]
   );
 
-  return {
+  const report: SajuReportData = {
     serviceId,
     kind,
     title: meta.title,
@@ -2219,12 +2342,20 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     pillars: basis.pillars,
     fiveElements,
     tenGods,
+    visibleTenGods: basis.visibleTenGods,
+    tenGodBasisNote: basis.tenGodBasisNote,
     metaGrid: buildMetaGrid(birthLabel, questionPreview, relationshipLabel, serialNumber, createdAt),
     summary,
     questionAnswers,
     sections,
     yearLuck,
     monthLuck,
-    actionPlan
+    actionPlan,
+    qualityAudit: EMPTY_QUALITY_AUDIT
+  };
+
+  return {
+    ...report,
+    qualityAudit: scoreReportQuality(report)
   };
 }
