@@ -39,31 +39,12 @@ function flattenReportTexts(report: SajuReportData) {
     ...report.summary.analysis,
     ...report.summary.advice,
     ...report.legalNotice,
-    report.currentDayun.summary,
-    report.currentDayun.focus,
-    report.currentDayun.caution,
-    report.nextDayun.summary,
-    report.nextDayun.focus,
-    report.nextDayun.caution,
     ...report.keyTakeaways.flatMap((card) => [card.title, card.body, card.badge || '']),
     ...report.questionAnswers.flatMap((answer) => [
       answer.question,
       answer.title,
       answer.analysis,
       ...answer.advice
-    ]),
-    ...report.yearLuck.flatMap((item) => [
-      item.ganzhi,
-      item.headline,
-      item.summary,
-      item.focus,
-      item.warning
-    ]),
-    ...report.monthLuck.flatMap((item) => [
-      item.ganzhi,
-      item.summary,
-      item.focus,
-      item.warning
     ]),
     report.actionPlan.title,
     ...report.actionPlan.priorities,

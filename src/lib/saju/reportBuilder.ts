@@ -175,7 +175,7 @@ const BRANCH_PAIR_RELATIONS: Array<{
   {
     name: '파',
     pairs: [['자', '유'], ['축', '진'], ['인', '해'], ['묘', '오'], ['사', '신'], ['미', '술']],
-    tone: '이미 맞춘 약속이나 구조가 느슨해지는 지점입니다. 계약, 일정, 역할을 문서로 다시 확인하는 편이 좋습니다.'
+    tone: '이미 맞춘 약속이나 구조가 느슨해지기 쉬우니 계약, 일정, 역할을 문서로 다시 확인하는 편이 좋습니다.'
   },
   {
     name: '해',
@@ -286,7 +286,7 @@ function buildBranchRelationDetails(basis: DeterministicSajuBasis) {
       for (const relation of BRANCH_PAIR_RELATIONS) {
         if (relation.pairs.some((pair) => isSamePair(left.branch, right.branch, pair))) {
           details.push(
-            `${withAndParticle(formatBranchPiece(left))} ${formatBranchPiece(right)} 사이에 ${relation.name} 관계가 보입니다. ${relation.tone}`
+            `${withAndParticle(formatBranchPiece(left))} ${formatBranchPiece(right)} 사이에 ${relation.name} 관계가 보입니다. 이 ${formatBranchPiece(left)}-${formatBranchPiece(right)} 조합에서는 ${relation.tone}`
           );
         }
       }
@@ -583,11 +583,15 @@ function buildDayunPracticalTheme(
 
   if (isWaterMoneyCycle) {
     return {
-      summary:
-        '수(水) 재성의 압력이 커져 돈 흐름, 고객, 인간관계, 야간 활동, 이동성, 감정 소모가 한꺼번에 늘어나는 시기입니다. 사회적 자리 잡기보다 돈이 어디서 들어오고 어디로 새는지, 누구 때문에 생활 리듬이 흔들리는지가 핵심입니다.',
-      focus: `${isCurrent ? '현재 진행 중인' : '다음 단계의'} 돈 흐름, 고객 응대, 인간관계 거리, 이동 일정, 야간 생활을 먼저 관리해야 합니다. 들어오는 사람과 제안은 늘 수 있지만 가격표, 정산일, 연락 가능 시간, 수면 기준이 없으면 남는 돈보다 피로가 커집니다.`,
-      caution:
-        '감정소비, 야간 활동, 충동 결제, 흐린 정산, 답장에 끌려다니는 관계가 이번 대운의 손실 포인트입니다. 돈과 사람을 같이 보되, 밤에 결정한 약속과 결제는 다음 날 다시 확인해야 합니다.'
+      summary: isCurrent
+        ? '수(水) 재성의 압력이 커져 돈 흐름, 고객, 인간관계, 야간 활동, 이동성, 감정 소모가 한꺼번에 늘어나는 시기입니다. 사회적 자리 잡기보다 돈이 어디서 들어오고 어디로 새는지, 누구 때문에 생활 리듬이 흔들리는지가 핵심입니다.'
+        : '다음 수 재성 흐름은 현재보다 고정비, 정산, 생활 기반을 더 현실적으로 묻습니다. 새 기회를 잡는 힘보다 이미 들어온 돈과 사람을 안정적으로 보관하는 힘이 중요해집니다.',
+      focus: isCurrent
+        ? '지금 들어오는 돈 흐름, 고객 응대, 인간관계 거리, 이동 일정, 야간 생활을 먼저 관리해야 합니다. 가격표와 연락 가능 시간이 없으면 기회가 와도 피로가 먼저 커집니다.'
+        : '다음 단계에서는 수입원, 주거 리듬, 고정 고객, 장기 계약처럼 오래 남는 기반을 살펴야 합니다. 즉흥 제안보다 정산 주기와 반복 구매 구조를 먼저 확인하세요.',
+      caution: isCurrent
+        ? '감정소비, 야간 활동, 충동 결제, 흐린 정산, 답장에 끌려다니는 관계가 이번 대운의 손실 포인트입니다. 돈과 사람을 같이 보되, 밤에 결정한 약속과 결제는 다음 날 다시 확인해야 합니다.'
+        : '다음 대운에서는 이미 익숙해진 지출과 관계 부담이 조용히 커질 수 있습니다. 자동 결제, 장기 약속, 고정비, 미뤄둔 정산을 주기적으로 끊어 보는 습관이 필요합니다.'
     };
   }
 
@@ -824,9 +828,9 @@ function buildMonthLuck(
       month: date.getMonth() + 1,
       ganzhi: `${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]}`,
       score,
-      summary: `${date.getMonth() + 1}월은 ${stemElement}·${branchElement} 흐름이 강조되는 달입니다. 일과 관계 모두 ${score >= 70 ? '선택을 분명하게 가져갈수록' : '리듬을 정돈할수록'} 안정감이 높아집니다.`,
-      focus: `이번 달은 생활 리듬, 제공 범위, 우선순위 정리가 핵심입니다. 고객, 연인, 가족과의 약속도 말로만 두지 말고 일정과 역할을 남기면 흔들림이 줄어듭니다.`,
-      warning: `${cautionGuidance} 무리해서 끌고 가는 달보다 덜어내서 선명해지는 달로 운영하세요.`
+      summary: `${date.getMonth() + 1}월은 ${stemElement}·${branchElement} 흐름이 강조되는 달입니다. ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 월운에서는 ${score >= 70 ? '선택을 분명하게 가져갈수록' : '리듬을 정돈할수록'} 일과 관계의 안정감이 높아집니다.`,
+      focus: `${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 흐름의 실제 과제는 생활 리듬, 제공 범위, 우선순위 정리입니다. ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 달에는 고객, 연인, 가족과의 약속도 말로만 두지 말고 일정과 역할을 남기면 흔들림이 줄어듭니다.`,
+      warning: `${cautionGuidance} ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 달은 무리해서 끌고 가기보다 덜어내서 선명해지는 방식으로 운영하세요.`
     };
   });
 }
@@ -1137,7 +1141,8 @@ function buildPremiumQuestionAnalysis(
   category: QuestionCategory,
   currentDayunName: string,
   helpfulText: string,
-  cautionGuidance: string
+  cautionGuidance: string,
+  questionIndex = 0
 ) {
   const customerLabel = getPremiumCustomerLabel(basis);
   const intent = getQuestionIntent(answer.question, category);
@@ -1145,12 +1150,28 @@ function buildPremiumQuestionAnalysis(
   const fiveElementText = summarizeFiveElementsForQuestion(basis);
   const tenGodText = getTopTenGodsForQuestion(basis);
   const visibleTenGodText = basis.visibleTenGods.map((item) => `${item.pillar} ${item.reading}`).join(', ');
+  const isSecondQuestion = questionIndex % 2 === 1;
   const options = extractQuestionOptions(answer.question);
   const optionLine = options.length >= 2
     ? `이번 질문의 핵심 선택지는 ${options.join('·')}로 보이므로, 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
     : '이 질문은 막연한 운세가 아니라 실제 행동으로 확인해야 답이 선명해지는 유형입니다.';
+  const basisLine = isSecondQuestion
+    ? `${customerLabel}의 명식은 ${basis.pillars.day} 일주를 중심으로 보고, ${basis.pillars.month} 월령과 ${currentDayunName} 대운을 겹쳐 판단합니다.`
+    : `${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다.`;
+  const elementLine = isSecondQuestion
+    ? `오행 체감은 ${fiveElementText}로 보되, 실제 판단은 월령과 대운에서 다시 힘을 받는 기운까지 함께 봐야 합니다. 지장간 포함 십성은 ${tenGodText} 순서로 올라옵니다.`
+    : `오행은 ${fiveElementText}, 지장간 포함 십성 상위 흐름은 ${tenGodText}입니다.`;
+  const visibleLine = isSecondQuestion
+    ? `겉으로 드러난 십성은 ${visibleTenGodText}입니다. 이 기준은 고객이 바로 체감하는 역할과 반응을 보는 표이고, 숫자 분포와는 분리해서 읽습니다.`
+    : `겉글자 기준으로는 ${visibleTenGodText}처럼 읽어 숫자표와 해석 기준을 분리합니다.`;
+  const cautionLine = isSecondQuestion
+    ? `판단은 ${helpfulText} 기운을 생활 기준으로 내릴 때 선명해집니다. 과해지는 흐름은 연락, 돈, 이동 속도로 나타나기 쉬우니 결정 전에 기록으로 늦추고, 비어 있는 기운은 다음 단계 제안과 관계 방향을 의식적으로 보완해야 합니다.`
+    : `${helpfulText} 기운은 판단을 현실에 붙이는 힘으로 쓰고, ${cautionGuidance}`;
+  const closingLine = isSecondQuestion
+    ? '따라서 이 해석은 정해진 미래가 아니라 선택지를 좁히는 상담 기준입니다. 현장 확인, 지출 기록, 7일 관찰을 붙이면 답이 훨씬 현실적으로 정리됩니다.'
+    : '이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.';
 
-  return `${directAnswer} ${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다. 오행은 ${fiveElementText}, 지장간 포함 십성 상위 흐름은 ${tenGodText}입니다. 겉글자 기준으로는 ${visibleTenGodText}처럼 읽어 숫자표와 해석 기준을 분리합니다. 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${helpfulText} 기운은 판단을 현실에 붙이는 힘으로 쓰고, ${cautionGuidance} 이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.`;
+  return `${directAnswer} ${basisLine} ${elementLine} ${visibleLine} 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${cautionLine} ${closingLine}`;
 }
 
 function buildCrisisSafetyAnalysis(answer: QuestionAnswerBlock, basis: DeterministicSajuBasis, currentDayunName: string) {
@@ -1187,7 +1208,6 @@ function getPremiumQuestionAdvice(
 
   const question = answer.question;
   const intent = getQuestionIntent(question, category);
-  const directAnswer = buildQuestionDirectAnswer(question, category, basis);
   const options = extractQuestionOptions(question);
   const optionText = options.length >= 2 ? `${options.join('·')} 각각` : '선택지 각각';
   const customerLabel = getPremiumCustomerLabel(basis);
@@ -1205,7 +1225,7 @@ function getPremiumQuestionAdvice(
 
   if (isCompanyQuestion) {
     return [
-      `${directAnswer}`,
+      '회사 안 검증과 퇴사 판단을 분리하세요. 감정이 지친 날의 결론과 실제 시장 반응은 반드시 따로 봐야 합니다.',
       `${customerLabel}의 ${basis.dayMaster.stem} 일간은 기준과 책임을 중요하게 보므로, 감정이 지친 날 바로 퇴사 결론을 내리면 뒤에서 돈과 체력 부담이 커질 수 있습니다.`,
       `${currentDayunName} 대운에서는 회사 밖 기회도 열리지만 먼저 검증해야 합니다. 회사 안에서는 맡은 일 중 고객 반응, 문서화, 운영 개선, 상담·분석 능력이 드러나는 업무를 따로 기록하세요.`,
       `30일 안에 할 일은 대표 상품 후보 1개를 정하고, 누구의 어떤 문제를 해결하는지 한 문장으로 쓰는 것입니다. 직업명보다 해결 문제를 먼저 잡아야 합니다.`,
@@ -1220,7 +1240,7 @@ function getPremiumQuestionAdvice(
 
   if (isBusinessQuestion) {
     return [
-      `${directAnswer}`,
+      '사업은 크게 여는 것보다 작게 유료 검증하는 순서가 맞습니다. 첫 목표는 유명해지는 것이 아니라 돈을 낸 고객의 질문을 모으는 것입니다.',
       `${customerLabel}의 원국은 말과 글, 분석, 기준 정리, 고객 문제를 구조화하는 방식에서 수익성이 살아납니다. 그래서 막연한 창업보다 상담형 분석 서비스, 개인 맞춤 리포트, 지식 상품, 운영 진단형 상품이 잘 맞습니다.`,
       `첫 상품은 넓게 만들지 마세요. “30분 상담”, “프리미엄 리포트”, “후속 질문권”처럼 고객이 받는 결과와 시간이 분명해야 결제가 쉬워집니다.`,
       `가격 구조는 입문 상품, 본 상품, 고가 상품, 재구매 상품으로 나누세요. 예를 들면 2,900원 유입, 9,900원 주력, 34,900원 심층, 월간 점검권처럼 계단을 만들어야 합니다.`,
@@ -1234,7 +1254,7 @@ function getPremiumQuestionAdvice(
   }
 
   return [
-    `${directAnswer}`,
+    '첫 판단은 결론보다 조건 분해입니다. 선택지를 돈, 사람, 시간, 체력 네 칸으로 나누면 답이 훨씬 빨리 좁혀집니다.',
     `${customerLabel}의 명리 근거는 ${basis.dayMaster.stem} 일간, ${basis.pillars.month} 월령, ${currentDayunName} 대운입니다. 이 조합은 감정적 확신보다 실제 유지 조건을 먼저 봐야 답이 안정됩니다.`,
     `언제 움직일지: 오늘 바로 결론내리지 말고 7일 동안 ${intent}과 관련된 돈, 시간, 체력, 사람 반응을 하루 한 줄씩 기록하세요.`,
     `어디서 확인할지: ${placeGuide}`,
@@ -1270,7 +1290,8 @@ export function strengthenQuestionAnswerQuality(
     category,
     currentDayunName,
     helpfulText,
-    cautionGuidance
+    cautionGuidance,
+    options.questionIndex || 0
   );
   const analysis = category === 'crisis'
     ? getQuestionTextLength(answer.analysis) >= PREMIUM_QUESTION_MIN_ANALYSIS_CHARS
@@ -2031,28 +2052,28 @@ function buildSections(
       details: [
         {
           summary: '내가 왜 이런 사람에게 끌리는지',
-          content: `${loveProfile.drawnTo}\n\n여기서 중요한 건 끌림이 곧 안정이라는 뜻은 아니라는 점입니다. ${basis.dayMaster.stem} 일간의 관계 방식은 처음의 설렘보다 “내 기준이 존중받는가”에서 마음이 깊어집니다. 그래서 초반에 강하게 끌려도 상대의 생활 리듬과 책임 방식이 맞지 않으면 시간이 지날수록 피로가 커질 수 있습니다.`,
+          content: `이 사주는 말의 화려함보다 생활이 정돈된 사람에게 마음이 깊어지는 편입니다. 책임을 미루지 않고, 돈과 시간을 함부로 쓰지 않으며, 약속을 안정적으로 지키는 모습에서 신뢰가 생깁니다.\n\n여기서 중요한 건 끌림이 곧 안정이라는 뜻은 아니라는 점입니다. ${basis.dayMaster.stem} 일간의 관계 방식은 처음의 설렘보다 “내 기준이 존중받는가”에서 마음이 깊어집니다. 그래서 초반에 강하게 끌려도 상대의 생활 리듬과 책임 방식이 맞지 않으면 시간이 지날수록 피로가 커질 수 있습니다.`,
           open: true
         },
         {
           summary: '오래 가는 사람과 빨리 식는 사람의 차이',
-          content: `${loveProfile.longTermType}\n\n반대로 ${loveProfile.avoidPeople} 초반에는 묘하게 신경 쓰이고 끌릴 수 있지만, 시간이 지날수록 관계의 에너지를 많이 쓰게 만듭니다. 이 사주에서는 “나를 얼마나 설레게 하는가”보다 “나를 불안하게 만들지 않는가”가 장기 궁합의 핵심입니다.`
+          content: `길게 이어지는 인연은 큰 이벤트보다 평소 태도가 일정한 사람입니다. 연락이 조금 느려도 약속을 지키고, 감정이 흔들릴 때도 기본 예의를 잃지 않는 사람이 안정감을 줍니다.\n\n반대로 초반부터 감정을 크게 흔들지만 책임과 생활 기준이 흐린 사람은 시간이 지날수록 에너지를 많이 쓰게 만듭니다. 이 사주에서는 “나를 얼마나 설레게 하는가”보다 “나를 불안하게 만들지 않는가”가 장기 궁합의 핵심입니다.`
         },
         {
           summary: '상대가 보는 나의 연애 스타일',
-          content: `${loveProfile.perceivedStyle}\n\n그래서 이 사주는 마음이 있어도 표현이 늦거나, 상대를 더 지켜본 뒤 확신하려는 흐름이 생길 수 있습니다. 이 자체가 나쁜 것은 아니지만, 상대 입장에서는 “좋아하는 건지 아닌지 모르겠다”는 신호로 읽힐 수 있으니 중요한 순간에는 짧게라도 마음을 말해주는 편이 좋습니다.`
+          content: `상대 입장에서는 쉽게 흔들리지 않고 자기 리듬이 있는 사람처럼 보일 수 있습니다. 믿음직한 인상을 주는 대신, 감정 표현이 늦으면 무심함으로 오해받을 여지도 있습니다.\n\n그래서 이 사주는 마음이 있어도 표현이 늦거나, 상대를 더 지켜본 뒤 확신하려는 흐름이 생길 수 있습니다. 이 자체가 나쁜 것은 아니지만, 상대 입장에서는 “좋아하는 건지 아닌지 모르겠다”는 신호로 읽힐 수 있으니 중요한 순간에는 짧게라도 마음을 말해주는 편이 좋습니다.`
         },
         {
           summary: '미래 인연의 인상과 직업 환경',
-          content: `${loveProfile.spouseFace}\n\n${loveProfile.jobField}\n\n직업이나 얼굴을 한 가지로 단정하면 리포트가 가벼워집니다. 대신 이 사주에서는 상대가 풍기는 분위기, 돈과 시간에 대한 태도, 사회적 책임감이 더 중요한 신호입니다. 인연상은 스펙 나열보다 생활 태도에서 더 선명하게 드러납니다.`
+          content: `인연의 분위기는 자극적으로 튀기보다 단정하고 안정적인 쪽에 가깝습니다. 첫눈의 강렬함보다 시간이 지날수록 믿음이 쌓이는 인상이 더 오래 남습니다.\n\n직업 환경은 현실 감각이 필요한 분야와 연결되기 쉽습니다. 관리, 회계, 운영, 부동산, 조직 실무, 공공성 있는 일처럼 책임과 기준이 분명한 영역에서 인연 신호가 들어올 수 있습니다.\n\n직업이나 얼굴을 한 가지로 단정하면 리포트가 가벼워집니다. 대신 이 사주에서는 상대가 풍기는 분위기, 돈과 시간에 대한 태도, 사회적 책임감이 더 중요한 신호입니다. 인연상은 스펙 나열보다 생활 태도에서 더 선명하게 드러납니다.`
         },
         {
           summary: '만남 루트와 소개팅 전략',
-          content: `${loveProfile.meetingRoute}\n\n완전히 우연한 만남보다 목적이 있는 자리, 반복적으로 마주치는 공간, 지인이나 일의 신뢰가 깔린 연결에서 관계가 열릴 가능성이 큽니다. 소개를 받는다면 “조건이 좋은 사람”보다 내 생활 리듬 안으로 자연스럽게 들어오는 사람을 우선 보세요. 첫 만남에서는 직업보다 시간 약속, 대화의 균형, 돈 쓰는 태도를 보는 편이 더 정확합니다.`
+          content: `만남은 완전히 낯선 자리보다 신뢰가 한 겹 깔린 연결에서 자연스럽습니다. 소개, 일과 이어진 모임, 자주 가는 생활권, 반복 수업이나 취미 공간처럼 얼굴을 여러 번 보는 환경이 더 잘 맞습니다.\n\n완전히 우연한 만남보다 목적이 있는 자리, 반복적으로 마주치는 공간, 지인이나 일의 신뢰가 깔린 연결에서 관계가 열릴 가능성이 큽니다. 소개를 받는다면 “조건이 좋은 사람”보다 내 생활 리듬 안으로 자연스럽게 들어오는 사람을 우선 보세요. 첫 만남에서는 직업보다 시간 약속, 대화의 균형, 돈 쓰는 태도를 보는 편이 더 정확합니다.`
         },
         {
           summary: '결혼 현실성과 결혼 후 모습',
-          content: `${loveProfile.marriagePoint}\n\n${loveProfile.marriedLife}\n\n결혼으로 이어지려면 세 가지를 확인해야 합니다. 첫째, 돈을 쓰고 모으는 기준이 크게 충돌하지 않는가. 둘째, 가족과 일의 경계를 서로 존중할 수 있는가. 셋째, 갈등이 생겼을 때 침묵이나 회피가 아니라 조율로 돌아올 수 있는가입니다.`
+          content: `${loveProfile.marriagePoint}\n\n결혼 생활은 감정만으로 굴러가기보다 역할을 나누고 생활 기준을 맞출 때 안정됩니다. 집안일, 돈 관리, 가족과의 거리, 쉬는 방식까지 현실 조건이 맞아야 관계가 오래 버팁니다.\n\n결혼으로 이어지려면 세 가지를 확인해야 합니다. 첫째, 돈을 쓰고 모으는 기준이 크게 충돌하지 않는가. 둘째, 가족과 일의 경계를 서로 존중할 수 있는가. 셋째, 갈등이 생겼을 때 침묵이나 회피가 아니라 조율로 돌아올 수 있는가입니다.`
         },
         {
           summary: '헤어지는 결정적 이유와 연애 체력',
@@ -2096,18 +2117,18 @@ function buildSections(
       paragraphs: [
         `${currentDayun.name} 대운은 현재 10년의 주제이고, ${nextDayun.name} 대운은 그 다음 10년의 방향을 설명합니다.`,
         '같은 사주라도 대운이 바뀌면 체감되는 기회, 부담, 선택의 우선순위가 달라집니다. 지금의 선택은 단기 결과만이 아니라 다음 대운에 가져갈 자산과 습관까지 함께 만듭니다.',
-        currentDayun.summary,
-        `현재 대운의 핵심은 ${currentDayun.focus} ${currentDayun.caution}`
+        `지금 구간은 ${currentDayun.name}의 흐름을 현실의 돈, 관계, 일정 관리로 번역해야 하는 시기입니다. 들어오는 제안의 양보다 무엇이 내 손에 남는지를 먼저 봐야 합니다.`,
+        '현재 대운을 잘 쓰려면 기회가 왔을 때 바로 받기보다 가격, 역할, 책임, 회복 시간을 먼저 확인해야 합니다. 다음 대운은 지금 정리한 습관과 기준을 그대로 이어받습니다.'
       ],
       cards: [
         {
           title: `${currentDayun.name} 대운 · ${currentDayun.range}`,
-          body: currentDayun.focus,
+          body: '지금은 진행 중인 일의 수보다 기준의 선명도가 중요합니다. 돈, 고객, 관계, 이동 일정이 동시에 늘어날 때 기록과 정산 기준을 먼저 세우세요.',
           tone: 'good'
         },
         {
           title: `${nextDayun.name} 대운 · ${nextDayun.range}`,
-          body: nextDayun.focus
+          body: '다음 흐름은 지금 만든 생활 기반과 수익 모델을 시험합니다. 오래 가져갈 구조만 남기고, 체력을 갉아먹는 방식은 미리 줄이는 편이 좋습니다.'
         },
         {
           title: '대운 전환 준비',
@@ -2146,7 +2167,7 @@ function buildSections(
           content:
             index === 0
               ? `${item.label} 기운이 가장 앞에 와 있다는 뜻은 사회적인 얼굴과 성과 방식이 이 축을 통해 드러난다는 의미입니다. 이 기운은 사람들에게 “저 사람은 이런 역할을 해준다”는 인상을 남기는 핵심 단서입니다.`
-              : `${item.label} 기운은 상황에 따라 장점과 부담이 함께 드러날 수 있는 성향 축입니다. 중요한 건 이 기운을 어떤 역할과 구조에 배치하느냐입니다. 점수가 높다고 무조건 좋거나 낮다고 부족한 것이 아니라, 현재 대운과 실제 환경에서 쓰임이 맞을 때 강점이 됩니다.`,
+              : `${item.label} 기운은 상황에 따라 장점과 부담이 함께 드러날 수 있는 성향 축입니다. 중요한 건 ${item.label}을 어떤 역할과 구조에 배치하느냐입니다. ${item.label} 점수는 높다고 무조건 좋거나 낮다고 부족한 것이 아니라, 현재 대운과 실제 환경에서 쓰임이 맞을 때 강점이 됩니다.`,
           open: index < 2
         }))
       ]
@@ -2157,7 +2178,7 @@ function buildSections(
       subtitle: '각 기둥의 생장 흐름을 현실 언어로 읽는 영역',
       details: twelveStates.map((item, index) => ({
         summary: `${item.pillar} · ${item.state}`,
-        content: `${item.pillar}에서 ${item.state} 운성이 드러난다는 것은 그 자리의 기운이 ${index === 0 ? '배경과 성장 경험' : index === 1 ? '사회 환경과 현재 리듬' : index === 2 ? '내면 중심축' : '생활 습관과 세부 운영'}에 어떤 결로 작동하는지를 보여주는 단서입니다.\n\n12운성은 사건을 단정하는 도구가 아니라 기운의 컨디션을 보는 도구입니다. 같은 기운이라도 어느 자리에 놓였는지에 따라 밖으로 드러나는 방식과 피로가 쌓이는 지점이 달라집니다.`,
+        content: `${item.pillar}에서 ${item.state} 운성이 드러난다는 것은 그 자리의 기운이 ${index === 0 ? '배경과 성장 경험' : index === 1 ? '사회 환경과 현재 리듬' : index === 2 ? '내면 중심축' : '생활 습관과 세부 운영'}에 어떤 결로 작동하는지를 보여주는 단서입니다.\n\n${item.state}은 사건을 단정하는 이름이 아니라 ${item.pillar} 기운의 컨디션을 보는 기준입니다. ${item.pillar}에 놓인 이 흐름은 밖으로 드러나는 방식과 피로가 쌓이는 지점을 다르게 만듭니다.`,
         open: index === 0
       }))
     },
@@ -2224,6 +2245,70 @@ function buildYearlySummary(customerName: string, serviceLabel: string, basis: D
       '30일 안에 할 일: 반복해서 팔 수 있는 대표 상품 또는 대표 선택지 하나만 남기고 나머지는 보류하세요.'
     ]
   };
+}
+
+function diversifyRepeatedReportPhrases(report: SajuReportData, repeatedCaution: string) {
+  if (!repeatedCaution) {
+    return report;
+  }
+
+  let cautionIndex = 0;
+  const cautionSubjects = [
+    '관계 판단에서는',
+    '돈 문제에서는',
+    '일정 조율에서는',
+    '고객 응대에서는',
+    '생활 리듬에서는',
+    '중요한 선택 앞에서는',
+    '계약과 결제 전에는',
+    '감정이 올라오는 날에는',
+    '제안이 갑자기 늘 때는',
+    '몸이 무거운 시기에는',
+    '새로운 만남 앞에서는',
+    '일을 넓히고 싶을 때는'
+  ];
+  const cautionBodies = [
+    '속도보다 기록을 먼저 두어야 손실이 줄고, 다음 단계 제안과 관계 방향은 따로 적어 보완하세요.',
+    '말과 지출이 빨라질수록 판단이 흐려질 수 있으니, 부족한 부분은 일정표와 책임 범위로 천천히 채우세요.',
+    '기회처럼 보이는 흐름이 피로를 함께 데려올 수 있으므로, 방향 감각이 비는 지점은 비교표를 두고 다시 확인하세요.',
+    '연락, 이동, 돈의 흐름이 한꺼번에 몰리기 쉬우니, 결정 전에 비용과 체력 조건을 분리해 적는 것이 안전합니다.',
+    '좋은 말보다 실제 태도를 보고, 약한 기운은 관계의 다음 단계가 흐려지는 신호로 읽어야 합니다.'
+  ];
+  const getCautionAlternative = (index: number) => {
+    if (index === 0) return repeatedCaution;
+    return `${cautionSubjects[(index - 1) % cautionSubjects.length]} ${cautionBodies[(index - 1) % cautionBodies.length]}`;
+  };
+
+  const replaceText = (text: string) => {
+    let next = text;
+
+    while (next.includes(repeatedCaution)) {
+      next = next.replace(repeatedCaution, getCautionAlternative(cautionIndex));
+      cautionIndex += 1;
+    }
+
+    return next;
+  };
+
+  const walk = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      return replaceText(value);
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => walk(item));
+    }
+
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, walk(item)])
+      );
+    }
+
+    return value;
+  };
+
+  return walk(report) as SajuReportData;
 }
 
 export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFormData>, providedBasis?: DeterministicSajuBasis): SajuReportData {
@@ -2354,8 +2439,10 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     qualityAudit: EMPTY_QUALITY_AUDIT
   };
 
+  const polishedReport = diversifyRepeatedReportPhrases(report, cautionGuidance);
+
   return {
-    ...report,
-    qualityAudit: scoreReportQuality(report)
+    ...polishedReport,
+    qualityAudit: scoreReportQuality(polishedReport)
   };
 }

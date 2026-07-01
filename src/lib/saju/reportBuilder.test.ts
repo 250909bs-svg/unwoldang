@@ -65,7 +65,7 @@ describe('saju report question answers', () => {
 
     expect(answer.title).toContain('직업·커리어');
     expect(answer.analysis).toContain('결론부터');
-    expect(answer.analysis).toContain('겉글자 기준');
+    expect(answer.analysis).toContain('겉으로 드러난 십성');
     expect(answer.advice.join('\n')).toContain('추천 업종');
     expect(answer.advice.join('\n')).toContain('수익 구조');
     expect(answer.analysis.replace(/\s/g, '').length).toBeGreaterThanOrEqual(300);
@@ -138,6 +138,7 @@ describe('saju report question answers', () => {
     const report = buildSajuReport('general-signature', makeFormData({ q1: '회사 계속 다녀도 될까?', q2: '사업을 어떻게 시작할까?' }));
 
     expect(report.qualityAudit.score).toBeGreaterThanOrEqual(80);
+    expect(report.qualityAudit.repeatedSentences).toEqual([]);
     expect(report.qualityAudit.bannedTerms).toEqual([]);
     expect(report.qualityAudit.typoSignals).toEqual([]);
   });

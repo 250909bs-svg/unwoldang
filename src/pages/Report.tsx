@@ -5,6 +5,7 @@ import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
+import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 
 type ReportLocationState = {
@@ -1021,7 +1022,12 @@ function polishRepeatedReportLanguage(report: SajuReportData, repeatedCaution: s
     return value;
   };
 
-  return walk(report) as SajuReportData;
+  const polishedReport = walk(report) as SajuReportData;
+
+  return {
+    ...polishedReport,
+    qualityAudit: scoreReportQuality(polishedReport)
+  };
 }
 
 function SectionBlock({
@@ -4673,7 +4679,6 @@ function getRelationDigest(report: SajuReportData) {
 
 function buildExpertSatisfactionReport(report: SajuReportData, options: { preserveQuestionAnswers?: boolean } = {}): SajuReportData {
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
-  const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const dominantTenGod = report.tenGods[0];
   const secondTenGod = report.tenGods[1];
   const currentYear = report.yearLuck[0];
@@ -4684,7 +4689,6 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
   const cautionGuidance = formatCautionElements(report);
   const cautionScenes = buildCautionSceneBank(report);
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
-  const strongestLabel = strongestElement?.label || report.helpfulElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
   const secondLabel = secondTenGod?.label || '보조 십성';
   const climate = buildMyeongriClimate(report);
@@ -4946,41 +4950,6 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
     ]
   };
 
-  const premiumBonusSection: ReportSection = {
-    id: 'premium-bonus',
-    title: '프리미엄 보너스',
-    subtitle: '고가 리포트에서 고객이 실제로 저장하고 다시 보는 실행 항목입니다.',
-    cards: [
-      {
-        title: '90일 실행 플랜',
-        body: '1~30일은 대표 상품 하나를 정리하고, 31~60일은 가격표와 샘플 결과물을 고정하며, 61~90일은 실제 고객 반응을 보고 문구와 제공 범위를 다듬는 흐름이 맞습니다.',
-        tone: 'good'
-      },
-      {
-        title: '올해 돈 버는 구조',
-        body: '기본 리포트로 유입을 만들고, 프리미엄 심층 리포트와 월별 점검으로 재방문을 받는 구조가 좋습니다. 단건 판매보다 계단형 상품이 재물운을 안정시킵니다.'
-      },
-      {
-        title: '피해야 할 동업·고객 유형',
-        body: '말은 좋지만 마감과 비용을 흐리는 사람, 처음부터 예외를 요구하는 고객, 책임자는 없고 의견만 많은 협업은 피로를 크게 만듭니다.',
-        tone: 'warn'
-      },
-      {
-        title: '직업·사업 추천 10가지',
-        body: businessRecommendations.join(' · ')
-      },
-      {
-        title: '연애·결혼 별도 심층',
-        body: '관계는 끌림보다 생활 기준이 맞아야 오래 갑니다. 연락 템포, 돈 쓰는 태도, 갈등 후 대화 방식이 맞는 사람이 결혼 현실성까지 이어지기 쉽습니다.'
-      },
-      {
-        title: '월별 액션 체크리스트',
-        body: '강한 달에는 공개와 제안을 열고, 조율 달에는 계약과 가격을 정리하고, 회복 달에는 건강과 관계 소모를 줄입니다. 월운은 점수보다 역할표로 써야 실전성이 올라갑니다.',
-        tone: 'good'
-      }
-    ]
-  };
-
   const myeongriBasisSection: ReportSection = {
     id: 'myeongri-basis',
     title: '명리 근거 해설',
@@ -5187,43 +5156,6 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
 
   const emotionalFlowSection = buildEmotionalFlowSection(report);
 
-  const expertCheckSection: ReportSection = {
-    id: 'expert-check',
-    title: '전문가 검증 포인트',
-    subtitle: '결론을 받아들이기 전에 함께 확인해야 할 근거를 따로 정리했습니다.',
-    callout: {
-      title: '왜 이 결론이 나왔는가',
-      body: `이 리포트는 입력한 생년월일, 출생시간, 원국, 오행 분포, 십성 흐름, ${report.currentDayun.name} 대운, 연운과 월운을 함께 놓고 해석합니다. 단정적인 사건 예언보다 실제 선택에 도움이 되는 판단 기준을 우선합니다.`
-    },
-    cards: [
-      {
-        title: '명식 근거',
-        body: `${report.dayMaster} 일간과 ${report.strengthLabel} 흐름을 중심으로, 강한 ${strongestLabel} 기운과 보완이 필요한 ${weakestLabel} 기운의 균형을 봅니다.`,
-        tone: 'good'
-      },
-      {
-        title: '운의 근거',
-        body: `${report.currentDayun.name} 대운의 핵심은 들어온 기회를 내 구조로 바꾸는 데 있습니다. ${asSentence(report.currentDayun.focus)} 다만 ${asSentence(report.currentDayun.caution)}`
-      },
-      {
-        title: '현실 검증',
-        body: '좋은 운도 일정, 가격, 관계 태도, 체력 관리가 무너지면 체감되지 않습니다. 그래서 모든 조언은 행동으로 확인 가능한 기준으로 번역했습니다.'
-      },
-      {
-        title: '단정 금지',
-        body: '배우자, 질병, 사고, 투자 성과처럼 삶을 크게 흔드는 사건은 결과를 단언하지 않습니다. 대신 위험 신호와 선택 기준을 알려드립니다.',
-        tone: 'warn'
-      }
-    ],
-    details: [
-      {
-        summary: '고객이 다시 봐야 할 체크리스트',
-        content: `1. 지금 가장 강한 선택지가 내 체력을 망가뜨리지 않는가\n\n2. 돈이 들어오는 일인지, 돈이 남는 일인지 구분했는가\n\n3. 관계에서 말보다 반복 행동을 확인했는가\n\n4. 좋은 달에는 열고 약한 달에는 정리하는 리듬을 지키고 있는가`,
-        open: true
-      }
-    ]
-  };
-
   const expertReport: SajuReportData = {
     ...report,
     heroNote: `${report.customerName}님의 원국, 대운, 세운, 월운, 질문 맥락을 함께 검토한 프리미엄 상담형 리포트입니다. 단순한 위로보다 실제 선택에 도움이 되는 근거와 행동 기준을 우선했습니다.`,
@@ -5282,8 +5214,6 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
       customerResonanceSection,
       careerDetailSection,
       relationshipPatternSection,
-      premiumBonusSection,
-      expertCheckSection,
       ...expertSections
     ],
     actionPlan: {
@@ -5539,7 +5469,6 @@ function buildLifeFlowProductReport(report: SajuReportData): SajuReportData {
       buildMonthStageSection(report, '12개월 월별 운세 전략'),
       getSection(report, 'myeongri-basis'),
       getSection(report, 'yongsin'),
-      getSection(report, 'expert-check')
     ]),
     actionPlan: {
       ...report.actionPlan,
@@ -5641,7 +5570,6 @@ function buildLoveProductReport(report: SajuReportData): SajuReportData {
       loveTiming,
       getSection(report, 'yongsin'),
       buildMonthStageSection(report, '연애운 월별 행동 전략'),
-      getSection(report, 'expert-check')
     ]),
     actionPlan: {
       ...report.actionPlan,
@@ -5734,7 +5662,6 @@ function buildReunionProductReport(report: SajuReportData): SajuReportData {
       getSection(report, 'relationship-pattern'),
       getSection(report, 'love'),
       getSection(report, 'event-timeline'),
-      getSection(report, 'expert-check')
     ]),
     actionPlan: {
       ...report.actionPlan,
@@ -5831,7 +5758,6 @@ function buildMarriageProductReport(report: SajuReportData): SajuReportData {
       getSection(report, 'relationship-pattern'),
       getSection(report, 'yongsin'),
       buildMonthStageSection(report, isTiming ? '혼인 시기 월별 전략' : '결혼운 월별 전략'),
-      getSection(report, 'expert-check')
     ]),
     actionPlan: {
       ...report.actionPlan,
@@ -5929,7 +5855,6 @@ function buildCompatibilityProductReport(report: SajuReportData): SajuReportData
       compatibilityTimeline,
       getSection(report, 'love'),
       getSection(report, 'myeongri-basis'),
-      getSection(report, 'expert-check')
     ]),
     actionPlan: {
       ...report.actionPlan,
