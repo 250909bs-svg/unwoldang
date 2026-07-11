@@ -1,6 +1,7 @@
-import { Archive, ChevronDown, ChevronRight, LogOut, Menu, ScrollText, Sparkles } from 'lucide-react';
+import { Archive, ChevronDown, ChevronRight, LogOut, ScrollText, Sparkles } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
+import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import { beginKakaoLogin } from '../lib/auth';
 import {
@@ -79,18 +80,7 @@ function formatArchiveDate(value: string) {
 }
 
 function MyReplayHeader() {
-  return (
-    <header className="my-replay-header">
-      <Link to="/" className="my-replay-logo" aria-label="운월당 홈">
-        <span>운</span>
-        <strong>운월당</strong>
-      </Link>
-
-      <Link to="/menu" className="my-replay-menu-button" aria-label="메뉴">
-        <Menu size={20} />
-      </Link>
-    </header>
-  );
+  return <MobileTopBar title="보관함" backTo="/" backLabel="홈" />;
 }
 
 function LoggedOutReplay() {

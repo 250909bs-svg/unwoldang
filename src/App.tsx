@@ -1,9 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Test from './pages/Test';
 import FaceAI from './pages/FaceAI';
 import Search from './pages/Search';
-import Tarot from './pages/Tarot';
 import Detail from './pages/Detail';
 import Form from './pages/Form';
 import Checkout from './pages/Checkout';
@@ -36,7 +36,7 @@ function AppRoutes() {
         <Route path="/test" element={<Test />} />
         <Route path="/test/face-ai" element={<FaceAI />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/tarot" element={<Tarot />} />
+        <Route path="/tarot" element={<Navigate to="/" replace />} />
         <Route path="/my" element={<My />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Login />} />
@@ -61,6 +61,22 @@ function AppRoutes() {
 function AppShell() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
+  const usesDarkAppShell =
+    location.pathname === '/' ||
+    location.pathname.startsWith('/test') ||
+    location.pathname.startsWith('/search') ||
+    location.pathname.startsWith('/my') ||
+    location.pathname.startsWith('/login') ||
+    isLegalRoute;
+
+  useEffect(() => {
+    document.body.classList.toggle('home-all-black', usesDarkAppShell);
+
+    return () => {
+      document.body.classList.remove('home-all-black');
+    };
+  }, [usesDarkAppShell]);
 
   return (
     <div className={isAdminRoute ? 'app-container admin-app-container' : 'app-container'}>

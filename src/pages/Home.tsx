@@ -1,19 +1,7 @@
-import {
-  Flame,
-  Gem,
-  Heart,
-  BriefcaseBusiness,
-  Menu as MenuIcon,
-  MessageCircle,
-  PiggyBank,
-  ScrollText,
-  Sparkles,
-  User,
-  WalletCards,
-  X
-} from 'lucide-react';
+import { Menu as MenuIcon, MessageCircle, Play, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
 
 const illustrationDeck = {
@@ -34,22 +22,20 @@ const homeMenuItems = [
   { label: '종합사주', to: '/form/general-signature', state: { tabOrigin: '/' } },
   { label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
   { label: '심리테스트', to: '/test' },
-  { label: '타로', to: '/tarot' },
   { label: '마이페이지', to: '/my' }
 ] as const;
 
 const supportMailHref =
   'mailto:250909bs@gmail.com?subject=%EC%9A%B4%EC%9B%94%EB%8B%B9%20%EB%AC%B8%EC%9D%98';
 
-const mainCategories = [
-  { target: 'general-signature', label: '종합사주', icon: ScrollText, tint: '#fff6df' },
-  { target: 'life-flow', label: '신년운세', icon: Sparkles, tint: '#f4efff' },
-  { target: 'concern-reading', label: '고민풀이', icon: Sparkles, tint: '#eef7ff' },
-  { target: 'love-reading', label: '연애운', icon: Heart, tint: '#fff0f5' },
-  { target: 'love-reunion', label: '재회운', icon: Heart, tint: '#fff6f8' },
-  { target: 'career-reading', label: '직업운', icon: BriefcaseBusiness, tint: '#f6f2ea' },
-  { target: 'money-reading', label: '금전운', icon: PiggyBank, tint: '#fff8e7' },
-  { path: '/tarot', label: '타로', icon: WalletCards, tint: '#fff1f5' }
+const homeCategoryTabs = [
+  { id: 'all', label: '전체' },
+  { id: 'general', label: '종합' },
+  { id: 'love', label: '연애' },
+  { id: 'reunion', label: '재회' },
+  { id: 'marriage', label: '결혼' },
+  { id: 'match', label: '궁합' },
+  { id: 'wealth', label: '재물' }
 ] as const;
 
 const cardNewsSlides = [
@@ -105,11 +91,115 @@ const cardNewsSlides = [
   }
 ] as const;
 
+type HomeCategoryId = (typeof homeCategoryTabs)[number]['id'];
+type HomeProductCategory = Exclude<HomeCategoryId, 'all'> | 'all-only';
+
+type HomeProductCard = {
+  id: string;
+  category: HomeProductCategory;
+  to: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  imagePosition?: string;
+};
+
+const homeProductCards: HomeProductCard[] = [
+  {
+    id: 'general-signature',
+    category: 'general',
+    to: '/form/general-signature',
+    image: illustrationDeck.generalSaju,
+    title: '운월선생 정통 종합사주',
+    subtitle: '타고난 기질부터 인생 전체 흐름까지'
+  },
+  {
+    id: 'love-reading',
+    category: 'love',
+    to: '/form/love-reading',
+    image: illustrationDeck.loveReading,
+    title: '홍연아씨 연애운',
+    subtitle: '다가올 인연과 마음의 타이밍'
+  },
+  {
+    id: 'love-reunion',
+    category: 'reunion',
+    to: '/form/love-reunion',
+    image: illustrationDeck.loveReunion,
+    title: '홍연아씨 재회운',
+    subtitle: '다시 이어질 가능성과 연락 시기'
+  },
+  {
+    id: 'marriage-blueprint',
+    category: 'marriage',
+    to: '/form/marriage-blueprint',
+    image: illustrationDeck.blossom,
+    title: '청연부인 결혼운 설계도',
+    subtitle: '배우자 흐름과 현실적인 혼인 기준'
+  },
+  {
+    id: 'marriage-timing',
+    category: 'marriage',
+    to: '/form/marriage-timing',
+    image: illustrationDeck.lantern,
+    title: '청연부인 혼인 적기',
+    subtitle: '결혼이 안정되는 시기와 선택 포인트'
+  },
+  {
+    id: 'match-couple',
+    category: 'match',
+    to: '/form/match-couple',
+    image: illustrationDeck.matchCouple,
+    title: '월연도령 사주궁합',
+    subtitle: '두 사람의 속도와 생활 궁합 분석'
+  },
+  {
+    id: 'match-destiny',
+    category: 'match',
+    to: '/form/match-destiny',
+    image: illustrationDeck.red,
+    title: '월연도령 운명 궁합',
+    subtitle: '오래 이어질 인연인지 보는 깊은 궁합'
+  },
+  {
+    id: 'money-reading',
+    category: 'wealth',
+    to: '/form/money-reading',
+    image: illustrationDeck.sunlight,
+    title: '운월선생 재물운 설계도',
+    subtitle: '돈이 들어오고 머무는 나만의 흐름'
+  },
+  {
+    id: 'life-flow',
+    category: 'all-only',
+    to: '/form/life-flow',
+    image: illustrationDeck.yearlyFortune,
+    title: '운월선생 신년운세',
+    subtitle: '다가오는 12개월의 기회와 조심할 시기'
+  },
+  {
+    id: 'concern-reading',
+    category: 'all-only',
+    to: '/form/concern-reading',
+    image: illustrationDeck.concernReading,
+    title: '운월당 고민풀이',
+    subtitle: '지금 가장 답답한 고민을 사주로 정리'
+  },
+  {
+    id: 'career-reading',
+    category: 'all-only',
+    to: '/form/career-reading',
+    image: illustrationDeck.moon,
+    title: '운월선생 직업운 설계도',
+    subtitle: '직업 방향과 나에게 맞는 일의 방식'
+  }
+];
+
 const homeDiscoverySections = [
   {
     id: 'love-cluster',
+    eyebrow: '연애 · 재회 분야',
     title: '썸, 연애, 재회, 일단 들어와 봐요',
-    icon: Heart,
     cards: [
       {
         id: 'love-reading',
@@ -142,8 +232,8 @@ const homeDiscoverySections = [
   },
   {
     id: 'new-arrivals',
+    eyebrow: '종합사주 분야',
     title: '따끈한 신상 운세 들어왔어요',
-    icon: Flame,
     cards: [
       {
         id: 'general-signature',
@@ -176,8 +266,8 @@ const homeDiscoverySections = [
   },
   {
     id: 'future-preview',
+    eyebrow: '운세 · 궁합 분야',
     title: '내 인생, 미리보기 하고싶다면?',
-    icon: Sparkles,
     cards: [
       {
         id: 'life-flow',
@@ -210,8 +300,8 @@ const homeDiscoverySections = [
   },
   {
     id: 'premium-luck',
+    eyebrow: '직업 · 재물 분야',
     title: '나도 상위 1% 가능하다고?',
-    icon: Gem,
     cards: [
       {
         id: 'wealth',
@@ -246,7 +336,10 @@ const homeDiscoverySections = [
 
 export default function Home() {
   const [activeCardNewsIndex, setActiveCardNewsIndex] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeHomeCategory, setActiveHomeCategory] = useState<HomeCategoryId>('all');
+  const [menuOpen, setMenuOpen] = useState(
+    () => new URLSearchParams(window.location.search).get('menu') === 'open'
+  );
   const [authUser, setAuthUser] = useState(() => readStoredAuthUser());
   const menuNickname = authUser?.nickname?.trim() || '운월당 회원';
   const menuStatusLabel = authUser
@@ -255,6 +348,12 @@ export default function Home() {
       : '테스트 로그인'
     : '로그인 전';
   const menuAvatar = authUser?.avatar || illustrationDeck.sunlight;
+  const activeCategoryLabel =
+    homeCategoryTabs.find((category) => category.id === activeHomeCategory)?.label || '전체';
+  const visibleProducts =
+    activeHomeCategory === 'all'
+      ? []
+      : homeProductCards.filter((product) => product.category === activeHomeCategory);
   const visibleCardNews = cardNewsSlides
     .map((slide, index) => ({
       ...slide,
@@ -306,32 +405,20 @@ export default function Home() {
   return (
     <main className="app-home-shell">
       <div className="app-mobile-shell">
-        <header className="app-home-header">
-          <Link to="/" className="mobile-topbar-brand" aria-label="운월당 홈">
-            운월당
-          </Link>
-
-          <div className="app-header-actions">
+        <MobileTopBar
+          title="운월당"
+          rightSlot={
             <button
               type="button"
-              className="app-menu-button"
+              className="app-menu-button primary-topbar-menu"
               aria-label="운월당 메뉴 열기"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(true)}
             >
-              <MenuIcon size={18} strokeWidth={2.35} />
+              <MenuIcon size={24} strokeWidth={2.2} />
             </button>
-            <button
-              type="button"
-              className="app-profile-button"
-              aria-label="운월당 메뉴 열기"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(true)}
-            >
-              <User size={17} strokeWidth={2.2} />
-            </button>
-          </div>
-        </header>
+          }
+        />
 
         {menuOpen ? (
           <div className="home-menu-overlay" role="presentation" onClick={() => setMenuOpen(false)}>
@@ -384,113 +471,150 @@ export default function Home() {
           </div>
         ) : null}
 
-        <section className="home-cardnews-wrap" aria-label="상단 카드뉴스">
-          <div className="home-cardnews-stage">
-            {visibleCardNews.map((slide) => (
-              <Link
-                key={slide.id}
-                to={`/form/${slide.target}`}
-                state={{ tabOrigin: '/' }}
-                className={
-                  slide.offset === 0
-                    ? `home-cardnews-card active tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
-                    : slide.offset === 1
-                      ? `home-cardnews-card next tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
-                      : `home-cardnews-card tail tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
-                }
-                aria-hidden={slide.offset !== 0}
-                tabIndex={slide.offset === 0 ? 0 : -1}
+        <nav className="home-category-nav" aria-label="운월당 카테고리">
+          <div
+            className="home-category-rail"
+            onWheel={(event) => {
+              if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+                return;
+              }
+
+              const rail = event.currentTarget;
+              const canMoveRight = event.deltaY > 0 && rail.scrollLeft < rail.scrollWidth - rail.clientWidth;
+              const canMoveLeft = event.deltaY < 0 && rail.scrollLeft > 0;
+
+              if (canMoveRight || canMoveLeft) {
+                event.preventDefault();
+                rail.scrollLeft += event.deltaY;
+              }
+            }}
+          >
+            {homeCategoryTabs.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                className={activeHomeCategory === category.id ? 'home-category-tab active' : 'home-category-tab'}
+                aria-pressed={activeHomeCategory === category.id}
+                onClick={() => setActiveHomeCategory(category.id)}
               >
-                <img src={slide.image} alt={`${slide.kicker} 카드뉴스`} className="home-cardnews-image" />
-                <span className="home-cardnews-rank">TOP {slide.rank}</span>
-                <div className="home-cardnews-overlay" />
-                <div className="home-cardnews-copy">
-                  <small>{slide.kicker}</small>
-                  <h2>{slide.title}</h2>
-                  <p>{slide.subtitle}</p>
-                </div>
+                {category.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {activeHomeCategory === 'all' ? (
+          <>
+            <section id="home-all" className="home-cardnews-wrap" aria-label="상단 카드뉴스">
+              <div className="home-cardnews-stage">
+                {visibleCardNews.map((slide) => (
+                  <Link
+                    key={slide.id}
+                    to={`/form/${slide.target}`}
+                    state={{ tabOrigin: '/' }}
+                    className={
+                      slide.offset === 0
+                        ? `home-cardnews-card active tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
+                        : slide.offset === 1
+                          ? `home-cardnews-card next tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
+                          : `home-cardnews-card tail tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
+                    }
+                    aria-hidden={slide.offset !== 0}
+                    tabIndex={slide.offset === 0 ? 0 : -1}
+                  >
+                    <img src={slide.image} alt={`${slide.kicker} 카드뉴스`} className="home-cardnews-image" />
+                    <span className="home-cardnews-rank">TOP {slide.rank}</span>
+                    <div className="home-cardnews-overlay" />
+                    <div className="home-cardnews-copy">
+                      <small>{slide.kicker}</small>
+                      <h2>{slide.title}</h2>
+                      <p>{slide.subtitle}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="home-cardnews-dots" role="tablist" aria-label="카드뉴스 선택">
+                {cardNewsSlides.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeCardNewsIndex === index}
+                    className={activeCardNewsIndex === index ? 'home-cardnews-dot active' : 'home-cardnews-dot'}
+                    onClick={() => setActiveCardNewsIndex(index)}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="home-showcase-stack">
+              {homeDiscoverySections.map((section) => (
+                <section id={`home-${section.id}`} key={section.id} className="home-showcase-section">
+                  <div className="home-showcase-head">
+                    <small className="home-showcase-kicker">{section.eyebrow}</small>
+                    <strong>{section.title}</strong>
+                  </div>
+
+                  <div className="home-showcase-rail">
+                    {section.cards.map((card) => (
+                      <Link key={card.id} to={card.to} state={{ tabOrigin: '/' }} className="home-showcase-card">
+                        <article
+                          className={
+                            card.image.startsWith('/home-')
+                              ? 'home-showcase-cover poster-cover'
+                              : 'home-showcase-cover'
+                          }
+                        >
+                          <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
+                          <div className="home-showcase-cover-overlay" />
+                          <div className="home-showcase-cover-copy">
+                            <small>{card.coverKicker}</small>
+                            <h3>{card.coverTitle}</h3>
+                          </div>
+                        </article>
+                        <div className="home-showcase-meta">
+                          <strong>{card.title}</strong>
+                          <p>{card.summary}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </section>
+          </>
+        ) : (
+          <section
+            className="home-filtered-products"
+            aria-label={`${activeCategoryLabel} 사주 목록`}
+            aria-live="polite"
+          >
+            {visibleProducts.map((product) => (
+              <Link
+                key={product.id}
+                to={product.to}
+                state={{ tabOrigin: '/' }}
+                className="home-filter-product-card"
+              >
+                <img
+                  src={product.image}
+                  alt=""
+                  className="home-filter-product-image"
+                  style={product.imagePosition ? { objectPosition: product.imagePosition } : undefined}
+                />
+                <span className="home-filter-product-shade" aria-hidden="true" />
+                <span className="home-filter-product-copy">
+                  <strong>{product.title}</strong>
+                  <small>{product.subtitle}</small>
+                </span>
+                <span className="home-filter-product-play" aria-hidden="true">
+                  <Play size={18} fill="currentColor" strokeWidth={1.8} />
+                </span>
               </Link>
             ))}
-          </div>
-
-          <div className="home-cardnews-dots" role="tablist" aria-label="카드뉴스 선택">
-            {cardNewsSlides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                role="tab"
-                aria-selected={activeCardNewsIndex === index}
-                className={activeCardNewsIndex === index ? 'home-cardnews-dot active' : 'home-cardnews-dot'}
-                onClick={() => setActiveCardNewsIndex(index)}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="home-block">
-          <h2>전체 카테고리</h2>
-          <div className="live-category-grid">
-            {mainCategories.map((category) => {
-              const Icon = category.icon;
-
-              return (
-                <Link
-                  key={`${category.label}-${'target' in category ? category.target : category.path}`}
-                  to={'target' in category ? `/form/${category.target}` : category.path}
-                  state={{ tabOrigin: '/' }}
-                  className="live-category-card"
-                >
-                  <span className="live-category-icon" style={{ background: category.tint }}>
-                    <Icon size={18} />
-                  </span>
-                  <strong>{category.label}</strong>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="home-showcase-stack">
-          {homeDiscoverySections.map((section) => {
-            const Icon = section.icon;
-
-            return (
-              <section key={section.id} className="home-showcase-section">
-                <div className="home-showcase-head">
-                  <span className="home-showcase-icon">
-                    <Icon size={14} />
-                  </span>
-                  <strong>{section.title}</strong>
-                </div>
-
-                <div className="home-showcase-rail">
-                  {section.cards.map((card) => (
-                    <Link key={card.id} to={card.to} state={{ tabOrigin: '/' }} className="home-showcase-card">
-                      <article
-                        className={
-                          card.image.startsWith('/home-')
-                            ? 'home-showcase-cover poster-cover'
-                            : 'home-showcase-cover'
-                        }
-                      >
-                        <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
-                        <div className="home-showcase-cover-overlay" />
-                        <div className="home-showcase-cover-copy">
-                          <small>{card.coverKicker}</small>
-                          <h3>{card.coverTitle}</h3>
-                        </div>
-                      </article>
-                      <div className="home-showcase-meta">
-                        <strong>{card.title}</strong>
-                        <p>{card.summary}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </section>
+          </section>
+        )}
       </div>
     </main>
   );

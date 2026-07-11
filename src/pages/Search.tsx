@@ -1,6 +1,7 @@
-import { ArrowLeft, Search as SearchIcon, X } from 'lucide-react';
+import { Search as SearchIcon, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import MobileTopBar from '../components/MobileTopBar';
 
 type SearchProduct = {
   id: string;
@@ -73,13 +74,6 @@ const searchProducts: SearchProduct[] = [
     image: '/intake-lantern-night.png',
     to: '/form/life-flow',
     keywords: ['신년운세', '올해', '2026', '월별운세', '운세', '시기']
-  },
-  {
-    id: 'tarot',
-    title: '운월당 타로 리딩',
-    image: '/tarot-lucky-amulet.png',
-    to: '/tarot',
-    keywords: ['타로', '카드', '연애타로', '재회타로', '결혼타로']
   }
 ];
 
@@ -109,11 +103,10 @@ export default function Search() {
 
   return (
     <main className="search-page-shell">
+      <MobileTopBar title="검색" backTo="/" backLabel="홈" />
+
       <div className="search-page-inner">
         <header className="search-topbar">
-          <Link to="/" className="search-back-button" aria-label="홈으로 돌아가기">
-            <ArrowLeft size={21} />
-          </Link>
           <label className="search-input-box">
             <SearchIcon size={18} />
             <input

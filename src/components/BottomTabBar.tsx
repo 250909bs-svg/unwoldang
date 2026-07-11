@@ -1,4 +1,4 @@
-import { Archive, FlaskConical, Home, Search, WalletCards } from 'lucide-react';
+import { Archive, FlaskConical, Home, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
@@ -21,12 +21,6 @@ const navItems = [
     icon: Search
   },
   {
-    to: '/tarot',
-    label: '타로',
-    match: (pathname: string) => pathname.startsWith('/tarot'),
-    icon: WalletCards
-  },
-  {
     to: '/my',
     label: '보관함',
     match: (pathname: string) => pathname.startsWith('/my') || pathname.startsWith('/login'),
@@ -37,9 +31,17 @@ const navItems = [
 export default function BottomTabBar() {
   const location = useLocation();
   const locationState = (location.state as { tabOrigin?: string } | null) ?? null;
-  const inFlowPage = ['/detail/', '/form/', '/checkout', '/loading', '/report/', '/admin'].some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const inFlowPage = [
+    '/detail/',
+    '/form/',
+    '/checkout',
+    '/loading',
+    '/report/',
+    '/admin',
+    '/terms',
+    '/privacy',
+    '/refund'
+  ].some((path) => location.pathname.startsWith(path));
 
   if (location.pathname.startsWith('/admin')) {
     return null;

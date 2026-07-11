@@ -1,6 +1,6 @@
-import { Menu } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import { beginKakaoLogin, sanitizeAuthReturnTo } from '../lib/auth';
 
@@ -54,16 +54,7 @@ export default function Login() {
   return (
     <main className="login-visual-page">
       <div className="login-visual-shell">
-        <header className="login-visual-header">
-          <Link to="/" className="login-visual-logo" aria-label="운월당 홈">
-            <span>雲</span>
-            <strong>운월당</strong>
-          </Link>
-
-          <Link to="/menu" className="login-visual-menu" aria-label="메뉴">
-            <Menu size={23} />
-          </Link>
-        </header>
+        <MobileTopBar title="로그인" backTo="/" backLabel="홈" />
 
         <section className="login-visual-hero login-poster-hero" aria-label="카카오 로그인">
           <img src="/my-kakao-login-hero.png" alt="운월당 카카오 로그인 안내" className="login-visual-image" />
