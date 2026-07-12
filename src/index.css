@@ -2599,7 +2599,7 @@ body {
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
 }
 
 .home-showcase-rail::-webkit-scrollbar {
@@ -19088,7 +19088,7 @@ body.home-all-black .app-home-header .app-menu-button svg {
   scrollbar-width: none;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
 }
 
 .home-category-rail::-webkit-scrollbar {
