@@ -16,7 +16,22 @@ export type ReportArchiveEntry = {
   reportData: SajuReportData;
 };
 
-const REPORT_ARCHIVE_KEY = 'unwoldang.report.archive';
+const LEGACY_REPORT_ARCHIVE_KEY = 'unwoldang.report.archive';
+const REPORT_ARCHIVE_KEY_PREFIX = 'unwoldang.report.archive.v2';
+
+function getReportArchiveStorage(ownerId?: string) {
+  return ownerId?.trim() ? window.localStorage : window.sessionStorage;
+}
+
+export function getReportArchiveStorageKey(ownerId?: string) {
+  const normalizedOwner = ownerId?.trim().replace(/[^a-zA-Z0-9._@=-]/g, '') || 'guest';
+
+  return `${REPORT_ARCHIVE_KEY_PREFIX}.${normalizedOwner}`;
+}
+
+function clearLegacySharedArchive() {
+  window.localStorage.removeItem(LEGACY_REPORT_ARCHIVE_KEY);
+}
 
 function sortReportArchiveEntries(entries: ReportArchiveEntry[]) {
   return [...entries].sort((left, right) => Date.parse(right.createdAt || '') - Date.parse(left.createdAt || ''));
@@ -36,40 +51,52 @@ export const mergeReportArchiveEntries = (...groups: ReportArchiveEntry[][]) => 
   return sortReportArchiveEntries([...map.values()]).slice(0, 20);
 };
 
-export const readReportArchiveEntries = () => {
+export const readReportArchiveEntries = (ownerId?: string) => {
   if (typeof window === 'undefined') {
     return [] as ReportArchiveEntry[];
   }
 
-  const raw = window.localStorage.getItem(REPORT_ARCHIVE_KEY);
+  clearLegacySharedArchive();
+  const storage = getReportArchiveStorage(ownerId);
+  const storageKey = getReportArchiveStorageKey(ownerId);
+  const raw = storage.getItem(storageKey);
 
   if (!raw) {
     return [] as ReportArchiveEntry[];
   }
 
   try {
-    return JSON.parse(raw) as ReportArchiveEntry[];
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      storage.removeItem(storageKey);
+      return [] as ReportArchiveEntry[];
+    }
+
+    return parsed as ReportArchiveEntry[];
   } catch {
-    window.localStorage.removeItem(REPORT_ARCHIVE_KEY);
+    storage.removeItem(storageKey);
     return [] as ReportArchiveEntry[];
   }
 };
 
-export const saveReportArchiveEntry = (entry: ReportArchiveEntry) => {
+export const saveReportArchiveEntry = (entry: ReportArchiveEntry, ownerId?: string) => {
   if (typeof window === 'undefined') {
     return;
   }
 
-  const next = mergeReportArchiveEntries([entry], readReportArchiveEntries());
-  window.localStorage.setItem(REPORT_ARCHIVE_KEY, JSON.stringify(next));
+  const storage = getReportArchiveStorage(ownerId);
+  const next = mergeReportArchiveEntries([entry], readReportArchiveEntries(ownerId));
+  storage.setItem(getReportArchiveStorageKey(ownerId), JSON.stringify(next));
 };
 
-export const writeReportArchiveEntries = (entries: ReportArchiveEntry[]) => {
+export const writeReportArchiveEntries = (entries: ReportArchiveEntry[], ownerId?: string) => {
   if (typeof window === 'undefined') {
     return;
   }
 
-  window.localStorage.setItem(REPORT_ARCHIVE_KEY, JSON.stringify(mergeReportArchiveEntries(entries)));
+  const storage = getReportArchiveStorage(ownerId);
+  storage.setItem(getReportArchiveStorageKey(ownerId), JSON.stringify(mergeReportArchiveEntries(entries)));
 };
 
 async function readArchiveResponse(response: Response) {

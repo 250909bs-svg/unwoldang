@@ -18487,7 +18487,7 @@ body {
   }
 }
 
-/* TIGHT-style all-black shell shared by the primary bottom-tab routes. */
+/* Shared all-black shell for the primary bottom-tab routes. */
 body.home-all-black {
   background: #18191a;
   color: #fafafa;
@@ -19128,7 +19128,7 @@ body.home-all-black .app-home-header .app-menu-button svg {
   scroll-margin-top: 120px;
 }
 
-/* Shared TIGHT-style top bar and full-width filtered home cards. */
+/* Shared top bar and full-width filtered home cards. */
 .primary-topbar {
   position: sticky;
   top: 0;

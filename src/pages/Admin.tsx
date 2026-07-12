@@ -1235,7 +1235,7 @@ export default function Admin() {
   const [customerFilter, setCustomerFilter] = useState<CustomerFilter>('all');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState('');
-  const [reports, setReports] = useState(() => readReportArchiveEntries());
+  const [reports, setReports] = useState(() => readReportArchiveEntries(readStoredAuthUser()?.id));
   const authUser = readStoredAuthUser();
   const adminLoginEndpoint = getAdminLoginEndpoint();
   const isLocalOnlyMode = isLocalAdminHost();
@@ -1325,7 +1325,7 @@ export default function Admin() {
           return;
         }
 
-        setReports(mergeReportArchiveEntries(remoteReports, readReportArchiveEntries()));
+        setReports(mergeReportArchiveEntries(remoteReports, readReportArchiveEntries(authUser?.id)));
       } catch {
         // Keep the local archive or sample dashboard visible if the server admin API is not reachable.
       }
@@ -1336,7 +1336,7 @@ export default function Admin() {
     return () => {
       isCancelled = true;
     };
-  }, [adminAccessToken, isUnlocked]);
+  }, [adminAccessToken, authUser?.id, isUnlocked]);
 
   const unlock = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
@@ -1526,15 +1526,15 @@ export default function Admin() {
   const activeCategory = categoryCards.find((card) => card.id === activeView) || categoryCards[0];
 
   const refresh = () => {
-    setReports(readReportArchiveEntries());
+    setReports(readReportArchiveEntries(authUser?.id));
 
     if (adminAccessToken) {
       void fetchAdminReportArchiveEntries(adminAccessToken)
         .then((remoteReports) => {
-          setReports(mergeReportArchiveEntries(remoteReports, readReportArchiveEntries()));
+          setReports(mergeReportArchiveEntries(remoteReports, readReportArchiveEntries(authUser?.id)));
         })
         .catch(() => {
-          setReports(readReportArchiveEntries());
+          setReports(readReportArchiveEntries(authUser?.id));
         });
     }
   };

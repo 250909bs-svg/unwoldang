@@ -6012,9 +6012,8 @@ export default function Report() {
       reportData: report
     };
 
-    saveReportArchiveEntry(archiveEntry);
-
     const authUser = readStoredAuthUser();
+    saveReportArchiveEntry(archiveEntry, authUser?.id);
 
     if (authUser?.authToken && reportAccessToken) {
       void saveRemoteReportArchiveEntry(archiveEntry, {

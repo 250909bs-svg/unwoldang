@@ -273,7 +273,7 @@ const homeDiscoverySections = [
         id: 'life-flow',
         to: '/form/life-flow',
         image: illustrationDeck.yearlyFortune,
-        coverKicker: '청월아씨',
+        coverKicker: '운월선생',
         coverTitle: '신년운세',
         title: '운월선생 신년운세',
         summary: '올해와 내년의 흐름 지도'

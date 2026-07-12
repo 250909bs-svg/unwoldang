@@ -175,7 +175,7 @@ function PromoBanner({ promo }: { promo: ReplayPromo }) {
 
 function LoggedInReplay() {
   const { user, logout } = useAuth();
-  const [recentReports, setRecentReports] = useState(() => readReportArchiveEntries());
+  const [recentReports, setRecentReports] = useState(() => readReportArchiveEntries(user?.id));
   const [archiveOpen, setArchiveOpen] = useState(true);
   const [showAllReports, setShowAllReports] = useState(false);
   const visibleReports = showAllReports ? recentReports : recentReports.slice(0, 4);
@@ -183,7 +183,7 @@ function LoggedInReplay() {
 
   useEffect(() => {
     let isCancelled = false;
-    const syncReports = () => setRecentReports(readReportArchiveEntries());
+    const syncReports = () => setRecentReports(readReportArchiveEntries(user?.id));
     const syncRemoteReports = async () => {
       syncReports();
 
@@ -198,8 +198,8 @@ function LoggedInReplay() {
           return;
         }
 
-        const mergedReports = mergeReportArchiveEntries(readReportArchiveEntries(), remoteReports);
-        writeReportArchiveEntries(mergedReports);
+        const mergedReports = mergeReportArchiveEntries(readReportArchiveEntries(user?.id), remoteReports);
+        writeReportArchiveEntries(mergedReports, user?.id);
         setRecentReports(mergedReports);
       } catch {
         // Local archive remains available when the server archive is temporarily unavailable.
@@ -216,7 +216,7 @@ function LoggedInReplay() {
       window.removeEventListener('focus', syncReports);
       window.removeEventListener('storage', syncReports);
     };
-  }, [user?.authToken]);
+  }, [user?.authToken, user?.id]);
 
   return (
     <main className="my-replay-page">
