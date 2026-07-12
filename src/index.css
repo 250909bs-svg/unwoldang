@@ -18509,7 +18509,7 @@ body.home-all-black .app-container {
 }
 
 body.home-all-black .mobile-topbar-brand {
-  color: #fafafa;
+  color: #f7f4ee;
 }
 
 body.home-all-black .app-menu-button,
@@ -19034,14 +19034,13 @@ body.home-all-black .app-home-header {
 body.home-all-black .app-home-header .mobile-topbar-brand {
   font-family: 'Nanum Myeongjo', 'Noto Serif KR', 'AppleMyungjo', 'Batang', serif;
   font-size: 27px;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.1em;
-  background: linear-gradient(90deg, #ff246f 0%, #ff4c98 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 8px 26px rgba(255, 36, 111, 0.18);
+  letter-spacing: -0.06em;
+  background: none;
+  color: #f7f4ee;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 2px 14px rgba(255, 255, 255, 0.1);
 }
 
 body.home-all-black .app-header-actions {
@@ -19154,14 +19153,13 @@ body.home-all-black .primary-topbar {
 .primary-topbar .mobile-topbar-brand {
   font-family: 'Nanum Myeongjo', 'Noto Serif KR', 'AppleMyungjo', 'Batang', serif;
   font-size: 27px;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.1em;
-  background: linear-gradient(90deg, #ff246f 0%, #ff4c98 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 8px 26px rgba(255, 36, 111, 0.18);
+  letter-spacing: -0.06em;
+  background: none;
+  color: #f7f4ee;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 2px 14px rgba(255, 255, 255, 0.1);
 }
 
 .primary-topbar .mobile-topbar-right {
