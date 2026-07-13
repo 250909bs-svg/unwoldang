@@ -53,6 +53,12 @@
       ]
     },
     {
+      "source": "/search",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
       "source": "/form/:path*",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
@@ -104,6 +110,38 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/detail/:slug",
+      "destination": "/seo/detail-:slug.html"
+    },
+    {
+      "source": "/menu",
+      "destination": "/seo/menu.html"
+    },
+    {
+      "source": "/tarot",
+      "destination": "/seo/tarot.html"
+    },
+    {
+      "source": "/test",
+      "destination": "/seo/test.html"
+    },
+    {
+      "source": "/test/face-ai",
+      "destination": "/seo/test-face-ai.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/seo/terms.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/seo/privacy.html"
+    },
+    {
+      "source": "/refund",
+      "destination": "/seo/refund.html"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
