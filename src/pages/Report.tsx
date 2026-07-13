@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
+import { pastLifeChapters } from '../content/pastLifeExperience';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
@@ -1044,6 +1045,7 @@ function SectionBlock({
       ? section.details?.filter((detail) => detail.summary !== '오행 강약 보기')
       : section.details;
   const visibleTable = section.id === 'saju' ? null : section.table;
+  const pastLifeChapter = pastLifeChapters.find((chapter) => section.id === `pastlife-${chapter.id}`);
   const sectionClassName =
     section.id === 'love' ? 'premium-report-section premium-love-section' : 'premium-report-section';
   const cardGridClassName =
@@ -1064,6 +1066,16 @@ function SectionBlock({
           </div>
         </div>
       </div>
+
+      {pastLifeChapter ? (
+        <figure className="past-life-chapter-art">
+          <img src={pastLifeChapter.image} alt={pastLifeChapter.imageAlt} loading="lazy" />
+          <figcaption>
+            <span>{pastLifeChapter.volume}</span>
+            <strong>{pastLifeChapter.symbol}</strong>
+          </figcaption>
+        </figure>
+      ) : null}
 
       {section.id === 'fortune' ? <PremiumDayunFlow report={report} /> : null}
       {section.id === 'year' ? <PremiumFortuneTimeline report={report} /> : null}
@@ -5285,6 +5297,15 @@ const REPORT_PAGE_COPY: Partial<Record<SajuReportData['serviceId'], ReportPageCo
     glanceCaption: '원국, 십성, 오행의 기본값을 고민 해석의 근거로 확인합니다.',
     tocTitle: '고민풀이 전체 흐름 보기'
   },
+  'past-life-goblin': {
+    coverTitle: 'MZ 도깨비 전생사주',
+    summaryCaption: '원국에 반복해서 남은 기질을 전생의 상징과 현생의 과제로 먼저 정리했습니다.',
+    qaTitle: '전생사주 질문 해답',
+    qaCaption: '입력한 질문을 월령, 십성, 합충형파와 현재 대운에 연결해 풀었습니다.',
+    glanceTitle: '전생 서사의 명리 근거',
+    glanceCaption: '상징적인 이야기에 앞서 원국, 오행, 십성의 계산값을 먼저 확인합니다.',
+    tocTitle: '도깨비 전생 이야기 전체 보기'
+  },
   'love-reading': {
     coverTitle: '연애운 리포트',
     summaryCaption: '감정선, 연락 온도, 끌리는 사람과 오래 가는 사람의 차이를 먼저 정리했습니다.',
@@ -5394,6 +5415,156 @@ function buildProductQuestionAnswers(report: SajuReportData, productLabel: strin
       '결론을 확정처럼 받아들이기보다, 7일 안에 확인 가능한 행동 하나로 현실 반응을 보세요.'
     ]
   }));
+}
+
+function buildPastLifeGoblinReport(report: SajuReportData): SajuReportData {
+  const dominantTenGods = [...report.tenGods]
+    .sort((left, right) => right.value - left.value)
+    .slice(0, 3)
+    .map((item) => item.label)
+    .join('·');
+  const missingElements = report.fiveElements.filter((item) => item.value === 0).map((item) => item.label);
+  const missingElementText = missingElements.length
+    ? `${missingElements.join('·')} 기운이 비어 있는 자리`
+    : '오행이 고르게 놓인 자리';
+  const helpfulText = report.helpfulElements.length ? report.helpfulElements.join('·') : '보완 기운';
+  const sealNameByElement = {
+    목: '길을 숨긴 문지기',
+    화: '불을 감춘 기록관',
+    토: '무너진 터를 지킨 사람',
+    금: '이름을 새긴 재판관',
+    수: '밤길을 건넌 전령'
+  } as const;
+  const sealName = sealNameByElement[report.dayMasterElement];
+  const basisLine = `${report.dayMaster} 일간, ${report.gyeokguk}, ${dominantTenGods || '십성 분포'}, ${missingElementText}`;
+
+  const sealChapter: ReportSection = {
+    id: 'pastlife-seal',
+    title: '제1권 봉인록',
+    subtitle: '이름이 지워진 자리에도 운명은 남는다.',
+    callout: { title: `전생 봉인명 · ${sealName}`, body: `${basisLine}를 상징 언어로 번역한 이름입니다. 역사적 신원이나 실제 과거 생애를 뜻하지 않습니다.` },
+    details: [
+      { summary: '01. 당신의 전생 봉인명', content: `${report.customerName}님의 봉인명은 “${sealName}”입니다. 남의 문제를 먼저 알아차리고 정리하는 능력과, 정작 자기 요구는 뒤로 미루는 습관이 함께 보입니다. 오늘의 해원 행동은 부탁을 받자마자 답하지 않고 내 일정부터 확인하는 것입니다.`, open: true },
+      { summary: '02. 전생에 당신은 누구였는가', content: `전생 인물은 권력을 휘두르는 영웅보다 기록과 판단을 맡았던 실무자로 그려집니다. ${report.dayMaster} 일간의 중심성과 ${dominantTenGods || '십성'}의 작동이 이 상징을 만듭니다. 현생에서도 회의나 관계가 꼬이면 결국 정리하는 사람이 되기 쉽습니다.` },
+      { summary: '03. 살았던 시대와 장소', content: '특정 왕조나 지역을 사실로 단정하지 않습니다. 상징 장면은 성곽과 시장 사이의 기록소입니다. 사람과 돈, 약속이 오가지만 어느 편에도 완전히 속하지 못한 자리입니다. 현생에서는 조직 안팎을 연결하는 역할에서 같은 익숙함이 나타날 수 있습니다.' },
+      { summary: '04. 전생의 신분과 직업', content: '장부, 계약, 소식, 분쟁을 다루는 중간 책임자의 이미지가 가깝습니다. 화려한 신분보다 틀린 이름과 숫자를 바로잡는 역할입니다. 능력은 있었지만 책임 범위가 흐려 손해를 떠안았다는 상징이 남습니다.' },
+      { summary: '05. 전생에서 타고난 능력', content: `복잡한 정보를 빠르게 분류하고, 사람마다 다른 이해관계를 한 문장으로 정리하는 재능입니다. ${helpfulText} 기운을 생활에서 쓸수록 이 능력이 소진이 아니라 결과물로 남습니다. 무료 도움과 유료 결과물을 구분하는 것이 현생의 사용법입니다.` }
+    ]
+  };
+
+  const relationshipChapter: ReportSection = {
+    id: 'pastlife-relationship',
+    title: '제2권 인연록',
+    subtitle: '사람은 떠나도 매듭은 남는다.',
+    details: [
+      { summary: '06. 전생에서 가장 사랑했던 사람', content: '말이 많고 화려한 사람보다 약속을 조용히 지키는 사람에게 마음을 내어준 서사입니다. 현생에서도 처음의 설렘보다 반복 행동에서 신뢰를 느낍니다. 다만 상대가 알아서 눈치채길 기다리면 관계가 늦게 무너질 수 있습니다.', open: true },
+      { summary: '07. 현생에서 다시 만난 전생 인연', content: '처음부터 설명을 생략해도 통할 것 같은 익숙함으로 나타납니다. 그러나 익숙함은 안전의 증거가 아닙니다. 연락 간격, 돈 쓰는 태도, 갈등 뒤 돌아오는 말투를 세 번 이상 확인한 뒤 관계의 이름을 정하세요.' },
+      { summary: '08. 당신을 배신한 사람', content: '노골적으로 해치는 사람보다 책임을 나누겠다고 말한 뒤 결정적인 순간에 빠지는 사람의 상징이 강합니다. 현생에서는 공동 작업과 연애 모두 “같이 하자”는 말보다 실제 분담표를 먼저 확인해야 합니다.' },
+      { summary: '09. 전생에서 원수가 된 사람', content: '악인이 아니라 서로의 침묵을 오해한 관계입니다. 한쪽은 기다렸고 다른 쪽은 이미 끝났다고 생각했습니다. 현생에서는 불편함을 오래 저장하지 말고 “나는 이 지점이 어렵다”는 한 문장을 먼저 꺼내야 같은 매듭을 만들지 않습니다.' }
+    ]
+  };
+
+  const karmaChapter: ReportSection = {
+    id: 'pastlife-karma',
+    title: '제3권 업록',
+    subtitle: '벌이 아니라 반복이 업을 드러낸다.',
+    details: [
+      { summary: '10. 전생에 남긴 죄와 상처', content: '여기서 죄는 저주가 아니라 외면했던 책임을 뜻합니다. 틀린 것을 알고도 관계가 깨질까 침묵했고, 일이 커진 뒤 혼자 수습한 장면입니다. 현생에서는 작은 오류를 초기에 말하는 것이 가장 현실적인 해원입니다.', open: true },
+      { summary: '11. 아직 갚지 못한 빚', content: '돈의 액수보다 정당한 대가를 포기한 선택의 상징입니다. 도움을 주고도 값을 말하지 못해 서운함이 쌓였습니다. 지금은 가격, 수정 횟수, 마감일을 먼저 적어야 같은 부채가 생기지 않습니다.' },
+      { summary: '12. 끝내 지키지 못한 약속', content: '누군가를 끝까지 지키겠다는 약속 때문에 자기 삶의 시기를 놓친 서사입니다. 현생에서 “내가 아니면 안 된다”는 부탁을 받을 때 특히 조심하세요. 도움의 끝나는 날짜를 정하는 것이 약속을 건강하게 지키는 방식입니다.' },
+      { summary: '13. 운명을 바꾼 마지막 사건', content: '진실을 말할지 관계를 지킬지 선택해야 했던 장면입니다. 관계를 택했지만 결국 둘 다 잃었다는 상징으로 읽습니다. 지금은 중요한 사실을 감정이 폭발하기 전에 짧게 공유하는 연습이 필요합니다.' },
+      { summary: '14. 생의 마지막에 남은 후회', content: '더 용감하지 못한 것이 아니라, 필요한 말을 너무 늦게 한 후회입니다. 현생에서는 완벽한 문장을 준비하느라 타이밍을 놓치지 마세요. 사실, 요청, 기한 세 가지만 말해도 충분합니다.' },
+      { summary: '15. 끝내 전하지 못한 말', content: '“나도 지쳤다”는 문장입니다. 강한 사람으로 보이려다 도움을 청하지 못한 흔적이 남습니다. 이번 주 안에 믿을 만한 한 사람에게 해결책이 아니라 현재 상태를 먼저 알려보세요.' }
+    ]
+  };
+
+  const presentChapter: ReportSection = {
+    id: 'pastlife-present',
+    title: '제4권 현생록',
+    subtitle: '과거는 기억보다 습관으로 돌아온다.',
+    details: [
+      { summary: '16. 현생까지 따라온 업', content: `일이 어긋난 것을 빨리 발견하지만 바로 말하지 않고, 결국 마지막에 책임을 떠안는 패턴입니다. ${report.currentDayun.name} 대운에서는 이 습관이 돈과 체력을 동시에 소모시킬 수 있습니다. 문제를 발견한 날 기록으로 남기세요.`, open: true },
+      { summary: '17. 연애에서 반복되는 전생의 흔적', content: '좋아할수록 요구를 줄이고 상대를 이해하려다, 어느 순간 마음을 닫는 장면입니다. 배려보다 확인이 먼저입니다. 보고 싶은 날짜, 필요한 연락 간격, 힘든 말투를 구체적으로 말해야 관계가 오래 갑니다.' },
+      { summary: '18. 돈과 직업에 남은 전생의 흔적', content: '남들이 어려워하는 일을 해결하지만 가격을 뒤늦게 말해 수익보다 피로가 커질 수 있습니다. 업무 시작 전에 결과물, 일정, 수정 범위, 정산일을 고정하면 재능이 수입으로 남습니다.' },
+      { summary: '19. 가족과 인간관계에 남은 흔적', content: '가족이나 가까운 사람의 감정을 먼저 관리하는 역할을 맡기 쉽습니다. 하지만 상대의 기분과 내 책임은 다릅니다. 도울 수 있는 것 한 가지와 할 수 없는 것 한 가지를 함께 말하세요.' },
+      { summary: '20. 전생에서 가져온 복과 재능', content: `${dominantTenGods || '십성'}의 장점은 설명, 중재, 분석, 기록을 실제 결과로 바꾸는 힘입니다. 단번에 주목받기보다 신뢰가 쌓일수록 가치가 커집니다. 하나의 대표 결과물을 오래 다듬는 방식이 맞습니다.` }
+    ]
+  };
+
+  const releaseChapter: ReportSection = {
+    id: 'pastlife-release',
+    title: '제5권 해원록',
+    subtitle: '풀어야 할 것은 운명이 아니라 오래된 선택이다.',
+    details: [
+      { summary: '21. 현생에서 피해야 할 악연', content: '도움을 당연하게 여기고, 책임이 생기면 설명 없이 빠지는 사람입니다. 강한 끌림보다 약속 이행을 보세요. 두 번 연속 일정과 책임을 미루는 사람에게 세 번째 기회를 자동으로 주지 않는 것이 기준입니다.', open: true },
+      { summary: '22. 현생에서 알아봐야 할 귀인', content: '화려한 말을 하는 사람보다 역할과 대가를 분명히 해주는 사람입니다. 불편한 사실을 예의 있게 말하고, 당신이 쉬는 시간을 존중하는 사람이 기회를 오래 남깁니다.' },
+      { summary: '23. 이번 생에서 끝내야 할 숙제', content: '모든 것을 내가 수습해야 끝난다는 믿음을 내려놓는 것입니다. 능력을 증명하기 위해 과도한 책임을 맡지 마세요. 역할이 흐리면 시작 전에 다시 묻는 것이 이번 생의 새로운 선택입니다.' },
+      { summary: '24. 전생의 업을 푸는 방법', content: '의식이나 부적이 아니라 반복 행동을 바꾸는 방식입니다. 즉답을 하루 늦추고, 돈과 시간이 오가는 일은 문자로 남기고, 불편함이 작을 때 말하세요. 세 가지를 30일 유지하면 생활의 결과가 달라집니다.' },
+      { summary: '25. 30일 봉인 해제 퀘스트', content: `1주차에는 반복 장면을 기록하고, 2주차에는 책임 경계를 한 문장으로 정합니다. 3주차에는 잘하는 일 하나에 가격과 범위를 붙이고, 4주차에는 ${helpfulText} 기운을 살리는 수면·기록·일정 습관 하나를 고정합니다.` },
+      { summary: '26. 전생의 내가 현생의 나에게 보내는 편지', content: '나는 오래도록 남의 이름을 지키느라 내 이름을 뒤로 미뤘다. 너는 그러지 않아도 된다. 필요한 말을 제때 하고, 네가 만든 가치에 값을 붙이고, 떠나야 할 관계 앞에서 미안함을 의무로 착각하지 마라.' }
+    ],
+    callout: { title: '봉인이 풀리는 문장', body: '전생은 바꿀 수 없지만, 그때부터 이어진 습관은 이번 생에서 끝낼 수 있습니다.' }
+  };
+
+  return {
+    ...report,
+    title: '도깨비 전생장부: 봉인록',
+    subtitle: '사주 원국의 반복 기질을 다섯 권 26개 주제와 현생의 행동으로 연결한 개인 전생장부',
+    badge: `전생 봉인명 · ${sealName}`,
+    heroNote: `${report.customerName}님의 전생 이야기는 미래를 겁주는 예언이 아닙니다. ${report.dayMaster} 일간과 ${dominantTenGods || '십성'}의 반복 장면을 통해, 왜 비슷한 사람과 일 앞에서 같은 선택을 하는지 알아보는 거울에 가깝습니다.`,
+    summary: {
+      title: `${report.customerName}님의 봉인 전 핵심 판정`,
+      analysis: [
+        `${report.dayMaster} 일간, ${report.pillars.month} 월주, ${report.gyeokguk}과 ${dominantTenGods || '십성 분포'}를 함께 보면, 남들이 지나친 문제를 먼저 알아차리고 정리하는 힘이 앞에 있습니다. 반면 책임의 끝을 정하지 않으면 능력이 성과보다 뒷수습으로 소모되기 쉽습니다.`,
+        `${missingElementText}는 부족함을 겁주는 표지가 아니라 의식적으로 길러야 할 생활 감각을 보여줍니다. 이 장부에서 화는 차가운 금수의 한기를 데우는 조후의 온도로, 토는 흩어진 생각과 관계를 일정·가격·책임 범위에 담는 현실의 그릇으로 분리해 읽습니다.`,
+        `현재 ${report.currentDayun.name} 대운에서는 익숙한 사람과 일보다 실제로 약속을 지키는 사람, 대가와 범위가 보이는 일을 고르는 편이 중요합니다. 전생 서사는 이 선택 습관을 기억에 남게 보여주는 상징이며, 역사적 신원이나 초자연적 사실을 확정하는 문서가 아닙니다.`
+      ],
+      advice: [
+        '부탁을 받은 자리에서 바로 답하지 말고 일정과 책임 범위를 먼저 확인합니다.',
+        '돈과 시간이 오가는 일은 가격, 정산일, 수정 횟수를 시작 전에 기록합니다.',
+        '관계의 익숙함보다 약속 이행과 갈등 뒤 회복 행동을 세 번 이상 관찰합니다.',
+        `30일 동안 ${helpfulText} 기운을 생활에서 쓰는 한 가지 습관을 정해 기록합니다.`
+      ]
+    },
+    keyTakeaways: [
+      { title: '전생 캐릭터', body: '복잡한 판을 읽고 사람과 자원을 정리하던 실무형 조력자의 상징이 강합니다.', tone: 'good' },
+      { title: '남겨진 재능', body: '설명, 중재, 기록, 분석처럼 보이지 않는 문제를 형태로 만드는 능력이 남아 있습니다.' },
+      { title: '반복되는 업', body: '남의 책임까지 떠안은 뒤 한꺼번에 지쳐 관계와 일을 끊는 장면을 조심해야 합니다.', tone: 'warn' },
+      { title: '현생 미션', body: '도움과 희생을 구분하고, 내 재능에 범위와 값을 붙이는 것이 이번 생의 핵심 과제입니다.' }
+    ],
+    questionAnswers: buildProductQuestionAnswers(
+      report,
+      '도깨비 전생사주',
+      '전생은 검증된 사실로 단정하지 않고, 원국에 반복해서 남은 기질과 현재 대운이 만드는 생활 장면을 상징적으로 연결해 읽습니다.'
+    ),
+    sections: [sealChapter, relationshipChapter, karmaChapter, presentChapter, releaseChapter],
+    actionPlan: {
+      ...report.actionPlan,
+      title: '30일 현생 미션',
+      priorities: [
+        '1주차: 반복해서 지치는 사람, 일, 돈 장면을 각각 하나씩 적습니다.',
+        '2주차: 내 책임과 상대 책임의 경계를 한 문장으로 정합니다.',
+        '3주차: 당연하게 제공하던 재능 하나에 결과물과 가격을 붙입니다.',
+        '4주차: 이전과 다른 선택을 한 장면을 기록하고 다음 달에도 유지할 규칙 하나를 남깁니다.'
+      ],
+      dos: [
+        '익숙함보다 실제 행동이 안정적인 사람을 선택하기',
+        '부탁을 받으면 즉답하지 않고 시간과 범위를 먼저 확인하기',
+        '감정이 닫히기 전에 불편한 지점을 짧게 말하기',
+        '잘하는 일을 무료 도움과 유료 결과물로 구분하기'
+      ],
+      avoids: [
+        '전생 이야기만으로 현실의 사람과 사건을 확정하는 것',
+        '미안함 때문에 내 일정과 돈을 무제한으로 내어주는 것',
+        '말하지 않고 참다가 관계를 한 번에 끊는 것',
+        '상징적인 해석을 의료, 법률, 투자 판단의 근거로 사용하는 것'
+      ]
+    },
+    legalNotice: [
+      ...report.legalNotice,
+      '전생 서사는 사주 원국의 반복 성향을 이해하기 위한 상징적 콘텐츠이며, 과거 생애의 실재를 증명하거나 특정 인물·사건을 확정하지 않습니다.'
+    ]
+  };
 }
 
 function buildLifeFlowProductReport(report: SajuReportData): SajuReportData {
@@ -5878,6 +6049,10 @@ function buildProductFocusedReport(report: SajuReportData): SajuReportData {
     return buildLifeFlowProductReport(report);
   }
 
+  if (report.serviceId === 'past-life-goblin') {
+    return buildPastLifeGoblinReport(report);
+  }
+
   if (report.serviceId === 'love-reading') {
     return buildLoveProductReport(report);
   }
@@ -5930,6 +6105,42 @@ function preserveGeneratedQuestionAnswers(report: SajuReportData, source: SajuRe
   };
 }
 
+function drawWrappedCanvasText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  centerX: number,
+  startY: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number
+) {
+  const characters = Array.from(text.trim());
+  const lines: string[] = [];
+  let currentLine = '';
+
+  characters.forEach((character) => {
+    const candidate = `${currentLine}${character}`;
+
+    if (currentLine && context.measureText(candidate).width > maxWidth) {
+      lines.push(currentLine.trim());
+      currentLine = character;
+      return;
+    }
+
+    currentLine = candidate;
+  });
+
+  if (currentLine.trim()) {
+    lines.push(currentLine.trim());
+  }
+
+  const visibleLines = lines.slice(0, maxLines);
+  visibleLines.forEach((line, index) => {
+    const suffix = index === maxLines - 1 && lines.length > maxLines ? '…' : '';
+    context.fillText(`${line}${suffix}`, centerX, startY + index * lineHeight);
+  });
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -5940,7 +6151,8 @@ export default function Report() {
   const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
   const shouldBlockPreview = isLiveHost && (!hasReportSource || (!reportData && !reportAccessToken));
   const reportInput = formData?.birthDate ? formData : PREVIEW_FORM_DATA;
-  const reportCharacterVideo = reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
+  const reportCharacterVideo =
+    reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
   const report = useMemo(() => {
     const preserveAiQuestions = Boolean(reportData);
@@ -5968,14 +6180,152 @@ export default function Report() {
     return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
   }, [baseReport, reportData]);
   const isYearlyShowcase = report.serviceId === 'life-flow';
+  const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
   const pageCopy = getReportPageCopy(report);
   const yearlyLead = report.yearLuck[0];
   const yearlyMomentum = report.yearLuck.slice(0, 3);
   const monthlyHotMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
   const [isTocOpen, setIsTocOpen] = useState(false);
+  const [activePastLifeChapter, setActivePastLifeChapter] = useState('seal');
+  const [pastLifeShareFormat, setPastLifeShareFormat] = useState<'square' | 'story'>('square');
+  const activePastLifeIndex = Math.max(
+    0,
+    pastLifeChapters.findIndex((chapter) => chapter.id === activePastLifeChapter)
+  );
   const [htmlDownloadMessage, setHtmlDownloadMessage] = useState('');
   const [htmlDownloadUrl, setHtmlDownloadUrl] = useState('');
   const [htmlDownloadFileName, setHtmlDownloadFileName] = useState('');
+  const pastLifeShareCards = [
+    {
+      id: 'seal-name',
+      label: '나의 전생 봉인명',
+      value: report.badge.replace(/^전생 봉인명\s*·\s*/, ''),
+      tone: 'cyan'
+    },
+    {
+      id: 'past-sentence',
+      label: '전생이 남긴 한 문장',
+      value: report.keyTakeaways.find((item) => item.title === '반복되는 업')?.body || report.heroNote,
+      tone: 'red'
+    },
+    {
+      id: 'current-promise',
+      label: '이번 생에서 끝낼 약속',
+      value: report.actionPlan.priorities[1] || report.actionPlan.priorities[0],
+      tone: 'gold'
+    }
+  ] as const;
+
+  const handleDownloadPastLifeShareCard = async (card: (typeof pastLifeShareCards)[number]) => {
+    await document.fonts?.ready;
+
+    const width = 1080;
+    const height = pastLifeShareFormat === 'square' ? 1080 : 1920;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      return;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    context.fillStyle = '#05070a';
+    context.fillRect(0, 0, width, height);
+
+    const upperGlow = context.createLinearGradient(0, 0, 0, height * 0.56);
+    upperGlow.addColorStop(0, '#0c1821');
+    upperGlow.addColorStop(1, '#05070a');
+    context.fillStyle = upperGlow;
+    context.fillRect(0, 0, width, height * 0.58);
+
+    context.strokeStyle = 'rgba(179, 138, 76, 0.68)';
+    context.lineWidth = 3;
+    context.strokeRect(54, 54, width - 108, height - 108);
+    context.strokeStyle = 'rgba(179, 138, 76, 0.22)';
+    context.lineWidth = 1;
+    context.strokeRect(72, 72, width - 144, height - 144);
+
+    context.fillStyle = 'rgba(179, 138, 76, 0.86)';
+    context.beginPath();
+    context.arc(width * 0.5, height * 0.17, 72, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = '#0c1821';
+    context.beginPath();
+    context.arc(width * 0.53, height * 0.15, 72, 0, Math.PI * 2);
+    context.fill();
+
+    context.strokeStyle = card.tone === 'red' ? 'rgba(224, 74, 47, 0.76)' : 'rgba(185, 39, 36, 0.58)';
+    context.lineWidth = 4;
+    context.beginPath();
+    context.moveTo(90, height * 0.68);
+    context.bezierCurveTo(width * 0.28, height * 0.61, width * 0.68, height * 0.75, width - 90, height * 0.66);
+    context.stroke();
+
+    context.textAlign = 'center';
+    context.fillStyle = card.tone === 'gold' ? '#d9bd87' : '#8de8ed';
+    context.font = '700 34px Pretendard, "Noto Sans KR", sans-serif';
+    context.fillText(card.label, width / 2, height * 0.29);
+
+    context.fillStyle = '#f1e8d9';
+    context.font = `800 ${pastLifeShareFormat === 'square' ? 62 : 70}px "Noto Serif KR", "Nanum Myeongjo", serif`;
+    drawWrappedCanvasText(context, card.value, width / 2, height * 0.4, width - 220, pastLifeShareFormat === 'square' ? 88 : 104, 6);
+
+    context.fillStyle = '#8b8377';
+    context.font = '500 26px Pretendard, "Noto Sans KR", sans-serif';
+    context.fillText('도깨비 전생장부: 봉인록', width / 2, height - 130);
+    context.fillStyle = '#b38a4c';
+    context.font = '800 30px "Noto Serif KR", serif';
+    context.fillText('운월당', width / 2, height - 88);
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `운월당-${card.id}-${pastLifeShareFormat}.png`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  };
+
+  const movePastLifeChapter = (offset: -1 | 1) => {
+    const nextIndex = Math.min(Math.max(activePastLifeIndex + offset, 0), pastLifeChapters.length - 1);
+    const nextChapter = pastLifeChapters[nextIndex];
+
+    setActivePastLifeChapter(nextChapter.id);
+    document.getElementById(`pastlife-${nextChapter.id}`)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+  };
+
+  useEffect(() => {
+    if (!isPastLifeShowcase) {
+      return;
+    }
+
+    const sections = pastLifeChapters
+      .map((chapter) => document.getElementById(`pastlife-${chapter.id}`))
+      .filter((section): section is HTMLElement => Boolean(section));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+
+        if (visibleEntry?.target.id) {
+          setActivePastLifeChapter(visibleEntry.target.id.replace('pastlife-', ''));
+        }
+      },
+      { rootMargin: '-22% 0px -58% 0px', threshold: [0.08, 0.2, 0.45] }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [isPastLifeShowcase]);
   const [isReportVideoMuted, setIsReportVideoMuted] = useState(true);
   const reportVideoRef = useRef<HTMLVideoElement>(null);
   const htmlDownloadUrlRef = useRef('');
@@ -6073,19 +6423,30 @@ export default function Report() {
     );
   }
 
-  const tocItems = [
-    ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
-    { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
-    { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
-    { id: 'glance', label: '핵심 지표 요약', number: '02' },
-    ...report.sections.map((section, index) => ({
-      id: section.id,
-      label: section.title,
-      number: String(index + 3).padStart(2, '0')
-    })),
-    { id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') },
-    { id: 'legal', label: '안전 안내', number: String(report.sections.length + 4).padStart(2, '0') }
-  ];
+  const tocItems = isPastLifeShowcase
+    ? [
+        ...report.sections.map((section, index) => ({
+          id: section.id,
+          label: section.title,
+          number: `제${index + 1}권`
+        })),
+        { id: 'plan', label: '30일 봉인 해제', number: '실행' },
+        { id: 'share-cards', label: '공유 카드', number: '저장' },
+        { id: 'legal', label: '장부 이용 안내', number: '안내' }
+      ]
+    : [
+        ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
+        { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
+        { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
+        { id: 'glance', label: '핵심 지표 요약', number: '02' },
+        ...report.sections.map((section, index) => ({
+          id: section.id,
+          label: section.title,
+          number: String(index + 3).padStart(2, '0')
+        })),
+        { id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') },
+        { id: 'legal', label: '안전 안내', number: String(report.sections.length + 4).padStart(2, '0') }
+      ];
 
   const scrollToSection = (targetId: string) => {
     document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -6162,8 +6523,16 @@ export default function Report() {
       });
 
       const fileBaseName = createSafeReportFileName(`운월당-${report.serviceId}-리포트`);
-      const pageClassName = isYearlyShowcase ? 'premium-report-page yearly-premium-page export-html-page' : 'premium-report-page export-html-page';
-      const shellClassName = isYearlyShowcase ? 'premium-report-shell yearly-report-shell export-html-shell' : 'premium-report-shell export-html-shell';
+      const pageClassName = isYearlyShowcase
+        ? 'premium-report-page yearly-premium-page export-html-page'
+        : isPastLifeShowcase
+          ? 'premium-report-page past-life-report-page export-html-page'
+          : 'premium-report-page export-html-page';
+      const shellClassName = isYearlyShowcase
+        ? 'premium-report-shell yearly-report-shell export-html-shell'
+        : isPastLifeShowcase
+          ? 'premium-report-shell past-life-report-shell export-html-shell'
+          : 'premium-report-shell export-html-shell';
       const html = `<!doctype html>
 <html lang="ko">
 <head>
@@ -6345,7 +6714,13 @@ body {
   )}`;
 
   return (
-    <main className={isYearlyShowcase ? 'premium-report-page yearly-premium-page' : 'premium-report-page'}>
+    <main className={
+      isYearlyShowcase
+        ? 'premium-report-page yearly-premium-page'
+        : isPastLifeShowcase
+          ? 'premium-report-page past-life-report-page'
+          : 'premium-report-page'
+    }>
       <header className="premium-report-topbar">
         <div className="premium-report-topbar-inner">
           <Link to="/" className="premium-report-brand" aria-label="운월당 홈">
@@ -6366,8 +6741,20 @@ body {
         </div>
       </header>
 
-      <div className={isYearlyShowcase ? 'premium-report-shell yearly-report-shell' : 'premium-report-shell'}>
-        <article className={isYearlyShowcase ? 'premium-report-paper yearly-report-paper' : 'premium-report-paper'}>
+      <div className={
+        isYearlyShowcase
+          ? 'premium-report-shell yearly-report-shell'
+          : isPastLifeShowcase
+            ? 'premium-report-shell past-life-report-shell'
+            : 'premium-report-shell'
+      }>
+        <article className={
+          isYearlyShowcase
+            ? 'premium-report-paper yearly-report-paper'
+            : isPastLifeShowcase
+              ? 'premium-report-paper past-life-report-paper'
+              : 'premium-report-paper'
+        }>
           {isYearlyShowcase && yearlyLead ? (
             <section className="premium-report-cover yearly-report-cover">
               <div className="yearly-report-orbit">
@@ -6444,7 +6831,43 @@ body {
             </>
           ) : null}
 
-          {report.serviceId === 'general-signature' || report.serviceId === 'concern-reading' ? (
+          {isPastLifeShowcase ? (
+            <section className="past-life-report-cover">
+              <div className="past-life-report-cover-visual">
+                <img src="/media/dokkaebi-poster.webp" alt="도깨비 전생장부 봉인록 표지" />
+                <span className="past-life-report-moon" aria-hidden="true" />
+                <span className="past-life-report-thread" aria-hidden="true" />
+              </div>
+              <div className="past-life-report-cover-copy">
+                <span>{hasReportSource ? '개인 맞춤 전생장부' : '샘플 전생장부'}</span>
+                <h1>{report.customerName}님의 도깨비 전생장부</h1>
+                <strong>{report.badge}</strong>
+                <p>{report.heroNote}</p>
+              </div>
+              <nav className="past-life-report-seals" aria-label="다섯 권 장부 바로가기">
+                {pastLifeChapters.map((chapter, index) => (
+                  <a
+                    key={chapter.id}
+                    href={`#pastlife-${chapter.id}`}
+                    className={activePastLifeChapter === chapter.id ? 'active' : undefined}
+                    aria-current={activePastLifeChapter === chapter.id ? 'step' : undefined}
+                    aria-label={`${chapter.volume} ${chapter.title}로 이동`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setActivePastLifeChapter(chapter.id);
+                      document.getElementById(`pastlife-${chapter.id}`)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    }}
+                  >
+                    <i aria-hidden="true">印</i>
+                    <span>{chapter.title}</span>
+                    <small>{index + 1}/5</small>
+                  </a>
+                ))}
+              </nav>
+            </section>
+          ) : null}
+
+          {['general-signature', 'concern-reading'].includes(report.serviceId) ? (
             <section className="premium-report-character" aria-label="운월당 사주 리포트 캐릭터">
               <video
                 ref={reportVideoRef}
@@ -6654,7 +7077,7 @@ body {
 
             <div className="premium-grid2">
               <article className="premium-card tone-good">
-                <h3>DO</h3>
+                <h3>{isPastLifeShowcase ? '이번 생에서 시작할 것' : 'DO'}</h3>
                 <ul className="premium-list">
                   {report.actionPlan.dos.map((item) => (
                     <li key={item}>{item}</li>
@@ -6663,7 +7086,7 @@ body {
               </article>
 
               <article className="premium-card tone-warn">
-                <h3>AVOID</h3>
+                <h3>{isPastLifeShowcase ? '이번 생에서 멈출 것' : 'AVOID'}</h3>
                 <ul className="premium-list">
                   {report.actionPlan.avoids.map((item) => (
                     <li key={item}>{item}</li>
@@ -6672,30 +7095,78 @@ body {
               </article>
             </div>
 
-            <div className="premium-grid2 premium-plan-days">
-              <article className="premium-card">
-                <h3>행운일</h3>
-                <ul className="premium-list">
-                  {report.actionPlan.luckyDays.map((item) => (
-                    <li key={`lucky-${item.day}`}>
-                      {item.day}일: {item.reason}
-                    </li>
-                  ))}
-                </ul>
-              </article>
+            {!isPastLifeShowcase ? (
+              <div className="premium-grid2 premium-plan-days">
+                <article className="premium-card">
+                  <h3>행운일</h3>
+                  <ul className="premium-list">
+                    {report.actionPlan.luckyDays.map((item) => (
+                      <li key={`lucky-${item.day}`}>
+                        {item.day}일: {item.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
 
-              <article className="premium-card">
-                <h3>주의일</h3>
-                <ul className="premium-list">
-                  {report.actionPlan.unluckyDays.map((item) => (
-                    <li key={`unlucky-${item.day}`}>
-                      {item.day}일: {item.reason}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            </div>
+                <article className="premium-card">
+                  <h3>주의일</h3>
+                  <ul className="premium-list">
+                    {report.actionPlan.unluckyDays.map((item) => (
+                      <li key={`unlucky-${item.day}`}>
+                        {item.day}일: {item.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </div>
+            ) : null}
           </section>
+
+          {isPastLifeShowcase ? (
+            <>
+              <div className="premium-divider" />
+
+              <section className="premium-report-section past-life-share-section" id="share-cards">
+                <div className="premium-section-heading">
+                  <div>
+                    <h2>내 장부에서 저장할 세 문장</h2>
+                    <p className="premium-muted">생년월일은 표시하지 않습니다. 공개할 문장과 화면 비율만 골라 저장하세요.</p>
+                  </div>
+                </div>
+
+                <div className="past-life-share-format" aria-label="공유 카드 비율">
+                  <button
+                    type="button"
+                    className={pastLifeShareFormat === 'square' ? 'active' : undefined}
+                    aria-pressed={pastLifeShareFormat === 'square'}
+                    onClick={() => setPastLifeShareFormat('square')}
+                  >
+                    1:1 정사각형
+                  </button>
+                  <button
+                    type="button"
+                    className={pastLifeShareFormat === 'story' ? 'active' : undefined}
+                    aria-pressed={pastLifeShareFormat === 'story'}
+                    onClick={() => setPastLifeShareFormat('story')}
+                  >
+                    9:16 스토리
+                  </button>
+                </div>
+
+                <div className="past-life-share-grid">
+                  {pastLifeShareCards.map((card) => (
+                    <article key={card.id} className={`past-life-share-card tone-${card.tone}`}>
+                      <span>{card.label}</span>
+                      <strong>{card.value}</strong>
+                      <button type="button" onClick={() => void handleDownloadPastLifeShareCard(card)}>
+                        PNG 저장
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </>
+          ) : null}
 
           <div className="premium-divider" />
 
@@ -6763,6 +7234,31 @@ body {
           </footer>
         </article>
       </div>
+
+      {isPastLifeShowcase ? (
+        <nav className="past-life-mobile-chapter-nav" aria-label="장부 이전 권과 다음 권" data-export-remove="true">
+          <button
+            type="button"
+            onClick={() => movePastLifeChapter(-1)}
+            disabled={activePastLifeIndex === 0}
+            aria-label="이전 권"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span>
+            <small>{pastLifeChapters[activePastLifeIndex].volume}</small>
+            <strong>{pastLifeChapters[activePastLifeIndex].title}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => movePastLifeChapter(1)}
+            disabled={activePastLifeIndex === pastLifeChapters.length - 1}
+            aria-label="다음 권"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </nav>
+      ) : null}
     </main>
   );
 }

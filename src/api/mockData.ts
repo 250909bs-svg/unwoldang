@@ -4,6 +4,7 @@ export const serviceIds = [
   'general-signature',
   'life-flow',
   'concern-reading',
+  'past-life-goblin',
   'love-reading',
   'love-reunion',
   'match-couple',
@@ -47,6 +48,12 @@ export interface IntakeFormData {
   location: string;
   q1: string;
   q2: string;
+  pastLifeTopic?: string;
+  repeatedScene?: string;
+  frequentEmotion?: string;
+  hiddenDesire?: string;
+  chosenSymbol?: string;
+  readingTone?: string;
 }
 
 export interface CategoryDefinition {
@@ -217,6 +224,25 @@ export const serviceCatalog: ServiceDefinition[] = [
     bullets: ['사주 기본 구조 분석', '십성·신살·합충형해파 확인', '감정 상태와 인간관계 패턴', '고민별 행동 처방전'],
     process: ['천간지지 원국 확인', '십성 분포와 신강/신약 점검', '대운·세운·월운 흐름 분석', '연애·재물·직업 고민별 정리'],
     output: ['고민풀이 리포트', '감정 상태 분석', '올해 피해야 할 것 TOP3', '사주 처방전']
+  },
+  {
+    id: 'past-life-goblin',
+    category: 'general',
+    label: 'MZ 도깨비 전생사주',
+    advisor: '장부지기 도깨비',
+    subtitle: '도깨비 전생장부: 봉인록 · 사주 원국에 남은 기질과 관계 습관을 다섯 권의 전생 서사로 풀어내는 개인 장부',
+    teaser: '왜 같은 사람에게 끌리고, 비슷한 선택 앞에서 망설이는지 사주에 남은 반복 패턴으로 읽어드립니다.',
+    description:
+      '전생을 확인된 사실처럼 단정하는 콘텐츠가 아닙니다. 월령, 일간, 십성, 합충형파와 대운에서 반복되는 기질을 도깨비 세계관의 상징적인 이야기로 번역해, 타고난 재능과 오래된 관계 습관, 현생에서 풀어야 할 과제를 함께 정리합니다.',
+    price: '49,000원',
+    accent: '#d4a84f',
+    theme: 'pastlife',
+    heroTag: 'PAST LIFE',
+    badge: 'MZ 전생 리포트',
+    spotlight: '원국의 반복 패턴을 봉인록·인연록·업록·현생록·해원록으로 연결하는 개인 전생장부',
+    bullets: ['다섯 권 26개 맞춤 주제', '전생에서 남은 인연과 업', '현생의 연애·돈·가족·직업 패턴', '30일 봉인 해제 퀘스트'],
+    process: ['사주 원국과 월령 고정', '십성·합충형파·대운 분석', '다섯 권의 상징 서사 구성', '현생 행동과 30일 퀘스트 제안'],
+    output: ['전생 봉인명 공유 카드', '다섯 권 26개 개인 장부', '현생 반복 장면과 직언', '30일 봉인 해제 기록']
   },
   {
     id: 'love-reading',

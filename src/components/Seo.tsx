@@ -71,6 +71,12 @@ const routeSeo: Record<string, RouteSeo> = {
     keywords: '고민풀이, 사주 고민, 신년운세 고민풀이, 십성 분석, 신살 분석, 운월당 고민풀이',
     image: '/intake-lantern-night.png'
   },
+  '/detail/past-life-goblin': {
+    title: 'MZ 도깨비 전생사주 | 운월당 전생 캐릭터 리포트',
+    description: '사주 원국에 반복해서 남은 기질과 관계 습관을 도깨비 전생 캐릭터, 남겨진 재능, 현생 미션으로 풀어보는 운월당 전생사주입니다.',
+    keywords: '전생사주, 도깨비 전생사주, MZ 사주, 전생 캐릭터, 현생 미션, 사주 반복 패턴',
+    image: '/intake-night-blue.png'
+  },
   '/detail/love-reading': {
     title: '연애운 리포트 | 운월당 인연·감정 흐름 분석',
     description: '내가 끌리는 사람, 오래 가는 인연, 연애 패턴과 만남의 흐름을 정리하는 운월당 연애운 리포트입니다.',
@@ -127,6 +133,7 @@ Object.assign(routeSeo, {
   '/form/general-signature': routeSeo['/detail/general-signature'],
   '/form/life-flow': routeSeo['/detail/life-flow'],
   '/form/concern-reading': routeSeo['/detail/concern-reading'],
+  '/form/past-life-goblin': routeSeo['/detail/past-life-goblin'],
   '/form/love-reading': routeSeo['/detail/love-reading'],
   '/form/love-reunion': routeSeo['/detail/love-reunion'],
   '/form/match-couple': routeSeo['/detail/match-couple'],

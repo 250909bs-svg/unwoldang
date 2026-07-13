@@ -27,6 +27,13 @@ const searchProducts: SearchProduct[] = [
     keywords: ['종합사주', '사주', '대운', '세운', '인생', '원국', '오행', '십성']
   },
   {
+    id: 'past-life-goblin',
+    title: 'MZ 도깨비 전생사주',
+    image: '/media/dokkaebi-poster.webp',
+    to: '/detail/past-life-goblin',
+    keywords: ['전생', '전생사주', '도깨비', 'MZ', '업보', '인연', '반복패턴', '현생미션']
+  },
+  {
     id: 'love-reading',
     title: '홍연아씨 연애운 리딩',
     image: '/intake-blossom-girl.png',
@@ -77,8 +84,8 @@ const searchProducts: SearchProduct[] = [
   }
 ];
 
-const livePopularIds = ['concern-reading', 'love-reading', 'general-signature', 'match-couple', 'money-reading'] as const;
-const recommendedKeywords = ['재물', '연애', '궁합', '결혼', '고민'] as const;
+const livePopularIds = ['past-life-goblin', 'concern-reading', 'love-reading', 'general-signature', 'match-couple'] as const;
+const recommendedKeywords = ['전생', '재물', '연애', '궁합', '고민'] as const;
 
 function normalizeText(value: string) {
   return value.replace(/\s/g, '').toLowerCase();

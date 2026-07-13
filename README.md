@@ -30,6 +30,21 @@ npm run test
 
 문서만 수정한 경우에는 빌드가 필수는 아니지만, 코드나 리포트 생성 로직을 수정했다면 배포 전 빌드와 테스트를 확인합니다.
 
+## MZ 도깨비 전생사주
+
+기존 종합사주와 분리된 전용 상품입니다. `general-signature`의 입력·계산·리포트 구조를 바꾸지 않고 별도 서비스 ID인 `past-life-goblin`으로 동작합니다.
+
+- 상품 랜딩: `/detail/past-life-goblin`
+- 4단계 입력: `/form/past-life-goblin`
+- 결제 전 확인: `/checkout`의 `past-life-goblin` 분기
+- 5권 리포트: `/report/past-life-goblin`
+- 상품·권별 문구: `src/content/pastLifeExperience.ts`
+- 영상 제어: `src/components/HeroFilm.tsx`
+- 전용 스타일: `src/styles/past-life.css`
+- 포스터·영상·권별 WebP: `public/media/`
+
+대표 영상은 화면 밖으로 벗어나면 멈추며, 움직임 감소 설정에서는 포스터로 대체됩니다. 권별 이미지는 WebP를 지연 로딩하고, 공유 카드에는 고객의 생년월일을 넣지 않습니다.
+
 ## 환경변수
 
 `.env.local`, 실제 API 키, Secret Manager 값은 GitHub에 올리지 않습니다. 새 PC에서는 `.env.example`을 기준으로 직접 다시 채워야 합니다.

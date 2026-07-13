@@ -18,8 +18,11 @@ const illustrationDeck = {
   blossom: '/intake-blossom-girl.png'
 } as const;
 
+const goblinPastLifePoster = '/media/dokkaebi-poster.webp';
+
 const homeMenuItems = [
   { label: '종합사주', to: '/form/general-signature', state: { tabOrigin: '/' } },
+  { label: 'MZ 도깨비 전생사주', to: '/detail/past-life-goblin', state: { tabOrigin: '/' } },
   { label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
   { label: '심리테스트', to: '/test' },
   { label: '마이페이지', to: '/my' }
@@ -38,7 +41,21 @@ const homeCategoryTabs = [
   { id: 'wealth', label: '재물' }
 ] as const;
 
-const cardNewsSlides = [
+type CardNewsSlide = {
+  id: string;
+  target: string;
+  to?: string;
+  rank: number;
+  kicker: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  video?: string;
+  artworkTitle?: boolean;
+  tone: 'indigo' | 'amber' | 'rose' | 'violet' | 'emerald';
+};
+
+const cardNewsSlides: CardNewsSlide[] = [
   {
     id: 'news-general',
     target: 'general-signature',
@@ -50,9 +67,21 @@ const cardNewsSlides = [
     tone: 'indigo'
   },
   {
+    id: 'news-past-life-goblin',
+    target: 'past-life-goblin',
+    to: '/detail/past-life-goblin',
+    rank: 2,
+    kicker: 'MZ 전생사주',
+    title: 'MZ 도깨비 전생사주',
+    subtitle: '사주에 남은 반복 기질을 도깨비 전생 서사로 해석',
+    image: goblinPastLifePoster,
+    artworkTitle: true,
+    tone: 'amber'
+  },
+  {
     id: 'news-yearly',
     target: 'life-flow',
-    rank: 2,
+    rank: 3,
     kicker: '신년운세',
     title: '운월선생 신년운세',
     subtitle: '다가오는 12개월 흐름과 월별 선택 타이밍',
@@ -62,7 +91,7 @@ const cardNewsSlides = [
   {
     id: 'news-concern',
     target: 'concern-reading',
-    rank: 3,
+    rank: 4,
     kicker: '고민풀이',
     title: '운월당 고민풀이',
     subtitle: '지금 고민 2개를 사주 구조와 대운으로 바로 정리',
@@ -72,7 +101,7 @@ const cardNewsSlides = [
   {
     id: 'news-love',
     target: 'love-reading',
-    rank: 4,
+    rank: 5,
     kicker: '연애운',
     title: '운월당 연애운',
     subtitle: '끌림과 인연 흐름, 관계의 속도를 함께 분석',
@@ -82,7 +111,7 @@ const cardNewsSlides = [
   {
     id: 'news-reunion',
     target: 'love-reunion',
-    rank: 5,
+    rank: 6,
     kicker: '재회운',
     title: '운월당 재회운',
     subtitle: '다시 이어질 가능성과 연락 타이밍을 정리',
@@ -99,6 +128,8 @@ type HomeProductCard = {
   category: HomeProductCategory;
   to: string;
   image: string;
+  video?: string;
+  artworkTitle?: boolean;
   title: string;
   subtitle: string;
   imagePosition?: string;
@@ -112,6 +143,15 @@ const homeProductCards: HomeProductCard[] = [
     image: illustrationDeck.generalSaju,
     title: '운월선생 정통 종합사주',
     subtitle: '타고난 기질부터 인생 전체 흐름까지'
+  },
+  {
+    id: 'past-life-goblin',
+    category: 'general',
+    to: '/detail/past-life-goblin',
+    image: goblinPastLifePoster,
+    artworkTitle: true,
+    title: 'MZ 도깨비 전생사주',
+    subtitle: '전생 캐릭터와 현생에서 풀어야 할 미션'
   },
   {
     id: 'love-reading',
@@ -245,6 +285,16 @@ const homeDiscoverySections = [
         summary: '인생 전반의 흐름과 선택 기준'
       },
       {
+        id: 'past-life-goblin',
+        to: '/detail/past-life-goblin',
+        image: goblinPastLifePoster,
+        artworkTitle: true,
+        coverKicker: '도깨비 선생',
+        coverTitle: '전생사주',
+        title: 'MZ 도깨비 전생사주',
+        summary: '내 사주에 남은 전생의 재능과 현생 미션'
+      },
+      {
         id: 'concern-reading',
         to: '/form/concern-reading',
         image: illustrationDeck.concernReading,
@@ -364,7 +414,7 @@ export default function Home() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       setActiveCardNewsIndex((prev) => (prev + 1) % cardNewsSlides.length);
-    }, 1000);
+    }, 4200);
 
     return () => window.clearInterval(timer);
   }, []);
@@ -510,19 +560,33 @@ export default function Home() {
                 {visibleCardNews.map((slide) => (
                   <Link
                     key={slide.id}
-                    to={`/form/${slide.target}`}
+                    to={slide.to || `/form/${slide.target}`}
                     state={{ tabOrigin: '/' }}
-                    className={
+                    className={`${
                       slide.offset === 0
-                        ? `home-cardnews-card active tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
+                        ? `home-cardnews-card active tone-${slide.tone}`
                         : slide.offset === 1
-                          ? `home-cardnews-card next tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
-                          : `home-cardnews-card tail tone-${slide.tone}${slide.image.startsWith('/home-') ? ' poster-card' : ''}`
-                    }
+                          ? `home-cardnews-card next tone-${slide.tone}`
+                          : `home-cardnews-card tail tone-${slide.tone}`
+                    }${slide.image.startsWith('/home-') && !slide.video ? ' poster-card' : ''}${slide.video ? ' video-card' : ''}${slide.artworkTitle ? ' artwork-title-card' : ''}`}
                     aria-hidden={slide.offset !== 0}
                     tabIndex={slide.offset === 0 ? 0 : -1}
                   >
-                    <img src={slide.image} alt={`${slide.kicker} 카드뉴스`} className="home-cardnews-image" />
+                    {slide.video ? (
+                      <video
+                        className="home-cardnews-image home-cardnews-video"
+                        src={slide.video}
+                        poster={slide.image}
+                        autoPlay={slide.offset === 0}
+                        muted
+                        loop
+                        playsInline
+                        preload={slide.offset === 0 ? 'metadata' : 'none'}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <img src={slide.image} alt={`${slide.kicker} 카드뉴스`} className="home-cardnews-image" />
+                    )}
                     <span className="home-cardnews-rank">TOP {slide.rank}</span>
                     <div className="home-cardnews-overlay" />
                     <div className="home-cardnews-copy">
@@ -561,9 +625,9 @@ export default function Home() {
                       <Link key={card.id} to={card.to} state={{ tabOrigin: '/' }} className="home-showcase-card">
                         <article
                           className={
-                            card.image.startsWith('/home-')
-                              ? 'home-showcase-cover poster-cover'
-                              : 'home-showcase-cover'
+                            `${card.image.startsWith('/home-') ? 'home-showcase-cover poster-cover' : 'home-showcase-cover'}${
+                              'artworkTitle' in card && card.artworkTitle ? ' artwork-title-cover' : ''
+                            }`
                           }
                         >
                           <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
@@ -595,14 +659,28 @@ export default function Home() {
                 key={product.id}
                 to={product.to}
                 state={{ tabOrigin: '/' }}
-                className="home-filter-product-card"
+                className={product.artworkTitle ? 'home-filter-product-card artwork-title-card' : 'home-filter-product-card'}
               >
-                <img
-                  src={product.image}
-                  alt=""
-                  className="home-filter-product-image"
-                  style={product.imagePosition ? { objectPosition: product.imagePosition } : undefined}
-                />
+                {product.video ? (
+                  <video
+                    src={product.video}
+                    poster={product.image}
+                    className="home-filter-product-image home-filter-product-video"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <img
+                    src={product.image}
+                    alt=""
+                    className="home-filter-product-image"
+                    style={product.imagePosition ? { objectPosition: product.imagePosition } : undefined}
+                  />
+                )}
                 <span className="home-filter-product-shade" aria-hidden="true" />
                 <span className="home-filter-product-copy">
                   <strong>{product.title}</strong>

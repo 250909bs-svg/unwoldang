@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { type IntakeFormData, findServiceById } from '../api/mockData';
 import { useAuth } from '../context/AuthContext';
+import { pastLifeSymbolOptions, pastLifeToneOptions, pastLifeTopicOptions } from '../content/pastLifeExperience';
 
 const initialState: IntakeFormData = {
   name: '',
@@ -16,7 +17,13 @@ const initialState: IntakeFormData = {
   relationshipDuration: '',
   location: '',
   q1: '',
-  q2: ''
+  q2: '',
+  pastLifeTopic: '',
+  repeatedScene: '',
+  frequentEmotion: '',
+  hiddenDesire: '',
+  chosenSymbol: '',
+  readingTone: '균형 있게'
 };
 
 type IntakeStep = 1 | 2 | 3 | 4;
@@ -53,6 +60,19 @@ const questionSuggestions = {
     '앞으로 3개월 안에 움직이면 좋은 시기는 언제인가요?',
     '연애운과 결혼운 중 지금 더 가까운 흐름은 무엇인가요?',
     '재물운과 직업운 중 어떤 쪽에 집중해야 하나요?'
+  ]
+} as const;
+
+const pastLifeQuestionSuggestions = {
+  q1: [
+    '제가 반복해서 겪는 관계 패턴은 전생 서사에서 어떻게 읽히나요?',
+    '사주에 남은 전생의 재능은 현생에서 어떤 일로 살릴 수 있나요?',
+    '이유 없이 익숙하거나 끌리는 장소와 사람의 공통점은 무엇인가요?'
+  ],
+  q2: [
+    '전생에서 이어진 습관 중 지금 내려놓아야 할 것은 무엇인가요?',
+    '현생에서 반드시 풀어야 할 가장 중요한 과제는 무엇인가요?',
+    '앞으로 90일 동안 전생의 장점을 현실에서 쓰는 방법을 알려주세요.'
   ]
 } as const;
 
@@ -149,7 +169,13 @@ const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormDat
   relationshipDuration: source?.relationshipDuration ?? '',
   location: source?.location ?? '',
   q1: source?.q1 ?? '',
-  q2: source?.q2 ?? ''
+  q2: source?.q2 ?? '',
+  pastLifeTopic: source?.pastLifeTopic ?? '',
+  repeatedScene: source?.repeatedScene ?? '',
+  frequentEmotion: source?.frequentEmotion ?? '',
+  hiddenDesire: source?.hiddenDesire ?? '',
+  chosenSymbol: source?.chosenSymbol ?? '',
+  readingTone: source?.readingTone ?? '균형 있게'
 });
 
 function getBirthTimeSelectValue(formData: IntakeFormData) {
@@ -163,6 +189,7 @@ function getBirthTimeSelectValue(formData: IntakeFormData) {
 export default function Form() {
   const { id } = useParams<{ id: string }>();
   const service = findServiceById(id);
+  const isPastLifeFlow = service.id === 'past-life-goblin';
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -260,14 +287,26 @@ export default function Form() {
   const birthTimeReady = Boolean(formData.birthTime) || formData.isUnknownTime;
   const step1Ready =
     Boolean(formData.name.trim()) && Boolean(formData.gender) && birthDateReady && birthTimeReady;
-  const step2Ready = Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
-  const step3Ready = Boolean(formData.q1.trim());
-  const step4Ready = Boolean(formData.q2.trim());
+  const step2Ready = isPastLifeFlow
+    ? Boolean(formData.pastLifeTopic?.trim())
+    : Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
+  const step3Ready = isPastLifeFlow
+    ? Boolean(formData.repeatedScene?.trim()) && Boolean(formData.frequentEmotion?.trim()) && Boolean(formData.hiddenDesire?.trim())
+    : Boolean(formData.q1.trim());
+  const step4Ready = isPastLifeFlow
+    ? Boolean(formData.chosenSymbol?.trim()) && Boolean(formData.readingTone?.trim())
+    : Boolean(formData.q2.trim());
   const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;
   const isYearlyFlow = false;
   const isLoveReadingFlow = false;
   const isCinematicFlow = true;
   const activeVisual = (isYearlyFlow ? yearlyStepVisuals : stepVisuals)[step];
+  const activeQuestionSuggestions = isPastLifeFlow ? pastLifeQuestionSuggestions : questionSuggestions;
+  const intakeVideoSource = isPastLifeFlow
+    ? '/media/dokkaebi-hero.mp4'
+    : isLoveReadingFlow
+      ? '/love-reading-intake-hero.mp4'
+      : '/signature-intake-hero.mp4';
   const _yearlySceneCopyDraft = {
     1: {
       kicker: 'YEARLY FLOW',
@@ -336,10 +375,18 @@ export default function Form() {
       return;
     }
 
+    const submittedFormData = isPastLifeFlow
+      ? {
+          ...formData,
+          q1: `전생사주에서 ${formData.pastLifeTopic} 주제와 연결된 반복 장면을 풀어주세요. 실제 반복 장면: ${formData.repeatedScene}`,
+          q2: `자주 드는 감정은 ${formData.frequentEmotion}, 숨기기 어려운 욕심은 ${formData.hiddenDesire}입니다. ${formData.chosenSymbol} 상징을 선택했고 ${formData.readingTone} 말투로 현생 미션을 알려주세요.`
+        }
+      : formData;
+
     navigate('/checkout', {
       state: {
         product: service.id,
-        formData,
+        formData: submittedFormData,
         tabOrigin
       }
     });
@@ -388,7 +435,7 @@ export default function Form() {
     <main
       className={`intake-story-page intake-step-${step} ${isYearlyFlow ? 'yearly-flow-page' : ''} ${
         isCinematicFlow ? 'signature-video-flow-page' : ''
-      } ${isLoveReadingFlow ? 'love-reading-video-flow-page' : ''}`}
+      } ${isLoveReadingFlow ? 'love-reading-video-flow-page' : ''} ${isPastLifeFlow ? 'past-life-goblin-flow-page' : ''}`}
     >
       <div className="intake-story-backdrop" />
       <div className="intake-story-shade" />
@@ -414,10 +461,16 @@ export default function Form() {
           ) : null}
 
           <div className={isCinematicFlow ? 'intake-story-hero-art signature-intake-hero-art' : 'intake-story-hero-art'} aria-hidden="true">
-            {isCinematicFlow ? (
+            {isPastLifeFlow ? (
+              <img
+                src="/media/dokkaebi-poster.webp"
+                alt=""
+                className="intake-story-hero-image past-life-intake-hero-image"
+              />
+            ) : isCinematicFlow ? (
               <video
                 className="intake-story-hero-video"
-                src={isLoveReadingFlow ? '/love-reading-intake-hero.mp4' : '/signature-intake-hero.mp4'}
+                src={intakeVideoSource}
                 autoPlay
                 muted
                 loop
@@ -434,12 +487,12 @@ export default function Form() {
           {step === 1 ? (
             <div className="intake-story-form-stack">
               <label className="intake-story-field">
-                <span>나의 이름</span>
+                <span>{isPastLifeFlow ? '장부에 표시할 이름 또는 호칭' : '나의 이름'}</span>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(event) => updateField('name', event.target.value.slice(0, 12))}
-                  placeholder="이름을 입력해 주세요"
+                  placeholder={isPastLifeFlow ? '장부에 남길 이름을 입력해 주세요' : '이름을 입력해 주세요'}
                 />
               </label>
 
@@ -541,6 +594,35 @@ export default function Form() {
           ) : null}
 
           {step === 2 ? (
+            isPastLifeFlow ? (
+              <div className="intake-story-form-stack past-life-intake-stack">
+                <div className="intake-story-question-copy">
+                  <span className="past-life-intake-volume">두 번째 봉인</span>
+                  <strong>지금 가장 알고 싶은 흔적을 골라주세요</strong>
+                  <p>선택한 주제는 전생 서사와 현생의 실제 장면을 연결하는 중심 질문이 됩니다.</p>
+                </div>
+
+                <article className="intake-story-question-card past-life-intake-card">
+                  <div className="intake-story-question-head">
+                    <strong>현재 가장 궁금한 주제</strong>
+                    <span className="intake-story-order-badge">02</span>
+                  </div>
+                  <div className="past-life-choice-grid topic-grid">
+                    {pastLifeTopicOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={formData.pastLifeTopic === option ? 'past-life-choice active' : 'past-life-choice'}
+                        aria-pressed={formData.pastLifeTopic === option}
+                        onClick={() => updateField('pastLifeTopic', option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+              </div>
+            ) : (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>현재 관계 상태를 알려주세요</strong>
@@ -597,9 +679,46 @@ export default function Form() {
                 </p>
               </article>
             </div>
+            )
           ) : null}
 
           {step === 3 ? (
+            isPastLifeFlow ? (
+              <div className="intake-story-form-stack past-life-intake-stack">
+                <div className="intake-story-question-copy">
+                  <span className="past-life-intake-volume">세 번째 봉인</span>
+                  <strong>현생에서 되풀이되는 장면을 적어주세요</strong>
+                  <p>예쁘게 정리하지 않아도 됩니다. 실제로 반복되는 말, 사람, 감정을 적을수록 장부가 구체적으로 열립니다.</p>
+                </div>
+
+                <article className="intake-story-question-card past-life-intake-card past-life-text-card">
+                  <label>
+                    <span>이상하게 반복되는 장면 한 가지</span>
+                    <textarea
+                      value={formData.repeatedScene || ''}
+                      onChange={(event) => updateField('repeatedScene', event.target.value.slice(0, 180))}
+                      placeholder="예: 결국 제가 뒷수습을 맡고, 참다가 갑자기 관계를 끊어요."
+                    />
+                  </label>
+                  <label>
+                    <span>요즘 가장 자주 드는 감정</span>
+                    <textarea
+                      value={formData.frequentEmotion || ''}
+                      onChange={(event) => updateField('frequentEmotion', event.target.value.slice(0, 100))}
+                      placeholder="예: 억울함, 피로, 불안, 설명하기 싫은 마음"
+                    />
+                  </label>
+                  <label>
+                    <span>남들에게 말하기 어려운 욕심</span>
+                    <textarea
+                      value={formData.hiddenDesire || ''}
+                      onChange={(event) => updateField('hiddenDesire', event.target.value.slice(0, 120))}
+                      placeholder="예: 인정받고 싶지만 책임은 더 늘리고 싶지 않아요."
+                    />
+                  </label>
+                </article>
+              </div>
+            ) : (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>첫 번째 질문을 적어주세요</strong>
@@ -621,7 +740,7 @@ export default function Form() {
                   <span>{formData.q1.length}/180</span>
                 </div>
                 <div className="intake-story-suggestion-row">
-                  {questionSuggestions.q1.map((item) => (
+                  {activeQuestionSuggestions.q1.map((item) => (
                     <button key={item} type="button" className="intake-story-suggestion" onClick={() => applyQuestionSuggestion('q1', item)}>
                       {item}
                     </button>
@@ -629,9 +748,59 @@ export default function Form() {
                 </div>
               </article>
             </div>
+            )
           ) : null}
 
           {step === 4 ? (
+            isPastLifeFlow ? (
+              <div className="intake-story-form-stack past-life-intake-stack">
+                <div className="intake-story-question-copy">
+                  <span className="past-life-intake-volume">마지막 봉인</span>
+                  <strong>끌리는 상징과 해석의 온도를 골라주세요</strong>
+                  <p>상징은 장부의 서사 장치로만 사용하며, 사주 계산값을 바꾸지 않습니다.</p>
+                </div>
+
+                <article className="intake-story-question-card past-life-intake-card">
+                  <div className="intake-story-question-head">
+                    <strong>지금 가장 끌리는 상징</strong>
+                    <span className="intake-story-order-badge">象</span>
+                  </div>
+                  <div className="past-life-choice-grid symbol-grid">
+                    {pastLifeSymbolOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={formData.chosenSymbol === option ? 'past-life-choice active' : 'past-life-choice'}
+                        aria-pressed={formData.chosenSymbol === option}
+                        onClick={() => updateField('chosenSymbol', option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+
+                <article className="intake-story-question-card past-life-intake-card">
+                  <div className="intake-story-question-head">
+                    <strong>도깨비의 말투</strong>
+                    <span className="intake-story-order-badge">語</span>
+                  </div>
+                  <div className="past-life-choice-grid tone-grid">
+                    {pastLifeToneOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={formData.readingTone === option ? 'past-life-choice active' : 'past-life-choice'}
+                        aria-pressed={formData.readingTone === option}
+                        onClick={() => updateField('readingTone', option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+              </div>
+            ) : (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>두 번째 질문도 적어주세요</strong>
@@ -653,7 +822,7 @@ export default function Form() {
                   <span>{formData.q2.length}/180</span>
                 </div>
                 <div className="intake-story-suggestion-row">
-                  {questionSuggestions.q2.map((item) => (
+                  {activeQuestionSuggestions.q2.map((item) => (
                     <button key={item} type="button" className="intake-story-suggestion" onClick={() => applyQuestionSuggestion('q2', item)}>
                       {item}
                     </button>
@@ -661,6 +830,7 @@ export default function Form() {
                 </div>
               </article>
             </div>
+            )
           ) : null}
 
           <footer className="intake-story-actions">
@@ -678,7 +848,13 @@ export default function Form() {
                 (step === 4 && !step4Ready)
               }
             >
-              {step === 4 ? (isYearlyFlow ? '결제하고 신년운세 보기' : '결제 정보 확인') : '다음으로'}
+              {step === 4
+                ? isPastLifeFlow
+                  ? '49,000원 장부 확인'
+                  : isYearlyFlow
+                    ? '결제하고 신년운세 보기'
+                    : '결제 정보 확인'
+                : '다음으로'}
             </button>
           </footer>
         </section>

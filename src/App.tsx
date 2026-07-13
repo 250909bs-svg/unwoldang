@@ -5,6 +5,7 @@ import Test from './pages/Test';
 import FaceAI from './pages/FaceAI';
 import Search from './pages/Search';
 import Detail from './pages/Detail';
+import PastLifeLanding from './pages/PastLifeLanding';
 import Form from './pages/Form';
 import Checkout from './pages/Checkout';
 import Loading from './pages/Loading';
@@ -42,6 +43,7 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route path="/payment/portone/callback" element={<PaymentCallback />} />
+        <Route path="/detail/past-life-goblin" element={<PastLifeLanding />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/form/:id" element={<Form />} />
         <Route path="/checkout" element={<Checkout />} />
@@ -61,6 +63,8 @@ function AppRoutes() {
 function AppShell() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isPastLifeLandingRoute = location.pathname === '/detail/past-life-goblin';
+  const isPastLifeReportRoute = location.pathname === '/report/past-life-goblin';
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
   const usesDarkAppShell =
     location.pathname === '/' ||
@@ -68,6 +72,7 @@ function AppShell() {
     location.pathname.startsWith('/search') ||
     location.pathname.startsWith('/my') ||
     location.pathname.startsWith('/login') ||
+    isPastLifeLandingRoute ||
     isLegalRoute;
 
   useEffect(() => {
@@ -79,7 +84,17 @@ function AppShell() {
   }, [usesDarkAppShell]);
 
   return (
-    <div className={isAdminRoute ? 'app-container admin-app-container' : 'app-container'}>
+    <div
+      className={
+        isAdminRoute
+          ? 'app-container admin-app-container'
+          : isPastLifeLandingRoute
+            ? 'app-container past-life-app-container'
+            : isPastLifeReportRoute
+              ? 'app-container past-life-report-app-container'
+            : 'app-container'
+      }
+    >
       <AppRoutes />
     </div>
   );

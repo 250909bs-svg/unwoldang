@@ -64,6 +64,7 @@ const KIND_BY_SERVICE: Partial<Record<ServiceId, ReportKind>> = {
   'general-signature': 'comprehensive',
   'life-flow': 'yearly',
   'concern-reading': 'comprehensive',
+  'past-life-goblin': 'comprehensive',
   'love-reading': 'love',
   'love-reunion': 'reunion',
   'marriage-blueprint': 'marriage',

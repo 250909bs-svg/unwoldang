@@ -34,6 +34,7 @@ export default function Checkout() {
   const formData = locationState?.formData || restoredPayment?.formData;
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
   const service = findServiceById(product);
+  const isPastLifeProduct = service.id === 'past-life-goblin';
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
@@ -218,29 +219,35 @@ export default function Checkout() {
   }
 
   return (
-    <main className="mobile-page-shell checkout-luxe-page">
+    <main
+      className={
+        isPastLifeProduct
+          ? 'mobile-page-shell checkout-luxe-page past-life-checkout-page'
+          : 'mobile-page-shell checkout-luxe-page'
+      }
+    >
       <div className="mobile-page-card checkout-luxe-card">
         <MobileTopBar title="운월당" backTo={`/form/${service.id}`} backLabel="이전" backState={{ tabOrigin }} />
 
         <section className="checkout-luxe-stage" aria-label="결제 상품 미리보기">
           <div className="checkout-luxe-copy">
-            <span>잠들어 있던 내 운의 흐름</span>
-            <strong>{formData?.name || '고객'}님의 사주 리포트</strong>
+            <span>{isPastLifeProduct ? '흑장부에 이름을 새기기 전' : '잠들어 있던 내 운의 흐름'}</span>
+            <strong>{formData?.name || '고객'}님의 {isPastLifeProduct ? '전생장부' : '사주 리포트'}</strong>
           </div>
           <div className="checkout-luxe-preview-row">
             <article className="checkout-luxe-preview-card slim">
-              <img src="/intake-beauty-red.png" alt="" />
+              <img src={isPastLifeProduct ? '/media/dokkaebi-poster.webp' : '/intake-beauty-red.png'} alt="" />
               <div>
-                <span>질문 2개</span>
-                <strong>맞춤 분석</strong>
+                <span>{isPastLifeProduct ? '다섯 권' : '질문 2개'}</span>
+                <strong>{isPastLifeProduct ? '26개 주제' : '맞춤 분석'}</strong>
               </div>
             </article>
             <article className="checkout-luxe-preview-card featured">
-              <img src="/intake-night-blue.png" alt="" />
+              <img src={isPastLifeProduct ? '/media/dokkaebi-poster.webp' : '/intake-night-blue.png'} alt="" />
               <div>
                 <span>운월당</span>
                 <strong>{service.label}</strong>
-                <p>내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서</p>
+                <p>{isPastLifeProduct ? '전생의 상징을 현생의 행동으로 연결하는 개인 장부' : '내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서'}</p>
               </div>
             </article>
           </div>
@@ -258,8 +265,8 @@ export default function Checkout() {
           </div>
 
           <div className="checkout-luxe-benefit-pill">
-            <span>혜택 적용</span>
-            <strong>결제 후 결과를 바로 확인할 수 있어요</strong>
+            <span>{isPastLifeProduct ? '개인 장부 구성' : '혜택 적용'}</span>
+            <strong>{isPastLifeProduct ? '한 번 결제로 다섯 권 전체를 받아요' : '결제 후 결과를 바로 확인할 수 있어요'}</strong>
           </div>
 
           <div className="checkout-luxe-package-stack">
@@ -270,18 +277,20 @@ export default function Checkout() {
               </span>
               <div>
                 <strong>{service.label}</strong>
-                <p>성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석</p>
+                <p>{isPastLifeProduct ? '봉인록·인연록·업록·현생록·해원록, 30일 봉인 해제' : '성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석'}</p>
               </div>
               <b>{service.price}</b>
             </article>
-            <article className="checkout-luxe-package disabled">
-              <span className="checkout-luxe-radio" />
-              <div>
-                <strong>운월당 보관 패키지</strong>
-                <p>결과 보관, 다시보기, 추가 질문 확장 기능 준비 중</p>
-              </div>
-              <b>준비중</b>
-            </article>
+            {!isPastLifeProduct ? (
+              <article className="checkout-luxe-package disabled">
+                <span className="checkout-luxe-radio" />
+                <div>
+                  <strong>운월당 보관 패키지</strong>
+                  <p>결과 보관, 다시보기, 추가 질문 확장 기능 준비 중</p>
+                </div>
+                <b>준비중</b>
+              </article>
+            ) : null}
           </div>
 
           <div className="checkout-luxe-price-box">
@@ -290,7 +299,7 @@ export default function Checkout() {
               <strong>{service.price}</strong>
             </div>
             <div>
-              <span>질문 맞춤 분석</span>
+              <span>{isPastLifeProduct ? '다섯 권 26개 맞춤 해석' : '질문 맞춤 분석'}</span>
               <strong>포함</strong>
             </div>
             <div className="total">

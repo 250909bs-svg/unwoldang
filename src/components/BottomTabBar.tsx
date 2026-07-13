@@ -30,7 +30,7 @@ const navItems = [
 
 export default function BottomTabBar() {
   const location = useLocation();
-  const locationState = (location.state as { tabOrigin?: string } | null) ?? null;
+  const locationState = (location.state as { tabOrigin?: string; product?: string } | null) ?? null;
   const inFlowPage = [
     '/detail/',
     '/form/',
@@ -43,7 +43,13 @@ export default function BottomTabBar() {
     '/refund'
   ].some((path) => location.pathname.startsWith(path));
 
-  if (location.pathname.startsWith('/admin')) {
+  const isPastLifeExperience =
+    location.pathname === '/detail/past-life-goblin' ||
+    location.pathname === '/form/past-life-goblin' ||
+    location.pathname === '/report/past-life-goblin' ||
+    locationState?.product === 'past-life-goblin';
+
+  if (location.pathname.startsWith('/admin') || isPastLifeExperience) {
     return null;
   }
 

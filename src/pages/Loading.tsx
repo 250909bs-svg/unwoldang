@@ -54,6 +54,7 @@ export default function Loading() {
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
   const reportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
   const service = findServiceById(product);
+  const isPastLifeProduct = service.id === 'past-life-goblin';
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
@@ -84,7 +85,14 @@ export default function Loading() {
 
   const messages = useMemo(
     () =>
-      canRequestAiReport
+      isPastLifeProduct
+        ? [
+            '흑장부에서 당신의 이름을 찾는 중입니다.',
+            '인연의 실을 맞추고 있습니다.',
+            '현생에 남은 반복 장면을 읽고 있습니다.',
+            '마지막 봉인을 풀고 있습니다.'
+          ]
+        : canRequestAiReport
         ? [
             `${service.advisor} 스타일로 프리미엄 리포트를 구성하고 있습니다.`,
             '입력한 사주 정보와 질문 2개를 바탕으로 AI 분석 결과를 생성하고 있습니다.',
@@ -97,7 +105,7 @@ export default function Loading() {
             '질문 2개와 사주 입력값을 묶어서 결과 구조를 정리하고 있습니다.',
             '분석이 거의 완료되었습니다. 결과 화면으로 이동합니다.'
           ],
-    [canRequestAiReport, service.advisor]
+    [canRequestAiReport, isPastLifeProduct, service.advisor]
   );
 
   useEffect(() => {
@@ -237,14 +245,14 @@ export default function Loading() {
   }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, service.id, tabOrigin]);
 
   return (
-    <main className="mobile-page-shell">
+    <main className={isPastLifeProduct ? 'mobile-page-shell past-life-loading-page' : 'mobile-page-shell'}>
       <div className="mobile-page-card">
         <MobileTopBar title="리포트 생성 중" backTo="/" backLabel="홈" />
 
         <section className="mobile-page-content centered">
           <div className="mobile-loading-card saju-loading-card">
             <div className="saju-loading-head">
-              <span className="mobile-chip">운월당 사주 원국 분석</span>
+              <span className="mobile-chip">{isPastLifeProduct ? '도깨비 전생장부 봉인 해제' : '운월당 사주 원국 분석'}</span>
               <h1>{messages[messageIndex]}</h1>
             </div>
 
@@ -290,7 +298,7 @@ export default function Loading() {
             ) : null}
 
             <div className="saju-loading-phases" aria-label="분석 진행 단계">
-              {LOADING_PHASES.map((phase, index) => (
+              {(isPastLifeProduct ? ['이름 탐색', '인연 정렬', '현생 해석', '봉인 해제'] : LOADING_PHASES).map((phase, index) => (
                 <span key={phase} className={progress >= (index + 1) * 24 ? 'active' : undefined}>
                   {phase}
                 </span>

@@ -1,0 +1,2744 @@
+/* MZ dokkaebi past-life experience. Every rule is scoped to the dedicated product. */
+
+.app-container.past-life-app-container,
+body.home-all-black .app-container.past-life-app-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: #05070a;
+  box-shadow: none;
+}
+
+.app-container.past-life-report-app-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: #05070a;
+  box-shadow: none;
+}
+
+.home-cardnews-card.artwork-title-card .home-cardnews-rank,
+.home-cardnews-card.artwork-title-card .home-cardnews-copy,
+.home-showcase-cover.artwork-title-cover .home-showcase-cover-copy,
+.home-filter-product-card.artwork-title-card .home-filter-product-copy,
+.home-filter-product-card.artwork-title-card .home-filter-product-play {
+  display: none;
+}
+
+.home-cardnews-card.artwork-title-card .home-cardnews-overlay,
+.home-showcase-cover.artwork-title-cover .home-showcase-cover-overlay,
+.home-filter-product-card.artwork-title-card .home-filter-product-shade {
+  background: linear-gradient(180deg, rgba(2, 4, 8, 0.02) 0%, rgba(2, 4, 8, 0.05) 72%, rgba(2, 4, 8, 0.28) 100%);
+}
+
+.home-cardnews-card.artwork-title-card .home-cardnews-image,
+.home-showcase-cover.artwork-title-cover .home-showcase-cover-image,
+.home-filter-product-card.artwork-title-card .home-filter-product-image {
+  object-position: 50% 50%;
+  filter: saturate(1.01) contrast(1.01);
+}
+
+.home-cardnews-card.artwork-title-card:hover .home-cardnews-image,
+.home-filter-product-card.artwork-title-card:hover .home-filter-product-image {
+  transform: none;
+}
+
+.dokkaebi-landing {
+  --dokkaebi-ink: #05070a;
+  --dokkaebi-charcoal: #0a0f14;
+  --dokkaebi-night: #0c1821;
+  --dokkaebi-hanji: #e9e1d2;
+  --dokkaebi-sand: #b9aa91;
+  --dokkaebi-cyan: #27dde8;
+  --dokkaebi-cyan-deep: #0c7280;
+  --dokkaebi-red: #b92724;
+  --dokkaebi-ember: #e04a2f;
+  --dokkaebi-brass: #b38a4c;
+  --dokkaebi-brass-dark: #6f512b;
+  min-height: 100vh;
+  overflow: clip;
+  background:
+    linear-gradient(180deg, rgba(12, 24, 33, 0.46) 0%, rgba(5, 7, 10, 0) 22%),
+    var(--dokkaebi-ink);
+  color: var(--dokkaebi-hanji);
+  font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  color-scheme: dark;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.dokkaebi-landing *,
+.dokkaebi-landing *::before,
+.dokkaebi-landing *::after {
+  box-sizing: border-box;
+}
+
+.dokkaebi-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dokkaebi-site-head {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  width: min(1280px, calc(100% - 80px));
+  min-height: 76px;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.16);
+}
+
+.dokkaebi-site-brand {
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.dokkaebi-head-action {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  border-bottom: 1px solid rgba(39, 221, 232, 0.48);
+  color: #dffbfc;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dokkaebi-head-action:focus-visible,
+.dokkaebi-primary-action:focus-visible,
+.dokkaebi-secondary-action:focus-visible,
+.dokkaebi-film-controls button:focus-visible,
+.dokkaebi-ledger summary:focus-visible,
+.dokkaebi-faq summary:focus-visible,
+.dokkaebi-sticky-purchase a:focus-visible {
+  outline: 2px solid var(--dokkaebi-cyan);
+  outline-offset: 4px;
+}
+
+.dokkaebi-hero {
+  position: relative;
+  display: grid;
+  width: min(1280px, calc(100% - 80px));
+  min-height: min(900px, calc(100vh - 76px));
+  margin: 0 auto;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: center;
+  gap: 32px;
+  padding: 56px 0 72px;
+}
+
+.dokkaebi-hero::before {
+  position: absolute;
+  inset: 6% 0 0 42%;
+  z-index: 0;
+  border: 1px solid rgba(179, 138, 76, 0.08);
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-hero-copy {
+  position: relative;
+  z-index: 2;
+  grid-column: span 5;
+  max-width: 560px;
+}
+
+.dokkaebi-kicker,
+.dokkaebi-section-heading > span,
+.dokkaebi-value-intro > span,
+.dokkaebi-final-offer > span {
+  display: block;
+  margin-bottom: 18px;
+  color: #8de8ed;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.dokkaebi-hero-copy h1,
+.dokkaebi-section-heading h2,
+.dokkaebi-value-intro h2,
+.dokkaebi-final-offer h2 {
+  margin: 0;
+  color: #f2eadc;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.dokkaebi-hero-copy h1 {
+  max-width: 11em;
+  font-size: clamp(34px, 4vw, 62px);
+  line-height: 1.25;
+}
+
+.dokkaebi-hero-copy > p {
+  max-width: 520px;
+  margin: 26px 0 0;
+  color: #c5bbab;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.dokkaebi-hero-price {
+  display: flex;
+  margin-top: 28px;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.dokkaebi-hero-price small {
+  color: #8f887d;
+  font-size: 13px;
+}
+
+.dokkaebi-hero-price strong {
+  color: #e7d0a0;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 24px;
+}
+
+.dokkaebi-hero-actions {
+  display: flex;
+  margin-top: 28px;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dokkaebi-primary-action,
+.dokkaebi-secondary-action {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 22px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.dokkaebi-primary-action {
+  border: 1px solid #c19b5b;
+  background: #b38a4c;
+  color: #0a0805 !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+.dokkaebi-primary-action:hover {
+  background: #c39b58;
+}
+
+.dokkaebi-secondary-action {
+  border: 1px solid rgba(233, 225, 210, 0.28);
+  background: rgba(233, 225, 210, 0.04);
+  color: #e9e1d2;
+}
+
+.dokkaebi-trust-line {
+  margin-top: 18px !important;
+  color: #7f786e !important;
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+}
+
+.dokkaebi-hero-film {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-column: 6 / span 7;
+  width: min(100%, 460px);
+  margin: 0 0 0 auto;
+  gap: 14px;
+}
+
+.dokkaebi-film-mobile-context {
+  display: none;
+}
+
+.dokkaebi-film-door {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.52);
+  border-radius: 4px;
+  background: #05070a;
+  box-shadow:
+    0 32px 70px rgba(0, 0, 0, 0.56),
+    0 0 0 8px #090c0f,
+    0 0 0 9px rgba(179, 138, 76, 0.22),
+    inset 0 0 38px rgba(39, 221, 232, 0.08);
+  isolation: isolate;
+}
+
+.dokkaebi-film-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.dokkaebi-film-vignette,
+.dokkaebi-film-grain,
+.dokkaebi-film-thread,
+.dokkaebi-film-flames {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dokkaebi-film-vignette {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 10%, transparent 65%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.28), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.28));
+}
+
+.dokkaebi-film-grain {
+  z-index: 3;
+  opacity: 0.12;
+  background-image:
+    repeating-linear-gradient(31deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(127deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 5px);
+  mix-blend-mode: soft-light;
+}
+
+.dokkaebi-film-thread {
+  z-index: 4;
+  top: 42%;
+  right: -20%;
+  bottom: auto;
+  left: -46%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 74, 47, 0.18), rgba(224, 74, 47, 0.72), transparent);
+  transform: rotate(-8deg) translateX(-35%);
+  animation: dokkaebiThreadPass 14s ease-in-out infinite;
+}
+
+.dokkaebi-film-flames {
+  z-index: 4;
+}
+
+.dokkaebi-film-flames i {
+  position: absolute;
+  left: 11%;
+  bottom: 7%;
+  width: 5px;
+  height: 10px;
+  border-radius: 50% 50% 45% 45%;
+  background: rgba(39, 221, 232, 0.62);
+  box-shadow: 0 0 10px rgba(39, 221, 232, 0.58);
+  opacity: 0.45;
+  animation: dokkaebiFlame 3.8s ease-in-out infinite alternate;
+  animation-delay: 0s;
+}
+
+.dokkaebi-film-flames i:nth-child(2) { left: 23%; animation-delay: -0.4s; }
+.dokkaebi-film-flames i:nth-child(3) { left: 35%; animation-delay: -0.8s; }
+.dokkaebi-film-flames i:nth-child(4) { left: 47%; animation-delay: -1.2s; }
+.dokkaebi-film-flames i:nth-child(5) { left: 59%; animation-delay: -1.6s; }
+.dokkaebi-film-flames i:nth-child(6) { left: 71%; animation-delay: -2s; }
+.dokkaebi-film-flames i:nth-child(7) { left: 83%; animation-delay: -2.4s; }
+
+.dokkaebi-film-flames i:nth-child(2),
+.dokkaebi-film-flames i:nth-child(5) {
+  bottom: 12%;
+}
+
+.dokkaebi-film-flames i:nth-child(3),
+.dokkaebi-film-flames i:nth-child(6) {
+  bottom: 17%;
+}
+
+.dokkaebi-film-brass {
+  position: absolute;
+  z-index: 6;
+  width: 28px;
+  height: 28px;
+  border-color: #b38a4c;
+  pointer-events: none;
+}
+
+.dokkaebi-film-brass.corner-one {
+  top: 9px;
+  left: 9px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.dokkaebi-film-brass.corner-two {
+  top: 9px;
+  right: 9px;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+
+.dokkaebi-film-brass.corner-three {
+  right: 9px;
+  bottom: 9px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.dokkaebi-film-brass.corner-four {
+  bottom: 9px;
+  left: 9px;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+}
+
+.dokkaebi-film-below {
+  display: grid;
+  min-height: 72px;
+  align-items: start;
+  gap: 10px;
+}
+
+.dokkaebi-film-below > p {
+  margin: 0;
+  color: #d9cfbe;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 15px;
+  line-height: 1.6;
+  animation: dokkaebiCaption 0.55s ease both;
+}
+
+.dokkaebi-film-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.dokkaebi-film-controls button {
+  display: inline-flex;
+  min-width: 92px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(233, 225, 210, 0.2);
+  border-radius: 4px;
+  background: #0a0f14;
+  color: #e9e1d2;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dokkaebi-film-controls button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.dokkaebi-film-below small {
+  color: #8d8579;
+  font-size: 12px;
+}
+
+@keyframes dokkaebiThreadPass {
+  0%, 28% { transform: rotate(-8deg) translateX(-40%); opacity: 0; }
+  36%, 60% { opacity: 1; }
+  74%, 100% { transform: rotate(-8deg) translateX(105%); opacity: 0; }
+}
+
+@keyframes dokkaebiFlame {
+  from { transform: translateY(2px) scale(0.82); opacity: 0.24; }
+  to { transform: translateY(-5px) scale(1.08); opacity: 0.62; }
+}
+
+@keyframes dokkaebiCaption {
+  from { opacity: 0; filter: blur(2px); transform: translateY(8px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+.dokkaebi-question-path,
+.dokkaebi-ledgers,
+.dokkaebi-sample,
+.dokkaebi-value,
+.dokkaebi-difference,
+.dokkaebi-final-offer,
+.dokkaebi-faq {
+  position: relative;
+  width: min(1160px, calc(100% - 80px));
+  margin: 0 auto;
+  padding: 112px 0;
+}
+
+.dokkaebi-question-path,
+.dokkaebi-ledgers,
+.dokkaebi-sample,
+.dokkaebi-difference,
+.dokkaebi-faq {
+  border-top: 1px solid rgba(185, 170, 145, 0.13);
+}
+
+.dokkaebi-section-heading {
+  max-width: 720px;
+  margin: 0 auto 52px;
+  text-align: center;
+}
+
+.dokkaebi-section-heading.align-left {
+  margin-left: 0;
+  text-align: left;
+}
+
+.dokkaebi-section-heading h2,
+.dokkaebi-value-intro h2,
+.dokkaebi-final-offer h2 {
+  font-size: clamp(29px, 3.4vw, 46px);
+  line-height: 1.34;
+}
+
+.dokkaebi-section-heading p,
+.dokkaebi-value-intro p {
+  max-width: 660px;
+  margin: 18px 0 0;
+  color: #9f9689;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.dokkaebi-section-heading:not(.align-left) p {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.dokkaebi-question-list {
+  position: relative;
+  display: grid;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.dokkaebi-question-list::before {
+  position: absolute;
+  top: 26px;
+  bottom: 26px;
+  left: 28px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(185, 39, 36, 0.72) 15%, rgba(185, 39, 36, 0.72) 85%, transparent);
+  content: "";
+}
+
+.dokkaebi-question-list li {
+  position: relative;
+  display: grid;
+  min-height: 92px;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.1);
+}
+
+.dokkaebi-question-list li > span {
+  display: grid;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  margin-left: 16px;
+  border: 1px solid rgba(185, 39, 36, 0.62);
+  border-radius: 50%;
+  background: #07090c;
+  color: #d8776b;
+  font-size: 9px;
+}
+
+.dokkaebi-question-list strong {
+  padding-left: 20px;
+  color: #ddd3c3;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(18px, 2.1vw, 25px);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.dokkaebi-ledgers {
+  overflow: hidden;
+}
+
+.dokkaebi-ledger-thread {
+  position: absolute;
+  top: 294px;
+  bottom: 140px;
+  left: 36px;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(185, 39, 36, 0.08), rgba(185, 39, 36, 0.74), rgba(224, 74, 47, 0.28));
+}
+
+.dokkaebi-ledger-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.dokkaebi-ledger {
+  position: relative;
+  margin: 0;
+  border: 1px solid rgba(185, 170, 145, 0.12);
+  border-left-color: rgba(179, 138, 76, 0.46);
+  background:
+    linear-gradient(90deg, rgba(179, 138, 76, 0.08), transparent 72px),
+    #080b0f;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+}
+
+.dokkaebi-ledger > summary {
+  display: grid;
+  min-height: 190px;
+  grid-template-columns: 142px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 30px;
+  padding: 18px 26px 18px 18px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dokkaebi-ledger > summary::-webkit-details-marker,
+.dokkaebi-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.dokkaebi-ledger-visual {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.38);
+  background: #0a0f14;
+}
+
+.dokkaebi-ledger-visual::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 48%, rgba(5, 7, 10, 0.75));
+  content: "";
+}
+
+.dokkaebi-ledger-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.72) contrast(1.04) brightness(0.74);
+  transition: filter 0.45s ease, transform 0.55s ease;
+}
+
+.dokkaebi-ledger[open] .dokkaebi-ledger-visual img {
+  filter: saturate(0.92) contrast(1.03) brightness(0.88);
+  transform: scale(1.025);
+}
+
+.dokkaebi-ledger-flame {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 14px;
+  width: 7px;
+  height: 15px;
+  border-radius: 50%;
+  background: #27dde8;
+  box-shadow: 0 0 15px rgba(39, 221, 232, 0.66);
+}
+
+.chapter-karma .dokkaebi-ledger-flame {
+  opacity: 0.38;
+}
+
+.chapter-release .dokkaebi-ledger-flame {
+  background: #e2c99b;
+  box-shadow: 0 0 14px rgba(226, 201, 155, 0.52);
+}
+
+.dokkaebi-ledger-seal {
+  position: absolute;
+  z-index: 3;
+  right: 10px;
+  top: 10px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid rgba(179, 138, 76, 0.72);
+  color: #c99d57;
+  font-family: "Noto Serif KR", serif;
+  font-size: 10px;
+  font-style: normal;
+  opacity: 0.34;
+  transform: rotate(-4deg);
+  transition: opacity 0.3s ease;
+}
+
+.dokkaebi-ledger[open] .dokkaebi-ledger-seal {
+  opacity: 1;
+}
+
+.dokkaebi-ledger-copy {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.dokkaebi-ledger-copy small {
+  color: #7fd2d7;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dokkaebi-ledger-copy strong {
+  color: #eee4d3;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.dokkaebi-ledger-copy em {
+  color: #aea394;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 16px;
+  font-style: normal;
+  line-height: 1.6;
+}
+
+.dokkaebi-ledger-copy > span {
+  color: #746c62;
+  font-size: 12px;
+}
+
+.dokkaebi-ledger-more {
+  display: inline-flex;
+  min-width: 76px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #aca293;
+  font-size: 12px;
+}
+
+.dokkaebi-ledger-more svg {
+  transition: transform 0.25s ease;
+}
+
+.dokkaebi-ledger[open] .dokkaebi-ledger-more svg {
+  transform: rotate(90deg);
+}
+
+.dokkaebi-ledger-topics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  padding: 0 18px 18px 190px;
+}
+
+.dokkaebi-ledger-topics span {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 0 16px;
+  border-top: 1px solid rgba(185, 170, 145, 0.12);
+  color: #c3b8a6;
+  font-size: 13px;
+}
+
+.dokkaebi-sample-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dokkaebi-sample-grid article {
+  position: relative;
+  display: flex;
+  min-height: 390px;
+  flex-direction: column;
+  padding: 34px 30px;
+  border: 1px solid rgba(179, 138, 76, 0.22);
+  background:
+    linear-gradient(180deg, rgba(179, 138, 76, 0.05), transparent 28%),
+    #0a0d11;
+}
+
+.dokkaebi-sample-grid article::after {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(179, 138, 76, 0.38);
+  color: rgba(179, 138, 76, 0.66);
+  content: "印";
+  font-family: "Noto Serif KR", serif;
+  font-size: 12px;
+  transform: rotate(-5deg);
+}
+
+.dokkaebi-sample-grid article > span {
+  color: #5f8890;
+  font-family: "Noto Serif KR", serif;
+  font-size: 34px;
+}
+
+.dokkaebi-sample-grid article > small {
+  align-self: flex-start;
+  margin-top: 26px;
+  padding: 4px 8px;
+  border: 1px solid rgba(185, 170, 145, 0.2);
+  color: #8f8678;
+  font-size: 10px;
+}
+
+.dokkaebi-sample-grid h3 {
+  margin: 24px 0 0;
+  color: #f0e7d8;
+  font-family: "Noto Serif KR", serif;
+  font-size: 25px;
+  letter-spacing: 0;
+}
+
+.dokkaebi-sample-grid strong {
+  margin-top: 18px;
+  color: #c7a86f;
+  font-size: 14px;
+}
+
+.dokkaebi-sample-grid p {
+  margin: 16px 0 0;
+  color: #aaa093;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.dokkaebi-sample blockquote {
+  max-width: 880px;
+  margin: 64px auto 0;
+  padding: 34px 48px;
+  border: 0;
+  border-top: 1px solid rgba(39, 221, 232, 0.24);
+  border-bottom: 1px solid rgba(39, 221, 232, 0.24);
+  color: #ded4c5;
+  font-family: "Noto Serif KR", serif;
+  font-size: clamp(21px, 2.6vw, 32px);
+  line-height: 1.65;
+  text-align: center;
+}
+
+.dokkaebi-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.8fr);
+  gap: 72px;
+  align-items: start;
+}
+
+.dokkaebi-value-intro {
+  max-width: 650px;
+}
+
+.dokkaebi-value ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dokkaebi-value li {
+  display: grid;
+  min-height: 60px;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.12);
+  color: #c8beaf;
+  font-size: 14px;
+}
+
+.dokkaebi-value li svg {
+  color: #b38a4c;
+}
+
+.dokkaebi-difference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dokkaebi-difference-grid article {
+  min-height: 230px;
+  padding: 34px;
+  border-top: 1px solid rgba(39, 221, 232, 0.42);
+  background: #0a0e12;
+}
+
+.dokkaebi-difference-grid article.muted {
+  border-top-color: rgba(185, 170, 145, 0.2);
+  background: #080a0d;
+  opacity: 0.74;
+}
+
+.dokkaebi-difference-grid svg {
+  color: #59cbd2;
+}
+
+.dokkaebi-difference-grid h3 {
+  margin: 28px 0 0;
+  color: #e9dfcf;
+  font-family: "Noto Serif KR", serif;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.dokkaebi-difference-grid p {
+  max-width: 500px;
+  margin: 14px 0 0;
+  color: #9d9487;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.dokkaebi-final-offer {
+  display: flex;
+  max-width: 840px;
+  min-height: 580px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.dokkaebi-final-offer::before {
+  position: absolute;
+  inset: 56px 0;
+  border-top: 1px solid rgba(179, 138, 76, 0.22);
+  border-bottom: 1px solid rgba(179, 138, 76, 0.22);
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-final-offer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dokkaebi-final-mark {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  margin-bottom: 24px;
+  border: 1px solid rgba(39, 221, 232, 0.3);
+  color: #63d8de;
+}
+
+.dokkaebi-final-offer p {
+  margin: 24px 0 0;
+  color: #b4aa9b;
+  font-family: "Noto Serif KR", serif;
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.dokkaebi-final-offer > strong {
+  margin: 28px 0 20px;
+  color: #e7d0a0;
+  font-size: 26px;
+}
+
+.dokkaebi-final-offer > small {
+  margin-top: 14px;
+  color: #81796e;
+  font-size: 12px;
+}
+
+.dokkaebi-faq-list {
+  border-top: 1px solid rgba(185, 170, 145, 0.16);
+}
+
+.dokkaebi-faq details {
+  border-bottom: 1px solid rgba(185, 170, 145, 0.16);
+}
+
+.dokkaebi-faq summary {
+  display: flex;
+  min-height: 74px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #ddd3c4;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dokkaebi-faq summary svg {
+  flex: 0 0 auto;
+  color: #756d62;
+  transition: transform 0.22s ease;
+}
+
+.dokkaebi-faq details[open] summary svg {
+  transform: rotate(90deg);
+}
+
+.dokkaebi-faq details p {
+  max-width: 760px;
+  margin: 0;
+  padding: 0 0 28px;
+  color: #a69d90;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.dokkaebi-legal-note {
+  margin: 34px 0 0;
+  padding: 22px 0;
+  border-top: 1px solid rgba(185, 170, 145, 0.1);
+  color: #746e65;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.dokkaebi-footer {
+  display: flex;
+  width: min(1160px, calc(100% - 80px));
+  min-height: 112px;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid rgba(185, 170, 145, 0.12);
+  color: #716a61;
+  font-size: 12px;
+}
+
+.dokkaebi-footer nav {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.dokkaebi-sticky-purchase {
+  display: none;
+}
+
+/* Dedicated four-step intake. */
+.past-life-goblin-flow-page {
+  min-height: calc(100dvh - 70px);
+  padding: 0 0 calc(96px + env(safe-area-inset-bottom, 0px));
+  overflow-x: clip;
+  overflow-y: auto;
+  background: #05070a;
+  color: #e9e1d2;
+  touch-action: pan-y;
+  color-scheme: dark;
+}
+
+.past-life-goblin-flow-page .intake-story-backdrop {
+  display: none;
+}
+
+.past-life-goblin-flow-page .intake-story-shade {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #05070a;
+  pointer-events: none;
+}
+
+.past-life-goblin-flow-page .intake-story-frame {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: calc(100dvh - 70px);
+  height: auto;
+  grid-template-rows: minmax(300px, 44dvh) auto;
+  padding: 0;
+  overflow: visible;
+  background: #05070a;
+}
+
+.past-life-goblin-flow-page .intake-story-topbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 8;
+  padding: 14px 16px 0;
+}
+
+.past-life-goblin-flow-page .intake-story-brand strong {
+  color: #f1e8d9;
+  font-family: "Noto Serif KR", serif;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.past-life-goblin-flow-page .intake-story-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(233, 225, 210, 0.22);
+  border-radius: 4px;
+  background: rgba(5, 7, 10, 0.58);
+  color: #e9e1d2;
+  backdrop-filter: blur(10px);
+}
+
+.past-life-goblin-flow-page .intake-story-copy {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.past-life-goblin-flow-page .signature-intake-hero-art,
+.past-life-goblin-flow-page .intake-story-hero-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #071016;
+  pointer-events: none;
+}
+
+.past-life-goblin-flow-page .signature-intake-hero-art::after,
+.past-life-goblin-flow-page .intake-story-hero-art::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 7, 10, 0.12) 0%, rgba(5, 7, 10, 0.04) 34%, rgba(5, 7, 10, 0.62) 82%, #05070a 100%),
+    linear-gradient(90deg, rgba(5, 7, 10, 0.3), transparent 22%, transparent 78%, rgba(5, 7, 10, 0.3));
+  content: "";
+}
+
+.past-life-goblin-flow-page .past-life-intake-hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 19%;
+  filter: saturate(0.86) contrast(1.03) brightness(0.82);
+}
+
+.past-life-goblin-flow-page .intake-story-panel {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: 4;
+  width: 100%;
+  max-height: none;
+  margin: -42px 0 0;
+  padding: 26px 18px 24px;
+  overflow: visible;
+  border: 1px solid rgba(179, 138, 76, 0.2);
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 6px 6px 0 0;
+  background:
+    linear-gradient(180deg, rgba(179, 138, 76, 0.05), transparent 92px),
+    #080b0f;
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.38);
+  transform: none;
+  scrollbar-width: auto;
+}
+
+.past-life-goblin-flow-page .intake-story-panel::before {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 38px;
+  height: 1px;
+  background: rgba(179, 138, 76, 0.58);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.past-life-goblin-flow-page .intake-story-form-stack {
+  gap: 18px;
+  margin: 0;
+}
+
+.past-life-goblin-flow-page .intake-story-field {
+  gap: 9px;
+}
+
+.past-life-goblin-flow-page .intake-story-field > span,
+.past-life-goblin-flow-page .intake-story-field-head > span,
+.past-life-goblin-flow-page .past-life-text-card label > span {
+  color: #e6dccd;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.past-life-goblin-flow-page .intake-story-field input {
+  min-height: 44px;
+  padding: 4px 0 8px;
+  border-bottom-color: rgba(233, 225, 210, 0.24);
+  color: #f4ecdf;
+  font-size: 16px;
+}
+
+.past-life-goblin-flow-page .intake-story-field input::placeholder,
+.past-life-goblin-flow-page .intake-story-question-card textarea::placeholder {
+  color: #6f6a63;
+}
+
+.past-life-goblin-flow-page .intake-story-field input:focus,
+.past-life-goblin-flow-page .intake-story-question-card textarea:focus {
+  border-color: #27dde8;
+  box-shadow: 0 1px 0 rgba(39, 221, 232, 0.72);
+}
+
+.past-life-goblin-flow-page .intake-story-pill,
+.past-life-goblin-flow-page .intake-story-segment-button,
+.past-life-goblin-flow-page .intake-story-select-wrap select,
+.past-life-goblin-flow-page .intake-story-mini-check {
+  min-height: 44px;
+}
+
+.past-life-goblin-flow-page .intake-story-pill {
+  min-width: 72px;
+  padding: 0 14px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.past-life-goblin-flow-page .intake-story-pill.active,
+.past-life-goblin-flow-page .intake-story-segment-button.active {
+  border-color: rgba(179, 138, 76, 0.82);
+  background: rgba(179, 138, 76, 0.2);
+  color: #f5e8d1;
+}
+
+.past-life-goblin-flow-page .intake-story-segment-button {
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.past-life-goblin-flow-page .intake-story-select-wrap select {
+  border-radius: 4px;
+  background: #0e1318;
+  color: #e9e1d2;
+  font-size: 15px;
+}
+
+.past-life-goblin-flow-page .intake-story-caption {
+  color: #847c71;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.past-life-goblin-flow-page .intake-story-mini-box {
+  border-color: rgba(233, 225, 210, 0.34);
+  border-radius: 2px;
+}
+
+.past-life-goblin-flow-page .intake-story-mini-box.checked {
+  border-color: #b38a4c;
+  background: #b38a4c;
+  color: #05070a;
+}
+
+.past-life-intake-stack {
+  min-height: 430px;
+}
+
+.past-life-intake-volume {
+  display: block;
+  margin-bottom: 8px;
+  color: #75d7dc;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.past-life-goblin-flow-page .intake-story-question-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.past-life-goblin-flow-page .intake-story-question-copy strong {
+  color: #eee4d4;
+  font-family: "Noto Serif KR", serif;
+  font-size: 22px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+.past-life-goblin-flow-page .intake-story-question-copy p {
+  margin: 0;
+  color: #9b9285;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.past-life-goblin-flow-page .intake-story-question-card,
+.past-life-goblin-flow-page .past-life-intake-card {
+  padding: 16px;
+  border: 1px solid rgba(185, 170, 145, 0.16);
+  border-radius: 4px;
+  background: #0c1014;
+}
+
+.past-life-goblin-flow-page .intake-story-question-head strong {
+  color: #d9cfbf;
+  font-size: 13px;
+}
+
+.past-life-goblin-flow-page .intake-story-order-badge {
+  border: 1px solid rgba(179, 138, 76, 0.35);
+  border-radius: 2px;
+  background: transparent;
+  color: #b99a64;
+}
+
+.past-life-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.past-life-choice-grid.topic-grid button:last-child,
+.past-life-choice-grid.tone-grid button:last-child {
+  grid-column: 1 / -1;
+}
+
+.past-life-choice {
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid rgba(233, 225, 210, 0.14);
+  border-radius: 4px;
+  background: #11171c;
+  color: #c7bdae;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.past-life-choice.active {
+  border-color: rgba(39, 221, 232, 0.62);
+  background: #102128;
+  color: #dbfbfc;
+  box-shadow: inset 3px 0 #27dde8;
+}
+
+.past-life-text-card {
+  display: grid;
+  gap: 18px;
+}
+
+.past-life-text-card label {
+  display: grid;
+  gap: 8px;
+}
+
+.past-life-goblin-flow-page .past-life-text-card textarea {
+  min-height: 94px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid rgba(233, 225, 210, 0.15);
+  border-radius: 4px;
+  background: #080b0f;
+  color: #f0e8db;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.past-life-goblin-flow-page .intake-story-actions {
+  position: sticky;
+  z-index: 3;
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: minmax(86px, 0.36fr) 1fr;
+  gap: 8px;
+  margin: 22px -4px -10px;
+  padding: 10px 4px;
+  background: rgba(8, 11, 15, 0.94);
+  backdrop-filter: blur(12px);
+}
+
+.past-life-goblin-flow-page .intake-story-secondary,
+.past-life-goblin-flow-page .intake-story-primary {
+  min-height: 50px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.past-life-goblin-flow-page .intake-story-secondary {
+  border-color: rgba(233, 225, 210, 0.22);
+  background: transparent;
+  color: #c7bdaf;
+}
+
+.past-life-goblin-flow-page .intake-story-primary {
+  border: 1px solid #bf9958;
+  background: #b38a4c;
+  color: #080604;
+  box-shadow: none;
+}
+
+.past-life-goblin-flow-page .intake-story-primary:disabled {
+  border-color: rgba(185, 170, 145, 0.16);
+  background: #25231f;
+  color: #68635b;
+}
+
+/* Loading and checkout remain isolated from the other products. */
+.past-life-loading-page {
+  background: #05070a;
+  color: #e9e1d2;
+  color-scheme: dark;
+}
+
+.past-life-loading-page .mobile-page-card,
+.past-life-loading-page .mobile-page-content {
+  background: #05070a;
+}
+
+.past-life-loading-page .mobile-loading-card {
+  border-color: rgba(179, 138, 76, 0.2);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(39, 221, 232, 0.04), transparent 30%),
+    #0a0f14;
+  color: #e9e1d2;
+  box-shadow: none;
+}
+
+.past-life-loading-page .mobile-chip {
+  border-color: rgba(39, 221, 232, 0.34);
+  background: rgba(39, 221, 232, 0.06);
+  color: #8ce6eb;
+}
+
+.past-life-loading-page .saju-loading-head h1,
+.past-life-loading-page .saju-loading-board-head strong,
+.past-life-loading-page .saju-loading-elements-head strong,
+.past-life-loading-page .saju-loading-pillars strong {
+  color: #eee5d6;
+}
+
+.past-life-loading-page .saju-loading-board,
+.past-life-loading-page .saju-loading-elements {
+  border-color: rgba(185, 170, 145, 0.14);
+  background: #080c10;
+}
+
+.past-life-loading-page .saju-loading-phases span.active {
+  border-color: rgba(39, 221, 232, 0.45);
+  background: rgba(39, 221, 232, 0.08);
+  color: #a1edf0;
+}
+
+.past-life-loading-page .saju-loading-progress .progress-track span {
+  background: linear-gradient(90deg, #0c7280, #27dde8);
+}
+
+.past-life-checkout-page {
+  background: #05070a;
+  color-scheme: dark;
+}
+
+.past-life-checkout-page .checkout-luxe-card,
+.past-life-checkout-page .checkout-luxe-sheet {
+  background: #070a0e;
+  color: #e9e1d2;
+}
+
+.past-life-checkout-page .checkout-luxe-stage {
+  background:
+    linear-gradient(180deg, rgba(5, 7, 10, 0.18), rgba(5, 7, 10, 0.96)),
+    #0c1821;
+}
+
+.past-life-checkout-page .checkout-luxe-copy span,
+.past-life-checkout-page .checkout-luxe-copy strong,
+.past-life-checkout-page .checkout-luxe-sheet h1,
+.past-life-checkout-page .checkout-luxe-package strong,
+.past-life-checkout-page .checkout-luxe-price-box strong {
+  color: #eee5d6;
+}
+
+.past-life-checkout-page .checkout-luxe-preview-card,
+.past-life-checkout-page .checkout-luxe-package,
+.past-life-checkout-page .checkout-luxe-price-box,
+.past-life-checkout-page .checkout-luxe-benefit-pill {
+  border-color: rgba(185, 170, 145, 0.16);
+  background: #0c1014;
+  color: #c9beae;
+}
+
+.past-life-checkout-page .checkout-luxe-package.active {
+  border-color: rgba(179, 138, 76, 0.58);
+  box-shadow: inset 3px 0 #b38a4c;
+}
+
+.past-life-checkout-page .checkout-luxe-preview-card img {
+  object-position: center 18%;
+}
+
+.past-life-checkout-page .checkout-luxe-general-pay {
+  border-color: #b38a4c;
+  background: #b38a4c;
+  color: #080604;
+}
+
+/* Five-volume report. */
+.past-life-report-page {
+  --past-report-ink: #05070a;
+  --past-report-panel: #0a0f14;
+  --past-report-hanji: #e9e1d2;
+  --past-report-cyan: #27dde8;
+  --past-report-red: #b92724;
+  --past-report-brass: #b38a4c;
+  min-height: 100vh;
+  background: #05070a;
+  color: #e9e1d2;
+  color-scheme: dark;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.past-life-report-page .premium-report-topbar {
+  border-bottom-color: rgba(185, 170, 145, 0.14);
+  background: rgba(5, 7, 10, 0.9);
+  backdrop-filter: blur(14px);
+}
+
+.past-life-report-page .premium-report-brand,
+.past-life-report-page .premium-report-topbar a,
+.past-life-report-page .premium-report-topbar button {
+  color: #eee5d7;
+}
+
+.past-life-report-shell {
+  width: min(980px, 100%);
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  background: #05070a;
+}
+
+.past-life-report-paper {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  animation: none;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.2);
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, rgba(179, 138, 76, 0.025), transparent 16%, transparent 84%, rgba(179, 138, 76, 0.025)),
+    #080b0f;
+  color: #e9e1d2;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.42);
+  transform: none;
+}
+
+.past-life-report-paper::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 31px;
+  z-index: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(185, 39, 36, 0.35) 13%, rgba(185, 39, 36, 0.24) 83%, transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.past-life-report-paper > * {
+  position: relative;
+  z-index: 1;
+}
+
+.past-life-report-cover {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1fr);
+  gap: 48px;
+  padding: 48px;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.14);
+  background:
+    linear-gradient(180deg, rgba(12, 24, 33, 0.4), transparent 50%),
+    #070a0e;
+}
+
+.past-life-report-cover-visual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.46);
+  background: #05070a;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.38);
+}
+
+.past-life-report-cover-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.past-life-report-cover-visual::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.18), transparent 24%, transparent 68%, rgba(5, 7, 10, 0.5));
+  content: "";
+}
+
+.past-life-report-moon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(233, 225, 210, 0.34);
+  border-radius: 50%;
+  box-shadow: inset 11px 0 #070a0e;
+}
+
+.past-life-report-thread {
+  position: absolute;
+  right: -12%;
+  bottom: 25%;
+  left: -16%;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(185, 39, 36, 0.72), transparent);
+  transform: rotate(8deg);
+}
+
+.past-life-report-cover-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.past-life-report-cover-copy > span {
+  color: #7adce1;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.past-life-report-cover-copy h1 {
+  margin: 18px 0 0;
+  color: #f1e8d9;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(30px, 4.4vw, 52px);
+  font-weight: 800;
+  line-height: 1.34;
+  letter-spacing: 0;
+}
+
+.past-life-report-cover-copy > strong {
+  margin-top: 22px;
+  padding: 10px 12px;
+  border: 1px solid rgba(179, 138, 76, 0.42);
+  color: #d9bd87;
+  font-family: "Noto Serif KR", serif;
+  font-size: 15px;
+}
+
+.past-life-report-cover-copy p {
+  max-width: 500px;
+  margin: 24px 0 0;
+  color: #aaa092;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.past-life-report-seals {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 12px;
+  border: 1px solid rgba(185, 170, 145, 0.12);
+  background: rgba(185, 170, 145, 0.12);
+}
+
+.past-life-report-seals a {
+  display: grid;
+  min-height: 86px;
+  grid-template-columns: 30px 1fr;
+  align-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #0a0e12;
+  color: #d5cabb;
+  text-decoration: none;
+}
+
+.past-life-report-seals i {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(179, 138, 76, 0.45);
+  color: #b38a4c;
+  font-family: "Noto Serif KR", serif;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.past-life-report-seals span {
+  font-family: "Noto Serif KR", serif;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.past-life-report-seals small {
+  grid-column: 2;
+  color: #6f6961;
+  font-size: 9px;
+}
+
+.past-life-report-seals a:focus-visible {
+  outline: 2px solid #27dde8;
+  outline-offset: -2px;
+}
+
+.past-life-report-seals a.active {
+  background: #10191e;
+  box-shadow: inset 0 -2px #27dde8;
+}
+
+.past-life-report-seals a.active i {
+  border-color: rgba(39, 221, 232, 0.68);
+  color: #80e5e9;
+}
+
+.past-life-report-seals a.active small {
+  color: #8bdde1;
+}
+
+.past-life-report-paper .premium-divider {
+  height: 1px;
+  margin: 0 48px;
+  background: rgba(185, 170, 145, 0.12);
+}
+
+.past-life-report-paper .premium-report-section {
+  padding: 56px 48px;
+  color: #dcd2c2;
+}
+
+.past-life-report-paper .premium-section-heading h2,
+.past-life-report-paper .premium-section-title-wrap h2 {
+  color: #eee4d5;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.past-life-report-paper .premium-section-index {
+  min-width: auto;
+  color: #71d7dc;
+  font-family: "Noto Serif KR", serif;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.past-life-chapter-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 30px 0;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.24);
+  background: #05070a;
+}
+
+.past-life-chapter-art::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 52%, rgba(5, 7, 10, 0.88));
+  content: "";
+  pointer-events: none;
+}
+
+.past-life-chapter-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 52%;
+  filter: saturate(0.88) contrast(1.02);
+}
+
+.past-life-chapter-art figcaption {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  left: 20px;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.past-life-chapter-art figcaption span {
+  color: #8ee7eb;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.past-life-chapter-art figcaption strong {
+  color: #e3d8c7;
+  font-family: "Noto Serif KR", serif;
+  font-size: 14px;
+}
+
+#pastlife-release .past-life-chapter-art figcaption span {
+  color: #e2c99b;
+}
+
+.past-life-report-paper .premium-muted {
+  color: #8e867a;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.past-life-report-paper .premium-callout,
+.past-life-report-paper .premium-card,
+.past-life-report-paper .premium-accordion,
+.past-life-report-paper .premium-table-wrap,
+.past-life-report-paper .premium-wonguk-board,
+.past-life-report-paper .premium-element-board,
+.past-life-report-paper .premium-ten-god-board,
+.past-life-report-paper .premium-report-support-card {
+  border-color: rgba(185, 170, 145, 0.15);
+  border-radius: 4px;
+  background: #0c1014;
+  color: #d7cdbc;
+  box-shadow: none;
+}
+
+.past-life-report-paper .premium-callout {
+  border-left: 2px solid #0c7280;
+}
+
+.past-life-report-paper .premium-callout h3,
+.past-life-report-paper .premium-card h3,
+.past-life-report-paper .premium-question-card h3,
+.past-life-report-paper .premium-answer-card h3,
+.past-life-report-paper .premium-key-label,
+.past-life-report-paper .premium-accordion summary,
+.past-life-report-paper .premium-report-support-card strong {
+  color: #e6dccd;
+}
+
+.past-life-report-paper .premium-callout p,
+.past-life-report-paper .premium-card p,
+.past-life-report-paper .premium-answer-card p,
+.past-life-report-paper .premium-accordion-body p,
+.past-life-report-paper .premium-list li,
+.past-life-report-paper .premium-report-support-card p {
+  color: #b7ad9e;
+  font-size: 16px;
+  line-height: 1.78;
+}
+
+.past-life-report-paper .premium-card.tone-good,
+.past-life-report-paper .premium-card.tone-warn {
+  background: #0c1014;
+}
+
+.past-life-report-paper .premium-card.tone-good {
+  border-left: 2px solid #0c7280;
+}
+
+.past-life-report-paper .premium-card.tone-warn {
+  border-left: 2px solid #8e6436;
+}
+
+.past-life-report-paper .premium-accordion summary {
+  min-height: 64px;
+  padding: 14px 16px;
+  font-family: "Noto Serif KR", serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.past-life-report-paper .premium-details-hint {
+  color: #746d63;
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  font-size: 11px;
+}
+
+.past-life-report-paper .premium-accordion-body {
+  border-top-color: rgba(185, 170, 145, 0.1);
+}
+
+.past-life-report-paper .premium-toc-header {
+  border-color: rgba(185, 170, 145, 0.16);
+  border-radius: 4px;
+  background: #0a0e12;
+  color: #e4dacb;
+}
+
+.past-life-report-paper .premium-toc-header span,
+.past-life-report-paper .premium-toc-header em {
+  color: #8e867b;
+}
+
+.past-life-report-paper .premium-toc-item {
+  min-height: 50px;
+  border-color: rgba(185, 170, 145, 0.12);
+  border-radius: 2px;
+  background: #0c1014;
+  color: #d7cdbc;
+}
+
+.past-life-report-paper .premium-toc-number {
+  color: #72d3d8;
+}
+
+.past-life-report-paper .premium-table th {
+  background: #10161b;
+  color: #c7bcac;
+}
+
+.past-life-report-paper .premium-table td {
+  border-color: rgba(185, 170, 145, 0.1);
+  color: #b2a89a;
+}
+
+.past-life-report-paper #pastlife-seal,
+.past-life-report-paper #pastlife-relationship,
+.past-life-report-paper #pastlife-karma,
+.past-life-report-paper #pastlife-present,
+.past-life-report-paper #pastlife-release {
+  position: relative;
+  scroll-margin-top: 74px;
+}
+
+.past-life-report-paper #pastlife-seal::before,
+.past-life-report-paper #pastlife-relationship::before,
+.past-life-report-paper #pastlife-karma::before,
+.past-life-report-paper #pastlife-present::before,
+.past-life-report-paper #pastlife-release::before {
+  position: absolute;
+  top: 30px;
+  right: 36px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(179, 138, 76, 0.38);
+  color: rgba(179, 138, 76, 0.72);
+  content: "印";
+  font-family: "Noto Serif KR", serif;
+  font-size: 11px;
+  transform: rotate(-4deg);
+}
+
+.past-life-report-paper #pastlife-relationship .premium-callout,
+.past-life-report-paper #pastlife-karma .premium-callout {
+  border-left-color: #7d2c2b;
+}
+
+.past-life-report-paper #pastlife-release {
+  background: linear-gradient(180deg, rgba(233, 225, 210, 0.035), transparent);
+}
+
+.past-life-report-paper #pastlife-release .premium-section-index,
+.past-life-report-paper #pastlife-release .premium-toc-number {
+  color: #d6bc8d;
+}
+
+.past-life-report-paper #pastlife-release .premium-callout {
+  border-left-color: #b38a4c;
+}
+
+.past-life-share-format {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border: 1px solid rgba(185, 170, 145, 0.14);
+  border-radius: 4px;
+  background: #080b0f;
+}
+
+.past-life-share-format button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #8f877b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.past-life-share-format button.active {
+  background: #122129;
+  color: #a5edf0;
+}
+
+.past-life-share-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.past-life-share-card {
+  position: relative;
+  display: flex;
+  min-height: 310px;
+  flex-direction: column;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.22);
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, rgba(12, 24, 33, 0.74), rgba(5, 7, 10, 0.95)),
+    #05070a;
+}
+
+.past-life-share-card::before {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(179, 138, 76, 0.42);
+  border-radius: 50%;
+  box-shadow: inset 10px 0 #0c1821;
+  content: "";
+}
+
+.past-life-share-card > span {
+  position: relative;
+  z-index: 1;
+  max-width: calc(100% - 48px);
+  color: #78d8dd;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.past-life-share-card.tone-red > span {
+  color: #d77b70;
+}
+
+.past-life-share-card.tone-gold > span {
+  color: #d9bd87;
+}
+
+.past-life-share-card > strong {
+  position: relative;
+  z-index: 1;
+  margin: auto 0;
+  color: #eee5d7;
+  font-family: "Noto Serif KR", serif;
+  font-size: 20px;
+  line-height: 1.65;
+  letter-spacing: 0;
+}
+
+.past-life-share-card > button {
+  position: relative;
+  z-index: 1;
+  min-height: 44px;
+  border: 1px solid rgba(233, 225, 210, 0.24);
+  border-radius: 3px;
+  background: rgba(233, 225, 210, 0.04);
+  color: #d8cebf;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.past-life-share-format button:focus-visible,
+.past-life-share-card > button:focus-visible {
+  outline: 2px solid #27dde8;
+  outline-offset: 3px;
+}
+
+.past-life-report-paper .premium-report-footer {
+  border-top-color: rgba(185, 170, 145, 0.12);
+  background: #070a0e;
+  color: #777066;
+}
+
+.past-life-mobile-chapter-nav {
+  display: none;
+}
+
+@media (max-width: 1040px) {
+  .dokkaebi-site-head,
+  .dokkaebi-hero,
+  .dokkaebi-question-path,
+  .dokkaebi-ledgers,
+  .dokkaebi-sample,
+  .dokkaebi-value,
+  .dokkaebi-difference,
+  .dokkaebi-final-offer,
+  .dokkaebi-faq,
+  .dokkaebi-footer {
+    width: min(calc(100% - 48px), 920px);
+  }
+
+  .dokkaebi-hero {
+    min-height: auto;
+    grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+    gap: 36px;
+  }
+
+  .dokkaebi-hero-copy,
+  .dokkaebi-hero-film {
+    grid-column: auto;
+  }
+
+  .dokkaebi-ledger-topics {
+    padding-left: 176px;
+  }
+
+  .dokkaebi-sample-grid article {
+    min-height: 360px;
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 820px) {
+  .dokkaebi-hero {
+    display: flex;
+    flex-direction: column;
+    padding-top: 34px;
+  }
+
+  .dokkaebi-hero::before {
+    inset: 22px 12% 38% 12%;
+  }
+
+  .dokkaebi-hero-film {
+    order: 1;
+    width: min(100%, 390px);
+    margin: 0 auto;
+  }
+
+  .dokkaebi-hero-copy {
+    order: 2;
+    width: min(100%, 680px);
+    max-width: none;
+    margin: 18px auto 0;
+    text-align: center;
+  }
+
+  .dokkaebi-hero-copy h1,
+  .dokkaebi-hero-copy > p {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .dokkaebi-hero-price,
+  .dokkaebi-hero-actions {
+    justify-content: center;
+  }
+
+  .dokkaebi-ledger > summary {
+    grid-template-columns: 112px minmax(0, 1fr) auto;
+    gap: 22px;
+  }
+
+  .dokkaebi-ledger-topics {
+    padding-left: 152px;
+  }
+
+  .dokkaebi-sample-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dokkaebi-sample-grid article:last-child {
+    grid-column: 1 / -1;
+    min-height: 300px;
+  }
+
+  .dokkaebi-value {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .past-life-report-cover {
+    gap: 30px;
+    padding: 36px;
+  }
+
+  .past-life-report-paper .premium-report-section {
+    padding: 46px 36px;
+  }
+
+  .past-life-chapter-art {
+    aspect-ratio: 4 / 5;
+    margin: 24px 0;
+  }
+
+  .past-life-chapter-art img {
+    object-position: center;
+  }
+
+  .past-life-report-paper .premium-divider {
+    margin-right: 36px;
+    margin-left: 36px;
+  }
+
+  .past-life-mobile-chapter-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 80;
+    display: grid;
+    min-height: calc(68px + env(safe-area-inset-bottom, 0px));
+    grid-template-columns: 48px 1fr 48px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(179, 138, 76, 0.24);
+    background: rgba(5, 7, 10, 0.96);
+    backdrop-filter: blur(14px);
+  }
+
+  .past-life-mobile-chapter-nav button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid rgba(233, 225, 210, 0.22);
+    border-radius: 3px;
+    background: #0c1014;
+    color: #e9e1d2;
+  }
+
+  .past-life-mobile-chapter-nav button:disabled {
+    color: #4f4b45;
+    opacity: 0.58;
+  }
+
+  .past-life-mobile-chapter-nav span {
+    display: grid;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .past-life-mobile-chapter-nav small {
+    color: #6bcdd2;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .past-life-mobile-chapter-nav strong {
+    color: #e7ddcd;
+    font-family: "Noto Serif KR", serif;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dokkaebi-landing {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .dokkaebi-site-head,
+  .dokkaebi-hero,
+  .dokkaebi-question-path,
+  .dokkaebi-ledgers,
+  .dokkaebi-sample,
+  .dokkaebi-value,
+  .dokkaebi-difference,
+  .dokkaebi-final-offer,
+  .dokkaebi-faq,
+  .dokkaebi-footer {
+    width: calc(100% - 40px);
+  }
+
+  .dokkaebi-site-head {
+    min-height: 64px;
+  }
+
+  .dokkaebi-site-brand {
+    font-size: 20px;
+  }
+
+  .dokkaebi-hero {
+    gap: 28px;
+    padding: 22px 0 76px;
+  }
+
+  .dokkaebi-hero-film {
+    width: min(100%, 320px);
+  }
+
+  .dokkaebi-film-mobile-context {
+    display: grid;
+    gap: 5px;
+    padding: 0 2px 4px;
+    text-align: center;
+  }
+
+  .dokkaebi-film-mobile-context span {
+    color: #77d4d9;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .dokkaebi-film-mobile-context strong {
+    color: #ece3d4;
+    font-family: "Noto Serif KR", serif;
+    font-size: 19px;
+    letter-spacing: 0;
+  }
+
+  .dokkaebi-film-door {
+    box-shadow:
+      0 24px 48px rgba(0, 0, 0, 0.48),
+      0 0 0 6px #090c0f,
+      0 0 0 7px rgba(179, 138, 76, 0.22);
+  }
+
+  .dokkaebi-film-below {
+    min-height: 106px;
+  }
+
+  .dokkaebi-film-below > p {
+    min-height: 48px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .dokkaebi-film-controls {
+    justify-content: center;
+  }
+
+  .dokkaebi-hero-copy h1 {
+    max-width: 12em;
+    font-size: clamp(30px, 9vw, 40px);
+    line-height: 1.32;
+  }
+
+  .dokkaebi-hero-copy > p {
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .dokkaebi-hero-copy > p br {
+    display: none;
+  }
+
+  .dokkaebi-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .dokkaebi-primary-action,
+  .dokkaebi-secondary-action {
+    width: 100%;
+  }
+
+  .dokkaebi-trust-line {
+    max-width: 290px !important;
+  }
+
+  .dokkaebi-question-path,
+  .dokkaebi-ledgers,
+  .dokkaebi-sample,
+  .dokkaebi-value,
+  .dokkaebi-difference,
+  .dokkaebi-final-offer,
+  .dokkaebi-faq {
+    padding: 76px 0;
+  }
+
+  .dokkaebi-section-heading {
+    margin-bottom: 34px;
+  }
+
+  .dokkaebi-section-heading h2,
+  .dokkaebi-value-intro h2,
+  .dokkaebi-final-offer h2 {
+    font-size: clamp(27px, 8vw, 35px);
+  }
+
+  .dokkaebi-section-heading p,
+  .dokkaebi-value-intro p {
+    font-size: 15px;
+  }
+
+  .dokkaebi-question-list::before {
+    left: 19px;
+  }
+
+  .dokkaebi-question-list li {
+    min-height: 86px;
+    grid-template-columns: 40px 1fr;
+  }
+
+  .dokkaebi-question-list li > span {
+    margin-left: 7px;
+  }
+
+  .dokkaebi-question-list strong {
+    padding-left: 14px;
+    font-size: 18px;
+  }
+
+  .dokkaebi-ledger-thread {
+    display: none;
+  }
+
+  .dokkaebi-ledger > summary {
+    min-height: 148px;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 16px;
+    padding: 14px;
+  }
+
+  .dokkaebi-ledger-copy {
+    gap: 5px;
+  }
+
+  .dokkaebi-ledger-copy strong {
+    font-size: 25px;
+  }
+
+  .dokkaebi-ledger-copy em {
+    font-size: 14px;
+  }
+
+  .dokkaebi-ledger-copy > span,
+  .dokkaebi-ledger-more {
+    display: none;
+  }
+
+  .dokkaebi-ledger-topics {
+    grid-template-columns: 1fr;
+    padding: 0 14px 14px;
+  }
+
+  .dokkaebi-ledger-topics span {
+    min-height: 44px;
+    padding: 0 8px;
+  }
+
+  .dokkaebi-sample-grid,
+  .dokkaebi-difference-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dokkaebi-sample-grid article,
+  .dokkaebi-sample-grid article:last-child {
+    grid-column: auto;
+    min-height: 330px;
+  }
+
+  .dokkaebi-sample blockquote {
+    margin-top: 42px;
+    padding: 26px 10px;
+    font-size: 21px;
+  }
+
+  .dokkaebi-difference-grid article {
+    min-height: 210px;
+    padding: 28px 22px;
+  }
+
+  .dokkaebi-final-offer {
+    min-height: 520px;
+  }
+
+  .dokkaebi-footer {
+    min-height: 150px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .dokkaebi-sticky-purchase {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 70;
+    display: flex;
+    min-height: calc(72px + env(safe-area-inset-bottom, 0px));
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(179, 138, 76, 0.24);
+    background: rgba(5, 7, 10, 0.96);
+    backdrop-filter: blur(14px);
+  }
+
+  .dokkaebi-sticky-purchase > span {
+    display: grid;
+    gap: 2px;
+  }
+
+  .dokkaebi-sticky-purchase small {
+    color: #7f786d;
+    font-size: 10px;
+  }
+
+  .dokkaebi-sticky-purchase strong {
+    color: #e1c58f;
+    font-size: 16px;
+  }
+
+  .dokkaebi-sticky-purchase a {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 17px;
+    border-radius: 4px;
+    background: #b38a4c;
+    color: #090704;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .past-life-report-shell {
+    padding: 0 0 74px;
+  }
+
+  .past-life-report-paper {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .past-life-report-paper::before {
+    left: 14px;
+  }
+
+  .past-life-report-cover {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 26px 20px 32px;
+  }
+
+  .past-life-report-cover-visual {
+    width: min(100%, 330px);
+    margin: 0 auto;
+  }
+
+  .past-life-report-cover-copy {
+    align-items: center;
+    text-align: center;
+  }
+
+  .past-life-report-cover-copy h1 {
+    font-size: clamp(29px, 9vw, 40px);
+  }
+
+  .past-life-report-cover-copy p {
+    font-size: 15px;
+  }
+
+  .past-life-report-seals {
+    display: flex;
+    width: calc(100% + 40px);
+    margin-right: -20px;
+    margin-left: -20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .past-life-report-seals::-webkit-scrollbar {
+    display: none;
+  }
+
+  .past-life-report-seals a {
+    flex: 0 0 112px;
+    scroll-snap-align: start;
+  }
+
+  .past-life-report-paper .premium-report-section {
+    padding: 42px 20px;
+  }
+
+  .past-life-report-paper .premium-divider {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  .past-life-report-paper .premium-callout p,
+  .past-life-report-paper .premium-card p,
+  .past-life-report-paper .premium-answer-card p,
+  .past-life-report-paper .premium-accordion-body p,
+  .past-life-report-paper .premium-list li {
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .past-life-report-paper .premium-grid2,
+  .past-life-report-paper .premium-grid3 {
+    grid-template-columns: 1fr;
+  }
+
+  .past-life-share-format {
+    display: grid;
+    width: 100%;
+  }
+
+  .past-life-share-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .past-life-share-card {
+    min-height: 250px;
+  }
+
+  .past-life-report-paper #pastlife-seal::before,
+  .past-life-report-paper #pastlife-relationship::before,
+  .past-life-report-paper #pastlife-karma::before,
+  .past-life-report-paper #pastlife-present::before,
+  .past-life-report-paper #pastlife-release::before {
+    top: 20px;
+    right: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .dokkaebi-site-head,
+  .dokkaebi-hero,
+  .dokkaebi-question-path,
+  .dokkaebi-ledgers,
+  .dokkaebi-sample,
+  .dokkaebi-value,
+  .dokkaebi-difference,
+  .dokkaebi-final-offer,
+  .dokkaebi-faq,
+  .dokkaebi-footer {
+    width: calc(100% - 28px);
+  }
+
+  .dokkaebi-hero-film {
+    width: min(100%, 286px);
+  }
+
+  .dokkaebi-hero-copy h1 {
+    font-size: 29px;
+  }
+
+  .dokkaebi-film-controls button {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .dokkaebi-sticky-purchase small {
+    display: none;
+  }
+
+  .past-life-goblin-flow-page .intake-story-panel {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .past-life-choice {
+    padding-right: 8px;
+    padding-left: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 900px) {
+  .past-life-goblin-flow-page .intake-story-frame {
+    grid-template-rows: minmax(360px, 48dvh) auto;
+  }
+
+  .past-life-goblin-flow-page .past-life-intake-hero-image {
+    object-position: center 22%;
+  }
+}
+
+@media (min-width: 1400px) {
+  .past-life-report-seals {
+    position: fixed;
+    top: 112px;
+    left: max(22px, calc(50% - 690px));
+    z-index: 30;
+    display: grid;
+    width: 184px;
+    grid-template-columns: 1fr;
+    margin: 0;
+    border-color: rgba(179, 138, 76, 0.2);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  }
+
+  .past-life-report-seals a {
+    min-height: 66px;
+    grid-template-columns: 26px 1fr;
+    padding: 8px 10px;
+  }
+
+  .past-life-report-seals i {
+    width: 24px;
+    height: 24px;
+  }
+
+  .past-life-report-seals a.active {
+    box-shadow: inset 2px 0 #27dde8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dokkaebi-landing *,
+  .dokkaebi-landing *::before,
+  .dokkaebi-landing *::after,
+  .past-life-goblin-flow-page *,
+  .past-life-report-page * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .dokkaebi-film-thread {
+    opacity: 0.45;
+    transform: rotate(-8deg) translateX(35%);
+  }
+}
