@@ -1,5 +1,11 @@
-import { Menu as MenuIcon, MessageCircle, Play, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, Menu as MenuIcon, MessageCircle, Play, X } from 'lucide-react';
+import {
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 import { Link } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
@@ -387,6 +393,10 @@ const homeDiscoverySections = [
 export default function Home() {
   const [activeCardNewsIndex, setActiveCardNewsIndex] = useState(0);
   const [activeHomeCategory, setActiveHomeCategory] = useState<HomeCategoryId>('all');
+  const cardNewsPointerIdRef = useRef<number | null>(null);
+  const cardNewsPointerStartRef = useRef({ x: 0, y: 0 });
+  const cardNewsPointerMovedRef = useRef(false);
+  const suppressCardNewsClickRef = useRef(false);
   const [menuOpen, setMenuOpen] = useState(
     () => new URLSearchParams(window.location.search).get('menu') === 'open'
   );
@@ -411,13 +421,93 @@ export default function Home() {
     }))
     .filter((slide) => slide.offset <= 2);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveCardNewsIndex((prev) => (prev + 1) % cardNewsSlides.length);
-    }, 4200);
+  const moveCardNews = (direction: -1 | 1) => {
+    setActiveCardNewsIndex((current) =>
+      (current + direction + cardNewsSlides.length) % cardNewsSlides.length
+    );
+  };
 
-    return () => window.clearInterval(timer);
-  }, []);
+  const handleCardNewsPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+
+    cardNewsPointerIdRef.current = event.pointerId;
+    cardNewsPointerStartRef.current = { x: event.clientX, y: event.clientY };
+    cardNewsPointerMovedRef.current = false;
+  };
+
+  const handleCardNewsPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (cardNewsPointerIdRef.current !== event.pointerId) {
+      return;
+    }
+
+    const deltaX = event.clientX - cardNewsPointerStartRef.current.x;
+    const deltaY = event.clientY - cardNewsPointerStartRef.current.y;
+    if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      cardNewsPointerMovedRef.current = true;
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    }
+  };
+
+  const handleCardNewsPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (cardNewsPointerIdRef.current !== event.pointerId) {
+      return;
+    }
+
+    const deltaX = event.clientX - cardNewsPointerStartRef.current.x;
+    const deltaY = event.clientY - cardNewsPointerStartRef.current.y;
+    const isHorizontalSwipe = Math.abs(deltaX) >= 46 && Math.abs(deltaX) > Math.abs(deltaY);
+
+    if (cardNewsPointerMovedRef.current) {
+      suppressCardNewsClickRef.current = true;
+      window.setTimeout(() => {
+        suppressCardNewsClickRef.current = false;
+      }, 300);
+    }
+
+    if (isHorizontalSwipe) {
+      moveCardNews(deltaX < 0 ? 1 : -1);
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    cardNewsPointerIdRef.current = null;
+    cardNewsPointerMovedRef.current = false;
+  };
+
+  const handleCardNewsPointerCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (cardNewsPointerIdRef.current !== event.pointerId) {
+      return;
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    cardNewsPointerIdRef.current = null;
+    cardNewsPointerMovedRef.current = false;
+  };
+
+  const handleCardNewsClickCapture = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (!suppressCardNewsClickRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    suppressCardNewsClickRef.current = false;
+  };
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setActiveCardNewsIndex((prev) => (prev + 1) % cardNewsSlides.length);
+    }, 6000);
+
+    return () => window.clearTimeout(timer);
+  }, [activeCardNewsIndex]);
 
   useEffect(() => {
     const syncAuthUser = () => setAuthUser(readStoredAuthUser());
@@ -556,7 +646,15 @@ export default function Home() {
         {activeHomeCategory === 'all' ? (
           <>
             <section id="home-all" className="home-cardnews-wrap" aria-label="상단 카드뉴스">
-              <div className="home-cardnews-stage">
+              <div
+                className="home-cardnews-stage"
+                onPointerDown={handleCardNewsPointerDown}
+                onPointerMove={handleCardNewsPointerMove}
+                onPointerUp={handleCardNewsPointerEnd}
+                onPointerCancel={handleCardNewsPointerCancel}
+                onClickCapture={handleCardNewsClickCapture}
+                onDragStart={(event) => event.preventDefault()}
+              >
                 {visibleCardNews.map((slide) => (
                   <Link
                     key={slide.id}
@@ -596,6 +694,23 @@ export default function Home() {
                     </div>
                   </Link>
                 ))}
+
+                <button
+                  type="button"
+                  className="home-cardnews-nav previous"
+                  aria-label="이전 카드뉴스"
+                  onClick={() => moveCardNews(-1)}
+                >
+                  <ChevronLeft aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="home-cardnews-nav next"
+                  aria-label="다음 카드뉴스"
+                  onClick={() => moveCardNews(1)}
+                >
+                  <ChevronRight aria-hidden="true" />
+                </button>
               </div>
 
               <div className="home-cardnews-dots" role="tablist" aria-label="카드뉴스 선택">
@@ -605,6 +720,7 @@ export default function Home() {
                     type="button"
                     role="tab"
                     aria-selected={activeCardNewsIndex === index}
+                    aria-label={`${index + 1}번 카드뉴스 보기`}
                     className={activeCardNewsIndex === index ? 'home-cardnews-dot active' : 'home-cardnews-dot'}
                     onClick={() => setActiveCardNewsIndex(index)}
                   />
