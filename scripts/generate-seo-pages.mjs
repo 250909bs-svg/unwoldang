@@ -233,6 +233,9 @@ function validatePage(route, seo, html) {
     `rel="canonical" href="${canonicalUrl}"`,
     `<h1>${escapeHtml(seo.heading)}</h1>`,
     'class="seo-static-fallback"',
+    'id="app-boot-guard"',
+    'html.app-booting #root > .seo-static-fallback',
+    "classList.add('app-booting')",
     'name="robots" content="index,follow'
   ];
 

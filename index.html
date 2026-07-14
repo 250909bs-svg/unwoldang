@@ -7,6 +7,47 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="google-site-verification" content="UDQ6oxHVTcMcRK5lehd6qpR6cu9VQzEqLWKyo20n3zU" />
 
+    <style id="app-boot-guard">
+      html.app-booting,
+      html.app-booting body,
+      html.app-booting #root {
+        min-height: 100%;
+        background: #f3ede3;
+      }
+
+      html.app-booting.app-booting-dark,
+      html.app-booting.app-booting-dark body,
+      html.app-booting.app-booting-dark #root {
+        background: #000000;
+      }
+
+      html.app-booting #root > .seo-static-fallback {
+        visibility: hidden;
+      }
+    </style>
+    <script>
+      (() => {
+        const pathname = window.location.pathname;
+        const darkPrefixes = ['/test', '/search', '/my', '/login'];
+        const usesDarkShell =
+          pathname === '/' ||
+          darkPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)) ||
+          pathname === '/detail/past-life-goblin' ||
+          pathname === '/terms' ||
+          pathname === '/privacy' ||
+          pathname === '/refund';
+
+        document.documentElement.classList.add('app-booting');
+        if (usesDarkShell) {
+          document.documentElement.classList.add('app-booting-dark');
+        }
+
+        window.setTimeout(() => {
+          document.documentElement.classList.remove('app-booting', 'app-booting-dark');
+        }, 8000);
+      })();
+    </script>
+
     <title>운월당 | 종합사주·신년운세·연애운 사주 리포트</title>
     <meta
       name="description"

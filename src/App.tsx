@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Test from './pages/Test';
@@ -75,7 +75,7 @@ function AppShell() {
     isPastLifeLandingRoute ||
     isLegalRoute;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.body.classList.toggle('home-all-black', usesDarkAppShell);
 
     return () => {

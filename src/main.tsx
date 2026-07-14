@@ -1,14 +1,24 @@
-import { StrictMode } from 'react';
+import { StrictMode, type ReactNode, useLayoutEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import './index.css';
 import './styles/past-life.css';
 
+function AppReadyBoundary({ children }: { children: ReactNode }) {
+  useLayoutEffect(() => {
+    document.documentElement.classList.remove('app-booting', 'app-booting-dark');
+  }, []);
+
+  return children;
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <AppReadyBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </AppReadyBoundary>
   </StrictMode>,
 );
