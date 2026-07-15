@@ -3221,3 +3221,211 @@ body.home-all-black .app-container.past-life-app-container {
     min-height: 68px;
   }
 }
+
+/* Second full-screen story shown after the customer enters the past-life experience. */
+.dokkaebi-immersion-page {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  width: 100%;
+  height: 100svh;
+  min-height: 0;
+  place-items: stretch center;
+  overflow: hidden;
+  background: #030405;
+  color: #f7f4ef;
+  color-scheme: dark;
+  isolation: isolate;
+}
+
+.dokkaebi-immersion-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  width: min(100%, 480px);
+  min-height: calc(64px + env(safe-area-inset-top, 0px));
+  align-items: center;
+  justify-content: space-between;
+  padding: env(safe-area-inset-top, 0px) 16px 0;
+  transform: translateX(-50%);
+}
+
+.dokkaebi-immersion-head::before {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 112px;
+  background: linear-gradient(180deg, rgba(2, 3, 4, 0.78), transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-immersion-back,
+.dokkaebi-immersion-sound {
+  display: grid;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: rgba(18, 20, 22, 0.48);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.dokkaebi-immersion-back {
+  border-color: transparent;
+  background: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.72));
+}
+
+.dokkaebi-immersion-sound:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.dokkaebi-immersion-back:focus-visible,
+.dokkaebi-immersion-sound:focus-visible,
+.dokkaebi-immersion-enter:focus-visible,
+.dokkaebi-immersion-skip:focus-visible {
+  outline: 2px solid #e9e1d2;
+  outline-offset: 3px;
+}
+
+.dokkaebi-immersion-stage {
+  position: relative;
+  width: min(100vw, 480px);
+  height: 100svh;
+  margin: 0;
+  overflow: hidden;
+  background: #050607;
+  box-shadow:
+    -22px 0 72px rgba(0, 0, 0, 0.56),
+    22px 0 72px rgba(0, 0, 0, 0.56);
+}
+
+.dokkaebi-immersion-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+.dokkaebi-immersion-vignette,
+.dokkaebi-immersion-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dokkaebi-immersion-vignette {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.46) 0%, transparent 16%, transparent 58%, rgba(0, 0, 0, 0.18) 74%, rgba(0, 0, 0, 0.82) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.18));
+}
+
+.dokkaebi-immersion-grain {
+  z-index: 3;
+  opacity: 0.08;
+  background-image:
+    repeating-linear-gradient(31deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(127deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 5px);
+  mix-blend-mode: soft-light;
+}
+
+.dokkaebi-immersion-choices {
+  position: absolute;
+  right: 20px;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  left: 20px;
+  z-index: 8;
+  display: grid;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px);
+  transition:
+    opacity 0.52s ease,
+    transform 0.52s ease;
+}
+
+.dokkaebi-immersion-choices.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.dokkaebi-immersion-enter,
+.dokkaebi-immersion-skip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.dokkaebi-immersion-enter {
+  min-height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 8px;
+  background: rgba(86, 88, 92, 0.78);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.16),
+    0 14px 34px rgba(0, 0, 0, 0.34);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(14px);
+}
+
+.dokkaebi-immersion-skip {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.88);
+}
+
+.dokkaebi-immersion-notice {
+  position: absolute;
+  right: 24px;
+  bottom: calc(146px + env(safe-area-inset-bottom, 0px));
+  left: 24px;
+  z-index: 8;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 360px) {
+  .dokkaebi-immersion-choices {
+    right: 14px;
+    left: 14px;
+  }
+
+  .dokkaebi-immersion-enter {
+    min-height: 60px;
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dokkaebi-immersion-choices {
+    transition: none;
+  }
+}

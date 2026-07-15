@@ -4,6 +4,7 @@ export const PAST_LIFE_PRODUCT = {
   price: '49,000원',
   poster: '/media/dokkaebi-poster.webp',
   film: '/media/dokkaebi-hero.mp4',
+  immersionFilm: '/media/dokkaebi-immersion.mp4',
   primaryAction: '내 전생 장부 열기',
   sampleAction: '샘플 장부 미리보기'
 } as const;

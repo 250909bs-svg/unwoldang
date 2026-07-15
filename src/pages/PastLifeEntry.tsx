@@ -22,7 +22,7 @@ export default function PastLifeEntry() {
         src={PAST_LIFE_PRODUCT.film}
         poster={PAST_LIFE_PRODUCT.poster}
         title={PAST_LIFE_PRODUCT.name}
-        actionHref="/form/past-life-goblin"
+        actionHref="/detail/past-life-goblin/immersion"
         actionLabel="전생체험 하러가기"
         actionState={startState}
         variant="entry"

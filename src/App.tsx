@@ -6,6 +6,7 @@ import FaceAI from './pages/FaceAI';
 import Search from './pages/Search';
 import Detail from './pages/Detail';
 import PastLifeEntry from './pages/PastLifeEntry';
+import PastLifeImmersion from './pages/PastLifeImmersion';
 import PastLifeLanding from './pages/PastLifeLanding';
 import Form from './pages/Form';
 import Checkout from './pages/Checkout';
@@ -45,6 +46,7 @@ function AppRoutes() {
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route path="/payment/portone/callback" element={<PaymentCallback />} />
         <Route path="/detail/past-life-goblin" element={<PastLifeEntry />} />
+        <Route path="/detail/past-life-goblin/immersion" element={<PastLifeImmersion />} />
         <Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/form/:id" element={<Form />} />
