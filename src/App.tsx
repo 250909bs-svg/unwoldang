@@ -5,6 +5,7 @@ import Test from './pages/Test';
 import FaceAI from './pages/FaceAI';
 import Search from './pages/Search';
 import Detail from './pages/Detail';
+import PastLifeEntry from './pages/PastLifeEntry';
 import PastLifeLanding from './pages/PastLifeLanding';
 import Form from './pages/Form';
 import Checkout from './pages/Checkout';
@@ -43,7 +44,8 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route path="/payment/portone/callback" element={<PaymentCallback />} />
-        <Route path="/detail/past-life-goblin" element={<PastLifeLanding />} />
+        <Route path="/detail/past-life-goblin" element={<PastLifeEntry />} />
+        <Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/form/:id" element={<Form />} />
         <Route path="/checkout" element={<Checkout />} />
@@ -63,7 +65,7 @@ function AppRoutes() {
 function AppShell() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isPastLifeLandingRoute = location.pathname === '/detail/past-life-goblin';
+  const isPastLifeLandingRoute = location.pathname.startsWith('/detail/past-life-goblin');
   const isPastLifeReportRoute = location.pathname === '/report/past-life-goblin';
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
   const usesDarkAppShell =

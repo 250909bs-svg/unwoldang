@@ -2979,3 +2979,245 @@ body.home-all-black .app-container.past-life-app-container {
     transform: rotate(-8deg) translateX(35%);
   }
 }
+
+/* Full-screen entry shown before the past-life intake. */
+.dokkaebi-entry-page {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  width: 100%;
+  height: 100svh;
+  min-height: 0;
+  place-items: stretch center;
+  overflow: hidden;
+  background: #030507;
+  color: #e9e1d2;
+  color-scheme: dark;
+  isolation: isolate;
+}
+
+.dokkaebi-entry-page::before,
+.dokkaebi-entry-page::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: -1;
+  width: max(0px, calc((100vw - 480px) / 2));
+  background:
+    linear-gradient(180deg, rgba(12, 24, 33, 0.34), transparent 34%),
+    #030507;
+  content: "";
+}
+
+.dokkaebi-entry-page::before {
+  left: 0;
+}
+
+.dokkaebi-entry-page::after {
+  right: 0;
+}
+
+.dokkaebi-entry-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 30;
+  display: grid;
+  width: min(100%, 480px);
+  min-height: calc(62px + env(safe-area-inset-top, 0px));
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: env(safe-area-inset-top, 0px) 16px 0;
+  color: #fffaf1;
+  transform: translateX(-50%);
+}
+
+.dokkaebi-entry-head::after {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 108px;
+  background: linear-gradient(180deg, rgba(2, 4, 7, 0.78), transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-entry-back,
+.dokkaebi-entry-brand {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dokkaebi-entry-back {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.72));
+}
+
+.dokkaebi-entry-brand {
+  justify-self: center;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82);
+}
+
+.dokkaebi-entry-head-spacer {
+  width: 44px;
+  height: 44px;
+}
+
+.dokkaebi-entry-back:focus-visible,
+.dokkaebi-entry-brand:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #27dde8;
+  outline-offset: 2px;
+}
+
+.dokkaebi-entry-page .dokkaebi-hero-film.is-entry {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(100vw, 480px);
+  height: 100svh;
+  margin: 0;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-door {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  box-shadow:
+    -20px 0 70px rgba(0, 0, 0, 0.5),
+    20px 0 70px rgba(0, 0, 0, 0.5);
+}
+
+.dokkaebi-entry-page .dokkaebi-film-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-vignette {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.64) 0%, rgba(0, 0, 0, 0.06) 14%, transparent 53%, rgba(0, 0, 0, 0.28) 72%, rgba(0, 0, 0, 0.9) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.24), transparent 14%, transparent 86%, rgba(0, 0, 0, 0.24));
+}
+
+.dokkaebi-entry-page .dokkaebi-film-brass {
+  display: none;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-preview-moment {
+  top: auto;
+  bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  display: flex;
+  width: max-content;
+  max-width: calc(100% - 44px);
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border-color: rgba(233, 225, 210, 0.2);
+  border-radius: 999px;
+  background: rgba(4, 7, 10, 0.74);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.dokkaebi-entry-page .dokkaebi-film-preview-moment small {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(39, 221, 232, 0.12);
+  color: #9eecef;
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-preview-moment strong {
+  overflow: hidden;
+  animation: none;
+  color: #fff8ec;
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-preview-moment > span {
+  display: none;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-entry-action {
+  right: 20px;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  left: 20px;
+  min-height: 72px;
+  border-color: rgba(218, 178, 105, 0.86);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(139, 43, 33, 0.98), rgba(82, 19, 17, 0.99));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 226, 170, 0.18),
+    inset 0 10px 24px rgba(255, 132, 84, 0.06),
+    0 18px 40px rgba(0, 0, 0, 0.46);
+  color: #fff2dc !important;
+  font-size: clamp(18px, 5.5vw, 22px);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.52);
+}
+
+.dokkaebi-entry-page .dokkaebi-film-below {
+  position: absolute;
+  inset: 0;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-controls {
+  top: calc(70px + env(safe-area-inset-top, 0px));
+  right: 14px;
+  gap: 7px;
+}
+
+.dokkaebi-entry-page .dokkaebi-film-controls button {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  border-color: rgba(233, 225, 210, 0.18);
+  background: rgba(3, 6, 9, 0.62);
+}
+
+@media (max-width: 360px) {
+  .dokkaebi-entry-page .dokkaebi-film-preview-moment {
+    max-width: calc(100% - 32px);
+    gap: 6px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .dokkaebi-entry-page .dokkaebi-film-preview-moment strong {
+    font-size: 11px;
+  }
+
+  .dokkaebi-entry-page .dokkaebi-film-entry-action {
+    right: 14px;
+    left: 14px;
+    min-height: 68px;
+  }
+}

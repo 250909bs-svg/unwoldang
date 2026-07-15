@@ -9,6 +9,7 @@ type HeroFilmProps = {
   actionHref: string;
   actionLabel: string;
   actionState?: { tabOrigin: string };
+  variant?: 'embedded' | 'entry';
 };
 
 const filmCaptions = [
@@ -22,12 +23,20 @@ const filmCaptions = [
 ] as const;
 
 const previewMoments = [
-  '내가 반복하던 관계가 보여서, 진짜 소름 돋았어요',
-  '막연했던 감정이 한 문장으로 정리됐어요',
-  '마지막 편지는 자꾸 다시 열어보게 돼요'
+  '진짜 제 이야기 같아서 소름 돋았어요',
+  '반복하던 관계의 이유가 바로 보였어요',
+  '마지막 편지는 자꾸 다시 보게 돼요'
 ] as const;
 
-export default function HeroFilm({ src, poster, title, actionHref, actionLabel, actionState }: HeroFilmProps) {
+export default function HeroFilm({
+  src,
+  poster,
+  title,
+  actionHref,
+  actionLabel,
+  actionState,
+  variant = 'embedded'
+}: HeroFilmProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const manuallyPausedRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -78,7 +87,7 @@ export default function HeroFilm({ src, poster, title, actionHref, actionLabel, 
 
     const timer = window.setInterval(() => {
       setPreviewIndex((current) => (current + 1) % previewMoments.length);
-    }, 3800);
+    }, 5200);
 
     return () => window.clearInterval(timer);
   }, [prefersReducedMotion]);
@@ -120,7 +129,7 @@ export default function HeroFilm({ src, poster, title, actionHref, actionLabel, 
   const showPoster = hasFailed || prefersReducedMotion;
 
   return (
-    <figure className="dokkaebi-hero-film">
+    <figure className={`dokkaebi-hero-film ${variant === 'entry' ? 'is-entry' : 'is-embedded'}`}>
       <div className="dokkaebi-film-door">
         <span className="dokkaebi-film-brass corner-one" aria-hidden="true" />
         <span className="dokkaebi-film-brass corner-two" aria-hidden="true" />
@@ -157,8 +166,8 @@ export default function HeroFilm({ src, poster, title, actionHref, actionLabel, 
         </span>
 
         <div className="dokkaebi-film-mobile-entry">
-          <div className="dokkaebi-film-preview-moment" aria-label="샘플 반응 문구">
-            <small>샘플 반응 문구</small>
+          <div className="dokkaebi-film-preview-moment" aria-label="체험 반응 예시">
+            <small>체험 반응 예시</small>
             <strong key={previewIndex}>{previewMoments[previewIndex]}</strong>
             <span aria-hidden="true">
               {previewMoments.map((item, index) => (

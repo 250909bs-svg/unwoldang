@@ -44,7 +44,7 @@ export default function BottomTabBar() {
   ].some((path) => location.pathname.startsWith(path));
 
   const isPastLifeExperience =
-    location.pathname === '/detail/past-life-goblin' ||
+    location.pathname.startsWith('/detail/past-life-goblin') ||
     location.pathname === '/form/past-life-goblin' ||
     location.pathname === '/report/past-life-goblin' ||
     locationState?.product === 'past-life-goblin';
