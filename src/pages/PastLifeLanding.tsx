@@ -1,4 +1,5 @@
 import { ArrowRight, BookOpen, Check, ChevronRight, Flame, KeyRound, ShieldCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HeroFilm from '../components/HeroFilm';
 import {
@@ -13,6 +14,26 @@ import {
 const startState = { tabOrigin: '/' } as const;
 
 export default function PastLifeLanding() {
+  const heroRef = useRef<HTMLElement>(null);
+  const [showStickyPurchase, setShowStickyPurchase] = useState(false);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+
+    if (!hero || !('IntersectionObserver' in window)) {
+      setShowStickyPurchase(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyPurchase(!entry.isIntersecting),
+      { threshold: 0.16 }
+    );
+
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <main className="dokkaebi-landing">
       <header className="dokkaebi-site-head">
@@ -25,7 +46,7 @@ export default function PastLifeLanding() {
         </Link>
       </header>
 
-      <section className="dokkaebi-hero" aria-labelledby="dokkaebi-main-title">
+      <section ref={heroRef} className="dokkaebi-hero" aria-labelledby="dokkaebi-main-title">
         <div className="dokkaebi-hero-copy">
           <span className="dokkaebi-kicker">사주에 남은 오래된 흔적을 깨우는 시간</span>
           <h1 id="dokkaebi-main-title">
@@ -57,7 +78,14 @@ export default function PastLifeLanding() {
           <p className="dokkaebi-trust-line">전생의 정체 · 인연 · 업 · 현생의 반복 · 해원 퀘스트</p>
         </div>
 
-        <HeroFilm src={PAST_LIFE_PRODUCT.film} poster={PAST_LIFE_PRODUCT.poster} title={PAST_LIFE_PRODUCT.name} />
+        <HeroFilm
+          src={PAST_LIFE_PRODUCT.film}
+          poster={PAST_LIFE_PRODUCT.poster}
+          title={PAST_LIFE_PRODUCT.name}
+          actionHref="/form/past-life-goblin"
+          actionLabel="전생체험 하러가기"
+          actionState={startState}
+        />
       </section>
 
       <section className="dokkaebi-question-path" aria-labelledby="dokkaebi-question-title">
@@ -229,12 +257,16 @@ export default function PastLifeLanding() {
         </nav>
       </footer>
 
-      <aside className="dokkaebi-sticky-purchase" aria-label="전생사주 구매">
+      <aside
+        className={`dokkaebi-sticky-purchase ${showStickyPurchase ? 'is-visible' : ''}`}
+        aria-label="전생사주 구매"
+        aria-hidden={!showStickyPurchase}
+      >
         <span>
           <small>개인 맞춤 전생장부</small>
           <strong>{PAST_LIFE_PRODUCT.price}</strong>
         </span>
-        <Link to="/form/past-life-goblin" state={startState}>
+        <Link to="/form/past-life-goblin" state={startState} tabIndex={showStickyPurchase ? undefined : -1}>
           {PAST_LIFE_PRODUCT.primaryAction}
         </Link>
       </aside>

@@ -112,6 +112,7 @@ body.home-all-black .app-container.past-life-app-container {
 .dokkaebi-head-action:focus-visible,
 .dokkaebi-primary-action:focus-visible,
 .dokkaebi-secondary-action:focus-visible,
+.dokkaebi-film-entry-action:focus-visible,
 .dokkaebi-film-controls button:focus-visible,
 .dokkaebi-ledger summary:focus-visible,
 .dokkaebi-faq summary:focus-visible,
@@ -260,6 +261,10 @@ body.home-all-black .app-container.past-life-app-container {
 }
 
 .dokkaebi-film-mobile-context {
+  display: none;
+}
+
+.dokkaebi-film-mobile-entry {
   display: none;
 }
 
@@ -2292,61 +2297,188 @@ body.home-all-black .app-container.past-life-app-container {
   }
 
   .dokkaebi-site-head {
+    position: absolute;
+    top: env(safe-area-inset-top, 0px);
+    left: 50%;
+    z-index: 40;
+    width: calc(100% - 40px);
     min-height: 64px;
+    border-bottom: 0;
+    transform: translateX(-50%);
   }
 
   .dokkaebi-site-brand {
     font-size: 20px;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.72);
+  }
+
+  .dokkaebi-head-action {
+    display: none;
   }
 
   .dokkaebi-hero {
-    gap: 28px;
-    padding: 22px 0 76px;
+    width: 100%;
+    gap: 0;
+    padding: 0 0 76px;
   }
 
   .dokkaebi-hero-film {
-    width: min(100%, 320px);
-  }
-
-  .dokkaebi-film-mobile-context {
-    display: grid;
-    gap: 5px;
-    padding: 0 2px 4px;
-    text-align: center;
-  }
-
-  .dokkaebi-film-mobile-context span {
-    color: #77d4d9;
-    font-size: 10px;
-    font-weight: 800;
-  }
-
-  .dokkaebi-film-mobile-context strong {
-    color: #ece3d4;
-    font-family: "Noto Serif KR", serif;
-    font-size: 19px;
-    letter-spacing: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 
   .dokkaebi-film-door {
+    width: 100%;
+    height: max(620px, 100svh);
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .dokkaebi-film-media {
+    object-position: center center;
+  }
+
+  .dokkaebi-film-vignette {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.68) 0%, rgba(0, 0, 0, 0.05) 15%, transparent 55%, rgba(0, 0, 0, 0.48) 88%, rgba(0, 0, 0, 0.88) 100%),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.18));
+  }
+
+  .dokkaebi-film-brass {
+    display: none;
+  }
+
+  .dokkaebi-film-mobile-entry {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: block;
+    pointer-events: none;
+  }
+
+  .dokkaebi-film-preview-moment {
+    position: absolute;
+    top: 47%;
+    left: 50%;
+    display: grid;
+    width: min(calc(100% - 56px), 330px);
+    gap: 5px;
+    padding: 11px 15px 10px;
+    border: 1px solid rgba(233, 225, 210, 0.18);
+    border-radius: 6px;
+    background: rgba(5, 7, 10, 0.7);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+    text-align: center;
+    transform: translate(-50%, -50%);
+    backdrop-filter: blur(10px);
+  }
+
+  .dokkaebi-film-preview-moment small {
+    color: #70d4d9;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .dokkaebi-film-preview-moment strong {
+    color: #f2eadc;
+    font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+    animation: dokkaebiCaption 0.55s ease both;
+  }
+
+  .dokkaebi-film-preview-moment > span {
+    display: flex;
+    min-height: 5px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .dokkaebi-film-preview-moment i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(233, 225, 210, 0.25);
+  }
+
+  .dokkaebi-film-preview-moment i.active {
+    background: #b38a4c;
+  }
+
+  .dokkaebi-film-entry-action {
+    position: absolute;
+    right: 20px;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    left: 20px;
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(218, 178, 105, 0.8);
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(126, 39, 31, 0.97), rgba(83, 22, 20, 0.98));
     box-shadow:
-      0 24px 48px rgba(0, 0, 0, 0.48),
-      0 0 0 6px #090c0f,
-      0 0 0 7px rgba(179, 138, 76, 0.22);
+      inset 0 0 0 1px rgba(255, 222, 158, 0.16),
+      0 16px 34px rgba(0, 0, 0, 0.38);
+    color: #f5e8d3 !important;
+    font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+    font-size: 18px;
+    font-weight: 800;
+    pointer-events: auto;
   }
 
   .dokkaebi-film-below {
-    min-height: 106px;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    min-height: 0;
+    pointer-events: none;
   }
 
   .dokkaebi-film-below > p {
-    min-height: 48px;
-    font-size: 14px;
-    text-align: center;
+    display: none;
   }
 
   .dokkaebi-film-controls {
-    justify-content: center;
+    position: absolute;
+    top: calc(74px + env(safe-area-inset-top, 0px));
+    right: 16px;
+    justify-content: flex-end;
+    pointer-events: auto;
+  }
+
+  .dokkaebi-film-controls button {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(5, 7, 10, 0.66);
+    backdrop-filter: blur(8px);
+  }
+
+  .dokkaebi-film-controls button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .dokkaebi-film-below > small {
+    display: none;
+  }
+
+  .dokkaebi-hero-copy {
+    width: calc(100% - 40px);
+    padding-top: 66px;
   }
 
   .dokkaebi-hero-copy h1 {
@@ -2509,6 +2641,16 @@ body.home-all-black .app-container.past-life-app-container {
     border-top: 1px solid rgba(179, 138, 76, 0.24);
     background: rgba(5, 7, 10, 0.96);
     backdrop-filter: blur(14px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(110%);
+    transition: opacity 0.22s ease, transform 0.28s ease;
+  }
+
+  .dokkaebi-sticky-purchase.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   .dokkaebi-sticky-purchase > span {
@@ -2657,7 +2799,11 @@ body.home-all-black .app-container.past-life-app-container {
   }
 
   .dokkaebi-hero-film {
-    width: min(100%, 286px);
+    width: 100%;
+  }
+
+  .dokkaebi-hero {
+    width: 100%;
   }
 
   .dokkaebi-hero-copy h1 {

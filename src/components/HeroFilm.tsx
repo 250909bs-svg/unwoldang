@@ -1,10 +1,14 @@
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 type HeroFilmProps = {
   src: string;
   poster: string;
   title: string;
+  actionHref: string;
+  actionLabel: string;
+  actionState?: { tabOrigin: string };
 };
 
 const filmCaptions = [
@@ -17,7 +21,13 @@ const filmCaptions = [
   { until: Number.POSITIVE_INFINITY, text: '개인 맞춤 전생장부 · 49,000원' }
 ] as const;
 
-export default function HeroFilm({ src, poster, title }: HeroFilmProps) {
+const previewMoments = [
+  '내가 반복하던 관계가 보여서, 진짜 소름 돋았어요',
+  '막연했던 감정이 한 문장으로 정리됐어요',
+  '마지막 편지는 자꾸 다시 열어보게 돼요'
+] as const;
+
+export default function HeroFilm({ src, poster, title, actionHref, actionLabel, actionState }: HeroFilmProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const manuallyPausedRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -25,6 +35,7 @@ export default function HeroFilm({ src, poster, title }: HeroFilmProps) {
   const [hasFailed, setHasFailed] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [captionIndex, setCaptionIndex] = useState(0);
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -58,6 +69,19 @@ export default function HeroFilm({ src, poster, title }: HeroFilmProps) {
     observer.observe(video);
     return () => observer.disconnect();
   }, [hasFailed, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setPreviewIndex(0);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setPreviewIndex((current) => (current + 1) % previewMoments.length);
+    }, 3800);
+
+    return () => window.clearInterval(timer);
+  }, [prefersReducedMotion]);
 
   const togglePlayback = () => {
     const video = videoRef.current;
@@ -97,10 +121,6 @@ export default function HeroFilm({ src, poster, title }: HeroFilmProps) {
 
   return (
     <figure className="dokkaebi-hero-film">
-      <div className="dokkaebi-film-mobile-context">
-        <span>사주에 남은 오래된 흔적을 깨우는 시간</span>
-        <strong>도깨비 전생장부: 봉인록</strong>
-      </div>
       <div className="dokkaebi-film-door">
         <span className="dokkaebi-film-brass corner-one" aria-hidden="true" />
         <span className="dokkaebi-film-brass corner-two" aria-hidden="true" />
@@ -135,6 +155,21 @@ export default function HeroFilm({ src, poster, title }: HeroFilmProps) {
             <i key={index} style={{ ['--flame-index' as string]: index }} />
           ))}
         </span>
+
+        <div className="dokkaebi-film-mobile-entry">
+          <div className="dokkaebi-film-preview-moment" aria-label="샘플 반응 문구">
+            <small>샘플 반응 문구</small>
+            <strong key={previewIndex}>{previewMoments[previewIndex]}</strong>
+            <span aria-hidden="true">
+              {previewMoments.map((item, index) => (
+                <i key={item} className={index === previewIndex ? 'active' : ''} />
+              ))}
+            </span>
+          </div>
+          <Link to={actionHref} state={actionState} className="dokkaebi-film-entry-action">
+            {actionLabel}
+          </Link>
+        </div>
       </div>
 
       <figcaption className="dokkaebi-film-below">
@@ -142,11 +177,23 @@ export default function HeroFilm({ src, poster, title }: HeroFilmProps) {
           {filmCaptions[captionIndex].text}
         </p>
         <div className="dokkaebi-film-controls" aria-label="대표 영상 제어">
-          <button type="button" onClick={togglePlayback} disabled={showPoster} aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}>
+          <button
+            type="button"
+            onClick={togglePlayback}
+            disabled={showPoster}
+            aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}
+            title={isPlaying ? '영상 일시정지' : '영상 재생'}
+          >
             {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
             <span>{isPlaying ? '일시정지' : '재생'}</span>
           </button>
-          <button type="button" onClick={toggleMute} disabled={showPoster} aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}>
+          <button
+            type="button"
+            onClick={toggleMute}
+            disabled={showPoster}
+            aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+            title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+          >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             <span>{isMuted ? '소리 켜기' : '소리 끄기'}</span>
           </button>
