@@ -5,6 +5,12 @@ export const PAST_LIFE_PRODUCT = {
   poster: '/media/dokkaebi-poster.webp',
   film: '/media/dokkaebi-hero.mp4',
   immersionFilm: '/media/dokkaebi-immersion.mp4',
+  immersionFilms: [
+    '/media/dokkaebi-immersion.mp4',
+    '/media/dokkaebi-story-01.mp4',
+    '/media/dokkaebi-story-02.mp4',
+    '/media/dokkaebi-story-04.mp4'
+  ],
   primaryAction: '내 전생 장부 열기',
   sampleAction: '샘플 장부 미리보기'
 } as const;

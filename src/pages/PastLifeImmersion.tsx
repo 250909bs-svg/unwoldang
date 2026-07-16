@@ -4,13 +4,22 @@ import { Link } from 'react-router-dom';
 import { PAST_LIFE_PRODUCT } from '../content/pastLifeExperience';
 
 const nextStoryState = { tabOrigin: '/' } as const;
+const CROSSFADE_SECONDS = 0.75;
+const CROSSFADE_MS = 620;
 
 export default function PastLifeImmersion() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const activeIndexRef = useRef(0);
+  const isMutedRef = useRef(true);
+  const transitionLockRef = useRef(false);
+  const transitionTimersRef = useRef<number[]>([]);
+  const failedClipsRef = useRef(new Set<number>());
   const [isMuted, setIsMuted] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [showChoices, setShowChoices] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const films = PAST_LIFE_PRODUCT.immersionFilms;
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -26,28 +35,139 @@ export default function PastLifeImmersion() {
     return () => media.removeEventListener('change', syncPreference);
   }, []);
 
-  const revealChoicesBeforeEnd = () => {
-    const video = videoRef.current;
+  useEffect(() => {
+    return () => {
+      transitionTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+      videoRefs.current.forEach((video) => video?.pause());
+    };
+  }, []);
 
-    if (!video || !Number.isFinite(video.duration)) {
+  useEffect(() => {
+    if (prefersReducedMotion) {
       return;
     }
 
-    const revealLead = Math.min(5, Math.max(2.8, video.duration * 0.18));
-    if (video.duration - video.currentTime <= revealLead) {
+    const resumeActiveClip = () => {
+      const activeVideo = videoRefs.current[activeIndexRef.current];
+      if (!activeVideo || !activeVideo.paused || activeVideo.ended) {
+        return;
+      }
+
+      activeVideo.muted = isMutedRef.current;
+      void activeVideo.play().catch(() => undefined);
+    };
+
+    const timer = window.setTimeout(resumeActiveClip, 0);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        resumeActiveClip();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pageshow', resumeActiveClip);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pageshow', resumeActiveClip);
+    };
+  }, [prefersReducedMotion]);
+
+  const activateClip = (index: number) => {
+    activeIndexRef.current = index;
+    setActiveIndex(index);
+  };
+
+  const startNextClip = (fromIndex: number) => {
+    if (fromIndex !== activeIndexRef.current || transitionLockRef.current) {
+      return;
+    }
+
+    let nextIndex = fromIndex + 1;
+    while (nextIndex < films.length && failedClipsRef.current.has(nextIndex)) {
+      nextIndex += 1;
+    }
+
+    if (nextIndex >= films.length) {
+      setShowChoices(true);
+      return;
+    }
+
+    const currentVideo = videoRefs.current[fromIndex];
+    const nextVideo = videoRefs.current[nextIndex];
+    if (!nextVideo) {
+      return;
+    }
+
+    transitionLockRef.current = true;
+    nextVideo.currentTime = 0;
+    nextVideo.muted = isMutedRef.current;
+
+    void nextVideo.play().then(() => {
+      activateClip(nextIndex);
+      const timer = window.setTimeout(() => {
+        currentVideo?.pause();
+        transitionLockRef.current = false;
+      }, CROSSFADE_MS);
+      transitionTimersRef.current.push(timer);
+    }).catch(() => {
+      failedClipsRef.current.add(nextIndex);
+      transitionLockRef.current = false;
+      startNextClip(fromIndex);
+    });
+  };
+
+  const handleTimeUpdate = (index: number) => {
+    const video = videoRefs.current[index];
+
+    if (!video || index !== activeIndexRef.current || !Number.isFinite(video.duration)) {
+      return;
+    }
+
+    const remaining = video.duration - video.currentTime;
+    const isLastClip = index === films.length - 1;
+
+    if (!isLastClip && remaining <= CROSSFADE_SECONDS) {
+      startNextClip(index);
+      return;
+    }
+
+    const revealLead = Math.min(1.5, Math.max(1.1, video.duration * 0.3));
+    if (isLastClip && remaining <= revealLead) {
       setShowChoices(true);
     }
   };
 
+  const handleClipError = (index: number) => {
+    failedClipsRef.current.add(index);
+    if (index !== activeIndexRef.current) {
+      return;
+    }
+
+    if (index < films.length - 1) {
+      startNextClip(index);
+      return;
+    }
+
+    setHasFailed(true);
+    setShowChoices(true);
+  };
+
   const toggleSound = () => {
-    const video = videoRef.current;
+    const video = videoRefs.current[activeIndexRef.current];
 
     if (!video || hasFailed || prefersReducedMotion) {
       return;
     }
 
-    video.muted = !video.muted;
-    setIsMuted(video.muted);
+    const nextMuted = !isMutedRef.current;
+    isMutedRef.current = nextMuted;
+    setIsMuted(nextMuted);
+    videoRefs.current.forEach((clip) => {
+      if (clip) {
+        clip.muted = nextMuted;
+      }
+    });
     if (video.paused && video.currentTime < video.duration) {
       void video.play().catch(() => undefined);
     }
@@ -78,25 +198,40 @@ export default function PastLifeImmersion() {
           <img
             src={PAST_LIFE_PRODUCT.poster}
             alt="도깨비 전생사주 몰입 이야기 포스터"
-            className="dokkaebi-immersion-media"
+            className="dokkaebi-immersion-media is-active"
           />
         ) : (
-          <video
-            ref={videoRef}
-            src={PAST_LIFE_PRODUCT.immersionFilm}
-            poster={PAST_LIFE_PRODUCT.poster}
-            className="dokkaebi-immersion-media"
-            muted
-            autoPlay
-            playsInline
-            preload="auto"
-            onTimeUpdate={revealChoicesBeforeEnd}
-            onEnded={() => setShowChoices(true)}
-            onError={() => {
-              setHasFailed(true);
-              setShowChoices(true);
-            }}
-          />
+          films.map((src, index) => (
+            <video
+              key={src}
+              ref={(video) => {
+                videoRefs.current[index] = video;
+              }}
+              src={src}
+              poster={index === 0 ? PAST_LIFE_PRODUCT.poster : undefined}
+              className={`dokkaebi-immersion-media ${activeIndex === index ? 'is-active' : ''}`}
+              muted
+              autoPlay={index === 0}
+              playsInline
+              preload="auto"
+              aria-label={`전생 이야기 ${index + 1}장`}
+              onLoadedData={(event) => {
+                if (index === activeIndexRef.current && event.currentTarget.paused && !prefersReducedMotion) {
+                  event.currentTarget.muted = isMutedRef.current;
+                  void event.currentTarget.play().catch(() => undefined);
+                }
+              }}
+              onTimeUpdate={() => handleTimeUpdate(index)}
+              onEnded={() => {
+                if (index === films.length - 1) {
+                  setShowChoices(true);
+                } else {
+                  startNextClip(index);
+                }
+              }}
+              onError={() => handleClipError(index)}
+            />
+          ))
         )}
 
         <span className="dokkaebi-immersion-vignette" aria-hidden="true" />
