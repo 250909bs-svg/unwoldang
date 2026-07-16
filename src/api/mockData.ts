@@ -35,6 +35,31 @@ export type ServiceTheme =
   | 'amulet'
   | 'daily';
 
+export type BirthTimePrecision = 'exact' | 'branch-range' | 'unknown';
+export type DayBoundaryPolicy = 'midnight' | 'late-zi';
+
+export interface BirthLocationData {
+  label: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+  utcOffsetMinutes?: number;
+  applySolarTimeCorrection?: boolean;
+}
+
+export interface PartnerBirthData {
+  name: string;
+  gender: 'male' | 'female';
+  calendar: 'solar' | 'lunar';
+  isLeapMonth: boolean;
+  birthDate: string;
+  birthTime: string;
+  isUnknownTime: boolean;
+  birthTimePrecision?: BirthTimePrecision;
+  dayBoundaryPolicy?: DayBoundaryPolicy;
+  birthLocation?: BirthLocationData;
+}
+
 export interface IntakeFormData {
   name: string;
   gender: 'male' | 'female';
@@ -43,6 +68,10 @@ export interface IntakeFormData {
   birthDate: string;
   birthTime: string;
   isUnknownTime: boolean;
+  birthTimePrecision?: BirthTimePrecision;
+  dayBoundaryPolicy?: DayBoundaryPolicy;
+  birthLocation?: BirthLocationData;
+  partner?: PartnerBirthData;
   relationshipStatus: '' | 'dating' | 'single' | 'married';
   relationshipDuration: '' | 'under1' | 'under3' | 'under5' | 'under10';
   location: string;

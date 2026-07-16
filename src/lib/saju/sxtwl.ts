@@ -163,28 +163,45 @@ export class DayUtil {
     private lunarToSolar(year: number, month: number, day: number, isLeap: boolean): [number, number, number] {
         // Base date: 1900-01-01 lunar is 1900-01-31 solar
         const baseDate = new Date(Date.UTC(1900, 0, 31));
+        const firstSupportedYear = 1900;
+        const lastSupportedYear = firstSupportedYear + LUNAR_INFO.length - 1;
+        if (!Number.isInteger(year) || year < firstSupportedYear || year > lastSupportedYear) {
+            throw new Error(`음력 변환은 ${firstSupportedYear}년부터 ${lastSupportedYear}년까지 지원합니다.`);
+        }
+        if (!Number.isInteger(month) || month < 1 || month > 12) {
+            throw new Error('음력 월은 1월부터 12월 사이여야 합니다.');
+        }
+
+        const monthDays = (data: number, targetMonth: number) =>
+            (data & (0x10000 >> targetMonth)) ? 30 : 29;
+        const leapMonthOf = (data: number) => data & 0xf;
+        const leapDays = (data: number) => leapMonthOf(data) ? ((data & 0x10000) ? 30 : 29) : 0;
 
         let dayOffset = 0;
         for (let y = 1900; y < year; y++) {
             const data = LUNAR_INFO[y - 1900];
-            const leapMonth = data & 0xf;
-            const monthsInYear = leapMonth ? 13 : 12;
-            for (let m = 1; m <= monthsInYear; m++) {
-                dayOffset += (data & (0x10000 >> m)) ? 30 : 29;
+            for (let m = 1; m <= 12; m++) {
+                dayOffset += monthDays(data, m);
             }
+            dayOffset += leapDays(data);
         }
 
         const data = LUNAR_INFO[year - 1900];
-        const leapMonth = data & 0xf;
+        const leapMonth = leapMonthOf(data);
         for (let m = 1; m < month; m++) {
-            dayOffset += (data & (0x10000 >> m)) ? 30 : 29;
+            dayOffset += monthDays(data, m);
             if (m === leapMonth) {
-                 dayOffset += (data & 0x10000) ? 30 : 29; // Check bit 16 for leap month size
+                 dayOffset += leapDays(data);
             }
         }
+
+        const selectedMonthDays = isLeap ? leapDays(data) : monthDays(data, month);
         if (isLeap) {
              if (leapMonth !== month) throw new Error("Invalid leap month for the given year.");
-             dayOffset += (data & (0x10000 >> month)) ? 30 : 29;
+             dayOffset += monthDays(data, month);
+        }
+        if (!Number.isInteger(day) || day < 1 || day > selectedMonthDays) {
+             throw new Error(`해당 음력 ${isLeap ? '윤' : ''}${month}월은 ${selectedMonthDays}일까지입니다.`);
         }
 
         dayOffset += day - 1;

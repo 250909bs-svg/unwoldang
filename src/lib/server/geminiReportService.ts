@@ -1,4 +1,11 @@
-import type { IntakeFormData, ServiceId } from '../../api/mockData';
+import type {
+  BirthLocationData,
+  BirthTimePrecision,
+  DayBoundaryPolicy,
+  IntakeFormData,
+  PartnerBirthData,
+  ServiceId
+} from '../../api/mockData';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from '../saju/deterministicBasis';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
 import {
@@ -16,7 +23,13 @@ import {
   type ReportSection,
   type SajuReportData
 } from '../saju/report';
-import { buildSajuReport, strengthenQuestionAnswerQuality } from '../saju/reportBuilder';
+import { buildSajuReport } from '../saju/reportBuilder';
+import {
+  hasMalformedReportEvidenceReference,
+  lockCommercialReportFacts,
+  parseReportEvidenceReferences,
+  stripReportEvidenceReferences
+} from '../saju/v2/reportFactGuard';
 
 type RelationshipStatus = IntakeFormData['relationshipStatus'] | null | undefined;
 type RelationshipDuration = IntakeFormData['relationshipDuration'] | null | undefined;
@@ -34,7 +47,11 @@ export type ReportRequestBody = {
       date?: string;
       time?: string | null;
       isUnknownTime?: boolean;
+      precision?: BirthTimePrecision;
+      dayBoundaryPolicy?: DayBoundaryPolicy;
+      location?: BirthLocationData | null;
     };
+    partner?: PartnerBirthData | null;
     relationship?: {
       status?: RelationshipStatus;
       duration?: RelationshipDuration;
@@ -46,13 +63,19 @@ export type ReportRequestBody = {
   debug?: boolean;
 };
 
-type GeminiDraft = {
+export type GeminiDraft = {
   heroNote?: string;
-  legalNotice?: string[];
   summary?: Partial<SajuReportData['summary']>;
   keyTakeaways?: Partial<ReportCard>[];
   questionAnswers?: Partial<QuestionAnswerBlock>[];
-  sections?: Array<Partial<ReportSection> & { id: string; details?: Partial<ReportDetail>[]; cards?: Partial<ReportCard>[] }>;
+  sections?: Array<{
+    id: string;
+    paragraphs?: string[];
+    bullets?: string[];
+    callout?: Partial<NonNullable<ReportSection['callout']>>;
+    details?: Partial<ReportDetail>[];
+    cards?: Partial<ReportCard>[];
+  }>;
   currentDayun?: Partial<SajuReportData['currentDayun']>;
   nextDayun?: Partial<SajuReportData['nextDayun']>;
   actionPlan?: Partial<ActionPlan>;
@@ -61,7 +84,7 @@ type GeminiDraft = {
 const DEFAULT_GEMINI_REQUEST_TIMEOUT_MS = 22000;
 
 export type ReportResponsePayload = {
-  provider: 'gemini';
+  provider: 'gemini' | 'deterministic-fallback';
   reportMode: string;
   promptVersion: string;
   report: SajuReportData;
@@ -96,6 +119,541 @@ function isAbortError(error: unknown) {
   return error instanceof Error && error.name === 'AbortError';
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function safeText(value: unknown, maxLength = 6000) {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.slice(0, maxLength) : undefined;
+}
+
+function safeTextArray(value: unknown, maxItems: number, maxLength = 3000) {
+  if (!Array.isArray(value)) return undefined;
+  const items = value
+    .map((item) => safeText(item, maxLength))
+    .filter((item): item is string => Boolean(item))
+    .slice(0, maxItems);
+  return items.length > 0 ? items : undefined;
+}
+
+export function sanitizeGeminiDraft(value: unknown, base: SajuReportData): GeminiDraft {
+  const root = asRecord(value);
+  if (!root) {
+    throw new Error('Gemini JSON 최상위 값이 객체가 아닙니다.');
+  }
+
+  const summary = asRecord(root.summary);
+  const rawCards = Array.isArray(root.keyTakeaways) ? root.keyTakeaways : [];
+  const rawAnswers = Array.isArray(root.questionAnswers) ? root.questionAnswers : [];
+  const rawSections = Array.isArray(root.sections) ? root.sections : [];
+  const currentDayun = asRecord(root.currentDayun);
+  const nextDayun = asRecord(root.nextDayun);
+  const actionPlan = asRecord(root.actionPlan);
+
+  const keyTakeaways = base.keyTakeaways.flatMap((baseCard) => {
+    const match = rawCards
+      .map(asRecord)
+      .find((candidate) => candidate && candidate.title === baseCard.title);
+    if (!match) return [];
+    return [{
+      title: baseCard.title,
+      body: safeText(match.body, 2400),
+      badge: safeText(match.badge, 120)
+    }];
+  });
+
+  const questionAnswers = base.questionAnswers.flatMap((baseAnswer) => {
+    const match = rawAnswers
+      .map(asRecord)
+      .find((candidate) => candidate && candidate.question === baseAnswer.question);
+    if (!match) return [];
+    return [{
+      question: baseAnswer.question,
+      title: safeText(match.title, 500),
+      analysis: safeText(match.analysis, 12000),
+      advice: safeTextArray(match.advice, 10, 2000)
+    }];
+  });
+
+  const sections = base.sections
+    .filter((baseSection) => !baseSection.id.endsWith('-v2'))
+    .flatMap((baseSection) => {
+      const match = rawSections
+        .map(asRecord)
+        .find((candidate) => candidate && candidate.id === baseSection.id);
+      if (!match) return [];
+      const rawSectionCards = Array.isArray(match.cards) ? match.cards : [];
+      const rawDetails = Array.isArray(match.details) ? match.details : [];
+      const callout = asRecord(match.callout);
+      return [{
+        id: baseSection.id,
+        paragraphs: safeTextArray(match.paragraphs, 30, 5000),
+        bullets: safeTextArray(match.bullets, 40, 3000),
+        callout: callout
+          ? {
+              title: safeText(callout.title, 300),
+              body: safeText(callout.body, 4000)
+            }
+          : undefined,
+        cards: (baseSection.cards || []).flatMap((baseCard) => {
+          const card = rawSectionCards
+            .map(asRecord)
+            .find((candidate) => candidate && candidate.title === baseCard.title);
+          return card
+            ? [{
+                title: baseCard.title,
+                body: safeText(card.body, 3000),
+                badge: safeText(card.badge, 120)
+              }]
+            : [];
+        }),
+        details: (baseSection.details || []).flatMap((baseDetail) => {
+          const detail = rawDetails
+            .map(asRecord)
+            .find((candidate) => candidate && candidate.summary === baseDetail.summary);
+          return detail
+            ? [{ summary: baseDetail.summary, content: safeText(detail.content, 8000) }]
+            : [];
+        })
+      }];
+    });
+
+  const sanitizeDays = (
+    rawValue: unknown,
+    baseDays: SajuReportData['actionPlan']['luckyDays']
+  ) => {
+    const rawDays = Array.isArray(rawValue) ? rawValue : [];
+    return baseDays.flatMap((baseDay) => {
+      const match = rawDays
+        .map(asRecord)
+        .find((candidate) => candidate && Number(candidate.day) === baseDay.day);
+      const reason = match ? safeText(match.reason, 1500) : undefined;
+      return reason ? [{ day: baseDay.day, reason }] : [];
+    });
+  };
+
+  return {
+    heroNote: safeText(root.heroNote, 4000),
+    summary: summary
+      ? {
+          title: safeText(summary.title, 500),
+          analysis: safeTextArray(summary.analysis, 12, 5000),
+          advice: safeTextArray(summary.advice, 20, 2500)
+        }
+      : undefined,
+    keyTakeaways: keyTakeaways.length ? keyTakeaways : undefined,
+    questionAnswers: questionAnswers.length ? questionAnswers : undefined,
+    sections: sections.length ? sections : undefined,
+    currentDayun: currentDayun
+      ? {
+          summary: safeText(currentDayun.summary, 5000),
+          focus: safeText(currentDayun.focus, 2500),
+          caution: safeText(currentDayun.caution, 2500)
+        }
+      : undefined,
+    nextDayun: nextDayun
+      ? {
+          summary: safeText(nextDayun.summary, 5000),
+          focus: safeText(nextDayun.focus, 2500),
+          caution: safeText(nextDayun.caution, 2500)
+        }
+      : undefined,
+    actionPlan: actionPlan
+      ? {
+          title: safeText(actionPlan.title, 500),
+          priorities: safeTextArray(actionPlan.priorities, 20, 2000),
+          dos: safeTextArray(actionPlan.dos, 20, 2000),
+          avoids: safeTextArray(actionPlan.avoids, 20, 2000),
+          luckyDays: sanitizeDays(actionPlan.luckyDays, base.actionPlan.luckyDays),
+          unluckyDays: sanitizeDays(actionPlan.unluckyDays, base.actionPlan.unluckyDays)
+        }
+      : undefined
+  };
+}
+
+type EvidenceScope = 'interpretation' | 'temporal' | 'compatibility';
+
+interface EvidenceCatalog {
+  byScope: Record<EvidenceScope, Set<string>>;
+  scopesById: Map<string, Set<EvidenceScope>>;
+}
+
+const ALL_EVIDENCE_SCOPES: EvidenceScope[] = ['interpretation', 'temporal', 'compatibility'];
+const TEMPORAL_SECTION_IDS = new Set(['fortune', 'year', 'ten', 'detail12', 'detailRel', 'detailSal', 'month']);
+const MIXED_SECTION_IDS = new Set(['business', 'money', 'career', 'love']);
+
+function collectEvidenceCatalog(basis: DeterministicSajuBasis): EvidenceCatalog {
+  const byScope: EvidenceCatalog['byScope'] = {
+    interpretation: new Set<string>(),
+    temporal: new Set<string>(),
+    compatibility: new Set<string>()
+  };
+  const scopesById = new Map<string, Set<EvidenceScope>>();
+  const add = (scope: EvidenceScope, id: unknown) => {
+    if (typeof id !== 'string' || !id.trim()) return;
+    const normalized = id.trim();
+    byScope[scope].add(normalized);
+    const scopes = scopesById.get(normalized) || new Set<EvidenceScope>();
+    scopes.add(scope);
+    scopesById.set(normalized, scopes);
+  };
+  const addMany = (scope: EvidenceScope, ids: unknown) => {
+    if (Array.isArray(ids)) ids.forEach((id) => add(scope, id));
+  };
+
+  const interpretation = basis.commercialV2.interpretation;
+  if (interpretation) {
+    const visitInterpretation = (value: unknown) => {
+      if (!value || typeof value !== 'object') return;
+      if (Array.isArray(value)) {
+        value.forEach(visitInterpretation);
+        return;
+      }
+      Object.entries(value as Record<string, unknown>).forEach(([key, child]) => {
+        if ((key === 'id' || key === 'ruleId') && typeof child === 'string') {
+          add('interpretation', child);
+        }
+        visitInterpretation(child);
+      });
+    };
+    visitInterpretation(interpretation);
+  }
+
+  const temporal = basis.commercialV2.temporal;
+  temporal?.relations.forEach((item) => add('temporal', item.id));
+  temporal?.tenGodActivations.forEach((item) => {
+    add('temporal', item.id);
+    addMany('temporal', item.evidenceIds);
+  });
+  temporal?.findings.forEach((item) => {
+    add('temporal', item.id);
+    addMany('temporal', item.evidenceIds);
+  });
+
+  const compatibility = basis.commercialV2.compatibility;
+  compatibility?.crossRelations.forEach((item) => add('compatibility', item.id));
+  compatibility?.facts.forEach((item) => {
+    add('compatibility', item.id);
+    addMany('compatibility', item.relationIds);
+  });
+  compatibility?.dimensions.forEach((item) => {
+    add('compatibility', item.id);
+    addMany('compatibility', item.evidenceIds);
+  });
+  if (compatibility) {
+    addMany('compatibility', compatibility.dayMaster.conclusion.evidenceIds);
+    addMany('compatibility', compatibility.spousePalace.relationIds);
+    addMany('compatibility', compatibility.spousePalace.conclusion.evidenceIds);
+    add('compatibility', compatibility.elementExchange.personAReceives.evidenceId);
+    add('compatibility', compatibility.elementExchange.personBReceives.evidenceId);
+    addMany('compatibility', compatibility.elementExchange.conclusion.evidenceIds);
+    addMany('compatibility', compatibility.overview.evidenceIds);
+  }
+
+  return { byScope, scopesById };
+}
+
+function availableScopes(scopes: EvidenceScope[], catalog: EvidenceCatalog) {
+  return scopes.filter((scope) => catalog.byScope[scope].size > 0);
+}
+
+function primaryEvidenceScopes(basis: DeterministicSajuBasis, catalog: EvidenceCatalog) {
+  // Top-level summaries and action plans intentionally combine natal and
+  // timing interpretation; narrower structures below use stricter scopes.
+  const scopes: EvidenceScope[] = ['interpretation', 'temporal'];
+  if (basis.commercialV2.compatibility) scopes.push('compatibility');
+  return availableScopes(scopes, catalog);
+}
+
+function questionEvidenceScopes(
+  question: string,
+  basis: DeterministicSajuBasis,
+  catalog: EvidenceCatalog
+) {
+  const scopes: EvidenceScope[] = ['interpretation'];
+  if (/언제|시기|올해|내년|이번|다음|월|년|대운|세운|월운|이직|이동|재회/.test(question)) {
+    scopes.push('temporal');
+  }
+  if (/궁합|상대|연애|사랑|결혼|배우자|남자친구|여자친구|파트너|관계/.test(question)) {
+    scopes.push('compatibility');
+  }
+  if (basis.commercialV2.compatibility) scopes.push('compatibility');
+  return availableScopes([...new Set(scopes)], catalog);
+}
+
+function sectionEvidenceScopes(
+  sectionId: string,
+  basis: DeterministicSajuBasis,
+  catalog: EvidenceCatalog
+) {
+  if (TEMPORAL_SECTION_IDS.has(sectionId)) {
+    return availableScopes(['temporal'], catalog);
+  }
+
+  const scopes: EvidenceScope[] = ['interpretation'];
+  if (MIXED_SECTION_IDS.has(sectionId)) scopes.push('temporal');
+  if (sectionId === 'love' && basis.commercialV2.compatibility) scopes.push('compatibility');
+  return availableScopes(scopes, catalog);
+}
+
+function validateGeneratedProse(
+  path: string,
+  value: string | undefined,
+  permittedScopes: EvidenceScope[],
+  catalog: EvidenceCatalog,
+  expected: string | undefined
+) {
+  if (!value) return;
+  if (hasMalformedReportEvidenceReference(value)) {
+    throw new Error(`Gemini 근거 인용 형식이 잘못되었습니다 (${path}).`);
+  }
+
+  const references = parseReportEvidenceReferences(value);
+  if (references.length === 0 || references.some((reference) => reference.ids.length === 0)) {
+    throw new Error(`Gemini 생성 문장에 근거 ID가 없습니다 (${path}).`);
+  }
+  if (!stripReportEvidenceReferences(value)) {
+    throw new Error(`Gemini 생성 문장에 근거 인용 외 설명이 없습니다 (${path}).`);
+  }
+
+  references.forEach((reference) => {
+    reference.ids.forEach((id) => {
+      const actualScopes = catalog.scopesById.get(id);
+      if (!actualScopes) {
+        throw new Error(`Gemini가 존재하지 않는 명리 근거를 인용했습니다 (${path}): ${id}`);
+      }
+      if (!permittedScopes.some((scope) => actualScopes.has(scope))) {
+        throw new Error(`Gemini가 문장 범위와 무관한 명리 근거를 인용했습니다 (${path}): ${id}`);
+      }
+    });
+  });
+
+  if (expected === undefined || stripReportEvidenceReferences(value) !== expected.trim()) {
+    throw new Error(`Gemini 생성 문장이 결정론적 기본 문구와 일치하지 않습니다 (${path}).`);
+  }
+}
+
+export function assertGeminiEvidenceReferences(
+  draft: GeminiDraft,
+  basis: DeterministicSajuBasis,
+  base: SajuReportData
+) {
+  const catalog = collectEvidenceCatalog(basis);
+  const primaryScopes = primaryEvidenceScopes(basis, catalog);
+  const validate = (
+    path: string,
+    value: string | undefined,
+    expected: string | undefined,
+    scopes = primaryScopes
+  ) => {
+    validateGeneratedProse(path, value, scopes, catalog, expected);
+  };
+
+  validate('heroNote', draft.heroNote, base.heroNote);
+  if (draft.summary) {
+    validate('summary.title', draft.summary.title, base.summary.title);
+    draft.summary.analysis?.forEach((value, index) => (
+      validate(`summary.analysis.${index}`, value, base.summary.analysis[index])
+    ));
+    draft.summary.advice?.forEach((value, index) => (
+      validate(`summary.advice.${index}`, value, base.summary.advice[index])
+    ));
+  }
+  draft.keyTakeaways?.forEach((card, index) => {
+    const baseCard = base.keyTakeaways.find((candidate) => candidate.title === card.title);
+    validate(`keyTakeaways.${index}.body`, card.body, baseCard?.body);
+    validate(`keyTakeaways.${index}.badge`, card.badge, baseCard?.badge);
+  });
+  draft.questionAnswers?.forEach((answer, index) => {
+    const baseAnswer = base.questionAnswers.find((candidate) => candidate.question === answer.question);
+    const scopes = questionEvidenceScopes(answer.question || '', basis, catalog);
+    validate(`questionAnswers.${index}.title`, answer.title, baseAnswer?.title, scopes);
+    validate(`questionAnswers.${index}.analysis`, answer.analysis, baseAnswer?.analysis, scopes);
+    answer.advice?.forEach((value, adviceIndex) => (
+      validate(
+        `questionAnswers.${index}.advice.${adviceIndex}`,
+        value,
+        baseAnswer?.advice[adviceIndex],
+        scopes
+      )
+    ));
+  });
+  draft.sections?.forEach((section, index) => {
+    const baseSection = base.sections.find((candidate) => candidate.id === section.id);
+    const scopes = sectionEvidenceScopes(section.id, basis, catalog);
+    section.paragraphs?.forEach((value, paragraphIndex) => (
+      validate(
+        `sections.${index}.paragraphs.${paragraphIndex}`,
+        value,
+        baseSection?.paragraphs?.[paragraphIndex],
+        scopes
+      )
+    ));
+    section.bullets?.forEach((value, bulletIndex) => (
+      validate(
+        `sections.${index}.bullets.${bulletIndex}`,
+        value,
+        baseSection?.bullets?.[bulletIndex],
+        scopes
+      )
+    ));
+    if (section.callout) {
+      validate(`sections.${index}.callout.title`, section.callout.title, baseSection?.callout?.title, scopes);
+      validate(`sections.${index}.callout.body`, section.callout.body, baseSection?.callout?.body, scopes);
+    }
+    section.cards?.forEach((card, cardIndex) => {
+      const baseCard = baseSection?.cards?.find((candidate) => candidate.title === card.title);
+      validate(`sections.${index}.cards.${cardIndex}.body`, card.body, baseCard?.body, scopes);
+      validate(`sections.${index}.cards.${cardIndex}.badge`, card.badge, baseCard?.badge, scopes);
+    });
+    section.details?.forEach((detail, detailIndex) => {
+      const baseDetail = baseSection?.details?.find((candidate) => candidate.summary === detail.summary);
+      validate(`sections.${index}.details.${detailIndex}.content`, detail.content, baseDetail?.content, scopes);
+    });
+  });
+
+  const temporalScopes = availableScopes(['temporal'], catalog);
+  if (draft.currentDayun) {
+    validate('currentDayun.summary', draft.currentDayun.summary, base.currentDayun.summary, temporalScopes);
+    validate('currentDayun.focus', draft.currentDayun.focus, base.currentDayun.focus, temporalScopes);
+    validate('currentDayun.caution', draft.currentDayun.caution, base.currentDayun.caution, temporalScopes);
+  }
+  if (draft.nextDayun) {
+    validate('nextDayun.summary', draft.nextDayun.summary, base.nextDayun.summary, temporalScopes);
+    validate('nextDayun.focus', draft.nextDayun.focus, base.nextDayun.focus, temporalScopes);
+    validate('nextDayun.caution', draft.nextDayun.caution, base.nextDayun.caution, temporalScopes);
+  }
+  if (draft.actionPlan) {
+    validate('actionPlan.title', draft.actionPlan.title, base.actionPlan.title);
+    draft.actionPlan.priorities?.forEach((value, index) => (
+      validate(`actionPlan.priorities.${index}`, value, base.actionPlan.priorities[index])
+    ));
+    draft.actionPlan.dos?.forEach((value, index) => (
+      validate(`actionPlan.dos.${index}`, value, base.actionPlan.dos[index])
+    ));
+    draft.actionPlan.avoids?.forEach((value, index) => (
+      validate(`actionPlan.avoids.${index}`, value, base.actionPlan.avoids[index])
+    ));
+    draft.actionPlan.luckyDays?.forEach((day, index) => {
+      const baseDay = base.actionPlan.luckyDays.find((candidate) => candidate.day === day.day);
+      validate(`actionPlan.luckyDays.${index}.reason`, day.reason, baseDay?.reason, temporalScopes);
+    });
+    draft.actionPlan.unluckyDays?.forEach((day, index) => {
+      const baseDay = base.actionPlan.unluckyDays.find((candidate) => candidate.day === day.day);
+      validate(`actionPlan.unluckyDays.${index}.reason`, day.reason, baseDay?.reason, temporalScopes);
+    });
+  }
+
+  if (Object.values(catalog.byScope).every((ids) => ids.size === 0) && Object.keys(draft).length > 0) {
+    throw new Error('검증 가능한 상용 명리 근거가 없어 Gemini 생성 문장을 사용할 수 없습니다.');
+  }
+}
+
+function stripGeneratedEvidence(value: string | undefined) {
+  return value === undefined ? undefined : stripReportEvidenceReferences(value);
+}
+
+/**
+ * Evidence IDs are transport-time validation metadata. They must never reach
+ * customer-facing report copy, where an ID could look like a source-backed
+ * endorsement of prose authored by a text model.
+ */
+export function stripGeminiEvidenceMetadata(draft: GeminiDraft): GeminiDraft {
+  return {
+    ...draft,
+    heroNote: stripGeneratedEvidence(draft.heroNote),
+    summary: draft.summary
+      ? {
+          ...draft.summary,
+          title: stripGeneratedEvidence(draft.summary.title),
+          analysis: draft.summary.analysis?.map((value) => stripReportEvidenceReferences(value)),
+          advice: draft.summary.advice?.map((value) => stripReportEvidenceReferences(value))
+        }
+      : undefined,
+    keyTakeaways: draft.keyTakeaways?.map((card) => ({
+      ...card,
+      body: stripGeneratedEvidence(card.body),
+      badge: stripGeneratedEvidence(card.badge)
+    })),
+    questionAnswers: draft.questionAnswers?.map((answer) => ({
+      ...answer,
+      title: stripGeneratedEvidence(answer.title),
+      analysis: stripGeneratedEvidence(answer.analysis),
+      advice: answer.advice?.map((value) => stripReportEvidenceReferences(value))
+    })),
+    sections: draft.sections?.map((section) => ({
+      ...section,
+      paragraphs: section.paragraphs?.map((value) => stripReportEvidenceReferences(value)),
+      bullets: section.bullets?.map((value) => stripReportEvidenceReferences(value)),
+      callout: section.callout
+        ? {
+            ...section.callout,
+            title: stripGeneratedEvidence(section.callout.title),
+            body: stripGeneratedEvidence(section.callout.body)
+          }
+        : undefined,
+      cards: section.cards?.map((card) => ({
+        ...card,
+        body: stripGeneratedEvidence(card.body),
+        badge: stripGeneratedEvidence(card.badge)
+      })),
+      details: section.details?.map((detail) => ({
+        ...detail,
+        content: stripGeneratedEvidence(detail.content)
+      }))
+    })),
+    currentDayun: draft.currentDayun
+      ? {
+          ...draft.currentDayun,
+          summary: stripGeneratedEvidence(draft.currentDayun.summary),
+          focus: stripGeneratedEvidence(draft.currentDayun.focus),
+          caution: stripGeneratedEvidence(draft.currentDayun.caution)
+        }
+      : undefined,
+    nextDayun: draft.nextDayun
+      ? {
+          ...draft.nextDayun,
+          summary: stripGeneratedEvidence(draft.nextDayun.summary),
+          focus: stripGeneratedEvidence(draft.nextDayun.focus),
+          caution: stripGeneratedEvidence(draft.nextDayun.caution)
+        }
+      : undefined,
+    actionPlan: draft.actionPlan
+      ? {
+          ...draft.actionPlan,
+          title: stripGeneratedEvidence(draft.actionPlan.title),
+          priorities: draft.actionPlan.priorities?.map((value) => stripReportEvidenceReferences(value)),
+          dos: draft.actionPlan.dos?.map((value) => stripReportEvidenceReferences(value)),
+          avoids: draft.actionPlan.avoids?.map((value) => stripReportEvidenceReferences(value)),
+          luckyDays: draft.actionPlan.luckyDays?.map((day) => ({
+            ...day,
+            reason: stripReportEvidenceReferences(day.reason)
+          })),
+          unluckyDays: draft.actionPlan.unluckyDays?.map((day) => ({
+            ...day,
+            reason: stripReportEvidenceReferences(day.reason)
+          }))
+        }
+      : undefined
+  };
+}
+
+function serializeEvidenceCatalog(basis: DeterministicSajuBasis) {
+  const catalog = collectEvidenceCatalog(basis);
+  return ALL_EVIDENCE_SCOPES.reduce<Record<EvidenceScope, string[]>>((result, scope) => {
+    result[scope] = [...catalog.byScope[scope]].sort();
+    return result;
+  }, {
+    interpretation: [],
+    temporal: [],
+    compatibility: []
+  });
+}
+
 export class ReportRequestError extends Error {
   status: number;
 
@@ -115,6 +673,10 @@ function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     birthDate: body.payload?.birth?.date || '',
     birthTime: body.payload?.birth?.time || '',
     isUnknownTime: Boolean(body.payload?.birth?.isUnknownTime),
+    birthTimePrecision: body.payload?.birth?.precision,
+    dayBoundaryPolicy: body.payload?.birth?.dayBoundaryPolicy,
+    birthLocation: body.payload?.birth?.location || undefined,
+    partner: body.payload?.partner || undefined,
     relationshipStatus: body.payload?.relationship?.status || '',
     relationshipDuration: body.payload?.relationship?.duration || '',
     q1: body.payload?.questions?.[0] || '',
@@ -127,10 +689,12 @@ function mergeCards(baseCards: ReportCard[], draftCards?: Partial<ReportCard>[])
     return baseCards;
   }
 
-  return baseCards.map((card, index) => ({
-    ...card,
-    ...draftCards[index]
-  }));
+  return baseCards.map((card) => {
+    const generated = draftCards.find((candidate) => candidate.title === card.title);
+    return generated
+      ? { ...card, body: generated.body || card.body, badge: generated.badge || card.badge }
+      : card;
+  });
 }
 
 function mergeDetails(baseDetails: ReportDetail[] | undefined, draftDetails?: Partial<ReportDetail>[]) {
@@ -138,10 +702,10 @@ function mergeDetails(baseDetails: ReportDetail[] | undefined, draftDetails?: Pa
     return baseDetails;
   }
 
-  return baseDetails.map((detail, index) => ({
-    ...detail,
-    ...draftDetails[index]
-  }));
+  return baseDetails.map((detail) => {
+    const generated = draftDetails.find((candidate) => candidate.summary === detail.summary);
+    return generated?.content ? { ...detail, content: generated.content } : detail;
+  });
 }
 
 function mergeSections(baseSections: ReportSection[], draftSections?: GeminiDraft['sections']) {
@@ -150,6 +714,9 @@ function mergeSections(baseSections: ReportSection[], draftSections?: GeminiDraf
   }
 
   return baseSections.map((section) => {
+    if (section.id.endsWith('-v2')) {
+      return section;
+    }
     const matched = draftSections.find((candidate) => candidate.id === section.id);
 
     if (!matched) {
@@ -160,7 +727,12 @@ function mergeSections(baseSections: ReportSection[], draftSections?: GeminiDraf
       ...section,
       paragraphs: matched.paragraphs?.filter(Boolean) || section.paragraphs,
       bullets: matched.bullets?.filter(Boolean) || section.bullets,
-      callout: matched.callout?.body ? { ...section.callout, ...matched.callout } : section.callout,
+      callout: matched.callout?.body
+        ? {
+            title: matched.callout.title || section.callout?.title,
+            body: matched.callout.body
+          }
+        : section.callout,
       cards: section.cards ? mergeCards(section.cards, matched.cards) : section.cards,
       details: mergeDetails(section.details, matched.details)
     };
@@ -172,8 +744,8 @@ function mergeQuestionAnswers(baseAnswers: QuestionAnswerBlock[], draftAnswers?:
     return baseAnswers;
   }
 
-  return baseAnswers.map((answer, index) => {
-    const draft = draftAnswers[index];
+  return baseAnswers.map((answer) => {
+    const draft = draftAnswers.find((candidate) => candidate.question === answer.question);
 
     if (!draft) {
       return answer;
@@ -181,6 +753,7 @@ function mergeQuestionAnswers(baseAnswers: QuestionAnswerBlock[], draftAnswers?:
 
     return {
       ...answer,
+      question: answer.question,
       title: draft.title || answer.title,
       analysis: draft.analysis || answer.analysis,
       advice: draft.advice?.filter(Boolean) || answer.advice
@@ -195,22 +768,18 @@ function mergeActionPlan(base: ActionPlan, draft?: Partial<ActionPlan>): ActionP
 
   return {
     ...base,
-    ...draft,
+    title: draft.title || base.title,
     priorities: draft.priorities?.filter(Boolean) || base.priorities,
     dos: draft.dos?.filter(Boolean) || base.dos,
     avoids: draft.avoids?.filter(Boolean) || base.avoids,
-    luckyDays: draft.luckyDays?.length
-      ? draft.luckyDays.map((item) => ({
-          day: Number(item.day),
-          reason: item.reason || ''
-        }))
-      : base.luckyDays,
-    unluckyDays: draft.unluckyDays?.length
-      ? draft.unluckyDays.map((item) => ({
-          day: Number(item.day),
-          reason: item.reason || ''
-        }))
-      : base.unluckyDays
+    luckyDays: base.luckyDays.map((item) => ({
+      ...item,
+      reason: draft.luckyDays?.find((candidate) => candidate.day === item.day)?.reason || item.reason
+    })),
+    unluckyDays: base.unluckyDays.map((item) => ({
+      ...item,
+      reason: draft.unluckyDays?.find((candidate) => candidate.day === item.day)?.reason || item.reason
+    }))
   };
 }
 
@@ -235,7 +804,7 @@ function mergeGeminiDraft(base: SajuReportData, draft?: GeminiDraft | null): Saj
   return {
     ...base,
     heroNote: draft.heroNote || base.heroNote,
-    legalNotice: draft.legalNotice?.filter(Boolean) || base.legalNotice,
+    legalNotice: base.legalNotice,
     summary: {
       ...base.summary,
       ...draft.summary,
@@ -251,28 +820,11 @@ function mergeGeminiDraft(base: SajuReportData, draft?: GeminiDraft | null): Saj
   };
 }
 
-function strengthenMergedQuestionAnswers(
-  report: SajuReportData,
-  deterministicBasis: DeterministicSajuBasis,
-  formData: Partial<IntakeFormData>
-): SajuReportData {
-  return {
-    ...report,
-    questionAnswers: report.questionAnswers.map((answer, index) =>
-      strengthenQuestionAnswerQuality(answer, deterministicBasis, {
-        formData,
-        questionIndex: index
-      })
-    )
-  };
-}
-
 function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: DeterministicSajuBasis) {
   const partialSchema = {
     type: 'OBJECT',
     properties: {
       heroNote: { type: 'STRING' },
-      legalNotice: { type: 'ARRAY', items: { type: 'STRING' } },
       summary: {
         type: 'OBJECT',
         properties: {
@@ -411,13 +963,21 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                 deterministicBasis,
                 debug: false
               }),
+              evidenceIdCatalog: serializeEvidenceCatalog(deterministicBasis),
               requiredOutput:
                 [
                   'Return JSON only.',
                   'Use deterministicBasis as the single source of truth.',
+                  'Within deterministicBasis, commercialV2 is the highest-priority expert evidence layer. Never replace it with a simpler five-element count or generic yongsin heuristic.',
+                  'Do not rewrite or reinterpret calculation-audit-v2, expert-evidence-v2, temporal-evidence-v2, or compatibility-evidence-v2. Their wording and evidence IDs are immutable.',
+                  'When commercialV2.interpretation.consensus is unresolved or conditional, explicitly preserve the conflict and never call a candidate a confirmed yongsin.',
+                  'When commercialV2 calendar stableSelection is unstable-day, do not make a single day-master, yongsin, temporal, or compatibility conclusion. Ask for a more exact birth time and explain only invariant facts.',
+                  'RELEASE-SAFE OUTPUT RULE: Do not author, rewrite, paraphrase, expand, shorten, or infer any customer-facing prose. For every explanatory field you return, copy the corresponding baseReport string byte-for-byte and only append evidence metadata in the exact format [근거:ID] (multiple IDs: [근거:ID1,ID2]). After the citation is removed, the value must exactly equal baseReport. This applies independently to heroNote, summary title and every summary item, every generated card body or badge, every Q&A title/analysis/advice item, every section paragraph/bullet/callout/card/detail, every dayun field, and every action-plan title/item/day reason. If no matching evidence exists, omit that field.',
+                  'Use evidence IDs from the relevant catalog only: currentDayun, nextDayun, fortune/year/month/detail12/detailRel/detailSal/ten sections, and lucky/unlucky-day reasons may cite temporal IDs only. Natal-only sections must cite interpretation IDs. Relationship copy may cite compatibility IDs only when commercialV2.compatibility exists. Never use an unrelated valid ID merely to satisfy citation syntax.',
+                  'Do not add citations to structural matching keys copied from baseReport: section id, question, existing card title, detail summary, or day number. Those keys must remain exact so the response can be merged safely.',
                   'Never change pillars, fiveElements, tenGods, dayun names, dayun ranges, seun, wolyun, birth data, serialNumber, or createdAt.',
                   'The golden sample in the system prompt is a validation case only. Do not copy its pillars or dayun into other users.',
-                  'Rewrite only explanatory text blocks: heroNote, summary text, Q&A text, section paragraphs, cards, details, and actionPlan wording.',
+                  'Return only exact deterministic prose echoes plus evidence metadata. Never return a novel factual claim, interpretation, example, recommendation, or stylistic improvement, even if an evidence ID appears related.',
                   'Avoid repetitive wording in the first summary. Do not keep repeating the same Korean nouns such as 기준, 구조, 문서화, 정교하게, 확장. Rotate concrete real-life expressions such as 정산 원칙, 역할 경계, 가격표, 생활 리듬, 책임 범위, 계약 습관, 일정 통제, 에너지 배분, 관계 장면, 회복 방식.',
                   'Never repeat the same helper sentence across sections. In particular, do not reuse endings like "생활 속에서 반복될 때 힘을 얻습니다" or "실제 선택 기준으로 써야 합니다". Each paragraph needs a different image, reason, and action.',
                   'The report must feel like saju/myeongri analysis, not self-development coaching. Use myeongri terms naturally and explain them: 월령, 조후, 통근, 투간, 합충, 십성, 용신, 희신, 대운, 세운, 월운.',
@@ -474,7 +1034,8 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Do not repeat stock phrases across sections. If a similar conclusion appears, rewrite with a different scene, different emotional trigger, and different action.',
                   'Mix short and medium sentence length intentionally so the report feels human, not machine-uniform.',
                   'Each section should contain one capture-worthy one-liner that a user wants to save or share.',
-                  'Do not produce generic coaching tone. Speak as a veteran consultant who has observed the pattern for years.'
+                  'Do not produce generic coaching tone. Speak as a veteran consultant who has observed the pattern for years.',
+                  'FINAL RELEASE-SAFE OVERRIDE: all earlier style and quality instructions describe how the deterministic baseReport was prepared; they do not authorize new prose. Your only permitted operation is exact baseReport prose echo plus valid evidence metadata. Omit anything you cannot echo exactly.'
                 ].join(' '),
               baseReport,
               deterministicBasis
@@ -484,7 +1045,7 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
       }
     ],
     generationConfig: {
-      temperature: 0.8,
+      temperature: 0,
       topP: 0.9,
       responseMimeType: 'application/json',
       responseSchema: partialSchema
@@ -501,7 +1062,7 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
     return null;
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), getGeminiRequestTimeoutMs(env));
   let response: Response;
@@ -510,7 +1071,8 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
     response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
       },
       signal: controller.signal,
       body: JSON.stringify(buildGeminiRequestPayload(baseReport, deterministicBasis))
@@ -540,7 +1102,9 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
     return null;
   }
 
-  return JSON.parse(text) as GeminiDraft;
+  const draft = sanitizeGeminiDraft(JSON.parse(text), baseReport);
+  assertGeminiEvidenceReferences(draft, deterministicBasis, baseReport);
+  return stripGeminiEvidenceMetadata(draft);
 }
 
 export async function generateGeminiSajuReport(body: ReportRequestBody): Promise<ReportResponsePayload> {
@@ -561,24 +1125,26 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
     draft = await requestGeminiDraft(fallbackReport, deterministicBasis);
   } catch (geminiError) {
     console.error('Gemini report draft failed:', geminiError);
-    throw new ReportRequestError(502, 'Gemini 분석 생성에 실패했습니다. 기본 리포트로 대체하지 않고 다시 시도해 주세요.');
   }
 
   if (!draft) {
-    throw new ReportRequestError(503, 'Gemini 분석 API가 설정되지 않았습니다. 기본 리포트로 대체하지 않습니다.');
+    return {
+      provider: 'deterministic-fallback',
+      reportMode: PREMIUM_SAJU_REPORT_MODE,
+      promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
+      report: fallbackReport,
+      debug: undefined
+    };
   }
 
-  const mergedReport = strengthenMergedQuestionAnswers(mergeGeminiDraft(fallbackReport, draft), deterministicBasis, formData);
+  const mergedReport = mergeGeminiDraft(fallbackReport, draft);
+  const guardedReport = lockCommercialReportFacts(fallbackReport, mergedReport);
 
   return {
     provider: 'gemini',
-    reportMode: body.reportMode || PREMIUM_SAJU_REPORT_MODE,
-    promptVersion: body.promptVersion || PREMIUM_SAJU_PROMPT_VERSION,
-    report: mergedReport,
-    debug: body.debug
-      ? {
-          deterministicBasis
-        }
-      : undefined
+    reportMode: PREMIUM_SAJU_REPORT_MODE,
+    promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
+    report: guardedReport,
+    debug: undefined
   };
 }

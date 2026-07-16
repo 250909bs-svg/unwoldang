@@ -107,6 +107,26 @@ export interface ReportQualityAudit {
   typoSignals: string[];
 }
 
+export interface ReportEngineMeta {
+  engineVersion: string;
+  validationStatus: string;
+  calendarVersion: string;
+  interpretationVersion: string;
+  interactionVersion: string;
+  calculationPrecision: 'exact-minute' | 'legacy-range' | 'unknown';
+  scenarioCount: number;
+  dayBoundaryPolicy: 'civil-midnight' | 'late-zi-next-day';
+  trueSolarTime: {
+    requested: boolean;
+    applied: boolean;
+    correctionMinutes: number | null;
+  };
+  evidenceCount: number;
+  confidence: number | null;
+  uncertainty: string[];
+  helpfulElementSource: 'expert-consensus' | 'legacy-fallback';
+}
+
 export interface SajuReportData {
   serviceId: ServiceId;
   kind: ReportKind;
@@ -152,4 +172,5 @@ export interface SajuReportData {
   monthLuck: MonthLuckItem[];
   actionPlan: ActionPlan;
   qualityAudit: ReportQualityAudit;
+  engineMeta?: ReportEngineMeta;
 }

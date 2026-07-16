@@ -142,4 +142,47 @@ describe('saju report question answers', () => {
     expect(report.qualityAudit.bannedTerms).toEqual([]);
     expect(report.qualityAudit.typoSignals).toEqual([]);
   });
+
+  it('publishes auditable expert, calendar, and temporal evidence metadata', () => {
+    const report = buildSajuReport(
+      'general-signature',
+      makeFormData({ q1: '회사 계속 다녀도 될까?', q2: '' })
+    );
+    const ids = report.sections.map((section) => section.id);
+
+    expect(ids).toEqual(expect.arrayContaining([
+      'calculation-audit-v2',
+      'expert-evidence-v2',
+      'temporal-evidence-v2'
+    ]));
+    expect(report.engineMeta?.engineVersion).toContain('myeongri-v2');
+    expect(report.engineMeta?.evidenceCount).toBeGreaterThan(0);
+    expect(report.engineMeta?.calculationPrecision).toBe('exact-minute');
+  });
+
+  it('includes purpose-specific two-person compatibility evidence', () => {
+    const report = buildSajuReport(
+      'match-couple',
+      makeFormData({
+        q1: '우리 관계가 오래 가려면 무엇을 맞춰야 하나요?',
+        q2: '',
+        partner: {
+          name: '상대방',
+          gender: 'female',
+          calendar: 'solar',
+          isLeapMonth: false,
+          birthDate: '1993-03-21',
+          birthTime: '14:10',
+          isUnknownTime: false,
+          birthTimePrecision: 'exact',
+          dayBoundaryPolicy: 'midnight'
+        }
+      })
+    );
+    const compatibility = report.sections.find((section) => section.id === 'compatibility-evidence-v2');
+
+    expect(compatibility).toBeDefined();
+    expect(compatibility?.cards).toHaveLength(4);
+    expect(compatibility?.subtitle).toContain('연애');
+  });
 });

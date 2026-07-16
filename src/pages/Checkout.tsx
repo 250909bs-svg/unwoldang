@@ -7,16 +7,24 @@ import { legalPages, type LegalPageKey } from '../content/legal';
 import { useAuth } from '../context/AuthContext';
 import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
+import { validateIntakeBirthInputs } from '../lib/birthInputValidation';
 import {
   buildPortOneRedirectUrl,
+  confirmAuthenticatedPortOnePayment,
   createCustomerKey,
   createOrderId,
   getPriceValue,
   readPendingPayment,
+  requestPaymentOrderIntent,
   savePendingPayment
 } from '../lib/auth';
 import { requestPortOnePayment } from '../lib/portonePayments';
-import { getPortOneConfirmEndpoint, hasPortOneRuntimeConfig, shouldUseDemoPayment } from '../lib/runtimeConfig';
+import {
+  getPaymentMode,
+  getPortOneConfirmEndpoint,
+  hasPortOneRuntimeConfig,
+  shouldUseDemoPayment
+} from '../lib/runtimeConfig';
 
 type CheckoutState = {
   product?: string;
@@ -66,12 +74,19 @@ export default function Checkout() {
   const confirmEndpoint = getPortOneConfirmEndpoint();
   const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || '01000000000';
   const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
+  const paymentMode = getPaymentMode();
   const isDemoPayment = shouldUseDemoPayment();
-  const canUsePortOneRuntime = Boolean(hasPortOneRuntimeConfig() && !isDemoPayment);
-  const hasRequiredBirthInfo = Boolean(formData?.name && formData?.birthDate && (formData?.birthTime || formData?.isUnknownTime));
+  const canUsePortOneRuntime = Boolean(paymentMode === 'live' && hasPortOneRuntimeConfig());
+  const requiresPartnerBirth = service?.id === 'match-couple' || service?.id === 'match-destiny';
+  const birthInputValidation = useMemo(
+    () => validateIntakeBirthInputs(formData || {}, { requirePartner: requiresPartnerBirth }),
+    [formData, requiresPartnerBirth]
+  );
+  const hasRequiredBirthInfo = birthInputValidation.self.valid;
+  const hasRequiredPartnerBirth = !requiresPartnerBirth || Boolean(birthInputValidation.partner?.valid);
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());
-  const paymentReady = isDemoPayment || canUsePortOneRuntime;
+  const paymentReady = isDemoPayment || (canUsePortOneRuntime && Boolean(user?.authToken));
   const canSubmit = Boolean(
     agreeService &&
       agreePrivacy &&
@@ -79,6 +94,7 @@ export default function Checkout() {
       service &&
       amount > 0 &&
       hasRequiredBirthInfo &&
+      hasRequiredPartnerBirth &&
       hasTwoQuestions &&
       reportReady &&
       paymentReady
@@ -105,7 +121,9 @@ export default function Checkout() {
     if (!canSubmit) {
       setError(
         !hasRequiredBirthInfo
-            ? '사주 정보를 먼저 입력해 주세요.'
+            ? birthInputValidation.self.errors[0]?.message || '사주 정보를 먼저 입력해 주세요.'
+            : !hasRequiredPartnerBirth
+              ? birthInputValidation.partner?.errors[0]?.message || '정밀 궁합을 위해 상대방의 생년월일과 출생 시각을 입력해 주세요.'
             : !hasTwoQuestions
               ? '질문 2개를 모두 입력해 주세요.'
               : !reportReady
@@ -129,11 +147,11 @@ export default function Checkout() {
       createdAt: new Date().toISOString()
     } as const;
 
-    savePendingPayment(pendingPayment);
     setIsSubmitting(true);
     setError(null);
 
     if (isDemoPayment) {
+      savePendingPayment(pendingPayment);
       navigate('/payment/portone/callback?payment=portone-success&mock=1', {
         replace: false
       });
@@ -146,11 +164,31 @@ export default function Checkout() {
       return;
     }
 
+    if (!user?.authToken) {
+      setError('안전한 결제 확인을 위해 카카오 로그인을 다시 진행해 주세요.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
+      const orderIntent = await requestPaymentOrderIntent({
+        confirmEndpoint,
+        authToken: user.authToken,
+        orderId,
+        productId: service.id,
+        amount
+      });
+      const authenticatedPendingPayment = {
+        ...pendingPayment,
+        orderId: orderIntent.orderId,
+        orderClaim: orderIntent.orderClaim
+      };
+      savePendingPayment(authenticatedPendingPayment);
+
       const paymentResponse = await requestPortOnePayment({
         storeId: portOneStoreId,
         channelKey: portOneChannelKey,
-        paymentId: orderId,
+        paymentId: orderIntent.orderId,
         orderName: service.label,
         totalAmount: amount,
         customerId: customerKey,
@@ -160,41 +198,33 @@ export default function Checkout() {
         redirectUrl: buildPortOneRedirectUrl(),
         customData: {
           productId: service.id,
-          paymentMethod: 'portone'
+          paymentMethod: 'portone',
+          orderClaim: orderIntent.orderClaim
         }
       });
 
       if (!paymentResponse) {
+        setError('결제창이 닫혔습니다. 결제를 다시 시도해 주세요.');
+        setIsSubmitting(false);
         return;
       }
 
-      const response = await fetch(confirmEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          paymentId: paymentResponse.paymentId || orderId,
-          txId: paymentResponse.txId,
-          orderId,
-          amount,
-          productId: service.id
-        })
+      const confirmed = await confirmAuthenticatedPortOnePayment({
+        confirmEndpoint,
+        authToken: user.authToken,
+        paymentId: paymentResponse.paymentId || orderIntent.orderId,
+        txId: paymentResponse.txId,
+        orderId: orderIntent.orderId,
+        amount,
+        productId: service.id,
+        orderClaim: orderIntent.orderClaim
       });
 
-      const parsed = (await response.json().catch(() => null)) as
-        | { message?: string; paymentId?: string; txId?: string; reportAccessToken?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(parsed?.message || 'PortOne KG이니시스 결제 검증에 실패했습니다.');
-      }
-
       savePendingPayment({
-        ...pendingPayment,
-        paymentKey: parsed?.paymentId || paymentResponse.paymentId || orderId,
-        txId: parsed?.txId || paymentResponse.txId,
-        reportAccessToken: parsed?.reportAccessToken
+        ...authenticatedPendingPayment,
+        paymentKey: confirmed.paymentId,
+        txId: confirmed.txId,
+        reportAccessToken: confirmed.reportAccessToken
       });
 
       navigate('/loading', {
@@ -203,9 +233,9 @@ export default function Checkout() {
           product: service.id,
           formData,
           paymentMethod: 'portone',
-          orderId,
+          orderId: confirmed.orderId,
           tabOrigin,
-          reportAccessToken: parsed?.reportAccessToken
+          reportAccessToken: confirmed.reportAccessToken
         }
       });
     } catch (caughtError) {

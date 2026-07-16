@@ -1,9 +1,17 @@
 import { Archive, ChevronDown, ChevronRight, LogOut, ScrollText, Sparkles } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { findServiceById } from '../api/mockData';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
-import { beginKakaoLogin } from '../lib/auth';
+import {
+  beginKakaoLogin,
+  fetchPaymentEntitlements,
+  readPendingPayment,
+  renewPaymentEntitlement,
+  savePendingPayment,
+  type PaymentEntitlement
+} from '../lib/auth';
 import {
   fetchRemoteReportArchiveEntries,
   mergeReportArchiveEntries,
@@ -11,6 +19,7 @@ import {
   writeReportArchiveEntries,
   type ReportArchiveEntry
 } from '../lib/reportArchive';
+import { getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
 
 type ReplayPromo = {
   title: string;
@@ -139,7 +148,8 @@ function ReportReplayCard({ report }: { report: ReportArchiveEntry }) {
         formData: report.formData,
         paymentMethod: report.paymentMethod,
         orderId: report.orderId,
-        reportData: report.reportData
+        reportData: report.reportData,
+        reportProvider: report.reportProvider
       }}
       className="my-report-replay-card"
     >
@@ -175,7 +185,11 @@ function PromoBanner({ promo }: { promo: ReplayPromo }) {
 
 function LoggedInReplay() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [recentReports, setRecentReports] = useState(() => readReportArchiveEntries(user?.id));
+  const [recoverablePayments, setRecoverablePayments] = useState<PaymentEntitlement[]>([]);
+  const [recoveryOrderId, setRecoveryOrderId] = useState('');
+  const [recoveryError, setRecoveryError] = useState('');
   const [archiveOpen, setArchiveOpen] = useState(true);
   const [showAllReports, setShowAllReports] = useState(false);
   const visibleReports = showAllReports ? recentReports : recentReports.slice(0, 4);
@@ -185,7 +199,8 @@ function LoggedInReplay() {
     let isCancelled = false;
     const syncReports = () => setRecentReports(readReportArchiveEntries(user?.id));
     const syncRemoteReports = async () => {
-      syncReports();
+      let mergedReports = readReportArchiveEntries(user?.id);
+      setRecentReports(mergedReports);
 
       if (!user?.authToken) {
         return;
@@ -198,11 +213,30 @@ function LoggedInReplay() {
           return;
         }
 
-        const mergedReports = mergeReportArchiveEntries(readReportArchiveEntries(user?.id), remoteReports);
+        mergedReports = mergeReportArchiveEntries(mergedReports, remoteReports);
         writeReportArchiveEntries(mergedReports, user?.id);
         setRecentReports(mergedReports);
       } catch {
         // Local archive remains available when the server archive is temporarily unavailable.
+      }
+
+      const confirmEndpoint = getPortOneConfirmEndpoint();
+
+      if (!confirmEndpoint || isCancelled) {
+        return;
+      }
+
+      try {
+        const entitlements = await fetchPaymentEntitlements(confirmEndpoint, user.authToken);
+
+        if (isCancelled) {
+          return;
+        }
+
+        const archivedOrderIds = new Set(mergedReports.map((entry) => entry.orderId).filter(Boolean));
+        setRecoverablePayments(entitlements.filter((entry) => !archivedOrderIds.has(entry.orderId)));
+      } catch {
+        // Existing local and remote report archives remain available if entitlement sync is unavailable.
       }
     };
 
@@ -218,6 +252,56 @@ function LoggedInReplay() {
     };
   }, [user?.authToken, user?.id]);
 
+  const handleResumePayment = async (entitlement: PaymentEntitlement) => {
+    const confirmEndpoint = getPortOneConfirmEndpoint();
+
+    if (!confirmEndpoint || !user?.authToken) {
+      setRecoveryError('결제 복구 서버 연결 또는 로그인 상태를 확인해 주세요.');
+      return;
+    }
+
+    setRecoveryOrderId(entitlement.orderId);
+    setRecoveryError('');
+
+    try {
+      const renewed = await renewPaymentEntitlement(confirmEndpoint, user.authToken, entitlement.orderId);
+      const pendingPayment = readPendingPayment();
+
+      if (pendingPayment?.orderId === entitlement.orderId && pendingPayment.formData) {
+        const recoveredPayment = {
+          ...pendingPayment,
+          reportAccessToken: renewed.reportAccessToken
+        };
+        savePendingPayment(recoveredPayment);
+        navigate('/loading', {
+          state: {
+            product: recoveredPayment.productId,
+            formData: recoveredPayment.formData,
+            paymentMethod: recoveredPayment.paymentMethod,
+            orderId: recoveredPayment.orderId,
+            tabOrigin: '/my',
+            reportAccessToken: renewed.reportAccessToken
+          }
+        });
+        return;
+      }
+
+      navigate(`/form/${entitlement.productId}`, {
+        state: {
+          tabOrigin: '/my',
+          recoveredEntitlement: {
+            orderId: entitlement.orderId,
+            reportAccessToken: renewed.reportAccessToken
+          }
+        }
+      });
+    } catch (error) {
+      setRecoveryError(error instanceof Error ? error.message : '결제 리포트 권한을 복구하지 못했습니다.');
+    } finally {
+      setRecoveryOrderId('');
+    }
+  };
+
   return (
     <main className="my-replay-page">
       <MyReplayHeader />
@@ -228,6 +312,46 @@ function LoggedInReplay() {
           <h1>{user?.nickname || '운월당'}님의 보관함</h1>
           <p>구매하거나 생성한 사주 리포트를 한곳에 모아두고 다시 볼 수 있어요.</p>
         </div>
+
+        {recoverablePayments.length ? (
+          <section className="my-report-archive-section open" aria-label="이어 만들 수 있는 결제 리포트">
+            <div className="my-archive-toggle">
+              <span className="my-archive-toggle-icon">
+                <ScrollText size={17} />
+              </span>
+              <span className="my-archive-toggle-copy">
+                <strong>결제 완료 리포트 이어보기</strong>
+                <em>다른 탭이나 컴퓨터에서 중단한 결제를 본인 인증으로 복구합니다.</em>
+              </span>
+            </div>
+            <div className="my-report-replay-list">
+              {recoverablePayments.map((entitlement) => {
+                const service = findServiceById(entitlement.productId);
+                const isRecovering = recoveryOrderId === entitlement.orderId;
+
+                return (
+                  <button
+                    key={entitlement.orderId}
+                    type="button"
+                    className="my-report-replay-card"
+                    disabled={Boolean(recoveryOrderId)}
+                    onClick={() => void handleResumePayment(entitlement)}
+                  >
+                    <span className="my-report-icon">
+                      <ScrollText size={17} />
+                    </span>
+                    <span className="my-report-summary">
+                      <strong>{service.label}</strong>
+                      <p>{isRecovering ? '결제 권한을 확인하고 있습니다.' : '본인 결제 확인 완료 · 이어서 작성'}</p>
+                    </span>
+                    <ChevronRight size={18} className="my-report-arrow" />
+                  </button>
+                );
+              })}
+            </div>
+            {recoveryError ? <p className="my-login-error">{recoveryError}</p> : null}
+          </section>
+        ) : null}
 
         {recentReports.length ? (
           <section className={archiveOpen ? 'my-report-archive-section open' : 'my-report-archive-section'}>

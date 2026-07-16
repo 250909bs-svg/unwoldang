@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Download, Share2, User, Volume2, VolumeX } f
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import { pastLifeChapters } from '../content/pastLifeExperience';
+import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
@@ -15,6 +16,7 @@ type ReportLocationState = {
   orderId?: string;
   reportAccessToken?: string;
   reportData?: SajuReportData;
+  reportProvider?: AiReportProvider;
 };
 
 const createSafeReportFileName = (value: string) =>
@@ -5392,6 +5394,29 @@ function compactSections(sections: Array<ReportSection | undefined>): ReportSect
   });
 }
 
+const ENGINE_SECTION_IDS = new Set([
+  'calculation-audit-v2',
+  'expert-evidence-v2',
+  'temporal-evidence-v2',
+  'compatibility-evidence-v2'
+]);
+const SUPERSEDED_LEGACY_ENGINE_SECTION_IDS = new Set(['myeongri-basis', 'yongsin']);
+
+function preserveEngineEvidence(next: SajuReportData, source: SajuReportData): SajuReportData {
+  const sourceEngineSections = source.sections.filter((section) => ENGINE_SECTION_IDS.has(section.id));
+  const nextProductSections = next.sections.filter(
+    (section) =>
+      !ENGINE_SECTION_IDS.has(section.id) &&
+      !(source.engineMeta && SUPERSEDED_LEGACY_ENGINE_SECTION_IDS.has(section.id))
+  );
+
+  return {
+    ...next,
+    engineMeta: source.engineMeta,
+    sections: compactSections([...sourceEngineSections, ...nextProductSections])
+  };
+}
+
 function buildMonthStageSection(report: SajuReportData, title = '월별 흐름 전략'): ReportSection {
   return {
     id: 'month-stage',
@@ -6145,7 +6170,8 @@ export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { formData, paymentMethod, orderId, reportAccessToken, reportData } = (location.state as ReportLocationState) || {};
+  const { formData, paymentMethod, orderId, reportAccessToken, reportData, reportProvider } =
+    (location.state as ReportLocationState) || {};
   const service = findServiceById(id);
   const hasReportSource = Boolean(reportData || formData?.birthDate);
   const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
@@ -6158,26 +6184,30 @@ export default function Report() {
     const preserveAiQuestions = Boolean(reportData);
     const expandedReport = buildExpandedCoreReport(baseReport);
     let nextReport: SajuReportData;
+    const finalize = (candidate: SajuReportData) => preserveEngineEvidence(
+      preserveAiQuestions ? preserveGeneratedQuestionAnswers(candidate, baseReport) : candidate,
+      baseReport
+    );
 
     if (expandedReport.serviceId === 'concern-reading') {
       nextReport = buildConcernReadingReportV2(expandedReport, { preserveQuestionAnswers: preserveAiQuestions });
-      return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
+      return finalize(nextReport);
     }
 
     if (expandedReport.serviceId === 'life-flow') {
       nextReport = buildProductFocusedReport(buildYearlyFortuneReportV2(expandedReport));
-      return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
+      return finalize(nextReport);
     }
 
     if (['love', 'reunion', 'marriage', 'career', 'wealth'].includes(expandedReport.kind)) {
       nextReport = buildProductFocusedReport(buildFocusedPremiumReport(expandedReport));
-      return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
+      return finalize(nextReport);
     }
 
     nextReport = buildProductFocusedReport(
       buildExpertSatisfactionReport(expandedReport, { preserveQuestionAnswers: preserveAiQuestions })
     );
-    return preserveAiQuestions ? preserveGeneratedQuestionAnswers(nextReport, baseReport) : nextReport;
+    return finalize(nextReport);
   }, [baseReport, reportData]);
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
@@ -6359,7 +6389,8 @@ export default function Report() {
       createdAt: report.createdAt,
       paymentMethod,
       formData,
-      reportData: report
+      reportData: report,
+      reportProvider
     };
 
     const authUser = readStoredAuthUser();
@@ -6373,7 +6404,7 @@ export default function Report() {
     }
 
     clearPendingPayment();
-  }, [formData, orderId, paymentMethod, report, reportAccessToken, shouldBlockPreview]);
+  }, [formData, orderId, paymentMethod, report, reportAccessToken, reportProvider, shouldBlockPreview]);
 
   useEffect(
     () => () => {
@@ -6755,6 +6786,15 @@ body {
               ? 'premium-report-paper past-life-report-paper'
               : 'premium-report-paper'
         }>
+          {reportProvider === 'deterministic-fallback' ? (
+            <section className="premium-report-section" aria-label="리포트 생성 상태">
+              <div className="premium-callout">
+                <strong>검증된 내부 명리 엔진 리포트</strong>
+                <p>AI 문장 보강이 일시적으로 지연되어 계산·근거가 잠긴 내부 엔진 결과로 제공되었습니다.</p>
+              </div>
+            </section>
+          ) : null}
+
           {isYearlyShowcase && yearlyLead ? (
             <section className="premium-report-cover yearly-report-cover">
               <div className="yearly-report-orbit">

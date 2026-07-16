@@ -1,9 +1,10 @@
 import { Check, ChevronDown, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { type IntakeFormData, findServiceById } from '../api/mockData';
+import { type IntakeFormData, type PartnerBirthData, findServiceById } from '../api/mockData';
 import { useAuth } from '../context/AuthContext';
 import { pastLifeSymbolOptions, pastLifeToneOptions, pastLifeTopicOptions } from '../content/pastLifeExperience';
+import { validateBirthInput } from '../lib/birthInputValidation';
 
 const initialState: IntakeFormData = {
   name: '',
@@ -13,6 +14,8 @@ const initialState: IntakeFormData = {
   birthDate: '',
   birthTime: '',
   isUnknownTime: false,
+  birthTimePrecision: 'branch-range',
+  dayBoundaryPolicy: 'midnight',
   relationshipStatus: '',
   relationshipDuration: '',
   location: '',
@@ -26,11 +29,27 @@ const initialState: IntakeFormData = {
   readingTone: '균형 있게'
 };
 
+const emptyPartnerBirthData: PartnerBirthData = {
+  name: '',
+  gender: 'male',
+  calendar: 'solar',
+  isLeapMonth: false,
+  birthDate: '',
+  birthTime: '',
+  isUnknownTime: false,
+  birthTimePrecision: 'branch-range',
+  dayBoundaryPolicy: 'midnight'
+};
+
 type IntakeStep = 1 | 2 | 3 | 4;
 
 type FormLocationState = {
   formData?: Partial<IntakeFormData>;
   tabOrigin?: string;
+  recoveredEntitlement?: {
+    orderId: string;
+    reportAccessToken: string;
+  };
 };
 
 const birthTimeOptions = [
@@ -48,6 +67,19 @@ const birthTimeOptions = [
   { value: 'sul', label: '술/戌 (19:30-21:29)', birthTime: '술/戌 (19:30-21:29)' },
   { value: 'hae', label: '해/亥 (21:30-23:29)', birthTime: '해/亥 (21:30-23:29)' },
   { value: 'yaja', label: '야자/夜子 (23:30-23:59)', birthTime: '야자/夜子 (23:30-23:59)' }
+] as const;
+
+const birthLocationOptions = [
+  { label: '지역 모름 · 보정 안 함', latitude: undefined, longitude: undefined },
+  { label: '서울', latitude: 37.5665, longitude: 126.978 },
+  { label: '인천', latitude: 37.4563, longitude: 126.7052 },
+  { label: '수원', latitude: 37.2636, longitude: 127.0286 },
+  { label: '대전', latitude: 36.3504, longitude: 127.3845 },
+  { label: '대구', latitude: 35.8714, longitude: 128.6014 },
+  { label: '광주', latitude: 35.1595, longitude: 126.8526 },
+  { label: '부산', latitude: 35.1796, longitude: 129.0756 },
+  { label: '울산', latitude: 35.5384, longitude: 129.3114 },
+  { label: '제주', latitude: 33.4996, longitude: 126.5312 }
 ] as const;
 
 const questionSuggestions = {
@@ -165,6 +197,12 @@ const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormDat
   birthDate: source?.birthDate ?? '',
   birthTime: source?.birthTime ?? '',
   isUnknownTime: Boolean(source?.isUnknownTime),
+  birthTimePrecision:
+    source?.birthTimePrecision ||
+    (source?.isUnknownTime ? 'unknown' : /^\d{1,2}:\d{2}$/.test(source?.birthTime || '') ? 'exact' : 'branch-range'),
+  dayBoundaryPolicy: source?.dayBoundaryPolicy || 'midnight',
+  birthLocation: source?.birthLocation,
+  partner: source?.partner ? { ...emptyPartnerBirthData, ...source.partner } : undefined,
   relationshipStatus: source?.relationshipStatus ?? '',
   relationshipDuration: source?.relationshipDuration ?? '',
   location: source?.location ?? '',
@@ -186,10 +224,37 @@ function getBirthTimeSelectValue(formData: IntakeFormData) {
   return birthTimeOptions.find((option) => option.birthTime === formData.birthTime)?.value || '';
 }
 
+function getExactBirthTimeValue(formData: IntakeFormData) {
+  if (formData.isUnknownTime || formData.birthTimePrecision !== 'exact') {
+    return '';
+  }
+
+  const match = formData.birthTime.match(/^(\d{1,2}):(\d{2})$/);
+  return match ? `${match[1].padStart(2, '0')}:${match[2]}` : '';
+}
+
+function getPartnerBirthTimeSelectValue(partner: PartnerBirthData) {
+  if (partner.isUnknownTime || partner.birthTimePrecision === 'exact') {
+    return '';
+  }
+
+  return birthTimeOptions.find((option) => option.birthTime === partner.birthTime)?.value || '';
+}
+
+function getPartnerExactBirthTimeValue(partner: PartnerBirthData) {
+  if (partner.isUnknownTime || partner.birthTimePrecision !== 'exact') {
+    return '';
+  }
+
+  const match = partner.birthTime.match(/^(\d{1,2}):(\d{2})$/);
+  return match ? `${match[1].padStart(2, '0')}:${match[2]}` : '';
+}
+
 export default function Form() {
   const { id } = useParams<{ id: string }>();
   const service = findServiceById(id);
   const isPastLifeFlow = service.id === 'past-life-goblin';
+  const isCompatibilityFlow = service.id === 'match-couple' || service.id === 'match-destiny';
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -199,6 +264,8 @@ export default function Form() {
   const [step, setStep] = useState<IntakeStep>(1);
   const [formData, setFormData] = useState<IntakeFormData>(initialState);
   const [birthDigits, setBirthDigits] = useState('');
+  const [partnerBirthDigits, setPartnerBirthDigits] = useState('');
+  const partnerData = formData.partner || emptyPartnerBirthData;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -226,6 +293,7 @@ export default function Form() {
 
     setFormData(hydrated);
     setBirthDigits(parseDateDigits(hydrated.birthDate));
+    setPartnerBirthDigits(parseDateDigits(hydrated.partner?.birthDate));
   }, [draftKey, locationState?.formData]);
 
   useEffect(() => {
@@ -252,24 +320,134 @@ export default function Form() {
     if (!selected) {
       updateField('isUnknownTime', false);
       updateField('birthTime', '');
+      updateField('birthTimePrecision', 'branch-range');
       return;
     }
 
     if (selected.value === 'unknown') {
       updateField('isUnknownTime', true);
       updateField('birthTime', '');
+      updateField('birthTimePrecision', 'unknown');
       return;
     }
 
     updateField('isUnknownTime', false);
     updateField('birthTime', selected.birthTime);
+    updateField('birthTimePrecision', 'branch-range');
+  };
+
+  const updateExactBirthTime = (value: string) => {
+    updateField('isUnknownTime', false);
+    updateField('birthTime', value);
+    updateField('birthTimePrecision', value ? 'exact' : 'branch-range');
+  };
+
+  const updateBirthLocation = (label: string) => {
+    const selected = birthLocationOptions.find((option) => option.label === label);
+
+    setFormData((prev) => ({
+      ...prev,
+      location: selected?.latitude === undefined ? '' : selected.label,
+      birthLocation:
+        selected?.latitude === undefined || selected.longitude === undefined
+          ? undefined
+          : {
+              label: selected.label,
+              latitude: selected.latitude,
+              longitude: selected.longitude,
+              timezone: 'Asia/Seoul',
+              utcOffsetMinutes: 540,
+              applySolarTimeCorrection: true
+            }
+    }));
+  };
+
+  const updatePartnerField = <K extends keyof PartnerBirthData>(name: K, value: PartnerBirthData[K]) => {
+    setFormData((prev) => ({
+      ...prev,
+      partner: {
+        ...emptyPartnerBirthData,
+        ...prev.partner,
+        [name]: value
+      }
+    }));
+  };
+
+  const updatePartnerBirthLocation = (label: string) => {
+    const selected = birthLocationOptions.find((option) => option.label === label);
+
+    updatePartnerField(
+      'birthLocation',
+      selected?.latitude === undefined || selected.longitude === undefined
+        ? undefined
+        : {
+            label: selected.label,
+            latitude: selected.latitude,
+            longitude: selected.longitude,
+            timezone: 'Asia/Seoul',
+            utcOffsetMinutes: 540,
+            applySolarTimeCorrection: true
+          }
+    );
+  };
+
+  const updatePartnerBirthDate = (value: string) => {
+    const digits = sanitizeDigits(value, 8);
+    setPartnerBirthDigits(digits);
+    updatePartnerField('birthDate', formatBirthDate(digits));
+  };
+
+  const updatePartnerExactBirthTime = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      partner: {
+        ...emptyPartnerBirthData,
+        ...prev.partner,
+        birthTime: value,
+        isUnknownTime: false,
+        birthTimePrecision: value ? 'exact' : 'branch-range'
+      }
+    }));
+  };
+
+  const updatePartnerBirthTime = (nextValue: string) => {
+    const selected = birthTimeOptions.find((option) => option.value === nextValue);
+
+    setFormData((prev) => ({
+      ...prev,
+      partner: {
+        ...emptyPartnerBirthData,
+        ...prev.partner,
+        birthTime: selected && selected.value !== 'unknown' ? selected.birthTime : '',
+        isUnknownTime: selected?.value === 'unknown',
+        birthTimePrecision: selected?.value === 'unknown' ? 'unknown' : 'branch-range'
+      }
+    }));
+  };
+
+  const togglePartnerUnknownBirthTime = () => {
+    setFormData((prev) => {
+      const partner = { ...emptyPartnerBirthData, ...prev.partner };
+      const nextUnknown = !partner.isUnknownTime;
+
+      return {
+        ...prev,
+        partner: {
+          ...partner,
+          isUnknownTime: nextUnknown,
+          birthTime: nextUnknown ? '' : partner.birthTime,
+          birthTimePrecision: nextUnknown ? 'unknown' : 'branch-range'
+        }
+      };
+    });
   };
 
   const toggleUnknownBirthTime = () => {
     setFormData((prev) => ({
       ...prev,
       isUnknownTime: !prev.isUnknownTime,
-      birthTime: !prev.isUnknownTime ? '' : prev.birthTime
+      birthTime: !prev.isUnknownTime ? '' : prev.birthTime,
+      birthTimePrecision: !prev.isUnknownTime ? 'unknown' : prev.birthTime ? prev.birthTimePrecision : 'branch-range'
     }));
   };
 
@@ -283,13 +461,33 @@ export default function Form() {
     });
   };
 
+  const selfBirthValidation = useMemo(
+    () => validateBirthInput(formData, { subjectLabel: '본인' }),
+    [
+      formData.name,
+      formData.gender,
+      formData.calendar,
+      formData.isLeapMonth,
+      formData.birthDate,
+      formData.birthTime,
+      formData.isUnknownTime,
+      formData.birthTimePrecision,
+      formData.dayBoundaryPolicy,
+      formData.birthLocation,
+      formData.location
+    ]
+  );
+  const partnerBirthValidation = useMemo(
+    () => validateBirthInput(partnerData, { subjectLabel: '상대방' }),
+    [partnerData]
+  );
   const birthDateReady = Boolean(formData.birthDate);
-  const birthTimeReady = Boolean(formData.birthTime) || formData.isUnknownTime;
-  const step1Ready =
-    Boolean(formData.name.trim()) && Boolean(formData.gender) && birthDateReady && birthTimeReady;
+  const step1Ready = selfBirthValidation.valid;
   const step2Ready = isPastLifeFlow
     ? Boolean(formData.pastLifeTopic?.trim())
-    : Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
+    : isCompatibilityFlow
+      ? partnerBirthValidation.valid
+      : Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
   const step3Ready = isPastLifeFlow
     ? Boolean(formData.repeatedScene?.trim()) && Boolean(formData.frequentEmotion?.trim()) && Boolean(formData.hiddenDesire?.trim())
     : Boolean(formData.q1.trim());
@@ -358,7 +556,9 @@ export default function Form() {
   const birthTimePreview = formData.isUnknownTime
     ? '시간을 모르는 경우에도 기본 사주 흐름 분석은 가능합니다.'
     : formData.birthTime
-      ? `${formData.birthTime} 구간으로 결과 리포트에 반영됩니다.`
+      ? formData.birthTimePrecision === 'exact'
+        ? `${formData.birthTime} 정확 시각으로 계산합니다.`
+        : `${formData.birthTime} 시간대의 시작·중앙·종료점을 비교해 민감도를 반영합니다.`
       : '태어난 시간 구간을 눌러 선택해 주세요.';
 
   const handleBack = () => {
@@ -382,6 +582,20 @@ export default function Form() {
           q2: `자주 드는 감정은 ${formData.frequentEmotion}, 숨기기 어려운 욕심은 ${formData.hiddenDesire}입니다. ${formData.chosenSymbol} 상징을 선택했고 ${formData.readingTone} 말투로 현생 미션을 알려주세요.`
         }
       : formData;
+
+    if (locationState?.recoveredEntitlement) {
+      navigate('/loading', {
+        state: {
+          product: service.id,
+          formData: submittedFormData,
+          paymentMethod: 'portone',
+          orderId: locationState.recoveredEntitlement.orderId,
+          reportAccessToken: locationState.recoveredEntitlement.reportAccessToken,
+          tabOrigin
+        }
+      });
+      return;
+    }
 
     navigate('/checkout', {
       state: {
@@ -557,6 +771,16 @@ export default function Form() {
                     <small>시간 모름</small>
                   </button>
                 </div>
+                <input
+                  type="time"
+                  value={getExactBirthTimeValue(formData)}
+                  disabled={formData.isUnknownTime}
+                  onChange={(event) => updateExactBirthTime(event.target.value)}
+                  aria-label="정확한 출생 시각"
+                />
+                <p className="intake-story-caption">
+                  정확한 시각을 알면 시·분을 먼저 입력하세요. 모르면 아래 시간대만 선택할 수 있습니다.
+                </p>
                 <div className="intake-story-select-wrap">
                   <select value={getBirthTimeSelectValue(formData)} onChange={(event) => updateBirthTime(event.target.value)}>
                     <option value="">태어난 시간 선택</option>
@@ -569,6 +793,49 @@ export default function Form() {
                   <ChevronDown size={16} />
                 </div>
                 <p className="intake-story-caption">{birthTimePreview}</p>
+              </div>
+
+              <div className="intake-story-field">
+                <span>출생 지역</span>
+                <div className="intake-story-select-wrap">
+                  <select
+                    value={formData.birthLocation?.label || birthLocationOptions[0].label}
+                    onChange={(event) => updateBirthLocation(event.target.value)}
+                  >
+                    {birthLocationOptions.map((option) => (
+                      <option key={option.label} value={option.label}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} />
+                </div>
+                <p className="intake-story-caption">
+                  선택한 지역은 진태양시 보정 근거로만 사용하며, 모르면 기존 한국 표준시로 계산합니다.
+                </p>
+              </div>
+
+              <div className="intake-story-field">
+                <span>23시대 날짜 경계 기준</span>
+                <div className="intake-story-segment-grid">
+                  <button
+                    type="button"
+                    className={formData.dayBoundaryPolicy !== 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                    onClick={() => updateField('dayBoundaryPolicy', 'midnight')}
+                  >
+                    자정 기준
+                  </button>
+                  <button
+                    type="button"
+                    className={formData.dayBoundaryPolicy === 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                    onClick={() => updateField('dayBoundaryPolicy', 'late-zi')}
+                  >
+                    야자시 익일 기준
+                  </button>
+                </div>
+                <p className="intake-story-caption">
+                  23시 이후 일주를 다음 날로 보는 학파 기준입니다. 출생 기록 기준을 모르면 자정 기준을 유지하세요.
+                </p>
               </div>
 
               <div className="intake-story-field">
@@ -621,6 +888,171 @@ export default function Form() {
                     ))}
                   </div>
                 </article>
+              </div>
+            ) : isCompatibilityFlow ? (
+              <div className="intake-story-form-stack">
+                <div className="intake-story-question-copy">
+                  <strong>상대방의 출생 정보를 입력해 주세요</strong>
+                  <p>정밀 궁합은 두 사람의 원국을 각각 계산한 뒤 배우자궁·오행·합충과 현재 운을 함께 비교합니다.</p>
+                </div>
+
+                <label className="intake-story-field">
+                  <span>상대방 이름 또는 호칭</span>
+                  <input
+                    type="text"
+                    value={partnerData.name}
+                    onChange={(event) => updatePartnerField('name', event.target.value.slice(0, 12))}
+                    placeholder="상대방을 구분할 이름"
+                  />
+                </label>
+
+                <div className="intake-story-field">
+                  <span>상대방 성별</span>
+                  <div className="intake-story-segment-grid">
+                    <button
+                      type="button"
+                      className={partnerData.gender === 'male' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      onClick={() => updatePartnerField('gender', 'male')}
+                    >
+                      남성
+                    </button>
+                    <button
+                      type="button"
+                      className={partnerData.gender === 'female' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      onClick={() => updatePartnerField('gender', 'female')}
+                    >
+                      여성
+                    </button>
+                  </div>
+                </div>
+
+                <div className="intake-story-field">
+                  <div className="intake-story-field-head">
+                    <span>상대방 생년월일</span>
+                    <button
+                      type="button"
+                      className="intake-story-mini-check"
+                      aria-pressed={partnerData.calendar === 'lunar' && partnerData.isLeapMonth}
+                      onClick={() => {
+                        updatePartnerField('calendar', 'lunar');
+                        updatePartnerField('isLeapMonth', !partnerData.isLeapMonth);
+                      }}
+                    >
+                      <span className={partnerData.isLeapMonth ? 'intake-story-mini-box checked' : 'intake-story-mini-box'}>
+                        <Check size={11} />
+                      </span>
+                      <small>윤달</small>
+                    </button>
+                  </div>
+                  <div className="intake-story-pill-row">
+                    <button
+                      type="button"
+                      className={partnerData.calendar === 'solar' ? 'intake-story-pill active' : 'intake-story-pill'}
+                      onClick={() => {
+                        updatePartnerField('calendar', 'solar');
+                        updatePartnerField('isLeapMonth', false);
+                      }}
+                    >
+                      양력
+                    </button>
+                    <button
+                      type="button"
+                      className={partnerData.calendar === 'lunar' ? 'intake-story-pill active' : 'intake-story-pill'}
+                      onClick={() => updatePartnerField('calendar', 'lunar')}
+                    >
+                      음력
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={partnerBirthDigits}
+                    onChange={(event) => updatePartnerBirthDate(event.target.value)}
+                    placeholder="19901231"
+                  />
+                </div>
+
+                <div className="intake-story-field">
+                  <div className="intake-story-field-head">
+                    <span>상대방 출생 시각</span>
+                    <button
+                      type="button"
+                      className="intake-story-mini-check"
+                      aria-pressed={partnerData.isUnknownTime}
+                      onClick={togglePartnerUnknownBirthTime}
+                    >
+                      <span className={partnerData.isUnknownTime ? 'intake-story-mini-box checked' : 'intake-story-mini-box'}>
+                        <Check size={11} />
+                      </span>
+                      <small>시간 모름</small>
+                    </button>
+                  </div>
+                  <input
+                    type="time"
+                    value={getPartnerExactBirthTimeValue(partnerData)}
+                    disabled={partnerData.isUnknownTime}
+                    onChange={(event) => updatePartnerExactBirthTime(event.target.value)}
+                    aria-label="상대방의 정확한 출생 시각"
+                  />
+                  <div className="intake-story-select-wrap">
+                    <select
+                      value={getPartnerBirthTimeSelectValue(partnerData)}
+                      disabled={partnerData.isUnknownTime}
+                      onChange={(event) => updatePartnerBirthTime(event.target.value)}
+                    >
+                      <option value="">정확한 시간을 모르면 시간대 선택</option>
+                      {birthTimeOptions.filter((option) => option.value !== 'unknown').map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} />
+                  </div>
+                </div>
+
+                <div className="intake-story-field">
+                  <span>상대방 출생 지역</span>
+                  <div className="intake-story-select-wrap">
+                    <select
+                      value={partnerData.birthLocation?.label || birthLocationOptions[0].label}
+                      onChange={(event) => updatePartnerBirthLocation(event.target.value)}
+                    >
+                      {birthLocationOptions.map((option) => (
+                        <option key={option.label} value={option.label}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} />
+                  </div>
+                  <p className="intake-story-caption">
+                    선택 지역은 한국 표준시(UTC+9)와 경도 기반 진태양시 보정에 사용합니다.
+                  </p>
+                </div>
+
+                <div className="intake-story-field">
+                  <span>23시대 날짜 경계 기준</span>
+                  <div className="intake-story-segment-grid">
+                    <button
+                      type="button"
+                      className={partnerData.dayBoundaryPolicy !== 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      onClick={() => updatePartnerField('dayBoundaryPolicy', 'midnight')}
+                    >
+                      자정 기준
+                    </button>
+                    <button
+                      type="button"
+                      className={partnerData.dayBoundaryPolicy === 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      onClick={() => updatePartnerField('dayBoundaryPolicy', 'late-zi')}
+                    >
+                      야자시 익일 기준
+                    </button>
+                  </div>
+                  <p className="intake-story-caption">
+                    출생 기록의 기준을 모르면 자정 기준을 유지하세요. 두 기준 차이는 리포트의 불확실성에 표시됩니다.
+                  </p>
+                </div>
               </div>
             ) : (
             <div className="intake-story-form-stack">
@@ -804,7 +1236,7 @@ export default function Form() {
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>두 번째 질문도 적어주세요</strong>
-                <p>결제 후 결과 페이지에서는 질문 2개가 각각 따로 분석되며, 사주 기본정보와 함께 GPT 결과로 이어집니다.</p>
+                <p>결제 후 결과 페이지에서는 질문 2개가 각각 따로 분석되며, 결정론 명리 근거와 AI 해설이 함께 제공됩니다.</p>
               </div>
 
               <article className="intake-story-question-card">

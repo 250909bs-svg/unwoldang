@@ -2,70 +2,91 @@
 
 ## 1. Production Flow
 
-- Checkout provider: PortOne KG Inicis
+1. Kakao exchange returns a signed user bearer token.
+2. Checkout calls `POST /api/payments/portone/order` with that bearer token. Cloud Run selects the server catalog price and returns `orderId` and a signed `orderClaim`.
+3. The browser opens PortOne KG Inicis with the returned order data and puts `productId` plus `orderClaim` in `customData`.
+4. The payment callback calls `POST /api/payments/portone/confirm` with the same user bearer token.
+5. Cloud Run verifies PortOne and atomically creates or reuses the user's Firestore entitlement.
+6. The browser calls `POST /api/report` with the short-lived `reportAccessToken`.
+7. A signed-in user can list or renew unused entitlements and can save/read their report archive.
+
+Public endpoints:
+
 - Frontend callback: `/payment/portone/callback`
-- Cloud Run payment verification: `/api/payments/portone/confirm`
+- Server order intent: `/api/payments/portone/order`
+- Payment confirmation: `/api/payments/portone/confirm`
+- Entitlement list: `/api/payments/portone/entitlements`
+- Entitlement token renewal: `/api/payments/portone/entitlement/renew`
 - Report generation: `/api/report`
-- Production admin: disabled on the public client until a server-authenticated admin API is connected
+- User report archive: `/api/archive/reports`
+- Admin login/reports: `/api/admin/login`, `/api/admin/reports`
 
 ## 2. PortOne Console Values
 
-In PortOne Admin Console, prepare these values:
+Prepare:
 
 - Store ID: `store-...`
-- Channel Key for KG Inicis: `channel-key-...`
-- V2 API Secret: server-side only
+- KG Inicis channel key: `channel-key-...`
+- PortOne V2 API Secret: server-side Secret Manager only
 
-The V2 API Secret must never be added to Vercel frontend environment variables.
+The API Secret and access-signing values must never be added to Vercel frontend variables.
 
-## 3. Cloud Run Secrets
+## 3. Secret Manager
 
-Store the PortOne API Secret in Secret Manager:
+Prepare local files containing placeholder-replaced values, then create the secrets used by your deployment:
 
 ```powershell
 gcloud secrets create PORTONE_API_SECRET --data-file="C:\path\to\portone-api-secret.txt"
-```
-
-Create a separate random report access signing secret. This is what blocks unpaid direct calls to the report API:
-
-```powershell
 gcloud secrets create REPORT_ACCESS_SECRET --data-file="C:\path\to\report-access-secret.txt"
+gcloud secrets create USER_ACCESS_SECRET --data-file="C:\path\to\user-access-secret.txt"
+gcloud secrets create ADMIN_ACCESS_SECRET --data-file="C:\path\to\admin-access-secret.txt"
+gcloud secrets create ADMIN_CREDENTIAL_HASH --data-file="C:\path\to\admin-credential-hash.txt"
 ```
 
-If the secret already exists, add a new version:
+`REPORT_ACCESS_SECRET`, `USER_ACCESS_SECRET`, and `ADMIN_ACCESS_SECRET` must be three different high-entropy values. `ADMIN_CREDENTIAL_HASH` contains only the SHA-256 digest of `adminId:password`, prepared offline.
+
+Optional enhancement/integration secrets:
 
 ```powershell
-gcloud secrets versions add PORTONE_API_SECRET --data-file="C:\path\to\portone-api-secret.txt"
-gcloud secrets versions add REPORT_ACCESS_SECRET --data-file="C:\path\to\report-access-secret.txt"
+gcloud secrets create GEMINI_API_KEY --data-file="C:\path\to\gemini-api-key.txt"
+gcloud secrets create KASI_SERVICE_KEY --data-file="C:\path\to\kasi-service-key.txt"
+gcloud secrets create KAKAO_CLIENT_SECRET --data-file="C:\path\to\kakao-client-secret.txt"
 ```
 
-Grant Cloud Run access:
+If a secret already exists, use `gcloud secrets versions add SECRET_NAME --data-file="..."` instead.
 
-```powershell
-$projectNumber = (gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)").Trim()
-gcloud secrets add-iam-policy-binding PORTONE_API_SECRET `
-  --member="serviceAccount:$projectNumber-compute@developer.gserviceaccount.com" `
-  --role="roles/secretmanager.secretAccessor"
-gcloud secrets add-iam-policy-binding REPORT_ACCESS_SECRET `
-  --member="serviceAccount:$projectNumber-compute@developer.gserviceaccount.com" `
-  --role="roles/secretmanager.secretAccessor"
-```
+Grant the Cloud Run runtime service account `roles/secretmanager.secretAccessor` on every named secret. Keep the service account identifier explicit; do not assume that every project uses the default Compute Engine service account.
 
-Deploy Cloud Run:
+## 4. Firestore
+
+- Create Firestore in Native mode before launch.
+- Give the Cloud Run runtime service account document read/write permission.
+- Keep `ENABLE_FIRESTORE_ARCHIVE=true`.
+- Keep `REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=true`.
+- Default collections are `portonePaymentConfirmations` and `reportArchives`.
+- Payment confirmation fails closed when the entitlement ledger is unavailable.
+
+## 5. Deploy Cloud Run
 
 ```powershell
 .\cloudrun-api\deploy-cloudrun.ps1 `
   -ProjectId YOUR_PROJECT_ID `
   -Region asia-northeast3 `
+  -GeminiSecretName GEMINI_API_KEY `
   -KasiSecretName KASI_SERVICE_KEY `
   -PortOneSecretName PORTONE_API_SECRET `
   -PortOneStoreId store-your-portone-store-id `
   -ReportAccessSecretName REPORT_ACCESS_SECRET `
+  -UserAccessSecretName USER_ACCESS_SECRET `
+  -AdminAccessSecretName ADMIN_ACCESS_SECRET `
+  -AdminCredentialHashSecretName ADMIN_CREDENTIAL_HASH `
   -KakaoRestApiKey YOUR_KAKAO_REST_API_KEY `
   -KakaoClientSecretName KAKAO_CLIENT_SECRET
 ```
 
-## 4. Vercel Frontend Env
+Gemini and KASI are optional. Omit their secret-name arguments for a deterministic/internal-calendar deployment. To keep the admin API unavailable, explicitly pass `-AdminAccessSecretName "" -AdminCredentialHashSecretName ""` because the admin signing-secret parameter otherwise has a production-oriented default.
+
+## 6. Vercel Frontend Env
 
 ```env
 VITE_PAYMENT_MODE=live
@@ -75,19 +96,30 @@ VITE_PORTONE_CONFIRM_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/payments/portone/co
 VITE_PORTONE_DEFAULT_PHONE_NUMBER=01000000000
 VITE_PORTONE_DEFAULT_EMAIL=customer@unwoldang.com
 VITE_REPORT_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/report
+VITE_REPORT_ARCHIVE_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/archive/reports
 VITE_REPORT_TIMEOUT_MS=70000
 VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/auth/kakao/exchange
+VITE_ADMIN_LOGIN_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/admin/login
+VITE_ADMIN_REPORTS_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/admin/reports
 VITE_ENABLE_CLIENT_ADMIN=false
 ```
 
-## 5. Final Test
+The client derives PortOne `/order`, `/entitlements`, and `/entitlement/renew` URLs from `VITE_PORTONE_CONFIRM_ENDPOINT`.
 
-- Real domain does not run with `VITE_PAYMENT_MODE=demo`
-- KG Inicis payment window opens from checkout
-- Payment cancel/fail returns to checkout
-- Payment success calls Cloud Run verification before report loading
-- Direct `/api/report` calls without a `reportAccessToken` return 401
-- Cloud Run rejects wrong amount, wrong payment ID, or non-`PAID` status
-- `/admin` is not usable on the public domain
-- Report and payment pages are `no-store`
-- Google Search Console and Naver Search Advisor have `https://unwoldang.com/sitemap.xml` submitted
+## 7. Final Tests
+
+- `GET /health` reports payment/report readiness separately from Gemini enhancement readiness.
+- The live domain never runs with `VITE_PAYMENT_MODE=demo`.
+- Checkout obtains a server order and embeds its signed `orderClaim` before opening PortOne.
+- Cancel/fail returns safely to checkout.
+- Success verifies payment before report loading.
+- Confirm rejects a missing/foreign user token, forged order claim, wrong amount/product/store/payment ID, and a non-`PAID` status.
+- A duplicate confirmation creates no second entitlement and returns a usable short-lived report token.
+- A concurrent duplicate report request returns a retryable in-progress response; a completed enhanced result is reused for the identical input.
+- A Gemini outage returns the deterministic fallback and leaves the enhancement attempt retryable.
+- Direct production `/api/report` calls without a valid payment-bound token return 401.
+- Entitlement list/renew works only for the signed-in owner and does not charge again.
+- User archives require user auth; archive writes also require the report token.
+- Admin login fails closed when its credential-hash secret is absent.
+- Report and payment pages are `no-store`.
+- Submit `https://unwoldang.com/sitemap.xml` to Google Search Console and Naver Search Advisor.

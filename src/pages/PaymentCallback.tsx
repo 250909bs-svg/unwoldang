@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
-import { readPendingPayment, savePendingPayment, type PendingPayment } from '../lib/auth';
+import { useAuth } from '../context/AuthContext';
+import {
+  confirmAuthenticatedPortOnePayment,
+  readPendingPayment,
+  savePendingPayment,
+  type PendingPayment
+} from '../lib/auth';
 import { getPortOneConfirmEndpoint, shouldUseDemoPayment } from '../lib/runtimeConfig';
 
 type CallbackView = 'loading' | 'fail' | 'error';
@@ -35,6 +41,8 @@ function getFirstParam(params: URLSearchParams, keys: string[]) {
 export default function PaymentCallback() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const confirmationStartedRef = useRef(false);
   const [view, setView] = useState<CallbackView>('loading');
   const [message, setMessage] = useState('PortOne KG이니시스 결제 결과를 확인하고 있습니다.');
 
@@ -98,36 +106,39 @@ export default function PaymentCallback() {
       return;
     }
 
+    const authToken = user?.authToken;
+    const orderClaim = pendingPayment.orderClaim;
+
+    if (!authToken || !orderClaim) {
+      setView('error');
+      setMessage('결제 사용자 인증 정보가 만료되었습니다. 카카오 로그인 후 결제 내역에서 다시 이어 주세요.');
+      return;
+    }
+
+    if (confirmationStartedRef.current) {
+      return;
+    }
+    confirmationStartedRef.current = true;
+
     const confirmPayment = async () => {
       try {
-        const response = await fetch(confirmEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            paymentId,
-            txId,
-            orderId: pendingPayment.orderId,
-            amount: pendingPayment.amount,
-            productId: pendingPayment.productId
-          })
+        const confirmed = await confirmAuthenticatedPortOnePayment({
+          confirmEndpoint,
+          authToken,
+          paymentId,
+          txId: txId || undefined,
+          orderId: pendingPayment.orderId,
+          amount: pendingPayment.amount,
+          productId: pendingPayment.productId,
+          orderClaim
         });
-
-        const parsed = (await response.json().catch(() => null)) as
-          | { message?: string; paymentId?: string; txId?: string; reportAccessToken?: string }
-          | null;
-
-        if (!response.ok) {
-          throw new Error(parsed?.message || 'PortOne KG이니시스 결제 검증에 실패했습니다.');
-        }
 
         const confirmedPayment = {
           ...pendingPayment,
           paymentMethod: 'portone',
-          paymentKey: parsed?.paymentId || paymentId,
-          txId: parsed?.txId || txId || undefined,
-          reportAccessToken: parsed?.reportAccessToken
+          paymentKey: confirmed.paymentId,
+          txId: confirmed.txId,
+          reportAccessToken: confirmed.reportAccessToken
         } satisfies PendingPayment;
         savePendingPayment(confirmedPayment);
         moveToResult(navigate, confirmedPayment);
@@ -138,7 +149,7 @@ export default function PaymentCallback() {
     };
 
     void confirmPayment();
-  }, [navigate, params]);
+  }, [navigate, params, user?.authToken]);
 
   return (
     <main className="mobile-page-shell">

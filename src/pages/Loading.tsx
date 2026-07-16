@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { findServiceById, type IntakeFormData, type ServiceId } from '../api/mockData';
 import MobileTopBar from '../components/MobileTopBar';
-import { readPendingPayment } from '../lib/auth';
-import { getAiReportEndpoint, requestAiReport } from '../lib/aiReport';
-import { getPaymentMode } from '../lib/runtimeConfig';
+import { useAuth } from '../context/AuthContext';
+import { readPendingPayment, renewPaymentEntitlement, savePendingPayment } from '../lib/auth';
+import { getAiReportEndpoint, requestAiReport, type AiReportProvider } from '../lib/aiReport';
+import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
 
@@ -16,9 +17,10 @@ type LoadingLocationState = {
   tabOrigin?: string;
   reportAccessToken?: string;
   reportData?: SajuReportData;
+  reportProvider?: AiReportProvider;
 };
 
-const LOADING_FALLBACK_TIMEOUT_MS = 28000;
+const LOADING_FALLBACK_TIMEOUT_MS = 100000;
 
 const LOADING_PILLARS = [
   { key: 'hour', label: '시주' },
@@ -45,6 +47,7 @@ const LOADING_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
 export default function Loading() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const locationState = (location.state as LoadingLocationState | null) ?? null;
   const recoveredPayment = useMemo(() => readPendingPayment(), []);
   const product = locationState?.product || recoveredPayment?.productId;
@@ -52,20 +55,28 @@ export default function Loading() {
   const paymentMethod = locationState?.paymentMethod || recoveredPayment?.paymentMethod;
   const orderId = locationState?.orderId || recoveredPayment?.orderId;
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
-  const reportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
+  const initialReportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
   const service = findServiceById(product);
   const isPastLifeProduct = service.id === 'past-life-goblin';
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
+  const [reportProvider, setReportProvider] = useState<AiReportProvider | null>(locationState?.reportProvider || null);
+  const [reportAccessToken, setReportAccessToken] = useState(initialReportAccessToken || '');
   const [analysisFinished, setAnalysisFinished] = useState(false);
   const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
   const [analysisFailed, setAnalysisFailed] = useState(false);
+  const generationRunRef = useRef<{ key: string; promise: Promise<void> } | null>(null);
   const hasAiEndpoint = Boolean(getAiReportEndpoint());
   const paymentMode = getPaymentMode();
-  const canRequestAiReport = hasAiEndpoint && Boolean(reportAccessToken);
+  const requiresVerifiedPayment = paymentMode === 'live' || paymentMode === 'disabled';
+  const confirmEndpoint = getPortOneConfirmEndpoint();
+  const canRenewReportAccess = Boolean(
+    requiresVerifiedPayment && confirmEndpoint && user?.authToken && (orderId || recoveredPayment?.orderId)
+  );
+  const canRequestAiReport = hasAiEndpoint && (Boolean(reportAccessToken) || canRenewReportAccess);
   const isMissingLiveReportAccess =
-    paymentMode === 'live' && hasAiEndpoint && !locationState?.reportData && !reportAccessToken;
+    requiresVerifiedPayment && !locationState?.reportData && (!hasAiEndpoint || (!reportAccessToken && !canRenewReportAccess));
   const previewReport = useMemo(() => {
     if (reportData) {
       return reportData;
@@ -109,9 +120,11 @@ export default function Loading() {
   );
 
   useEffect(() => {
-    let cancelled = false;
-
     const generateReport = async () => {
+      if (analysisFinished) {
+        return;
+      }
+
       if (!product || locationState?.reportData) {
         setAnalysisFinished(true);
         return;
@@ -130,37 +143,71 @@ export default function Loading() {
       }
 
       try {
+        const resolvedOrderId = orderId || recoveredPayment?.orderId;
+        let resolvedReportAccessToken = reportAccessToken;
+
+        if (requiresVerifiedPayment && confirmEndpoint && user?.authToken && resolvedOrderId) {
+          try {
+            const renewed = await renewPaymentEntitlement(confirmEndpoint, user.authToken, resolvedOrderId);
+            resolvedReportAccessToken = renewed.reportAccessToken;
+
+            if (recoveredPayment?.orderId === resolvedOrderId) {
+              savePendingPayment({
+                ...recoveredPayment,
+                reportAccessToken: renewed.reportAccessToken
+              });
+            }
+          } catch (renewError) {
+            if (!resolvedReportAccessToken) {
+              throw renewError;
+            }
+          }
+        }
+
+        if (!resolvedReportAccessToken) {
+          throw new Error('결제 리포트 접근 권한을 갱신할 수 없습니다. 카카오 로그인 후 다시 시도해 주세요.');
+        }
+
         const generated = await requestAiReport(product, formData || {}, {
-          orderId,
-          reportAccessToken
+          orderId: resolvedOrderId,
+          reportAccessToken: resolvedReportAccessToken
         });
 
-        if (!cancelled) {
-          setReportData(generated);
+        if (!generated) {
+          throw new Error('리포트 생성 서버 응답을 확인할 수 없습니다.');
+        }
+
+        setReportData(generated.report);
+        setReportProvider(generated.provider);
+        setReportAccessToken(resolvedReportAccessToken);
+
+        if (generated.degraded) {
+          setAnalysisNotice('AI 보강이 일시적으로 지연되어 검증된 내부 명리 엔진 리포트로 제공됩니다.');
         }
       } catch (error) {
-        if (!cancelled) {
-          console.error('AI report request failed:', error);
-          setAnalysisFailed(true);
-          setAnalysisNotice(
-            error instanceof Error
-              ? error.message
-              : 'AI 분석 생성에 실패했습니다. 결제 리포트는 기본 문장으로 대체하지 않고 다시 시도해야 합니다.'
-          );
-        }
+        console.error('AI report request failed:', error);
+        setAnalysisFailed(true);
+        setAnalysisNotice(
+          error instanceof Error
+            ? error.message
+            : 'AI 분석 생성에 실패했습니다. 결제 리포트는 기본 문장으로 대체하지 않고 다시 시도해야 합니다.'
+        );
       } finally {
-        if (!cancelled) {
-          setAnalysisFinished(true);
-        }
+        setAnalysisFinished(true);
       }
     };
 
-    void generateReport();
+    const generationKey = `${product || 'missing'}:${orderId || recoveredPayment?.orderId || 'no-order'}`;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [canRequestAiReport, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, reportAccessToken, service.id]);
+    if (!generationRunRef.current || generationRunRef.current.key !== generationKey) {
+      generationRunRef.current = {
+        key: generationKey,
+        promise: generateReport()
+      };
+    }
+
+    void generationRunRef.current.promise;
+  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, service.id, user?.authToken]);
 
   useEffect(() => {
     if (analysisFinished) {
@@ -234,7 +281,8 @@ export default function Loading() {
           orderId,
           tabOrigin,
           reportAccessToken,
-          reportData: reportData || undefined
+          reportData: reportData || undefined,
+          reportProvider: reportProvider || undefined
         }
       });
     }, 300);
@@ -242,7 +290,7 @@ export default function Loading() {
     return () => {
       window.clearTimeout(moveTimer);
     };
-  }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, service.id, tabOrigin]);
+  }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, reportProvider, service.id, tabOrigin]);
 
   return (
     <main className={isPastLifeProduct ? 'mobile-page-shell past-life-loading-page' : 'mobile-page-shell'}>
