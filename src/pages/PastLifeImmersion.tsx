@@ -1,6 +1,6 @@
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { PAST_LIFE_PRODUCT } from '../content/pastLifeExperience';
 
 const nextStoryState = { tabOrigin: '/' } as const;
@@ -8,9 +8,11 @@ const CROSSFADE_SECONDS = 0.75;
 const CROSSFADE_MS = 620;
 
 export default function PastLifeImmersion() {
+  const navigate = useNavigate();
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const activeIndexRef = useRef(0);
   const isMutedRef = useRef(true);
+  const hasEnteredRef = useRef(false);
   const transitionLockRef = useRef(false);
   const transitionTimersRef = useRef<number[]>([]);
   const failedClipsRef = useRef(new Set<number>());
@@ -78,6 +80,10 @@ export default function PastLifeImmersion() {
     setActiveIndex(index);
   };
 
+  const goToIntake = () => {
+    navigate('/form/past-life-goblin', { state: nextStoryState });
+  };
+
   const startNextClip = (fromIndex: number) => {
     if (fromIndex !== activeIndexRef.current || transitionLockRef.current) {
       return;
@@ -89,7 +95,11 @@ export default function PastLifeImmersion() {
     }
 
     if (nextIndex >= films.length) {
-      setShowChoices(true);
+      if (hasEnteredRef.current) {
+        goToIntake();
+      } else {
+        setShowChoices(true);
+      }
       return;
     }
 
@@ -126,16 +136,29 @@ export default function PastLifeImmersion() {
 
     const remaining = video.duration - video.currentTime;
     const isLastClip = index === films.length - 1;
+    const revealLead = Math.min(1.5, Math.max(1.1, video.duration * 0.3));
 
-    if (!isLastClip && remaining <= CROSSFADE_SECONDS) {
-      startNextClip(index);
+    if (index === 0 && !hasEnteredRef.current) {
+      if (remaining <= revealLead) {
+        setShowChoices(true);
+      }
       return;
     }
 
-    const revealLead = Math.min(1.5, Math.max(1.1, video.duration * 0.3));
-    if (isLastClip && remaining <= revealLead) {
-      setShowChoices(true);
+    if (!isLastClip && remaining <= CROSSFADE_SECONDS) {
+      startNextClip(index);
     }
+  };
+
+  const enterStory = () => {
+    if (hasFailed || prefersReducedMotion) {
+      goToIntake();
+      return;
+    }
+
+    hasEnteredRef.current = true;
+    setShowChoices(false);
+    startNextClip(0);
   };
 
   const handleClipError = (index: number) => {
@@ -144,8 +167,14 @@ export default function PastLifeImmersion() {
       return;
     }
 
-    if (index < films.length - 1) {
+    transitionLockRef.current = false;
+    if (hasEnteredRef.current && index < films.length - 1) {
       startNextClip(index);
+      return;
+    }
+
+    if (hasEnteredRef.current) {
+      goToIntake();
       return;
     }
 
@@ -223,8 +252,10 @@ export default function PastLifeImmersion() {
               }}
               onTimeUpdate={() => handleTimeUpdate(index)}
               onEnded={() => {
-                if (index === films.length - 1) {
+                if (index === 0 && !hasEnteredRef.current) {
                   setShowChoices(true);
+                } else if (index === films.length - 1) {
+                  goToIntake();
                 } else {
                   startNextClip(index);
                 }
@@ -241,14 +272,14 @@ export default function PastLifeImmersion() {
           className={`dokkaebi-immersion-choices ${showChoices ? 'is-visible' : ''}`}
           aria-hidden={!showChoices}
         >
-          <Link
-            to="/form/past-life-goblin"
-            state={nextStoryState}
+          <button
+            type="button"
             className="dokkaebi-immersion-enter"
+            onClick={enterStory}
             tabIndex={showChoices ? undefined : -1}
           >
             무섭지만... 들어간다
-          </Link>
+          </button>
           <Link
             to="/form/past-life-goblin"
             state={nextStoryState}
