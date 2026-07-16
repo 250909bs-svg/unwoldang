@@ -49,7 +49,13 @@ const ADMIN_CREDENTIAL_HASH = import.meta.env.VITE_LOCAL_ADMIN_CREDENTIAL_HASH |
 const ENABLE_CLIENT_ADMIN = import.meta.env.VITE_ENABLE_CLIENT_ADMIN === 'true';
 
 type AdminView = 'overview' | 'funnel' | 'orders' | 'customers' | 'reports' | 'issues' | 'costs';
-type AdminPeriod = 'today' | '7d' | '30d';
+type AdminPeriod = 'today' | 'yesterday' | '7d' | '30d' | 'month' | 'quarter' | 'year' | 'all' | 'custom';
+type AdminGranularity = 'hour' | 'day' | 'week' | 'month';
+type AdminComparison = 'previous' | 'yearAgo' | 'none';
+type AdminDateRange = {
+  start: Date;
+  end: Date;
+};
 type IconComponent = typeof BarChart3;
 type SourceChannel = '카카오' | '네이버검색' | '인스타그램' | '직접방문' | '재방문';
 type DeviceType = 'mobile' | 'desktop';
@@ -341,46 +347,132 @@ function countToday(orders: AdminOrder[]) {
   return orders.filter((order) => new Date(order.createdAt).toDateString() === today);
 }
 
-function filterOrdersByPeriod(orders: AdminOrder[], period: AdminPeriod) {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  if (period === '7d') {
-    start.setDate(start.getDate() - 6);
-  }
-
-  if (period === '30d') {
-    start.setDate(start.getDate() - 29);
-  }
-
-  return orders.filter((order) => new Date(order.createdAt).getTime() >= start.getTime());
+function startOfDay(value: Date) {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
 }
 
-function filterOrdersByPreviousPeriod(orders: AdminOrder[], period: AdminPeriod) {
-  const now = new Date();
-  const currentStart = new Date(now);
-  currentStart.setHours(0, 0, 0, 0);
+function endOfDay(value: Date) {
+  const date = new Date(value);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
 
-  if (period === '7d') {
-    currentStart.setDate(currentStart.getDate() - 6);
+function parseDateInput(value: string, useEndOfDay = false) {
+  const [year, month, day] = value.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return undefined;
   }
 
-  if (period === '30d') {
-    currentStart.setDate(currentStart.getDate() - 29);
+  const date = new Date(year, month - 1, day);
+  return useEndOfDay ? endOfDay(date) : startOfDay(date);
+}
+
+export function getAdminDateRange(
+  period: AdminPeriod,
+  orders: AdminOrder[],
+  customStart: string,
+  customEnd: string,
+  referenceDate = new Date()
+): AdminDateRange {
+  const now = new Date(referenceDate);
+  const today = startOfDay(now);
+  let start = new Date(today);
+  let end = new Date(now);
+
+  if (period === 'yesterday') {
+    start.setDate(start.getDate() - 1);
+    end = endOfDay(start);
+  } else if (period === '7d') {
+    start.setDate(start.getDate() - 6);
+  } else if (period === '30d') {
+    start.setDate(start.getDate() - 29);
+  } else if (period === 'month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (period === 'quarter') {
+    start = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+  } else if (period === 'year') {
+    start = new Date(now.getFullYear(), 0, 1);
+  } else if (period === 'all') {
+    const timestamps = orders
+      .map((order) => new Date(order.createdAt).getTime())
+      .filter((timestamp) => Number.isFinite(timestamp));
+    start = timestamps.length ? startOfDay(new Date(Math.min(...timestamps))) : today;
+  } else if (period === 'custom') {
+    const parsedStart = parseDateInput(customStart);
+    const parsedEnd = parseDateInput(customEnd, true);
+
+    if (parsedStart && parsedEnd) {
+      start = parsedStart.getTime() <= parsedEnd.getTime() ? parsedStart : startOfDay(parsedEnd);
+      end = parsedStart.getTime() <= parsedEnd.getTime() ? parsedEnd : endOfDay(parsedStart);
+    }
   }
 
-  const elapsed = now.getTime() - currentStart.getTime();
-  const previousEnd = currentStart.getTime() - 1;
-  const previousStart = previousEnd - elapsed;
+  return { start, end };
+}
 
+export function getComparisonDateRange(range: AdminDateRange, comparison: AdminComparison): AdminDateRange | undefined {
+  if (comparison === 'none') {
+    return undefined;
+  }
+
+  if (comparison === 'yearAgo') {
+    const start = new Date(range.start);
+    const end = new Date(range.end);
+    start.setFullYear(start.getFullYear() - 1);
+    end.setFullYear(end.getFullYear() - 1);
+    return { start, end };
+  }
+
+  const duration = Math.max(0, range.end.getTime() - range.start.getTime());
+  const end = new Date(range.start.getTime() - 1);
+  const start = new Date(end.getTime() - duration);
+  return { start, end };
+}
+
+function filterOrdersByRange(orders: AdminOrder[], range?: AdminDateRange) {
+  if (!range) {
+    return [];
+  }
+
+  const start = range.start.getTime();
+  const end = range.end.getTime();
   return orders.filter((order) => {
     const createdAt = new Date(order.createdAt).getTime();
-    return createdAt >= previousStart && createdAt <= previousEnd;
+    return createdAt >= start && createdAt <= end;
   });
 }
 
-function getPeriodDays(period: AdminPeriod) {
-  return period === 'today' ? 1 : period === '7d' ? 7 : 30;
+export function getRangeDays(range: AdminDateRange) {
+  const duration = Math.max(0, range.end.getTime() - range.start.getTime());
+  return Math.max(1, Math.ceil(duration / (1000 * 60 * 60 * 24)));
+}
+
+function formatDateRange(range: AdminDateRange) {
+  const formatter = new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  return `${formatter.format(range.start)} ~ ${formatter.format(range.end)}`;
+}
+
+export function getDefaultGranularity(period: AdminPeriod): AdminGranularity {
+  if (period === 'today' || period === 'yesterday') {
+    return 'hour';
+  }
+
+  if (period === 'quarter') {
+    return 'week';
+  }
+
+  if (period === 'year' || period === 'all') {
+    return 'month';
+  }
+
+  return 'day';
 }
 
 function getChangeRate(current: number, previous: number): number | undefined {
@@ -596,22 +688,98 @@ function buildCategoryRows(orders: AdminOrder[]): CategoryRow[] {
     });
 }
 
-function buildDailyTrend(orders: AdminOrder[]) {
-  const dayKeys = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - index));
-    return getDateKey(date);
-  });
+function buildTimeSeries(orders: AdminOrder[], range: AdminDateRange, granularity: AdminGranularity) {
+  const buckets: Array<{
+    key: string;
+    label: string;
+    start: Date;
+    end: Date;
+  }> = [];
 
-  return dayKeys.map((key) => {
-    const dayOrders = orders.filter((order) => getDateKey(new Date(order.createdAt)) === key);
-    const paidOrders = dayOrders.filter((order) => order.status === 'paid');
+  if (granularity === 'hour') {
+    Array.from({ length: 24 }, (_, hour) => {
+      const start = new Date(range.start);
+      start.setHours(hour, 0, 0, 0);
+      const end = new Date(start);
+      end.setMinutes(59, 59, 999);
+      buckets.push({
+        key: `hour-${hour}`,
+        label: `${String(hour).padStart(2, '0')}시`,
+        start,
+        end
+      });
+    });
+  } else if (granularity === 'day') {
+    const cursor = startOfDay(range.start);
+    let guard = 0;
+
+    while (cursor.getTime() <= range.end.getTime() && guard < 1100) {
+      const start = new Date(cursor);
+      const key = getDateKey(start);
+      const includeYear = range.start.getFullYear() !== range.end.getFullYear();
+      buckets.push({
+        key,
+        label: includeYear ? `${String(start.getFullYear()).slice(2)}.${start.getMonth() + 1}.${start.getDate()}` : formatDayLabel(key),
+        start,
+        end: endOfDay(start)
+      });
+      cursor.setDate(cursor.getDate() + 1);
+      guard += 1;
+    }
+  } else if (granularity === 'week') {
+    const cursor = startOfDay(range.start);
+    let guard = 0;
+
+    while (cursor.getTime() <= range.end.getTime() && guard < 220) {
+      const start = new Date(cursor);
+      const end = endOfDay(new Date(start));
+      end.setDate(end.getDate() + 6);
+      const key = `week-${getDateKey(start)}`;
+      buckets.push({
+        key,
+        label: `${start.getMonth() + 1}/${start.getDate()}`,
+        start,
+        end: new Date(Math.min(end.getTime(), range.end.getTime()))
+      });
+      cursor.setDate(cursor.getDate() + 7);
+      guard += 1;
+    }
+  } else {
+    const cursor = new Date(range.start.getFullYear(), range.start.getMonth(), 1);
+    let guard = 0;
+
+    while (cursor.getTime() <= range.end.getTime() && guard < 120) {
+      const start = new Date(cursor);
+      const end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
+      buckets.push({
+        key: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`,
+        label: `${String(start.getFullYear()).slice(2)}.${start.getMonth() + 1}`,
+        start,
+        end: new Date(Math.min(end.getTime(), range.end.getTime()))
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+      guard += 1;
+    }
+  }
+
+  return buckets.map((bucket) => {
+    const bucketOrders = orders.filter((order) => {
+      const createdAt = new Date(order.createdAt);
+
+      if (granularity === 'hour') {
+        return createdAt.getHours() === Number(bucket.key.replace('hour-', ''));
+      }
+
+      const timestamp = createdAt.getTime();
+      return timestamp >= bucket.start.getTime() && timestamp <= bucket.end.getTime();
+    });
+    const paidOrders = bucketOrders.filter((order) => order.status === 'paid');
     const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
-    const visitors = Math.max(28, dayOrders.length * 34 + Math.round(revenue / 9000));
+    const visitors = bucketOrders.length ? Math.max(paidOrders.length, bucketOrders.length * 34 + Math.round(revenue / 9000)) : 0;
 
     return {
-      key,
-      label: formatDayLabel(key),
+      key: bucket.key,
+      label: bucket.label,
       orders: paidOrders.length,
       revenue,
       visitors,
@@ -846,9 +1014,13 @@ function MetricCard({
 }
 
 function RevenueTrendChart({
-  data
+  data,
+  title = '선택 기간 매출 흐름',
+  rangeLabel
 }: {
-  data: ReturnType<typeof buildDailyTrend>;
+  data: ReturnType<typeof buildTimeSeries>;
+  title?: string;
+  rangeLabel?: string;
 }) {
   const width = 420;
   const height = 176;
@@ -864,25 +1036,31 @@ function RevenueTrendChart({
   });
   const polyline = points.map((point) => `${point.x},${point.y}`).join(' ');
   const area = `${paddingX},${height - paddingBottom} ${polyline} ${width - paddingX},${height - paddingBottom}`;
+  const labelInterval = Math.max(1, Math.ceil(points.length / 7));
 
   return (
     <div className="admin-chart-card admin-trend-card">
       <div className="admin-chart-head">
         <div>
           <span>매출 추이</span>
-          <h3>최근 7일 매출 추이</h3>
+          <h3>{title}</h3>
+          {rangeLabel ? <small>{rangeLabel}</small> : null}
         </div>
         <strong>{formatCurrency(data.reduce((sum, point) => sum + point.revenue, 0))}</strong>
       </div>
-      <svg className="admin-line-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="최근 7일 매출 추이 그래프">
+      <svg className="admin-line-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${title} 그래프`}>
         <polygon points={area} />
         <polyline points={polyline} />
-        {points.map((point) => (
+        {points.map((point, index) => (
           <g key={point.key}>
-            <circle cx={point.x} cy={point.y} r="4" />
-            <text x={point.x} y={height - 16} textAnchor="middle">
-              {point.label}
-            </text>
+            {points.length <= 80 || index % labelInterval === 0 || index === points.length - 1 ? (
+              <circle cx={point.x} cy={point.y} r="4" />
+            ) : null}
+            {index % labelInterval === 0 || index === points.length - 1 ? (
+              <text x={point.x} y={height - 16} textAnchor="middle">
+                {point.label}
+              </text>
+            ) : null}
           </g>
         ))}
       </svg>
@@ -1729,6 +1907,14 @@ export default function Admin() {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [period, setPeriod] = useState<AdminPeriod>('7d');
+  const [customStart, setCustomStart] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 29);
+    return getDateKey(date);
+  });
+  const [customEnd, setCustomEnd] = useState(() => getDateKey(new Date()));
+  const [granularity, setGranularity] = useState<AdminGranularity>('day');
+  const [comparison, setComparison] = useState<AdminComparison>('previous');
   const [adminSearch, setAdminSearch] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(() => Date.now());
@@ -1740,9 +1926,21 @@ export default function Admin() {
   const realOrders = useMemo(() => reports.map(toAdminOrder), [reports]);
   const isSampleMode = realOrders.length === 0;
   const allOrders = useMemo(() => (realOrders.length ? realOrders : buildSampleOrders()), [realOrders]);
-  const orders = useMemo(() => filterOrdersByPeriod(allOrders, period), [allOrders, period]);
-  const previousOrders = useMemo(() => filterOrdersByPreviousPeriod(allOrders, period), [allOrders, period]);
-  const previousDayOrders = useMemo(() => filterOrdersByPreviousPeriod(allOrders, 'today'), [allOrders]);
+  const selectedRange = useMemo(
+    () => getAdminDateRange(period, allOrders, customStart, customEnd),
+    [allOrders, customEnd, customStart, period]
+  );
+  const comparisonRange = useMemo(
+    () => getComparisonDateRange(selectedRange, comparison),
+    [comparison, selectedRange]
+  );
+  const yesterdayRange = useMemo(
+    () => getAdminDateRange('yesterday', allOrders, customStart, customEnd),
+    [allOrders, customEnd, customStart]
+  );
+  const orders = useMemo(() => filterOrdersByRange(allOrders, selectedRange), [allOrders, selectedRange]);
+  const previousOrders = useMemo(() => filterOrdersByRange(allOrders, comparisonRange), [allOrders, comparisonRange]);
+  const previousDayOrders = useMemo(() => filterOrdersByRange(allOrders, yesterdayRange), [allOrders, yesterdayRange]);
   const todayOrders = useMemo(() => countToday(allOrders), [allOrders]);
   const hasEstimatedAnalytics = orders.some((order) => order.analyticsEstimated);
   const paidOrders = orders.filter((order) => order.status === 'paid');
@@ -1770,7 +1968,10 @@ export default function Admin() {
     [allCustomerRows, allOrders, isSampleMode]
   );
   const issueRows = useMemo(() => buildIssueRows(orders), [orders]);
-  const dailyTrend = useMemo(() => buildDailyTrend(allOrders), [allOrders]);
+  const timeSeries = useMemo(
+    () => buildTimeSeries(orders, selectedRange, granularity),
+    [granularity, orders, selectedRange]
+  );
   const hourlyRows = useMemo(() => buildHourlyRows(orders), [orders]);
   const channelRows = useMemo(() => buildChannelRows(orders), [orders]);
   const channelPerformanceRows = useMemo(() => buildChannelPerformanceRows(orders), [orders]);
@@ -1804,7 +2005,7 @@ export default function Admin() {
     paidCustomerProfiles.filter((profile) => profile.paidOrders > 1).length,
     paidCustomerProfiles.length
   );
-  const periodDays = getPeriodDays(period);
+  const periodDays = getRangeDays(selectedRange);
   const forecastRevenue = Math.round((totalRevenue / Math.max(1, periodDays)) * 30);
   const opportunityRevenue = Math.round((funnel[4]?.count || 0) * 0.05 * Math.max(avgOrderValue, 2900));
   const bestChannel = channelPerformanceRows
@@ -1899,9 +2100,30 @@ export default function Admin() {
   ];
   const periodLabels: Record<AdminPeriod, string> = {
     today: '오늘',
+    yesterday: '어제',
     '7d': '최근 7일',
-    '30d': '최근 30일'
+    '30d': '최근 30일',
+    month: '이번 달',
+    quarter: '이번 분기',
+    year: '올해',
+    all: '전체 기간',
+    custom: '직접 지정'
   };
+  const granularityLabels: Record<AdminGranularity, string> = {
+    hour: '시간대별',
+    day: '일별',
+    week: '주별',
+    month: '월별'
+  };
+  const comparisonLabels: Record<AdminComparison, string> = {
+    previous: '직전 기간',
+    yearAgo: '전년 동기',
+    none: '비교 안 함'
+  };
+  const selectedRangeLabel = formatDateRange(selectedRange);
+  const comparisonRangeLabel = comparisonRange ? formatDateRange(comparisonRange) : '';
+  const trendLabel = comparisonLabels[comparison];
+  const todayInputKey = getDateKey(new Date());
   const normalizedSearch = adminSearch.trim().toLocaleLowerCase('ko-KR');
   const orderSearchResults = normalizedSearch
     ? allOrders.filter((order) => [
@@ -2014,6 +2236,23 @@ export default function Admin() {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const selectPeriod = (nextPeriod: Exclude<AdminPeriod, 'custom'>) => {
+    setPeriod(nextPeriod);
+    setGranularity(getDefaultGranularity(nextPeriod));
+  };
+
+  const updateCustomStart = (value: string) => {
+    setCustomStart(value);
+    setPeriod('custom');
+    setGranularity('day');
+  };
+
+  const updateCustomEnd = (value: string) => {
+    setCustomEnd(value);
+    setPeriod('custom');
+    setGranularity('day');
   };
 
   const openOrderFromSearch = (orderId: string) => {
@@ -2333,24 +2572,109 @@ export default function Admin() {
         <div>
           <span className="admin-live-label"><i /> 실시간 운영</span>
           <h1>{activeCategory.detailTitle}</h1>
-          <p>{periodLabels[period]} 기준 · 마지막 동기화 {new Date(lastUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
+          <p>{periodLabels[period]} · {selectedRangeLabel} · 마지막 동기화 {new Date(lastUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
         <div className="admin-period-control" role="group" aria-label="분석 기간">
           {([
             ['today', '오늘'],
+            ['yesterday', '어제'],
             ['7d', '7일'],
-            ['30d', '30일']
-          ] as Array<[AdminPeriod, string]>).map(([id, label]) => (
+            ['30d', '30일'],
+            ['month', '이번 달'],
+            ['quarter', '분기'],
+            ['year', '올해'],
+            ['all', '전체']
+          ] as Array<[Exclude<AdminPeriod, 'custom'>, string]>).map(([id, label]) => (
             <button
               key={id}
               type="button"
               className={period === id ? 'active' : ''}
-              onClick={() => setPeriod(id)}
+              onClick={() => selectPeriod(id)}
               aria-pressed={period === id}
             >
               {label}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="admin-date-command" aria-label="기간 상세 설정">
+        <div className="admin-date-summary">
+          <span className="admin-date-icon"><CalendarDays size={18} /></span>
+          <div>
+            <small>현재 분석 범위</small>
+            <strong>{selectedRangeLabel}</strong>
+            <span>{periodDays.toLocaleString('ko-KR')}일 · 주문 {orders.length.toLocaleString('ko-KR')}건 · 결제 {paidOrders.length.toLocaleString('ko-KR')}건</span>
+          </div>
+        </div>
+
+        <div className="admin-date-fields">
+          <label>
+            <span>시작일</span>
+            <input
+              type="date"
+              value={customStart}
+              max={customEnd || todayInputKey}
+              onChange={(event) => updateCustomStart(event.target.value)}
+              aria-label="분석 시작일"
+            />
+          </label>
+          <i>~</i>
+          <label>
+            <span>종료일</span>
+            <input
+              type="date"
+              value={customEnd}
+              min={customStart}
+              max={todayInputKey}
+              onChange={(event) => updateCustomEnd(event.target.value)}
+              aria-label="분석 종료일"
+            />
+          </label>
+        </div>
+
+        <div className="admin-date-segment">
+          <span>집계 단위</span>
+          <div role="group" aria-label="그래프 집계 단위">
+            {([
+              ['hour', '시간'],
+              ['day', '일'],
+              ['week', '주'],
+              ['month', '월']
+            ] as Array<[AdminGranularity, string]>).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={granularity === id ? 'active' : ''}
+                onClick={() => setGranularity(id)}
+                aria-pressed={granularity === id}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-date-segment comparison">
+          <span>비교 기준</span>
+          <div role="group" aria-label="비교 기준">
+            {([
+              ['previous', '직전'],
+              ['yearAgo', '전년'],
+              ['none', '없음']
+            ] as Array<[AdminComparison, string]>).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={comparison === id ? 'active' : ''}
+                onClick={() => setComparison(id)}
+                aria-pressed={comparison === id}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <small>{comparisonRangeLabel || '비교 지표를 숨깁니다'}</small>
         </div>
       </section>
 
@@ -2439,6 +2763,7 @@ export default function Admin() {
             value={formatCurrency(totalRevenue)}
             delta={`객단가 ${formatCurrency(avgOrderValue)} · ${formatChangeRate(aovChange)}`}
             trend={revenueChange}
+            trendLabel={trendLabel}
             icon={WalletCards}
             tone="good"
           />
@@ -2447,6 +2772,7 @@ export default function Admin() {
             value={formatPercent(successRate)}
             delta={`${paidOrders.length}/${orders.length}건 성공`}
             trend={successRateChange}
+            trendLabel={trendLabel}
             icon={TrendingUp}
           />
           <MetricCard
@@ -2454,12 +2780,13 @@ export default function Admin() {
             value={`${avgReadRate}%`}
             delta={`90% 이상 ${formatPercent(reportRead90)}`}
             trend={readRateChange}
+            trendLabel={trendLabel}
             icon={Eye}
           />
           <MetricCard
             title="이탈 집중 구간"
             value={formatPercent(largestDrop.drop)}
-            delta={`${largestDrop.label} · 이전 ${formatPercent(previousLargestDrop.drop)}`}
+            delta={comparison === 'none' ? largestDrop.label : `${largestDrop.label} · ${trendLabel} ${formatPercent(previousLargestDrop.drop)}`}
             icon={MousePointerClick}
             tone="warn"
           />
@@ -2468,6 +2795,7 @@ export default function Admin() {
             value={formatCurrency(netRevenue)}
             delta={`API ${formatCurrency(apiCost)} · 수수료 ${formatCurrency(paymentFee)}`}
             trend={netRevenueChange}
+            trendLabel={trendLabel}
             icon={LineChart}
             tone="blue"
           />
@@ -2491,7 +2819,11 @@ export default function Admin() {
           </section>
 
           <section className="admin-overview-analytics">
-            <RevenueTrendChart data={dailyTrend} />
+            <RevenueTrendChart
+              data={timeSeries}
+              title={`${granularityLabels[granularity]} 매출 흐름`}
+              rangeLabel={selectedRangeLabel}
+            />
             <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
             <LiveActivityFeed
               orders={allOrders}
@@ -2587,7 +2919,11 @@ export default function Admin() {
           </div>
 
           <section className="admin-ops-grid">
-            <RevenueTrendChart data={dailyTrend} />
+            <RevenueTrendChart
+              data={timeSeries}
+              title={`${granularityLabels[granularity]} 매출 흐름`}
+              rangeLabel={selectedRangeLabel}
+            />
             <HourlyBarChart data={hourlyRows} />
             <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
           </section>
