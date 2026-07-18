@@ -74,77 +74,106 @@ function buildStructuredData(route, seo) {
   const websiteId = `${SITE_URL}/#website`;
   const graph = [
     {
+      '@type': 'Organization',
+      '@id': organizationId,
+      name: '운월당',
+      legalName: '케이컴퍼니',
+      url: `${SITE_URL}/`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/apple-touch-icon.png`,
+        width: 180,
+        height: 180
+      },
+      email: '250909bs@gmail.com',
+      telephone: '050420111894',
+      areaServed: 'KR',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '050420111894',
+        email: '250909bs@gmail.com',
+        contactType: 'customer support',
+        areaServed: 'KR',
+        availableLanguage: 'ko'
+      }
+    },
+    {
+      '@type': 'WebSite',
+      '@id': websiteId,
+      name: '운월당',
+      alternateName: ['운월당 사주', 'Unwoldang'],
+      url: `${SITE_URL}/`,
+      inLanguage: 'ko-KR',
+      publisher: { '@id': organizationId }
+    },
+    {
       '@type': 'WebPage',
       '@id': `${canonicalUrl}#webpage`,
       url: canonicalUrl,
       name: seo.title,
       description: seo.description,
+      dateModified: seo.lastmod,
       inLanguage: 'ko-KR',
       isPartOf: { '@id': websiteId },
       primaryImageOfPage: {
         '@type': 'ImageObject',
-        url: imageUrl
+        url: imageUrl,
+        caption: seo.imageAlt || `${seo.heading} 대표 이미지`
       }
     }
   ];
 
   if (route === '/') {
-    graph.unshift(
-      {
-        '@type': 'Organization',
-        '@id': organizationId,
-        name: '운월당',
-        legalName: '케이컴퍼니',
-        url: `${SITE_URL}/`,
-        logo: {
-          '@type': 'ImageObject',
-          url: `${SITE_URL}/apple-touch-icon.png`,
-          width: 180,
-          height: 180
-        },
-        email: '250909bs@gmail.com',
-        telephone: '050420111894',
-        areaServed: 'KR'
-      },
-      {
-        '@type': 'WebSite',
-        '@id': websiteId,
-        name: '운월당',
-        alternateName: ['운월당 사주', 'Unwoldang'],
-        url: `${SITE_URL}/`,
-        inLanguage: 'ko-KR',
-        publisher: { '@id': organizationId }
-      },
-      {
-        '@type': 'ItemList',
-        '@id': `${SITE_URL}/#service-list`,
-        name: '운월당 개인 맞춤 사주 리포트',
-        itemListElement: Object.entries(routes)
-          .filter(([pathName, item]) => pathName.startsWith('/detail/') && item.indexable)
-          .map(([pathName, item], index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            name: item.heading,
-            url: `${SITE_URL}${pathName}`
-          }))
-      }
-    );
+    graph.push({
+      '@type': 'ItemList',
+      '@id': `${SITE_URL}/#service-list`,
+      name: '운월당 대표 사주 리포트',
+      itemListElement: Object.entries(routes)
+        .filter(([pathName, item]) => pathName.startsWith('/detail/') && item.indexable)
+        .map(([pathName, item], index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: item.productName || item.heading,
+          url: `${SITE_URL}${pathName}`
+        }))
+    });
   } else {
     graph.push(breadcrumbData(route, seo, canonicalUrl));
   }
 
-  if (route.startsWith('/detail/')) {
+  if (route.startsWith('/detail/') && seo.price && seo.priceCurrency) {
     graph.push({
-      '@type': 'Service',
-      '@id': `${canonicalUrl}#service`,
-      name: seo.heading,
-      serviceType: '개인 맞춤 사주 리포트',
+      '@type': 'Product',
+      '@id': `${canonicalUrl}#product`,
+      name: seo.productName || seo.heading,
       description: seo.description,
       url: canonicalUrl,
       image: imageUrl,
-      areaServed: 'KR',
-      availableLanguage: 'ko-KR',
-      provider: { '@id': organizationId }
+      category: '개인 맞춤 사주 리포트',
+      brand: { '@id': organizationId },
+      offers: {
+        '@type': 'Offer',
+        url: canonicalUrl,
+        price: String(seo.price),
+        priceCurrency: seo.priceCurrency,
+        availability: 'https://schema.org/InStock',
+        seller: { '@id': organizationId }
+      }
+    });
+  }
+
+  if (seo.faqs?.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${canonicalUrl}#faq`,
+      mainEntity: seo.faqs.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer
+        }
+      }))
     });
   }
 
@@ -160,6 +189,23 @@ function buildFallback(route, seo) {
     .map(([pathName, item]) => `<a href="${pathName}">${escapeHtml(item.heading)}</a>`)
     .join('');
   const highlights = seo.highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+  const sections = (seo.sections || [])
+    .map(
+      (item) => `<section class="seo-static-section">
+        <h2>${escapeHtml(item.heading)}</h2>
+        <p>${escapeHtml(item.body)}</p>
+      </section>`
+    )
+    .join('');
+  const faqItems = (seo.faqs || [])
+    .map(
+      (item) => `<div>
+        <dt>${escapeHtml(item.question)}</dt>
+        <dd>${escapeHtml(item.answer)}</dd>
+      </div>`
+    )
+    .join('');
+  const serviceId = seo.serviceId || route.split('/').at(-1);
 
   return `<main class="seo-static-fallback">
     <a class="seo-static-brand" href="/">운월당</a>
@@ -168,7 +214,9 @@ function buildFallback(route, seo) {
       <h1>${escapeHtml(seo.heading)}</h1>
       <p>${escapeHtml(seo.intro)}</p>
       <ul>${highlights}</ul>
-      ${route.startsWith('/detail/') ? `<a class="seo-static-action" href="/form/${route.split('/').at(-1)}">개인 리포트 입력 시작</a>` : ''}
+      ${route.startsWith('/detail/') ? `<a class="seo-static-action" href="/form/${serviceId}">개인 리포트 입력 시작</a>` : ''}
+      ${sections ? `<div class="seo-static-sections">${sections}</div>` : ''}
+      ${faqItems ? `<section class="seo-static-faq"><h2>자주 묻는 질문</h2><dl>${faqItems}</dl></section>` : ''}
     </article>
     <nav aria-label="운월당 주요 사주 리포트">${serviceLinks}</nav>
   </main>`;
@@ -192,10 +240,11 @@ function buildPage(route, seo) {
   html = replaceMeta(html, 'property', 'og:description', seo.description);
   html = replaceMeta(html, 'property', 'og:url', canonicalUrl);
   html = replaceMeta(html, 'property', 'og:image', imageUrl);
-  html = replaceMeta(html, 'property', 'og:image:alt', `${seo.heading} 대표 이미지`);
+  html = replaceMeta(html, 'property', 'og:image:alt', seo.imageAlt || `${seo.heading} 대표 이미지`);
   html = replaceMeta(html, 'name', 'twitter:title', seo.title);
   html = replaceMeta(html, 'name', 'twitter:description', seo.description);
   html = replaceMeta(html, 'name', 'twitter:image', imageUrl);
+  html = replaceMeta(html, 'name', 'twitter:image:alt', seo.imageAlt || `${seo.heading} 대표 이미지`);
   html = replaceLink(html, 'canonical', `<link rel="canonical" href="${canonicalUrl}" />`);
   html = html.replace(
     /<link\s+id="route-hreflang-ko"[^>]*>/i,
@@ -257,7 +306,15 @@ function validatePage(route, seo, html) {
     throw new Error(`Structured data is missing for ${route}`);
   }
 
-  JSON.parse(structuredDataMatch[1]);
+  const structuredData = JSON.parse(structuredDataMatch[1]);
+
+  if (seo.price && !structuredData['@graph'].some((item) => item['@type'] === 'Product')) {
+    throw new Error(`Product structured data is missing for ${route}`);
+  }
+
+  if (seo.faqs?.length && !structuredData['@graph'].some((item) => item['@type'] === 'FAQPage')) {
+    throw new Error(`FAQ structured data is missing for ${route}`);
+  }
 }
 
 await rm(path.join(distDir, 'seo'), { recursive: true, force: true });

@@ -5,7 +5,7 @@ export const PAST_LIFE_PRODUCT = {
   poster: '/media/dokkaebi-poster.webp',
   guideAvatar: '/media/dokkaebi-guide-avatar.webp',
   intakeImage: '/media/dokkaebi-guide-intake.webp',
-  film: '/media/dokkaebi-hero.mp4',
+  film: '/media/dokkaebi-hero-optimized.mp4',
   immersionFilm: '/media/dokkaebi-immersion.mp4',
   immersionFilms: [
     '/media/dokkaebi-story-01.mp4',

@@ -10,6 +10,8 @@ import type {
 } from '../lib/mz-love-fact/types';
 import type { SajuReportData } from '../lib/saju/report';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
+import '../styles/mz-love-fact.css';
+import '../styles/mz-love-report.css';
 
 type LoveChapter = MzLoveChapterViewModel;
 type LoveViewModel = MzLoveReportViewModel;

@@ -12,7 +12,7 @@ import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
 
 const illustrationDeck = {
-  generalSaju: '/home-general-saju-card.png',
+  generalSaju: '/home-general-saju-card.webp',
   yearlyFortune: '/home-yearly-fortune-card.png',
   concernReading: '/home-concern-reading-card.png',
   loveReading: '/home-love-reading-card.png',
@@ -28,7 +28,7 @@ const illustrationDeck = {
 const goblinPastLifePoster = '/media/dokkaebi-poster.webp';
 
 const homeMenuItems = [
-  { label: '종합사주', to: '/form/general-signature', state: { tabOrigin: '/' } },
+  { label: '종합사주', to: '/detail/general-saju', state: { tabOrigin: '/' } },
   { label: 'MZ 도깨비 전생사주', to: '/detail/past-life-goblin', state: { tabOrigin: '/' } },
   { label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
   { label: '심리테스트', to: '/test' },
@@ -66,6 +66,7 @@ const cardNewsSlides: CardNewsSlide[] = [
   {
     id: 'news-general',
     target: 'general-signature',
+    to: '/detail/general-saju',
     rank: 1,
     kicker: '종합사주',
     title: '운월 정통 종합사주',
@@ -148,7 +149,7 @@ const homeProductCards: HomeProductCard[] = [
   {
     id: 'general-signature',
     category: 'general',
-    to: '/form/general-signature',
+    to: '/detail/general-saju',
     image: illustrationDeck.generalSaju,
     title: '운월선생 정통 종합사주',
     subtitle: '타고난 기질부터 인생 전체 흐름까지'
@@ -288,7 +289,7 @@ const homeDiscoverySections = [
     cards: [
       {
         id: 'general-signature',
-        to: '/form/general-signature',
+        to: '/detail/general-saju',
         image: illustrationDeck.generalSaju,
         coverKicker: '운월선생',
         coverTitle: '종합사주',
@@ -549,6 +550,7 @@ export default function Home() {
 
   return (
     <main className="app-home-shell">
+      <h1 className="sr-only">사주를 계산하고, 내 이야기로 읽는 운월당</h1>
       <div className="app-mobile-shell">
         <MobileTopBar
           title="운월당"

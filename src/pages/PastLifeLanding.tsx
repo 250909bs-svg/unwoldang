@@ -10,6 +10,7 @@ import {
   pastLifeSamplePages,
   pastLifeValueItems
 } from '../content/pastLifeExperience';
+import '../styles/past-life.css';
 
 const startState = { tabOrigin: '/' } as const;
 

@@ -1,10 +1,12 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import notFoundHandler from '../../api/not-found';
 import retiredDetailHandler from '../../api/retired-detail';
 import vercelConfig from '../../vercel.json';
+import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
 import seoRouteData from './seoRoutes.json';
 
-const activeDetailPaths = ['/detail/love-reading', '/detail/past-life-goblin'] as const;
+const activeDetailPaths = ['/detail/general-saju', '/detail/love-reading', '/detail/past-life-goblin'] as const;
 const retiredDetailPaths = [
   '/detail/general-signature',
   '/detail/life-flow',
@@ -18,7 +20,7 @@ const retiredDetailPaths = [
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
 describe('retired detail page indexing', () => {
-  it('keeps only the two current product detail pages indexable', () => {
+  it('keeps only the three current product detail pages indexable', () => {
     const indexableDetailPaths = Object.entries(seoRouteData)
       .filter(([path, seo]) => path.startsWith('/detail/') && seo.indexable)
       .map(([path]) => path)
@@ -40,6 +42,7 @@ describe('retired detail page indexing', () => {
 
     expect(activeRewrites.get('/detail/past-life-goblin')).toBe('/seo/detail-past-life-goblin.html');
     expect(activeRewrites.get('/detail/love-reading')).toBe('/seo/detail-love-reading.html');
+    expect(activeRewrites.get('/detail/general-saju')).toBe('/seo/detail-general-saju.html');
     expect(retiredRewrite?.destination).toBe('/api/retired-detail');
     expect(vercelConfig.trailingSlash).toBe(false);
     expect(vercelConfig.headers).toContainEqual({
@@ -82,6 +85,51 @@ describe('retired detail page indexing', () => {
     expect(statusCode).toBe(410);
     expect(headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
     expect(responseBody).toContain('이 페이지는 종료되었어요.');
+  });
+
+  it('returns a hard 404 with noindex for every unknown route', () => {
+    const headers = new Map<string, string>();
+    let statusCode = 0;
+    let responseBody = '';
+    const response = {
+      setHeader(name: string, value: string) {
+        headers.set(name, value);
+      },
+      status(code: number) {
+        statusCode = code;
+        return this;
+      },
+      send(body: string) {
+        responseBody = body;
+        return this;
+      }
+    };
+
+    notFoundHandler({}, response);
+
+    expect(statusCode).toBe(404);
+    expect(headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
+    expect(responseBody).toContain('페이지를 찾을 수 없어요.');
+    expect(vercelConfig.rewrites.at(-1)).toEqual({ source: '/:path*', destination: '/api/not-found' });
+  });
+
+  it('ships the optimized general-saju artwork referenced by the landing page', () => {
+    const publicDir = new URL('../../public/', import.meta.url);
+    const webp = new URL('home-general-saju-card.webp', publicDir);
+    const avif = new URL('home-general-saju-card.avif', publicDir);
+
+    expect(existsSync(webp)).toBe(true);
+    expect(existsSync(avif)).toBe(true);
+    expect(statSync(webp).size).toBeLessThan(250_000);
+    expect(statSync(avif).size).toBeLessThan(250_000);
+  });
+
+  it('serves the compressed past-life hero film instead of the 21MB original', () => {
+    const optimizedFilm = new URL(`../../public${PAST_LIFE_PRODUCT.film}`, import.meta.url);
+
+    expect(PAST_LIFE_PRODUCT.film).toBe('/media/dokkaebi-hero-optimized.mp4');
+    expect(existsSync(optimizedFilm)).toBe(true);
+    expect(statSync(optimizedFilm).size).toBeLessThan(5_000_000);
   });
 
   it('does not publish retired detail URLs in the sitemap', () => {

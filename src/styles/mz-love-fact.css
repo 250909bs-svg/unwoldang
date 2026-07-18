@@ -1454,6 +1454,52 @@ body.home-all-black .app-container.mz-love-intake-app-container {
   text-align: center;
 }
 
+.mz-love-related {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  width: min(100% - 36px, 820px);
+  margin: 0 auto 32px;
+  padding: 26px;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(206, 155, 116, 0.2);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(52, 21, 29, 0.76), rgba(15, 11, 16, 0.94));
+}
+
+.mz-love-related > div {
+  display: grid;
+  gap: 4px;
+}
+
+.mz-love-related span {
+  color: #b9a0a7;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.mz-love-related strong {
+  color: #f6e9e4;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.mz-love-related > a {
+  display: inline-flex;
+  min-height: 42px;
+  padding: 0 15px;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(226, 174, 135, 0.32);
+  border-radius: 999px;
+  color: #edd3c7;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
 .mz-love-footer {
   display: flex;
   width: min(100% - 36px, 820px);
@@ -1573,6 +1619,15 @@ body.home-all-black .app-container.mz-love-intake-app-container {
 }
 
 @media (max-width: 720px) {
+  .mz-love-related {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .mz-love-related > a {
+    width: 100%;
+  }
+
   .mz-love-site-header {
     width: calc(100% - 32px);
   }

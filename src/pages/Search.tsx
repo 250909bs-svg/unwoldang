@@ -24,7 +24,7 @@ const searchProducts: SearchProduct[] = [
     id: 'general-signature',
     title: '운월선생 정통 종합사주',
     image: '/intake-night-blue.png',
-    to: '/form/general-signature',
+    to: '/detail/general-saju',
     keywords: ['종합사주', '사주', '대운', '세운', '인생', '원국', '오행', '십성']
   },
   {

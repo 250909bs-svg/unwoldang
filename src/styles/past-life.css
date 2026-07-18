@@ -3047,15 +3047,12 @@ body.home-all-black .app-container.past-life-app-container {
 
 /* Full-screen entry shown before the past-life intake. */
 .dokkaebi-entry-page {
-  position: fixed;
-  inset: 0;
+  position: relative;
   z-index: 90;
-  display: grid;
+  display: block;
   width: 100%;
-  height: 100svh;
-  min-height: 0;
-  place-items: stretch center;
-  overflow: hidden;
+  min-height: 100svh;
+  overflow: visible;
   background: #030507;
   color: #e9e1d2;
   color-scheme: dark;
@@ -3150,7 +3147,7 @@ body.home-all-black .app-container.past-life-app-container {
   display: block;
   width: min(100vw, 480px);
   height: 100svh;
-  margin: 0;
+  margin: 0 auto;
 }
 
 .dokkaebi-entry-page .dokkaebi-film-door {
@@ -3692,6 +3689,368 @@ body.home-all-black .app-container.past-life-app-container {
 
   .dokkaebi-immersion-choices {
     transition: none;
+  }
+}
+
+/* Search landing content follows the unchanged full-screen film entry. */
+.dokkaebi-entry-seo {
+  position: relative;
+  z-index: 4;
+  width: min(calc(100% - 40px), 1040px);
+  margin: 0 auto;
+  padding: 110px 0 46px;
+  color: #eae3d6;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  content-visibility: auto;
+  contain-intrinsic-size: 2400px;
+}
+
+.dokkaebi-entry-seo a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dokkaebi-entry-seo-hero {
+  max-width: 830px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.dokkaebi-entry-seo-hero > span,
+.dokkaebi-entry-seo-method > div > span,
+.dokkaebi-entry-seo-faq header > span {
+  color: #d5a84f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.dokkaebi-entry-seo h1,
+.dokkaebi-entry-seo h2 {
+  font-family: "Nanum Myeongjo", serif;
+  text-wrap: balance;
+}
+
+.dokkaebi-entry-seo-hero h1 {
+  margin: 20px 0 0;
+  font-size: clamp(36px, 6vw, 62px);
+  line-height: 1.32;
+  letter-spacing: -0.045em;
+}
+
+.dokkaebi-entry-seo-hero > p {
+  max-width: 730px;
+  margin: 26px auto 0;
+  color: #b7b0a4;
+  font-size: clamp(15px, 1.7vw, 18px);
+  line-height: 1.9;
+}
+
+.dokkaebi-entry-seo-hero > p.dokkaebi-entry-seo-price {
+  display: inline-flex;
+  width: auto;
+  margin: 20px auto 0;
+  padding: 9px 14px;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(213, 168, 79, 0.22);
+  border-radius: 999px;
+  color: #aaa195;
+  background: rgba(213, 168, 79, 0.06);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.dokkaebi-entry-seo-price strong {
+  color: #f0d39a;
+  font-size: 15px;
+}
+
+.dokkaebi-entry-seo-hero > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 33px;
+}
+
+.dokkaebi-entry-seo-hero > div a {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 22px;
+  border: 1px solid rgba(213, 168, 79, 0.32);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dokkaebi-entry-seo-hero > div a:first-child {
+  background: linear-gradient(135deg, #dbb45f, #a46d2b);
+  color: #130e08;
+}
+
+.dokkaebi-entry-seo-hero > div a:last-child {
+  background: rgba(255, 255, 255, 0.035);
+  color: #ddd6c8;
+}
+
+.dokkaebi-entry-seo-hero > ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px 18px;
+  margin: 25px 0 0;
+  padding: 0;
+  color: #969086;
+  font-size: 12px;
+  list-style: none;
+}
+
+.dokkaebi-entry-seo-hero > ul li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dokkaebi-entry-seo-hero > ul svg {
+  color: #d5a84f;
+}
+
+.dokkaebi-entry-seo-method {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  align-items: end;
+  gap: clamp(36px, 8vw, 92px);
+  margin-top: 112px;
+  padding: 70px 0;
+  border-top: 1px solid rgba(213, 168, 79, 0.2);
+  border-bottom: 1px solid rgba(213, 168, 79, 0.2);
+}
+
+.dokkaebi-entry-seo-method h2,
+.dokkaebi-entry-seo-faq h2 {
+  margin: 14px 0 0;
+  font-size: clamp(28px, 4.5vw, 44px);
+  line-height: 1.4;
+  letter-spacing: -0.035em;
+}
+
+.dokkaebi-entry-seo-method > div > p {
+  margin: 20px 0 0;
+  color: #aaa399;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.dokkaebi-entry-seo-method aside {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 23px;
+  border: 1px solid rgba(39, 221, 232, 0.18);
+  background: rgba(25, 86, 96, 0.1);
+}
+
+.dokkaebi-entry-seo-method aside svg {
+  flex: 0 0 auto;
+  color: #68d8dd;
+}
+
+.dokkaebi-entry-seo-method aside p {
+  margin: 0;
+  color: #a8b5b2;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.dokkaebi-entry-seo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 100px 0;
+}
+
+.dokkaebi-entry-seo-grid > article {
+  min-height: 300px;
+  padding: clamp(27px, 4vw, 38px);
+  border: 1px solid rgba(213, 168, 79, 0.15);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(42, 112, 121, 0.13), transparent 55%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.dokkaebi-entry-seo-grid > article > span {
+  color: #d5a84f;
+  font-family: "Nanum Myeongjo", serif;
+  font-size: 13px;
+}
+
+.dokkaebi-entry-seo-grid h2 {
+  margin: 37px 0 0;
+  font-size: 24px;
+  line-height: 1.45;
+}
+
+.dokkaebi-entry-seo-grid p {
+  margin: 16px 0 0;
+  color: #a59f95;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.dokkaebi-entry-seo-faq {
+  padding: 80px 0 100px;
+}
+
+.dokkaebi-entry-seo-faq > div {
+  margin-top: 34px;
+  border-top: 1px solid rgba(213, 168, 79, 0.19);
+}
+
+.dokkaebi-entry-seo-faq details {
+  border-bottom: 1px solid rgba(213, 168, 79, 0.19);
+}
+
+.dokkaebi-entry-seo-faq summary {
+  display: flex;
+  min-height: 75px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 3px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dokkaebi-entry-seo-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.dokkaebi-entry-seo-faq summary svg {
+  flex: 0 0 auto;
+  color: #d5a84f;
+  transition: transform 180ms ease;
+}
+
+.dokkaebi-entry-seo-faq details[open] summary svg {
+  transform: rotate(90deg);
+}
+
+.dokkaebi-entry-seo-faq details p {
+  max-width: 820px;
+  margin: -3px 0 0;
+  padding: 0 40px 26px 3px;
+  color: #a29c92;
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.dokkaebi-entry-related {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding-bottom: 90px;
+}
+
+.dokkaebi-entry-related > a {
+  padding: 27px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.dokkaebi-entry-related > a > span {
+  display: block;
+  color: #817d76;
+  font-size: 11px;
+}
+
+.dokkaebi-entry-related strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  color: #e5c57d;
+  font-family: "Nanum Myeongjo", serif;
+  font-size: 18px;
+}
+
+.dokkaebi-entry-seo-footer {
+  display: flex;
+  min-height: 100px;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(213, 168, 79, 0.16);
+  color: #77736d;
+  font-size: 11px;
+}
+
+.dokkaebi-entry-seo-footer > a {
+  color: #d4cbbd;
+  font-family: "Nanum Myeongjo", serif;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.dokkaebi-entry-seo-footer nav {
+  display: flex;
+  gap: 17px;
+}
+
+@media (max-width: 720px) {
+  .dokkaebi-entry-seo {
+    width: min(calc(100% - 30px), 1040px);
+    padding-top: 82px;
+  }
+
+  .dokkaebi-entry-seo-hero h1 {
+    font-size: clamp(34px, 10.5vw, 48px);
+  }
+
+  .dokkaebi-entry-seo-hero > div a {
+    width: 100%;
+  }
+
+  .dokkaebi-entry-seo-method,
+  .dokkaebi-entry-seo-grid,
+  .dokkaebi-entry-related {
+    grid-template-columns: 1fr;
+  }
+
+  .dokkaebi-entry-seo-method {
+    margin-top: 82px;
+  }
+
+  .dokkaebi-entry-seo-grid {
+    padding: 82px 0;
+  }
+
+  .dokkaebi-entry-seo-grid > article {
+    min-height: auto;
+  }
+
+  .dokkaebi-entry-seo-faq {
+    padding-top: 64px;
+  }
+
+  .dokkaebi-entry-seo-faq summary {
+    font-size: 14px;
+  }
+
+  .dokkaebi-entry-seo-faq details p {
+    padding-right: 4px;
+  }
+
+  .dokkaebi-entry-seo-footer {
+    min-height: 128px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 17px;
   }
 }
 

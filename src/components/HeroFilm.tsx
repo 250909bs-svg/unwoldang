@@ -169,7 +169,7 @@ export default function HeroFilm({
             loop
             autoPlay
             playsInline
-            preload={variant === 'entry' ? 'auto' : 'metadata'}
+            preload="metadata"
             onPlay={() => setIsPlaying(true)}
             onPlaying={() => {
               setIsVideoReady(true);

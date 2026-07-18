@@ -14,12 +14,15 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { findServiceById, type LoveReaction } from '../api/mockData';
+import seoRouteData from '../content/seoRoutes.json';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { getMzLoveScene } from '../lib/mz-love-fact/sceneManifest';
 import type { MzLoveSceneKey } from '../lib/mz-love-fact/types';
+import '../styles/mz-love-fact.css';
 
 const SERVICE_ID = 'love-reading';
 const FORM_PATH = `/form/${SERVICE_ID}`;
+const seoLoveFaqs = seoRouteData['/detail/love-reading'].faqs;
 
 type LoveChoiceId = LoveReaction;
 
@@ -136,30 +139,11 @@ const faqItems = [
     answer:
       '가능합니다. 출생시간을 모름으로 선택하면 시주를 제외하고 확인 가능한 범위 안에서 해석하며, 시간에 따라 달라질 수 있는 부분은 결과에서 따로 알려드려요.'
   },
-  {
-    question: '상대방 생년월일이 없어도 되나요?',
-    answer:
-      '네. 이 상품은 내 명식을 중심으로 반복되는 연애 패턴과 다음 관계의 조건을 읽습니다. 특정 상대와의 정밀 궁합은 두 사람의 정보가 필요한 별도 분석이에요.'
-  },
-  {
-    question: '현재 솔로여도 볼 수 있나요?',
-    answer:
-      '네. 솔로, 썸, 연애 중, 이별 후처럼 현재 관계 상태를 선택하면 같은 명식도 지금 필요한 질문에 맞게 풀어드려요.'
-  },
-  {
-    question: '재회 가능성도 나오나요?',
-    answer:
-      '과거 인연을 반복해서 확인하는 이유와 재접촉 시 주의할 패턴은 다루지만, 상대의 마음이나 재회를 확정하지는 않아요. 재회만 집중해서 보고 싶다면 재회 리포트를 이용해 주세요.'
-  },
+  ...seoLoveFaqs,
   {
     question: '결과는 얼마나 걸리나요?',
     answer:
       '정보 입력과 결제를 마치면 명식 계산과 리포트 생성이 순서대로 진행됩니다. 생성 상태는 화면에 표시되며 완료된 결과는 보관함에서 다시 볼 수 있어요.'
-  },
-  {
-    question: 'AI가 사주를 계산하나요?',
-    answer:
-      '아니요. 만세력과 명리 규칙, 개인화 문장은 코드 엔진이 확정합니다. Gemini는 문장을 새로 만들거나 다시 쓰지 않고 확정 문장을 그대로 구조화하며 허용된 근거 ID만 연결합니다. 서버가 문장 일치와 근거 적합성을 다시 검증합니다.'
   },
   {
     question: '결과 생성에 실패하면 어떻게 하나요?',
@@ -229,7 +213,8 @@ function SceneImage({
         width={scene.width}
         height={scene.height}
         loading={eager ? 'eager' : 'lazy'}
-        decoding={eager ? 'sync' : 'async'}
+        decoding="async"
+        fetchPriority={eager ? 'high' : 'auto'}
         sizes="(max-width: 840px) 100vw, 820px"
         style={{ objectPosition: `${scene.focalPoint.x * 100}% ${scene.focalPoint.y * 100}%` }}
       />
@@ -326,7 +311,7 @@ export default function LoveReadingLanding() {
 
       <section id="mz-love-character" className="mz-love-character-reveal" aria-labelledby="mz-love-character-title">
         <div className="mz-love-scene-frame mz-love-scene-frame--portrait">
-          <SceneImage sceneKey="hero-fan-closed" eager />
+          <SceneImage sceneKey="hero-fan-closed" />
           <span className="mz-love-frame-glow" aria-hidden="true" />
         </div>
         <div className="mz-love-scene-copy">
@@ -682,6 +667,21 @@ export default function LoveReadingLanding() {
           단정하지 않으며, 의료·법률·재정 등 전문적인 판단을 대신하지 않습니다.
         </p>
       </section>
+
+      <nav className="mz-love-related" aria-label="운월당 대표 사주 리포트">
+        <div>
+          <span>내 인생 전체 흐름도 함께 보고 싶다면</span>
+          <strong>성향·직업·재물·연애·대운을 한 번에 보는 종합사주</strong>
+        </div>
+        <Link to="/detail/general-saju">
+          종합사주 풀이 보기
+          <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+        <Link to="/detail/past-life-goblin">
+          MZ 도깨비 전생사주 보기
+          <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+      </nav>
 
       <footer className="mz-love-footer">
         <Link to="/">운월당</Link>

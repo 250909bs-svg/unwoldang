@@ -18,6 +18,8 @@ import {
 import { validateBirthInput } from '../lib/birthInputValidation';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
+import '../styles/mz-love-fact.css';
+import '../styles/past-life.css';
 
 const initialState: IntakeFormData = {
   name: '',
