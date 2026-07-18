@@ -4,7 +4,8 @@ import { buildSajuReport } from '../saju/reportBuilder';
 import {
   assertGeminiEvidenceReferences,
   sanitizeGeminiDraft,
-  stripGeminiEvidenceMetadata
+  stripGeminiEvidenceMetadata,
+  toFormData
 } from './geminiReportService';
 
 const formData = {
@@ -20,6 +21,60 @@ const formData = {
 };
 
 describe('Gemini commercial response validation', () => {
+  it('restores the love micro choice and expanded relationship status', () => {
+    const restored = toFormData({
+      serviceId: 'love-reading',
+      payload: {
+        relationship: {
+          status: 'breakup-reunion',
+          duration: '',
+          microChoice: 'B'
+        }
+      }
+    });
+
+    expect(restored).toMatchObject({
+      relationshipStatus: 'breakup-reunion',
+      relationshipDuration: '',
+      loveReaction: 'B'
+    });
+  });
+
+  it('restores structured past-life context into intake form data', () => {
+    const restored = toFormData({
+      serviceId: 'past-life-goblin',
+      payload: {
+        user: { name: '전생 고객', gender: 'female' },
+        birth: {
+          calendar: 'solar',
+          date: '1994-03-21',
+          time: '09:30',
+          isUnknownTime: false
+        },
+        pastLifeContext: {
+          topic: '연애',
+          repeatedScene: '늘 제가 먼저 관계를 수습해요.',
+          frequentEmotion: '억울함',
+          hiddenDesire: '책임에서 잠시 벗어나고 싶어요.',
+          chosenSymbol: '붉은 실',
+          readingTone: '균형 있게'
+        },
+        questions: ['전생 질문 1', '전생 질문 2']
+      }
+    });
+
+    expect(restored).toMatchObject({
+      pastLifeTopic: '연애',
+      repeatedScene: '늘 제가 먼저 관계를 수습해요.',
+      frequentEmotion: '억울함',
+      hiddenDesire: '책임에서 잠시 벗어나고 싶어요.',
+      chosenSymbol: '붉은 실',
+      readingTone: '균형 있게',
+      q1: '전생 질문 1',
+      q2: '전생 질문 2'
+    });
+  });
+
   it('accepts exact deterministic prose echoes and strips evidence metadata', () => {
     const basis = buildDeterministicSajuBasis('general-signature', formData);
     const report = buildSajuReport('general-signature', formData, basis);

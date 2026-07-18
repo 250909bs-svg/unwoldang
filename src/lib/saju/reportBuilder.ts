@@ -1,5 +1,6 @@
 import { findServiceById, type IntakeFormData, type ServiceId } from '../../api/mockData';
 import { getReportCallName } from '../customerName';
+import { getRelationshipDurationLabel, getRelationshipStatusLabel } from '../relationshipIntake';
 import {
   buildDeterministicSajuBasis,
   selectCurrentDayun,
@@ -446,25 +447,8 @@ function getTimeLabel(formData: Partial<IntakeFormData>) {
 }
 
 function getRelationshipLabel(formData: Partial<IntakeFormData>) {
-  const status =
-    formData.relationshipStatus === 'dating'
-      ? '연애 중'
-      : formData.relationshipStatus === 'married'
-        ? '기혼'
-        : formData.relationshipStatus === 'single'
-          ? '솔로'
-          : '관계 상태 미입력';
-
-  const duration =
-    formData.relationshipDuration === 'under1'
-      ? '1년 미만'
-      : formData.relationshipDuration === 'under3'
-        ? '3년 미만'
-        : formData.relationshipDuration === 'under5'
-          ? '5년 미만'
-          : formData.relationshipDuration === 'under10'
-            ? '10년 미만'
-            : '';
+  const status = getRelationshipStatusLabel(formData.relationshipStatus);
+  const duration = getRelationshipDurationLabel(formData.relationshipDuration);
 
   return duration ? `${status} / ${duration}` : status;
 }
@@ -1719,7 +1703,34 @@ function getRelationshipStageGuide(formData: Partial<IntakeFormData>, relationsh
     return `${relationshipLabel} 흐름에서는 무작정 소개를 늘리기보다 “어떤 사람을 만나야 오래 가는가”를 먼저 좁혀야 합니다. 만남의 양보다 선별 기준이 결과를 바꿉니다.`;
   }
 
+  if (formData.relationshipStatus === 'situationship') {
+    return `${relationshipLabel} 흐름에서는 상대의 속마음을 추측하기보다 연락의 꾸준함, 약속의 구체성, 관계를 정의하려는 행동을 확인해야 합니다. 설렘의 크기보다 반복해서 지켜지는 신호가 기준입니다.`;
+  }
+
+  if (formData.relationshipStatus === 'ambiguous') {
+    return `${relationshipLabel} 흐름에서는 기다림을 사랑으로 해석하지 않는 것이 중요합니다. 관계를 계속 볼 조건과 멈출 기준을 먼저 정하고, 말과 행동이 일치하는지를 짧은 기간 안에 확인해야 합니다.`;
+  }
+
+  if (formData.relationshipStatus === 'breakup-reunion') {
+    return `${relationshipLabel} 흐름에서는 다시 만날 가능성보다 헤어진 원인이 실제로 바뀌었는지를 먼저 봐야 합니다. 재회 여부는 연락 자체가 아니라 책임 있는 설명, 달라진 행동, 경계 존중으로 판단합니다.`;
+  }
+
   return `${relationshipLabel} 상태이므로, 이번 리포트는 원국과 대운 기준으로 인연상, 만남 경로, 결혼 현실성을 중심으로 읽었습니다. 실제 관계 정보가 더해지면 상대별 해석 밀도는 더 높아집니다.`;
+}
+
+function getLoveReactionGuide(formData: Partial<IntakeFormData>) {
+  switch (formData.loveReaction) {
+    case 'A':
+      return '입장 전 선택에서는 서운함을 바로 말하기보다 괜찮은 척 분위기를 지키는 반응을 골랐습니다. 리포트에서는 배려와 자기 억압을 구분하고, 감정을 작게라도 제때 말하는 기준을 함께 봅니다.';
+    case 'B':
+      return '입장 전 선택에서는 늦은 연락의 이유를 확인하는 반응을 골랐습니다. 리포트에서는 건강한 확인과 불안을 잠재우기 위한 추궁을 구분하고, 관계의 이름보다 반복 행동을 먼저 확인합니다.';
+    case 'C':
+      return '입장 전 선택에서는 상대에게 맞춰 일부러 답을 늦추는 반응을 골랐습니다. 리포트에서는 주도권 싸움과 건강한 속도 조절을 구분하고, 시험하지 않고도 경계를 세우는 방법을 함께 봅니다.';
+    case 'D':
+      return '입장 전 선택에서는 아무렇지 않은 척하면서 혼자 의미를 오래 해석하는 반응을 골랐습니다. 리포트에서는 사실과 추측을 분리하고, 기다릴 기한과 직접 물을 시점을 행동 기준으로 정리합니다.';
+    default:
+      return '';
+  }
 }
 
 function buildLoveProfile(
@@ -1735,7 +1746,10 @@ function buildLoveProfile(
   const meetingSignature = getElementLoveSignature((helpful[0] || dayElement) as FiveElement);
   const cautionSignature = getElementLoveSignature((cautious[0] || dayElement) as FiveElement);
   const dominantTenGods = basis.dominantTenGods.slice(0, 3).join(', ');
-  const stageGuide = getRelationshipStageGuide(formData, relationshipLabel);
+  const reactionGuide = getLoveReactionGuide(formData);
+  const stageGuide = [getRelationshipStageGuide(formData, relationshipLabel), reactionGuide]
+    .filter(Boolean)
+    .join(' ');
   const statusPrefix =
     formData.relationshipStatus === 'dating'
       ? '현재 관계에서는'
@@ -1743,7 +1757,13 @@ function buildLoveProfile(
         ? '현재 부부 흐름에서는'
         : formData.relationshipStatus === 'single'
           ? '새 인연을 볼 때는'
-          : '이번 관계운에서는';
+          : formData.relationshipStatus === 'situationship'
+            ? '현재 썸에서는'
+            : formData.relationshipStatus === 'ambiguous'
+              ? '이 애매한 관계에서는'
+              : formData.relationshipStatus === 'breakup-reunion'
+                ? '이별·재회 흐름에서는'
+                : '이번 관계운에서는';
   const marriageWindow = basis.seun
     .slice(0, 5)
     .map((item) => item.year)

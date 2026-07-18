@@ -1236,6 +1236,71 @@ body.home-all-black .app-container.past-life-app-container {
   filter: saturate(0.86) contrast(1.03) brightness(0.82);
 }
 
+.past-life-intake-guide-dialogue {
+  position: absolute;
+  bottom: 62px;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: min(520px, calc(100% - 36px));
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 13px 15px 14px 12px;
+  border: 1px solid rgba(120, 222, 226, 0.3);
+  border-radius: 20px 20px 20px 5px;
+  background:
+    linear-gradient(130deg, rgba(16, 30, 38, 0.94), rgba(5, 8, 12, 0.9)),
+    #071016;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.46), 0 0 28px rgba(39, 221, 232, 0.07);
+  color: #eee5d7;
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px);
+}
+
+.past-life-intake-guide-dialogue::after {
+  position: absolute;
+  bottom: -10px;
+  left: 17px;
+  width: 18px;
+  height: 18px;
+  border-bottom: 1px solid rgba(120, 222, 226, 0.26);
+  border-left: 1px solid rgba(120, 222, 226, 0.26);
+  background: #091119;
+  content: "";
+  transform: skewY(-35deg) rotate(-9deg);
+}
+
+.past-life-intake-guide-dialogue > img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(211, 174, 111, 0.54);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 22%;
+  box-shadow: 0 0 0 3px rgba(5, 8, 12, 0.76), 0 0 22px rgba(39, 221, 232, 0.12);
+}
+
+.past-life-intake-guide-dialogue small {
+  display: block;
+  color: #75dbe0;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+}
+
+.past-life-intake-guide-dialogue p {
+  margin: 5px 0 0;
+  color: #f0e7d9;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(13px, 3.55vw, 16px);
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+
 .past-life-goblin-flow-page .intake-story-panel {
   position: relative;
   left: auto;
@@ -1646,7 +1711,7 @@ body.home-all-black .app-container.past-life-app-container {
   max-width: none;
   margin: 0;
   animation: none;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(179, 138, 76, 0.2);
   border-radius: 4px;
   background:
@@ -3107,6 +3172,170 @@ body.home-all-black .app-container.past-life-app-container {
   object-position: 50% 50%;
 }
 
+.dokkaebi-entry-page video.dokkaebi-film-media {
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
+.dokkaebi-entry-page video.dokkaebi-film-media.is-video-visible {
+  opacity: 1;
+}
+
+.dokkaebi-entry-page video.dokkaebi-film-media.is-video-loading {
+  opacity: 0;
+}
+
+.dokkaebi-entry-sound-prompt {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px 156px;
+  border: 0;
+  background: rgba(47, 49, 51, 0.3);
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  backdrop-filter: grayscale(0.62) brightness(0.82);
+  -webkit-backdrop-filter: grayscale(0.62) brightness(0.82);
+  animation: dokkaebiSoundPromptIn 220ms ease-out both;
+}
+
+.dokkaebi-entry-sound-prompt > span {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 50%;
+  background: rgba(6, 8, 10, 0.48);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+}
+
+.dokkaebi-entry-sound-prompt strong {
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(6, 8, 10, 0.58);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.4;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.68);
+}
+
+.dokkaebi-entry-sound-prompt:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -5px;
+}
+
+@keyframes dokkaebiSoundPromptIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dokkaebi-cinematic-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 92px 28px 152px;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(38, 111, 118, 0.18), transparent 24%),
+    radial-gradient(circle at 50% 54%, rgba(146, 52, 38, 0.12), transparent 34%),
+    linear-gradient(180deg, #020405 0%, #070b0e 54%, #030405 100%);
+  color: #f2e9da;
+  font: inherit;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dokkaebi-cinematic-loading::before {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background-image:
+    repeating-linear-gradient(31deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(127deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 6px);
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-cinematic-loading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dokkaebi-cinematic-loading-seal {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 8px;
+  place-items: center;
+  border: 1px solid rgba(218, 178, 105, 0.64);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 7px rgba(218, 178, 105, 0.04),
+    inset 0 0 26px rgba(39, 221, 232, 0.08),
+    0 0 34px rgba(39, 221, 232, 0.12);
+  animation: dokkaebiSealWake 1.8s ease-in-out infinite;
+}
+
+.dokkaebi-cinematic-loading-seal::before,
+.dokkaebi-cinematic-loading-seal::after {
+  position: absolute;
+  content: "";
+}
+
+.dokkaebi-cinematic-loading-seal::before {
+  width: 24px;
+  height: 32px;
+  border: 1px solid rgba(237, 218, 181, 0.78);
+  border-radius: 48% 48% 42% 42%;
+  transform: rotate(45deg);
+}
+
+.dokkaebi-cinematic-loading-seal::after {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7de9ec;
+  box-shadow: 0 0 16px rgba(39, 221, 232, 0.92);
+}
+
+.dokkaebi-cinematic-loading strong {
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(17px, 4.8vw, 21px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.dokkaebi-cinematic-loading small {
+  color: rgba(233, 225, 210, 0.64);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@keyframes dokkaebiSealWake {
+  0%, 100% {
+    opacity: 0.62;
+    transform: scale(0.96) rotate(-2deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04) rotate(2deg);
+  }
+}
+
 .dokkaebi-entry-page .dokkaebi-film-vignette {
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.64) 0%, rgba(0, 0, 0, 0.06) 14%, transparent 53%, rgba(0, 0, 0, 0.28) 72%, rgba(0, 0, 0, 0.9) 100%),
@@ -3332,6 +3561,21 @@ body.home-all-black .app-container.past-life-app-container {
   opacity: 1;
 }
 
+.dokkaebi-immersion-loading {
+  z-index: 7;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dokkaebi-immersion-loading:disabled {
+  cursor: progress;
+  opacity: 1;
+}
+
 .dokkaebi-immersion-vignette,
 .dokkaebi-immersion-grain {
   position: absolute;
@@ -3437,11 +3681,1079 @@ body.home-all-black .app-container.past-life-app-container {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dokkaebi-entry-page video.dokkaebi-film-media,
   .dokkaebi-immersion-media {
     transition: none;
   }
 
+  .dokkaebi-cinematic-loading-seal {
+    animation: none;
+  }
+
   .dokkaebi-immersion-choices {
     transition: none;
+  }
+}
+
+/* The paid past-life report uses a continuous ledger instead of generic accordions. */
+.past-life-story-report {
+  color: #ddd2c1;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(39, 221, 232, 0.055), transparent 26%),
+    #05070a;
+}
+
+.past-life-story-prologue,
+.past-life-identity-ledger {
+  scroll-margin-top: 76px;
+}
+
+.past-life-story-prologue {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.76fr) minmax(0, 1.18fr);
+  gap: clamp(34px, 5vw, 72px);
+  align-items: center;
+  padding: 76px 64px;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.12);
+  background:
+    linear-gradient(115deg, rgba(12, 24, 33, 0.88), rgba(5, 7, 10, 0.82)),
+    #070a0d;
+}
+
+.past-life-guide-prologue-visual {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.28);
+  border-radius: 3px;
+  background: #040609;
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.42);
+}
+
+.past-life-guide-prologue-visual > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 28%;
+  filter: saturate(0.9) contrast(1.04) brightness(0.88);
+}
+
+.past-life-guide-prologue-visual > .past-life-story-art-shade {
+  background:
+    linear-gradient(180deg, rgba(3, 5, 8, 0.02) 26%, rgba(3, 5, 8, 0.9) 100%),
+    radial-gradient(circle at 50% 26%, transparent 30%, rgba(3, 5, 8, 0.28) 100%);
+}
+
+.past-life-guide-prologue-dialogues {
+  position: absolute;
+  right: 18px;
+  bottom: 20px;
+  left: 18px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+}
+
+.past-life-guide-prologue-dialogues p {
+  position: relative;
+  width: fit-content;
+  max-width: 92%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(119, 219, 224, 0.22);
+  border-radius: 15px 15px 15px 4px;
+  background: rgba(6, 12, 17, 0.9);
+  color: #eee4d5;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 12px;
+  line-height: 1.65;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+}
+
+.past-life-guide-prologue-dialogues p:nth-child(2) {
+  margin-left: 6%;
+}
+
+.past-life-guide-prologue-dialogues p:nth-child(3) {
+  margin-left: 12%;
+  border-color: rgba(179, 138, 76, 0.32);
+}
+
+.past-life-story-prologue-symbol {
+  position: relative;
+  display: grid;
+  width: 108px;
+  height: 108px;
+  place-items: center;
+  border: 1px solid rgba(179, 138, 76, 0.5);
+  color: #d2af73;
+  font-family: "Noto Serif KR", serif;
+  font-size: 42px;
+  transform: rotate(-3deg);
+}
+
+.past-life-story-prologue-symbol::before,
+.past-life-story-prologue-symbol::after {
+  position: absolute;
+  content: "";
+}
+
+.past-life-story-prologue-symbol::before {
+  inset: 7px;
+  border: 1px solid rgba(179, 138, 76, 0.2);
+}
+
+.past-life-story-prologue-symbol::after {
+  inset: -24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(39, 221, 232, 0.1), transparent 66%);
+  z-index: -1;
+}
+
+.past-life-story-prologue > div:last-child > span,
+.past-life-identity-ledger > header > span,
+.past-life-story-scene > span {
+  color: #77dbe0;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.18em;
+}
+
+.past-life-story-prologue h2 {
+  max-width: 760px;
+  margin: 12px 0 16px;
+  color: #f0e6d6;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(25px, 3.5vw, 42px);
+  line-height: 1.48;
+}
+
+.past-life-story-prologue p {
+  max-width: 760px;
+  margin: 0;
+  color: #aaa092;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.past-life-story-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.past-life-story-evidence span {
+  padding: 8px 10px;
+  border: 1px solid rgba(185, 170, 145, 0.15);
+  background: rgba(5, 7, 10, 0.52);
+  color: #9a9184;
+  font-size: 11px;
+}
+
+.past-life-identity-ledger {
+  padding: 72px 48px 80px;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.12);
+}
+
+.past-life-identity-ledger > header {
+  max-width: 720px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.past-life-identity-ledger > header h2 {
+  margin: 12px 0;
+  color: #eee4d5;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.4;
+}
+
+.past-life-identity-ledger > header p {
+  margin: 0;
+  color: #8f877c;
+  line-height: 1.75;
+}
+
+.past-life-portrait-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.past-life-portrait-card {
+  overflow: hidden;
+  border: 1px solid rgba(179, 138, 76, 0.24);
+  background: #090d11;
+}
+
+.past-life-portrait-frame {
+  position: relative;
+  height: min(64vw, 610px);
+  max-height: 610px;
+  overflow: hidden;
+  background: #05070a;
+}
+
+.past-life-portrait-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 25%;
+  filter: saturate(0.92) contrast(1.04);
+}
+
+.past-life-portrait-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 48%, rgba(5, 7, 10, 0.98) 100%),
+    radial-gradient(circle at 50% 30%, transparent 34%, rgba(2, 3, 4, 0.28) 100%);
+  pointer-events: none;
+}
+
+.past-life-portrait-card.connection .past-life-portrait-vignette {
+  background:
+    linear-gradient(180deg, transparent 48%, rgba(5, 7, 10, 0.98) 100%),
+    radial-gradient(circle at 72% 36%, rgba(185, 39, 36, 0.08), transparent 35%);
+}
+
+.past-life-portrait-mark {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(179, 138, 76, 0.6);
+  color: #d2af73;
+  font-family: "Noto Serif KR", serif;
+  font-size: 13px;
+}
+
+.past-life-portrait-copy {
+  padding: 25px 26px 28px;
+}
+
+.past-life-portrait-copy > span {
+  color: #76d9de;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.past-life-portrait-card.connection .past-life-portrait-copy > span {
+  color: #d18a77;
+}
+
+.past-life-portrait-copy h3 {
+  margin: 9px 0 10px;
+  color: #eee4d5;
+  font-family: "Noto Serif KR", serif;
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+.past-life-portrait-copy > p {
+  min-height: 54px;
+  margin: 0 0 22px;
+  color: #9d9487;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.past-life-portrait-copy dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid rgba(185, 170, 145, 0.12);
+}
+
+.past-life-portrait-copy dl > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.1);
+}
+
+.past-life-portrait-copy dt {
+  color: #746d64;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.past-life-portrait-copy dd {
+  margin: 0;
+  color: #c5baaa;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.past-life-portrait-copy small {
+  display: block;
+  margin-top: 16px;
+  color: #68625b;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.past-life-first-meeting {
+  margin-top: 18px;
+  padding: 28px 30px;
+  border: 1px solid rgba(185, 39, 36, 0.26);
+  border-left: 2px solid #9e3632;
+  background:
+    linear-gradient(90deg, rgba(114, 27, 26, 0.1), transparent 62%),
+    #090d11;
+}
+
+.past-life-first-meeting span {
+  color: #cc7c6c;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.past-life-first-meeting p,
+.past-life-first-meeting strong {
+  display: block;
+  margin: 10px 0 0;
+  color: #ddd2c1;
+  font-family: "Noto Serif KR", serif;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.85;
+}
+
+.past-life-first-meeting strong {
+  color: #9d9487;
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  font-size: 13px;
+}
+
+.past-life-symbolic-notice {
+  margin: 18px 0 0;
+  color: #746d64;
+  font-size: 11px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.past-life-story-chapter {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(300px, 42%) minmax(0, 1fr);
+  min-height: 800px;
+  scroll-margin-top: 74px;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.12);
+}
+
+.past-life-story-chapter-art {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 720px;
+  overflow: hidden;
+  background: #05070a;
+}
+
+.past-life-story-chapter-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.86) contrast(1.06);
+}
+
+.past-life-story-art-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 7, 10, 0.08), rgba(5, 7, 10, 0.82) 88%),
+    linear-gradient(90deg, transparent 70%, rgba(5, 7, 10, 0.76));
+}
+
+.past-life-story-chapter-title {
+  position: absolute;
+  right: 34px;
+  bottom: 44px;
+  left: 34px;
+  z-index: 1;
+}
+
+.past-life-story-chapter-title span {
+  color: #79dce1;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.past-life-story-chapter-title h2 {
+  margin: 8px 0;
+  color: #f0e6d7;
+  font-family: "Noto Serif KR", serif;
+  font-size: clamp(34px, 4.6vw, 58px);
+  line-height: 1.1;
+}
+
+.past-life-story-chapter-title p {
+  margin: 0;
+  color: #b8ad9f;
+  font-family: "Noto Serif KR", serif;
+  line-height: 1.7;
+}
+
+.past-life-story-chapter-body {
+  padding: 68px 46px 82px;
+  background:
+    linear-gradient(180deg, rgba(12, 24, 33, 0.22), transparent 24%),
+    #080b0f;
+}
+
+.past-life-goblin-dialogue {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 15px;
+  align-items: start;
+  margin-bottom: 48px;
+}
+
+.past-life-goblin-dialogue > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(39, 221, 232, 0.32);
+  border-radius: 50%;
+  color: #8be3e7;
+  font-family: "Noto Serif KR", serif;
+  box-shadow: 0 0 24px rgba(39, 221, 232, 0.08);
+}
+
+.past-life-goblin-dialogue small {
+  color: #6fcbcF;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.past-life-goblin-dialogue p {
+  margin: 5px 0 0;
+  color: #ddd4c5;
+  font-family: "Noto Serif KR", serif;
+  font-size: 17px;
+  line-height: 1.78;
+}
+
+.past-life-goblin-avatar {
+  overflow: hidden;
+  background: #071016;
+}
+
+.past-life-goblin-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: 50% 22%;
+}
+
+.past-life-dialogue-followup {
+  margin-top: 9px !important;
+  color: #948b7f !important;
+  font-family: Pretendard, "Noto Sans KR", sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+}
+
+.past-life-story-scene {
+  padding-bottom: 34px;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.14);
+}
+
+.past-life-story-scene h3 {
+  margin: 10px 0 16px;
+  color: #efe5d6;
+  font-family: "Noto Serif KR", serif;
+  font-size: clamp(25px, 3.2vw, 36px);
+  line-height: 1.45;
+}
+
+.past-life-story-scene p {
+  margin: 0;
+  color: #b8ae9f;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.past-life-story-scene strong {
+  display: block;
+  margin-top: 18px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(179, 138, 76, 0.62);
+  color: #cdbd9f;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.75;
+}
+
+.past-life-personal-records {
+  display: grid;
+  gap: 8px;
+  margin: 34px 0 44px;
+}
+
+.past-life-personal-records article {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 14px;
+  padding: 15px 16px;
+  border: 1px solid rgba(185, 170, 145, 0.11);
+  background: rgba(5, 7, 10, 0.46);
+}
+
+.past-life-personal-records span {
+  color: #81786d;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.past-life-personal-records p {
+  margin: 0;
+  color: #c9beae;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.past-life-story-pages {
+  display: grid;
+  gap: 0;
+}
+
+.past-life-story-page {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 18px;
+  padding: 29px 0;
+  border-top: 1px solid rgba(185, 170, 145, 0.11);
+}
+
+.past-life-story-page-number {
+  color: #5fcbd1;
+  font-family: "Noto Serif KR", serif;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.past-life-story-page h4 {
+  margin: 0 0 10px;
+  color: #e9dfcf;
+  font-family: "Noto Serif KR", serif;
+  font-size: 19px;
+  line-height: 1.55;
+}
+
+.past-life-story-page p {
+  margin: 0;
+  color: #a9a093;
+  font-size: 15px;
+  line-height: 1.88;
+}
+
+.past-life-story-page p + p {
+  margin-top: 10px;
+}
+
+.past-life-guide-interjection {
+  position: relative;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 13px;
+  align-items: start;
+  margin: 8px 0 18px 38px;
+  padding: 17px 18px 18px 14px;
+  border: 1px solid rgba(39, 221, 232, 0.2);
+  border-radius: 18px 18px 18px 5px;
+  background:
+    linear-gradient(130deg, rgba(15, 30, 38, 0.72), rgba(5, 8, 12, 0.88)),
+    #080c10;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.22);
+}
+
+.past-life-guide-interjection::after {
+  position: absolute;
+  bottom: -9px;
+  left: 17px;
+  width: 16px;
+  height: 16px;
+  border-bottom: 1px solid rgba(39, 221, 232, 0.2);
+  border-left: 1px solid rgba(39, 221, 232, 0.2);
+  background: #091117;
+  content: "";
+  transform: skewY(-34deg) rotate(-8deg);
+}
+
+.past-life-guide-interjection .past-life-goblin-avatar {
+  display: block;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(179, 138, 76, 0.44);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(39, 221, 232, 0.09);
+}
+
+.past-life-guide-interjection small {
+  color: #69cbd0;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+}
+
+.past-life-guide-interjection p {
+  margin: 5px 0 0;
+  color: #e4dacc;
+  font-family: "Noto Serif KR", serif;
+  font-size: 14px;
+  line-height: 1.72;
+}
+
+.past-life-story-callout {
+  margin-top: 28px;
+  padding: 26px;
+  border: 1px solid rgba(179, 138, 76, 0.27);
+  background: linear-gradient(135deg, rgba(179, 138, 76, 0.08), rgba(5, 7, 10, 0.48));
+}
+
+.past-life-story-callout > span {
+  color: #b38a4c;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.past-life-story-callout h4 {
+  margin: 9px 0 7px;
+  color: #e4d5bc;
+  font-family: "Noto Serif KR", serif;
+  font-size: 18px;
+}
+
+.past-life-story-callout p {
+  margin: 0;
+  color: #a99d8a;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.past-life-story-bridge {
+  margin-top: 48px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(39, 221, 232, 0.2);
+}
+
+.past-life-story-bridge span {
+  color: #70d6db;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.past-life-story-bridge p {
+  margin: 9px 0 18px;
+  color: #bab0a1;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.past-life-story-bridge a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid rgba(39, 221, 232, 0.25);
+  color: #8ce4e8;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.past-life-story-chapter[data-chapter="relationship"] .past-life-goblin-dialogue > span,
+.past-life-story-chapter[data-chapter="karma"] .past-life-goblin-dialogue > span {
+  border-color: rgba(185, 39, 36, 0.42);
+  color: #d2806e;
+  box-shadow: 0 0 24px rgba(185, 39, 36, 0.1);
+}
+
+.past-life-story-chapter[data-chapter="release"] .past-life-story-chapter-body {
+  background: linear-gradient(180deg, rgba(179, 138, 76, 0.1), transparent 30%), #080b0f;
+}
+
+.past-life-guide-ending {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+  min-height: 720px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(185, 170, 145, 0.14);
+  background:
+    radial-gradient(circle at 78% 18%, rgba(179, 138, 76, 0.1), transparent 36%),
+    #05070a;
+}
+
+.past-life-guide-ending-art {
+  position: relative;
+  min-height: 720px;
+  overflow: hidden;
+}
+
+.past-life-guide-ending-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 46%;
+  filter: saturate(0.88) contrast(1.05);
+}
+
+.past-life-guide-ending-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 52%, #05070a 100%),
+    linear-gradient(180deg, transparent 58%, rgba(5, 7, 10, 0.76));
+}
+
+.past-life-guide-ending-dialogue {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 16px;
+  align-self: center;
+  margin-left: -52px;
+  padding: 34px 42px 36px 24px;
+  border: 1px solid rgba(179, 138, 76, 0.26);
+  border-radius: 24px 24px 24px 6px;
+  background: rgba(7, 11, 15, 0.91);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.44);
+  backdrop-filter: blur(18px);
+}
+
+.past-life-guide-ending-dialogue .past-life-goblin-avatar {
+  display: block;
+  width: 50px;
+  height: 50px;
+  border: 1px solid rgba(179, 138, 76, 0.56);
+  border-radius: 50%;
+  box-shadow: 0 0 26px rgba(39, 221, 232, 0.1);
+}
+
+.past-life-guide-ending-dialogue small {
+  color: #71d4d9;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+}
+
+.past-life-guide-ending-dialogue h2 {
+  margin: 9px 0 18px;
+  color: #f0e5d4;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(25px, 3.4vw, 42px);
+  line-height: 1.42;
+}
+
+.past-life-guide-ending-dialogue p {
+  margin: 0;
+  color: #aaa092;
+  font-size: 14px;
+  line-height: 1.82;
+}
+
+.past-life-guide-ending-dialogue p + p {
+  margin-top: 8px;
+}
+
+.past-life-guide-ending-dialogue a {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 0 18px;
+  border: 1px solid rgba(39, 221, 232, 0.32);
+  background: rgba(39, 221, 232, 0.06);
+  color: #8ce4e8;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .past-life-story-prologue {
+    grid-template-columns: minmax(220px, 40%) minmax(0, 1fr);
+    gap: 24px;
+    padding: 58px 40px;
+  }
+
+  .past-life-guide-prologue-visual {
+    min-height: 460px;
+  }
+
+  .past-life-story-prologue-symbol {
+    width: 82px;
+    height: 82px;
+    font-size: 32px;
+  }
+
+  .past-life-identity-ledger {
+    padding: 58px 32px 66px;
+  }
+
+  .past-life-story-chapter {
+    display: block;
+  }
+
+  .past-life-story-chapter-art {
+    position: relative;
+    height: min(112vw, 780px);
+    min-height: 560px;
+  }
+
+  .past-life-story-art-shade {
+    background: linear-gradient(180deg, transparent 40%, rgba(5, 7, 10, 0.94));
+  }
+
+  .past-life-story-chapter-body {
+    padding: 54px 40px 70px;
+  }
+
+  .past-life-guide-ending {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+    min-height: 620px;
+  }
+
+  .past-life-guide-ending-art {
+    min-height: 620px;
+  }
+
+  .past-life-guide-ending-dialogue {
+    margin-left: -84px;
+    padding: 30px 30px 32px 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .past-life-story-prologue {
+    display: block;
+    padding: 46px 20px 50px;
+  }
+
+  .past-life-guide-prologue-visual {
+    min-height: min(132vw, 560px);
+    margin-bottom: 34px;
+  }
+
+  .past-life-guide-prologue-dialogues {
+    right: 12px;
+    bottom: 14px;
+    left: 12px;
+    gap: 6px;
+  }
+
+  .past-life-guide-prologue-dialogues p {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .past-life-story-prologue-symbol {
+    width: 66px;
+    height: 66px;
+    margin-bottom: 30px;
+    font-size: 25px;
+  }
+
+  .past-life-story-prologue h2 {
+    font-size: 25px;
+    line-height: 1.55;
+  }
+
+  .past-life-story-prologue p {
+    font-size: 14px;
+  }
+
+  .past-life-story-evidence {
+    gap: 6px;
+    margin-top: 22px;
+  }
+
+  .past-life-story-evidence span {
+    padding: 7px 8px;
+    font-size: 10px;
+  }
+
+  .past-life-identity-ledger {
+    padding: 48px 16px 56px;
+  }
+
+  .past-life-identity-ledger > header {
+    margin-bottom: 26px;
+  }
+
+  .past-life-identity-ledger > header h2 {
+    font-size: 27px;
+  }
+
+  .past-life-portrait-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .past-life-portrait-frame {
+    height: 145vw;
+    max-height: 650px;
+  }
+
+  .past-life-portrait-copy {
+    padding: 22px 20px 24px;
+  }
+
+  .past-life-portrait-copy > p {
+    min-height: 0;
+  }
+
+  .past-life-portrait-copy dl > div {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .past-life-first-meeting {
+    padding: 22px 20px;
+  }
+
+  .past-life-first-meeting p {
+    font-size: 15px;
+  }
+
+  .past-life-story-chapter-art {
+    height: 138vw;
+    min-height: 520px;
+    max-height: 690px;
+  }
+
+  .past-life-story-chapter-title {
+    right: 22px;
+    bottom: 30px;
+    left: 22px;
+  }
+
+  .past-life-story-chapter-title h2 {
+    font-size: 40px;
+  }
+
+  .past-life-story-chapter-body {
+    padding: 44px 20px 60px;
+  }
+
+  .past-life-goblin-dialogue {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 38px;
+  }
+
+  .past-life-goblin-dialogue > span {
+    width: 38px;
+    height: 38px;
+  }
+
+  .past-life-goblin-dialogue p {
+    font-size: 15px;
+  }
+
+  .past-life-story-scene h3 {
+    font-size: 26px;
+  }
+
+  .past-life-story-scene p {
+    font-size: 15px;
+  }
+
+  .past-life-personal-records article {
+    display: block;
+  }
+
+  .past-life-personal-records p {
+    margin-top: 6px;
+  }
+
+  .past-life-story-page {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    padding: 25px 0;
+  }
+
+  .past-life-story-page h4 {
+    font-size: 18px;
+  }
+
+  .past-life-story-page p {
+    font-size: 14px;
+  }
+
+  .past-life-guide-interjection {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 10px;
+    margin: 8px 0 18px 16px;
+    padding: 14px 14px 15px 12px;
+  }
+
+  .past-life-guide-interjection .past-life-goblin-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .past-life-guide-interjection p {
+    font-size: 13px;
+  }
+
+  .past-life-guide-ending {
+    display: block;
+    min-height: 0;
+    padding-bottom: 52px;
+  }
+
+  .past-life-guide-ending-art {
+    height: min(138vw, 680px);
+    min-height: 520px;
+  }
+
+  .past-life-guide-ending-shade {
+    background: linear-gradient(180deg, transparent 46%, #05070a 100%);
+  }
+
+  .past-life-guide-ending-dialogue {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+    margin: -96px 16px 0;
+    padding: 23px 20px 25px 16px;
+    border-radius: 20px 20px 20px 5px;
+  }
+
+  .past-life-guide-ending-dialogue .past-life-goblin-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .past-life-guide-ending-dialogue h2 {
+    margin-bottom: 14px;
+    font-size: 24px;
+  }
+
+  .past-life-guide-ending-dialogue p {
+    font-size: 13px;
+  }
+
+  .past-life-guide-ending-dialogue a {
+    width: 100%;
   }
 }

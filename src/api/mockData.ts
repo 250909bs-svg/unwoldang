@@ -1,4 +1,5 @@
 import { getReportCallName } from '../lib/customerName';
+import { getRelationshipStatusLabel } from '../lib/relationshipIntake';
 
 export const serviceIds = [
   'general-signature',
@@ -37,6 +38,15 @@ export type ServiceTheme =
 
 export type BirthTimePrecision = 'exact' | 'branch-range' | 'unknown';
 export type DayBoundaryPolicy = 'midnight' | 'late-zi';
+export type LoveReaction = 'A' | 'B' | 'C' | 'D';
+export type RelationshipStatus =
+  | ''
+  | 'single'
+  | 'situationship'
+  | 'dating'
+  | 'ambiguous'
+  | 'breakup-reunion'
+  | 'married';
 
 export interface BirthLocationData {
   label: string;
@@ -72,8 +82,9 @@ export interface IntakeFormData {
   dayBoundaryPolicy?: DayBoundaryPolicy;
   birthLocation?: BirthLocationData;
   partner?: PartnerBirthData;
-  relationshipStatus: '' | 'dating' | 'single' | 'married';
+  relationshipStatus: RelationshipStatus;
   relationshipDuration: '' | 'under1' | 'under3' | 'under5' | 'under10';
+  loveReaction?: LoveReaction;
   location: string;
   q1: string;
   q2: string;
@@ -276,21 +287,21 @@ export const serviceCatalog: ServiceDefinition[] = [
   {
     id: 'love-reading',
     category: 'love',
-    label: '홍연아씨 연애운 리딩',
-    advisor: '홍연아씨',
-    subtitle: '감정선, 연락 온도, 들어오는 인연, 썸의 방향까지 섬세하게 읽는 연애 리포트',
-    teaser: '지금 마음이 어느 방향으로 흐르는지, 누구와 맞닿는지 또렷하게 보여줍니다.',
+    label: 'MZ무당 팩폭 연애운',
+    advisor: 'MZ무당',
+    subtitle: '사주명리로 반복되는 연애 패턴, 끌리는 사람과 오래 갈 사람의 차이, 다음 인연의 조건을 읽는 팩폭 리포트',
+    teaser: '네 연애, 사람만 바뀌었지 결말은 비슷하지 않아? 설렘 뒤에 숨은 반복 패턴부터 보여줄게.',
     description:
-      '썸, 시작 단계의 관계, 애매한 감정선이 답답할 때 선택하기 좋은 연애운 리포트입니다. 감정의 속도와 표현 방식, 상대와의 간격, 다가오는 인연의 분위기를 한 장씩 넘기듯 확인할 수 있도록 구성했습니다.',
+      '생년월일시로 계산한 명식을 바탕으로 사랑할 때 달라지는 성격, 비슷한 사람에게 끌리는 이유, 실제로 오래 갈 사람의 신호와 앞으로 12개월의 연애 흐름을 읽습니다. 상대의 속마음이나 미래를 단정하지 않고 명리 근거, 반대 가능성, 현실에서 확인할 행동까지 웹툰처럼 한 장씩 풀어냅니다.',
     price: '49,000원',
-    accent: '#cb7f84',
+    accent: '#d9183d',
     theme: 'love',
-    heroTag: 'LOVE',
-    badge: '연애 인기',
-    spotlight: '썸의 기류와 들어오는 인연을 부드럽게 정리하는 인기 리포트',
-    bullets: ['감정선 분석', '연락 온도 진단', '들어오는 인연 포착', '실전 관계 조언'],
-    process: ['현재 감정 흐름 확인', '연애 패턴 분석', '인연 시기 정리', '연락·고백·거리감 조언 작성'],
-    output: ['연애운 요약 카드', '연락 스타일 분석', '인연 루트와 시기', '주의해야 할 관계 패턴']
+    heroTag: 'MZ LOVE',
+    badge: '팩폭 연애운',
+    spotlight: '끌리는 사람과 오래 갈 사람의 차이를 명리 근거와 행동 기준으로 풀어내는 개인 맞춤 연애 리포트',
+    bullets: ['반복되는 연애 패턴', '끌리는 타입 vs 오래 갈 타입', '12개월 연애 흐름', '30일 행동 플랜'],
+    process: ['명식과 현재 관계 상태 확인', '배우자궁·십성·합충·대운 분석', '인연 흐름과 반복 신호 해석', '현실 행동 기준과 30일 플랜 작성'],
+    output: ['첫 팩폭과 명리 근거', '다음 인연의 분위기와 조건', '12개월 연애 타임라인', '연락 실수와 30일 행동 플랜']
   },
   {
     id: 'love-reunion',
@@ -583,14 +594,9 @@ const buildSectionContent = (
     formData?.q1?.trim() || '지금 제 흐름에서 무엇을 가장 먼저 정리해야 하는지 알고 싶어요.';
   const secondQuestion =
     formData?.q2?.trim() || '가까운 시기 안에 어떤 선택을 하면 좋을지 구체적으로 보고 싶어요.';
-  const relationshipLabel =
-    formData?.relationshipStatus === 'dating'
-      ? '현재 연애 중'
-      : formData?.relationshipStatus === 'married'
-        ? '현재 기혼 상태'
-        : formData?.relationshipStatus === 'single'
-          ? '현재 솔로 상태'
-          : '현재 관계 상태 미입력';
+  const relationshipLabel = formData?.relationshipStatus
+    ? `현재 ${getRelationshipStatusLabel(formData.relationshipStatus)} 상태`
+    : '현재 관계 상태 미입력';
   const birthLabel = buildBirthLabel(formData);
 
   return [

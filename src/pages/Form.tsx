@@ -1,10 +1,23 @@
 import { Check, ChevronDown, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { type IntakeFormData, type PartnerBirthData, findServiceById } from '../api/mockData';
+import {
+  type IntakeFormData,
+  type LoveReaction,
+  type PartnerBirthData,
+  type RelationshipStatus,
+  findServiceById
+} from '../api/mockData';
 import { useAuth } from '../context/AuthContext';
-import { pastLifeSymbolOptions, pastLifeToneOptions, pastLifeTopicOptions } from '../content/pastLifeExperience';
+import {
+  PAST_LIFE_PRODUCT,
+  pastLifeSymbolOptions,
+  pastLifeToneOptions,
+  pastLifeTopicOptions
+} from '../content/pastLifeExperience';
 import { validateBirthInput } from '../lib/birthInputValidation';
+import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
+import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
 
 const initialState: IntakeFormData = {
   name: '',
@@ -43,8 +56,34 @@ const emptyPartnerBirthData: PartnerBirthData = {
 
 type IntakeStep = 1 | 2 | 3 | 4;
 
+const pastLifeGuideStepCopy: Record<IntakeStep, { eyebrow: string; line: string }> = {
+  1: {
+    eyebrow: '첫 번째 봉인',
+    line: '먼저 네 이름과 태어난 때를 알려줘. 장부 속 흔적의 주인부터 정확히 맞출게.'
+  },
+  2: {
+    eyebrow: '두 번째 봉인',
+    line: '지금 가장 마음에 걸리는 걸 하나만 골라. 그 질문부터 따라갈 거야.'
+  },
+  3: {
+    eyebrow: '세 번째 봉인',
+    line: '이번엔 꾸미지 말고 적어. 또 시작됐다고 느끼는 장면과 그때의 감정, 사실 바라는 결말.'
+  },
+  4: {
+    eyebrow: '마지막 봉인',
+    line: '마지막이야. 눈이 먼저 머무는 상징과 내가 어떤 온도로 말해주면 좋을지 골라.'
+  }
+};
+
+const pastLifeToneReplies: Record<string, string> = {
+  따뜻하게: '좋아. 아픈 대목도 다그치지 않고, 네가 받아들일 수 있는 속도로 읽어줄게.',
+  직설적으로: '좋아. 돌려 말하지 않고, 지금 끊어야 할 반복부터 바로 짚어줄게.',
+  '균형 있게': '좋아. 서사는 깊게 읽되, 현실에서 확인할 근거와 행동까지 함께 보여줄게.'
+};
+
 type FormLocationState = {
   formData?: Partial<IntakeFormData>;
+  loveReaction?: LoveReaction;
   tabOrigin?: string;
   recoveredEntitlement?: {
     orderId: string;
@@ -95,6 +134,19 @@ const questionSuggestions = {
   ]
 } as const;
 
+const loveReadingQuestionSuggestions = {
+  q1: [
+    '지금 반복되는 애매한 관계를 계속 이어가도 될까요?',
+    '왜 저는 확신을 늦게 주는 사람에게 더 끌릴까요?',
+    '다음 연애에서 꼭 피해야 할 제 반복 패턴은 무엇인가요?'
+  ],
+  q2: [
+    '앞으로 12개월 중 새 인연을 만나기 좋은 흐름은 언제인가요?',
+    '지금 상대와 오래 가려면 어떤 행동을 먼저 확인해야 하나요?',
+    '연락·약속·표현 중 제가 먼저 바꿔야 할 한 가지는 무엇인가요?'
+  ]
+} as const;
+
 const pastLifeQuestionSuggestions = {
   q1: [
     '제가 반복해서 겪는 관계 패턴은 전생 서사에서 어떻게 읽히나요?',
@@ -109,10 +161,17 @@ const pastLifeQuestionSuggestions = {
 } as const;
 
 const relationshipStatusOptions = [
-  { value: 'dating', label: '연애중', body: '현재 만나는 사람이 있어요.' },
-  { value: 'single', label: '솔로', body: '현재는 혼자 흐름을 보고 싶어요.' },
-  { value: 'married', label: '기혼', body: '결혼/배우자 흐름까지 함께 보고 싶어요.' }
-] as const;
+  { value: 'single', label: '솔로', body: '지금은 특정 상대 없이 다음 인연과 내 연애 패턴이 궁금해요.' },
+  { value: 'situationship', label: '썸 타는 중', body: '호감은 오가지만 아직 관계를 정하지 않았어요.' },
+  { value: 'dating', label: '연애 중', body: '현재 만나고 있는 사람과의 흐름이 궁금해요.' },
+  { value: 'ambiguous', label: '관계가 애매함', body: '연락과 감정선은 있지만 상대와의 정의가 모호해요.' },
+  { value: 'breakup-reunion', label: '이별·재회 고민', body: '헤어진 인연을 정리할지 다시 볼지 고민 중이에요.' },
+  { value: 'married', label: '기혼', body: '배우자와의 관계 흐름과 앞으로의 균형을 보고 싶어요.' }
+] as const satisfies ReadonlyArray<{
+  value: Exclude<RelationshipStatus, ''>;
+  label: string;
+  body: string;
+}>;
 
 const relationshipDurationOptions = [
   { value: 'under1', label: '1년 미만' },
@@ -205,6 +264,7 @@ const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormDat
   partner: source?.partner ? { ...emptyPartnerBirthData, ...source.partner } : undefined,
   relationshipStatus: source?.relationshipStatus ?? '',
   relationshipDuration: source?.relationshipDuration ?? '',
+  loveReaction: normalizeLoveReaction(source?.loveReaction) ?? undefined,
   location: source?.location ?? '',
   q1: source?.q1 ?? '',
   q2: source?.q2 ?? '',
@@ -289,12 +349,23 @@ export default function Form() {
       }
     }
 
-    const hydrated = hydrateFormData(locationState?.formData ?? draft);
+    const source = locationState?.formData ?? draft;
+    const storedLoveReaction = service.id === 'love-reading'
+      ? window.sessionStorage.getItem(MZ_LOVE_CHOICE_STORAGE_KEY)
+      : null;
+    const hydrated = hydrateFormData({
+      ...source,
+      loveReaction:
+        normalizeLoveReaction(locationState?.loveReaction) ??
+        normalizeLoveReaction(source?.loveReaction) ??
+        normalizeLoveReaction(storedLoveReaction) ??
+        undefined
+    });
 
     setFormData(hydrated);
     setBirthDigits(parseDateDigits(hydrated.birthDate));
     setPartnerBirthDigits(parseDateDigits(hydrated.partner?.birthDate));
-  }, [draftKey, locationState?.formData]);
+  }, [draftKey, locationState?.formData, locationState?.loveReaction, service.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -306,6 +377,14 @@ export default function Form() {
 
   const updateField = <K extends keyof IntakeFormData>(name: K, value: IntakeFormData[K]) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const selectRelationshipStatus = (relationshipStatus: Exclude<RelationshipStatus, ''>) => {
+    setFormData((prev) => ({
+      ...prev,
+      relationshipStatus,
+      relationshipDuration: relationshipStatus === 'single' ? '' : prev.relationshipDuration
+    }));
   };
 
   const updateBirthDate = (value: string) => {
@@ -483,11 +562,15 @@ export default function Form() {
   );
   const birthDateReady = Boolean(formData.birthDate);
   const step1Ready = selfBirthValidation.valid;
+  const isLoveReadingFlow = service.id === 'love-reading';
   const step2Ready = isPastLifeFlow
     ? Boolean(formData.pastLifeTopic?.trim())
     : isCompatibilityFlow
       ? partnerBirthValidation.valid
-      : Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
+      : isLoveReadingFlow
+        ? Boolean(formData.relationshipStatus) &&
+          (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration))
+        : Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
   const step3Ready = isPastLifeFlow
     ? Boolean(formData.repeatedScene?.trim()) && Boolean(formData.frequentEmotion?.trim()) && Boolean(formData.hiddenDesire?.trim())
     : Boolean(formData.q1.trim());
@@ -496,15 +579,18 @@ export default function Form() {
     : Boolean(formData.q2.trim());
   const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;
   const isYearlyFlow = false;
-  const isLoveReadingFlow = false;
   const isCinematicFlow = true;
   const activeVisual = (isYearlyFlow ? yearlyStepVisuals : stepVisuals)[step];
-  const activeQuestionSuggestions = isPastLifeFlow ? pastLifeQuestionSuggestions : questionSuggestions;
-  const intakeVideoSource = isPastLifeFlow
-    ? '/media/dokkaebi-hero.mp4'
+  const activeQuestionSuggestions = isPastLifeFlow
+    ? pastLifeQuestionSuggestions
     : isLoveReadingFlow
-      ? '/love-reading-intake-hero.mp4'
-      : '/signature-intake-hero.mp4';
+      ? loveReadingQuestionSuggestions
+      : questionSuggestions;
+  const pastLifeGuideCopy =
+    step === 4 && formData.readingTone && pastLifeToneReplies[formData.readingTone]
+      ? { eyebrow: pastLifeGuideStepCopy[step].eyebrow, line: pastLifeToneReplies[formData.readingTone] }
+      : pastLifeGuideStepCopy[step];
+  const intakeVideoSource = isPastLifeFlow ? PAST_LIFE_PRODUCT.film : '/signature-intake-hero.mp4';
   const _yearlySceneCopyDraft = {
     1: {
       kicker: 'YEARLY FLOW',
@@ -665,7 +751,7 @@ export default function Form() {
           </Link>
         </header>
 
-        <section className="intake-story-copy" aria-hidden="true">
+        <section className="intake-story-copy" aria-hidden={isPastLifeFlow || isLoveReadingFlow ? undefined : true}>
           {isYearlyFlow ? (
             <article className="yearly-flow-scene-card">
               <span>{yearlySceneCopy[step].kicker}</span>
@@ -674,13 +760,34 @@ export default function Form() {
             </article>
           ) : null}
 
-          <div className={isCinematicFlow ? 'intake-story-hero-art signature-intake-hero-art' : 'intake-story-hero-art'} aria-hidden="true">
+          <div
+            className={
+              isLoveReadingFlow
+                ? 'intake-story-hero-art signature-intake-hero-art mz-love-intake-hero-art'
+                : isCinematicFlow
+                  ? 'intake-story-hero-art signature-intake-hero-art'
+                  : 'intake-story-hero-art'
+            }
+            aria-hidden={isPastLifeFlow || isLoveReadingFlow ? undefined : true}
+          >
             {isPastLifeFlow ? (
               <img
-                src="/media/dokkaebi-poster.webp"
-                alt=""
+                src={PAST_LIFE_PRODUCT.intakeImage}
+                alt="검은 장부를 들고 다음 질문을 건네는 도깨비 장부지기"
                 className="intake-story-hero-image past-life-intake-hero-image"
               />
+            ) : isLoveReadingFlow ? (
+              <picture>
+                <source
+                  srcSet="/images/mz-love-fact/generated/hero-fan-closed.avif"
+                  type="image/avif"
+                />
+                <img
+                  src="/images/mz-love-fact/generated/hero-fan-closed.webp"
+                  alt="접힌 검붉은 부채를 들고 다음 연애운 질문을 건네는 MZ무당"
+                  className="intake-story-hero-image mz-love-intake-hero-image"
+                />
+              </picture>
             ) : isCinematicFlow ? (
               <video
                 className="intake-story-hero-video"
@@ -694,6 +801,15 @@ export default function Form() {
             ) : (
               <img src={activeVisual.background} alt="" className="intake-story-hero-image" />
             )}
+            {isPastLifeFlow ? (
+              <div className="past-life-intake-guide-dialogue" role="status" aria-live="polite">
+                <img src={PAST_LIFE_PRODUCT.guideAvatar} alt="" />
+                <div>
+                  <small>도깨비 장부지기 · {pastLifeGuideCopy.eyebrow}</small>
+                  <p>{pastLifeGuideCopy.line}</p>
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -865,8 +981,8 @@ export default function Form() {
               <div className="intake-story-form-stack past-life-intake-stack">
                 <div className="intake-story-question-copy">
                   <span className="past-life-intake-volume">두 번째 봉인</span>
-                  <strong>지금 가장 알고 싶은 흔적을 골라주세요</strong>
-                  <p>선택한 주제는 전생 서사와 현생의 실제 장면을 연결하는 중심 질문이 됩니다.</p>
+                  <strong>지금 가장 마음에 걸리는 걸 하나만 골라</strong>
+                  <p>그 질문을 중심으로 전생의 장면과 지금 반복되는 선택을 한 줄로 이어볼게.</p>
                 </div>
 
                 <article className="intake-story-question-card past-life-intake-card">
@@ -1058,7 +1174,7 @@ export default function Form() {
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>현재 관계 상태를 알려주세요</strong>
-                <p>연애중인지, 솔로인지, 기혼인지에 따라 연애운과 결혼운의 해석 기준이 더 선명해집니다.</p>
+                <p>솔로, 썸, 연애, 애매한 관계, 이별·재회, 기혼 중 지금과 가장 가까운 상태를 골라주세요.</p>
               </div>
 
               <article className="intake-story-question-card">
@@ -1076,7 +1192,7 @@ export default function Form() {
                           ? 'intake-relationship-card active'
                           : 'intake-relationship-card'
                       }
-                      onClick={() => updateField('relationshipStatus', option.value)}
+                      onClick={() => selectRelationshipStatus(option.value)}
                     >
                       <strong>{option.label}</strong>
                       <span>{option.body}</span>
@@ -1087,7 +1203,10 @@ export default function Form() {
 
               <article className="intake-story-question-card">
                 <div className="intake-story-question-head">
-                  <strong>기간은 얼마나 되나요?</strong>
+                  <strong>
+                    기간은 얼마나 되나요?
+                    {isLoveReadingFlow && !isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
+                  </strong>
                   <span className="intake-story-order-badge">PERIOD</span>
                 </div>
                 <div className="intake-relationship-duration-grid">
@@ -1107,7 +1226,7 @@ export default function Form() {
                   ))}
                 </div>
                 <p className="intake-story-caption">
-                  솔로라면 솔로 기간, 연애중/기혼이라면 현재 관계가 이어진 기간으로 선택해 주세요.
+                  연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.
                 </p>
               </article>
             </div>
@@ -1119,8 +1238,8 @@ export default function Form() {
               <div className="intake-story-form-stack past-life-intake-stack">
                 <div className="intake-story-question-copy">
                   <span className="past-life-intake-volume">세 번째 봉인</span>
-                  <strong>현생에서 되풀이되는 장면을 적어주세요</strong>
-                  <p>예쁘게 정리하지 않아도 됩니다. 실제로 반복되는 말, 사람, 감정을 적을수록 장부가 구체적으로 열립니다.</p>
+                  <strong>이번엔 꾸미지 말고, 반복되는 장면을 들려줘</strong>
+                  <p>또 시작됐다고 느끼는 순간과 그때의 감정, 사실 바라는 결말을 적을수록 장부가 선명하게 열려.</p>
                 </div>
 
                 <article className="intake-story-question-card past-life-intake-card past-life-text-card">
@@ -1154,7 +1273,11 @@ export default function Form() {
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>첫 번째 질문을 적어주세요</strong>
-                <p>가장 시급하거나 가장 궁금한 고민을 먼저 적으면 결과 리포트에서 첫 번째 맞춤 답변 카드로 분석됩니다.</p>
+                <p>
+                  {isLoveReadingFlow
+                    ? '지금 가장 마음을 흔드는 관계나 반복 패턴을 적으면 첫 번째 맞춤 연애 분석으로 이어집니다.'
+                    : '가장 시급하거나 가장 궁금한 고민을 먼저 적으면 결과 리포트에서 첫 번째 맞춤 답변 카드로 분석됩니다.'}
+                </p>
               </div>
 
               <article className="intake-story-question-card">
@@ -1165,10 +1288,16 @@ export default function Form() {
                 <textarea
                   value={formData.q1}
                   onChange={(event) => updateField('q1', event.target.value.slice(0, 180))}
-                  placeholder="예: 지금 제 인생에서 가장 먼저 정리해야 할 흐름은 무엇인가요?"
+                  placeholder={isLoveReadingFlow
+                    ? '예: 지금 반복되는 애매한 관계를 계속 이어가도 될까요?'
+                    : '예: 지금 제 인생에서 가장 먼저 정리해야 할 흐름은 무엇인가요?'}
                 />
                 <div className="intake-story-question-meta">
-                  <span>구체적인 질문일수록 결과 문장이 더 선명해집니다.</span>
+                  <span>
+                    {isLoveReadingFlow
+                      ? '상대의 속마음을 추측하기보다 실제 상황과 궁금한 선택을 적어주세요.'
+                      : '구체적인 질문일수록 결과 문장이 더 선명해집니다.'}
+                  </span>
                   <span>{formData.q1.length}/180</span>
                 </div>
                 <div className="intake-story-suggestion-row">
@@ -1188,8 +1317,8 @@ export default function Form() {
               <div className="intake-story-form-stack past-life-intake-stack">
                 <div className="intake-story-question-copy">
                   <span className="past-life-intake-volume">마지막 봉인</span>
-                  <strong>끌리는 상징과 해석의 온도를 골라주세요</strong>
-                  <p>상징은 장부의 서사 장치로만 사용하며, 사주 계산값을 바꾸지 않습니다.</p>
+                  <strong>끌리는 상징과 내가 말할 온도를 골라줘</strong>
+                  <p>상징은 이야기를 여는 장치일 뿐 사주 계산값은 바꾸지 않아. 말투만 네가 편하게 들을 수 있게 맞출게.</p>
                 </div>
 
                 <article className="intake-story-question-card past-life-intake-card">
@@ -1236,7 +1365,11 @@ export default function Form() {
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
                 <strong>두 번째 질문도 적어주세요</strong>
-                <p>결제 후 결과 페이지에서는 질문 2개가 각각 따로 분석되며, 결정론 명리 근거와 AI 해설이 함께 제공됩니다.</p>
+                <p>
+                  {isLoveReadingFlow
+                    ? '결제 후 두 질문을 각각 분석하고, 계산된 명리 근거와 현실에서 확인할 행동을 함께 제공합니다.'
+                    : '결제 후 결과 페이지에서는 질문 2개가 각각 따로 분석되며, 결정론 명리 근거와 AI 해설이 함께 제공됩니다.'}
+                </p>
               </div>
 
               <article className="intake-story-question-card">
@@ -1247,10 +1380,16 @@ export default function Form() {
                 <textarea
                   value={formData.q2}
                   onChange={(event) => updateField('q2', event.target.value.slice(0, 180))}
-                  placeholder="예: 앞으로 3개월 안에 움직이면 좋은 시기는 언제인가요?"
+                  placeholder={isLoveReadingFlow
+                    ? '예: 앞으로 12개월 중 새 인연을 만나기 좋은 흐름은 언제인가요?'
+                    : '예: 앞으로 3개월 안에 움직이면 좋은 시기는 언제인가요?'}
                 />
                 <div className="intake-story-question-meta">
-                  <span>질문 1과 다른 방향의 질문이면 리포트 폭이 더 넓어집니다.</span>
+                  <span>
+                    {isLoveReadingFlow
+                      ? '첫 질문과 다른 방향—시기·상대 기준·연락 행동—이면 리포트 폭이 더 넓어집니다.'
+                      : '질문 1과 다른 방향의 질문이면 리포트 폭이 더 넓어집니다.'}
+                  </span>
                   <span>{formData.q2.length}/180</span>
                 </div>
                 <div className="intake-story-suggestion-row">
@@ -1282,7 +1421,7 @@ export default function Form() {
             >
               {step === 4
                 ? isPastLifeFlow
-                  ? '49,000원 장부 확인'
+                  ? '49,000원 · 내 전생장부 열기'
                   : isYearlyFlow
                     ? '결제하고 신년운세 보기'
                     : '결제 정보 확인'

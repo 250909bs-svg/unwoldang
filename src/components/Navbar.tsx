@@ -33,7 +33,7 @@ export default function Navbar() {
             종합사주
           </NavLink>
           <NavLink
-            to="/form/love-reading"
+            to="/detail/love-reading"
             className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
           >
             <Heart size={14} />

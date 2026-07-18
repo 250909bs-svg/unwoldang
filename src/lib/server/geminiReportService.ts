@@ -6,7 +6,10 @@ import type {
   PartnerBirthData,
   ServiceId
 } from '../../api/mockData';
+import type { PastLifeAnalysisContext } from '../analysisPayload';
+import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from '../saju/deterministicBasis';
+import { buildPastLifeProfile } from '../saju/pastLifeProfile';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
 import {
   buildPremiumSajuPromptContext,
@@ -55,7 +58,9 @@ export type ReportRequestBody = {
     relationship?: {
       status?: RelationshipStatus;
       duration?: RelationshipDuration;
+      microChoice?: IntakeFormData['loveReaction'];
     };
+    pastLifeContext?: PastLifeAnalysisContext | null;
     questions?: string[];
   };
   reportMode?: string;
@@ -664,7 +669,9 @@ export class ReportRequestError extends Error {
   }
 }
 
-function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
+export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
+  const pastLifeContext = body.payload?.pastLifeContext;
+
   return {
     name: body.payload?.user?.name || '',
     gender: body.payload?.user?.gender || 'female',
@@ -679,6 +686,13 @@ function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     partner: body.payload?.partner || undefined,
     relationshipStatus: body.payload?.relationship?.status || '',
     relationshipDuration: body.payload?.relationship?.duration || '',
+    loveReaction: normalizeLoveReaction(body.payload?.relationship?.microChoice) ?? undefined,
+    pastLifeTopic: pastLifeContext?.topic || '',
+    repeatedScene: pastLifeContext?.repeatedScene || '',
+    frequentEmotion: pastLifeContext?.frequentEmotion || '',
+    hiddenDesire: pastLifeContext?.hiddenDesire || '',
+    chosenSymbol: pastLifeContext?.chosenSymbol || '',
+    readingTone: pastLifeContext?.readingTone || '',
     q1: body.payload?.questions?.[0] || '',
     q2: body.payload?.questions?.[1] || ''
   };
@@ -1117,7 +1131,11 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
   const inputFormData = toFormData(body);
   const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
   const deterministicBasis = buildDeterministicSajuBasis(serviceId, formData, verification);
-  const fallbackReport = buildSajuReport(serviceId, formData, deterministicBasis);
+  const builtReport = buildSajuReport(serviceId, formData, deterministicBasis);
+  const fallbackReport =
+    serviceId === 'past-life-goblin'
+      ? { ...builtReport, pastLifeProfile: buildPastLifeProfile(builtReport, formData) }
+      : builtReport;
 
   let draft: GeminiDraft | null = null;
 

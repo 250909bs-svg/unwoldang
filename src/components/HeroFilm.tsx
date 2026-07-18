@@ -1,4 +1,4 @@
-import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
+import { Hand, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -42,15 +42,22 @@ export default function HeroFilm({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [hasFailed, setHasFailed] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [hasPlaybackStarted, setHasPlaybackStarted] = useState(false);
   const [captionIndex, setCaptionIndex] = useState(0);
   const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const syncPreference = () => setPrefersReducedMotion(media.matches);
+    const syncPreference = () => {
+      setIsVideoReady(false);
+      setHasPlaybackStarted(false);
+      setPrefersReducedMotion(media.matches);
+    };
 
-    syncPreference();
     media.addEventListener('change', syncPreference);
     return () => media.removeEventListener('change', syncPreference);
   }, []);
@@ -120,6 +127,19 @@ export default function HeroFilm({
     setIsMuted(video.muted);
   };
 
+  const enableEntrySound = () => {
+    const video = videoRef.current;
+
+    if (!video || variant !== 'entry' || showPoster) {
+      return;
+    }
+
+    manuallyPausedRef.current = false;
+    video.muted = false;
+    setIsMuted(false);
+    void video.play().catch(() => undefined);
+  };
+
   const updateCaption = () => {
     const currentTime = videoRef.current?.currentTime || 0;
     const nextIndex = filmCaptions.findIndex((item) => currentTime < item.until);
@@ -127,6 +147,7 @@ export default function HeroFilm({
   };
 
   const showPoster = hasFailed || prefersReducedMotion;
+  const isEntryVideoVisible = variant !== 'entry' || (isVideoReady && hasPlaybackStarted);
 
   return (
     <figure className={`dokkaebi-hero-film ${variant === 'entry' ? 'is-entry' : 'is-embedded'}`}>
@@ -141,20 +162,52 @@ export default function HeroFilm({
         ) : (
           <video
             ref={videoRef}
-            className="dokkaebi-film-media"
+            className={`dokkaebi-film-media ${isEntryVideoVisible ? 'is-video-visible' : 'is-video-loading'}`}
             src={src}
-            poster={poster}
+            poster={variant === 'entry' ? undefined : poster}
             muted
             loop
             autoPlay
             playsInline
-            preload="metadata"
+            preload={variant === 'entry' ? 'auto' : 'metadata'}
             onPlay={() => setIsPlaying(true)}
+            onPlaying={() => {
+              setIsVideoReady(true);
+              setHasPlaybackStarted(true);
+            }}
             onPause={() => setIsPlaying(false)}
+            onLoadedData={() => setIsVideoReady(true)}
+            onCanPlay={() => setIsVideoReady(true)}
             onTimeUpdate={updateCaption}
-            onError={() => setHasFailed(true)}
+            onError={() => {
+              setHasFailed(true);
+              setIsVideoReady(false);
+              setHasPlaybackStarted(false);
+            }}
           />
         )}
+
+        {variant === 'entry' && !showPoster && !isEntryVideoVisible ? (
+          <div className="dokkaebi-cinematic-loading dokkaebi-film-loading" role="status" aria-live="polite">
+            <span className="dokkaebi-cinematic-loading-seal" aria-hidden="true" />
+            <strong>{isVideoReady ? '봉인이 열리고 있습니다' : '봉인된 장면을 불러오는 중'}</strong>
+            <small>{isVideoReady ? '잠시 후 전생의 문이 열립니다' : '어둠 속 기록을 깨우고 있어요'}</small>
+          </div>
+        ) : null}
+
+        {variant === 'entry' && isEntryVideoVisible && isMuted ? (
+          <button
+            type="button"
+            className="dokkaebi-entry-sound-prompt"
+            onClick={enableEntrySound}
+            aria-label="화면을 터치해 영상 소리 켜기"
+          >
+            <span aria-hidden="true">
+              <Hand size={28} strokeWidth={1.7} />
+            </span>
+            <strong>터치하면 소리가 나옵니다</strong>
+          </button>
+        ) : null}
 
         <span className="dokkaebi-film-vignette" aria-hidden="true" />
         <span className="dokkaebi-film-grain" aria-hidden="true" />
@@ -185,28 +238,30 @@ export default function HeroFilm({
         <p key={captionIndex} aria-live="polite">
           {filmCaptions[captionIndex].text}
         </p>
-        <div className="dokkaebi-film-controls" aria-label="대표 영상 제어">
-          <button
-            type="button"
-            onClick={togglePlayback}
-            disabled={showPoster}
-            aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}
-            title={isPlaying ? '영상 일시정지' : '영상 재생'}
-          >
-            {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
-            <span>{isPlaying ? '일시정지' : '재생'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={toggleMute}
-            disabled={showPoster}
-            aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
-            title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
-          >
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            <span>{isMuted ? '소리 켜기' : '소리 끄기'}</span>
-          </button>
-        </div>
+        {variant !== 'entry' ? (
+          <div className="dokkaebi-film-controls" aria-label="대표 영상 제어">
+            <button
+              type="button"
+              onClick={togglePlayback}
+              disabled={showPoster}
+              aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}
+              title={isPlaying ? '영상 일시정지' : '영상 재생'}
+            >
+              {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
+              <span>{isPlaying ? '일시정지' : '재생'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={toggleMute}
+              disabled={showPoster}
+              aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+              title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              <span>{isMuted ? '소리 켜기' : '소리 끄기'}</span>
+            </button>
+          </div>
+        ) : null}
         {prefersReducedMotion ? <small>움직임 감소 설정에 따라 포스터로 표시됩니다.</small> : null}
         {hasFailed ? <small>영상을 불러오지 못해 포스터로 표시됩니다.</small> : null}
       </figcaption>

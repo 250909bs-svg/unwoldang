@@ -1,14 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ChevronLeft, ChevronRight, Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
+import PastLifeStoryReport from '../components/PastLifeStoryReport';
 import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
+import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
+import { evaluateReportAccess } from '../lib/reportAccessGate';
+import { mapIntakeRelationshipStatus } from '../lib/mz-love-fact/relationshipStatusAdapter';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
+import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
+
+const LoveReadingStoryReport = lazy(() => import('../components/LoveReadingStoryReport'));
 
 type ReportLocationState = {
   formData?: Partial<IntakeFormData>;
@@ -18,6 +25,14 @@ type ReportLocationState = {
   reportData?: SajuReportData;
   reportProvider?: AiReportProvider;
 };
+
+const PAST_LIFE_STORY_SECTION_IDS = new Set([
+  'pastlife-seal',
+  'pastlife-relationship',
+  'pastlife-karma',
+  'pastlife-present',
+  'pastlife-release'
+]);
 
 const createSafeReportFileName = (value: string) =>
   value
@@ -52,6 +67,80 @@ const getCurrentPageCssText = () => {
 
   return [collectedRules, inlineStyles].filter(Boolean).join('\n\n');
 };
+
+const blobToDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error('이미지 변환에 실패했습니다.'));
+    reader.readAsDataURL(blob);
+  });
+
+async function inlineExportImageSources(root: HTMLElement) {
+  const images = Array.from(root.querySelectorAll<HTMLImageElement>('img[src]'));
+
+  await Promise.all(
+    images.map(async (image) => {
+      const source = image.getAttribute('src');
+
+      if (!source || source.startsWith('data:')) {
+        image.removeAttribute('srcset');
+        image.removeAttribute('sizes');
+        return;
+      }
+
+      const absoluteSource = new URL(source, window.location.href).href;
+
+      try {
+        const response = await fetch(absoluteSource);
+        if (!response.ok) {
+          throw new Error(`이미지 응답 오류: ${response.status}`);
+        }
+        image.setAttribute('src', await blobToDataUrl(await response.blob()));
+      } catch {
+        image.setAttribute('src', absoluteSource);
+      }
+
+      image.removeAttribute('srcset');
+      image.removeAttribute('sizes');
+    })
+  );
+
+  root.querySelectorAll('picture source').forEach((source) => source.remove());
+}
+
+function prepareStaticReportExport(source: HTMLElement, clone: HTMLElement) {
+  clone.classList.add('is-export-static');
+
+  const sourceCheckboxes = Array.from(source.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+  const clonedCheckboxes = Array.from(clone.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+
+  clonedCheckboxes.forEach((checkbox, index) => {
+    const checked = sourceCheckboxes[index]?.checked ?? checkbox.checked;
+    checkbox.checked = checked;
+    checkbox.toggleAttribute('checked', checked);
+    checkbox.disabled = true;
+    checkbox.setAttribute('aria-disabled', 'true');
+  });
+
+  clone.querySelectorAll<HTMLDetailsElement>('details').forEach((details) => {
+    details.open = true;
+    details.setAttribute('open', '');
+  });
+
+  clone.querySelectorAll<HTMLElement>('[data-export-reveal="true"]').forEach((element) => {
+    element.hidden = false;
+    element.removeAttribute('hidden');
+    element.removeAttribute('aria-hidden');
+    element.removeAttribute('tabindex');
+  });
+
+  clone.querySelectorAll<HTMLElement>('[data-export-only="true"]').forEach((element) => {
+    element.removeAttribute('aria-hidden');
+  });
+
+  clone.querySelectorAll<HTMLElement>('[aria-live]').forEach((element) => element.removeAttribute('aria-live'));
+}
 
 const PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
   name: '차민호',
@@ -5402,8 +5491,48 @@ const ENGINE_SECTION_IDS = new Set([
 ]);
 const SUPERSEDED_LEGACY_ENGINE_SECTION_IDS = new Set(['myeongri-basis', 'yongsin']);
 
+function hasKoreanFinalConsonant(value: string) {
+  const lastHangul = Array.from(value).reverse().find((character) => /[가-힣]/.test(character));
+
+  if (!lastHangul) {
+    return false;
+  }
+
+  return (lastHangul.charCodeAt(0) - 0xac00) % 28 !== 0;
+}
+
+function normalizeKoreanParticlePlaceholders(text: string) {
+  const token = '([가-힣A-Za-z0-9·]+)';
+
+  return text
+    .replace(new RegExp(`${token}은\\(는\\)`, 'g'), (_, word: string) => `${word}${hasKoreanFinalConsonant(word) ? '은' : '는'}`)
+    .replace(new RegExp(`${token}이\\(가\\)`, 'g'), (_, word: string) => `${word}${hasKoreanFinalConsonant(word) ? '이' : '가'}`)
+    .replace(new RegExp(`${token}을\\(를\\)`, 'g'), (_, word: string) => `${word}${hasKoreanFinalConsonant(word) ? '을' : '를'}`)
+    .replace(new RegExp(`${token}과\\(와\\)`, 'g'), (_, word: string) => `${word}${hasKoreanFinalConsonant(word) ? '과' : '와'}`);
+}
+
+function normalizeKoreanTextTree<T>(value: T): T {
+  if (typeof value === 'string') {
+    return normalizeKoreanParticlePlaceholders(value) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeKoreanTextTree(item)) as T;
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, normalizeKoreanTextTree(item)])
+    ) as T;
+  }
+
+  return value;
+}
+
 function preserveEngineEvidence(next: SajuReportData, source: SajuReportData): SajuReportData {
-  const sourceEngineSections = source.sections.filter((section) => ENGINE_SECTION_IDS.has(section.id));
+  const sourceEngineSections = source.sections
+    .filter((section) => ENGINE_SECTION_IDS.has(section.id))
+    .map((section) => normalizeKoreanTextTree(section));
   const nextProductSections = next.sections.filter(
     (section) =>
       !ENGINE_SECTION_IDS.has(section.id) &&
@@ -5471,8 +5600,8 @@ function buildPastLifeGoblinReport(report: SajuReportData): SajuReportData {
     details: [
       { summary: '01. 당신의 전생 봉인명', content: `${report.customerName}님의 봉인명은 “${sealName}”입니다. 남의 문제를 먼저 알아차리고 정리하는 능력과, 정작 자기 요구는 뒤로 미루는 습관이 함께 보입니다. 오늘의 해원 행동은 부탁을 받자마자 답하지 않고 내 일정부터 확인하는 것입니다.`, open: true },
       { summary: '02. 전생에 당신은 누구였는가', content: `전생 인물은 권력을 휘두르는 영웅보다 기록과 판단을 맡았던 실무자로 그려집니다. ${report.dayMaster} 일간의 중심성과 ${dominantTenGods || '십성'}의 작동이 이 상징을 만듭니다. 현생에서도 회의나 관계가 꼬이면 결국 정리하는 사람이 되기 쉽습니다.` },
-      { summary: '03. 살았던 시대와 장소', content: '특정 왕조나 지역을 사실로 단정하지 않습니다. 상징 장면은 성곽과 시장 사이의 기록소입니다. 사람과 돈, 약속이 오가지만 어느 편에도 완전히 속하지 못한 자리입니다. 현생에서는 조직 안팎을 연결하는 역할에서 같은 익숙함이 나타날 수 있습니다.' },
-      { summary: '04. 전생의 신분과 직업', content: '장부, 계약, 소식, 분쟁을 다루는 중간 책임자의 이미지가 가깝습니다. 화려한 신분보다 틀린 이름과 숫자를 바로잡는 역할입니다. 능력은 있었지만 책임 범위가 흐려 손해를 떠안았다는 상징이 남습니다.' },
+      { summary: '03. 상징 서사가 그리는 시대와 장소', content: '특정 왕조나 지역을 사실로 단정하지 않습니다. 앞의 인물 장부에 표시된 장소는 원국의 기질을 공간으로 번역한 상징 무대입니다. 사람과 돈, 약속이 오가지만 어느 편에도 완전히 속하지 못한 자리라는 공통점이 있습니다. 현생에서는 조직 안팎을 연결하는 역할에서 같은 익숙함이 나타날 수 있습니다.' },
+      { summary: '04. 장부가 그리는 신분과 직업', content: '앞의 인물 장부에 표시된 역할은 권력 그 자체보다 사람, 물건, 소식, 약속을 연결하고 정리하는 실무에 가깝습니다. 능력은 있었지만 책임 범위가 흐려 손해를 떠안았다는 상징이 남습니다.' },
       { summary: '05. 전생에서 타고난 능력', content: `복잡한 정보를 빠르게 분류하고, 사람마다 다른 이해관계를 한 문장으로 정리하는 재능입니다. ${helpfulText} 기운을 생활에서 쓸수록 이 능력이 소진이 아니라 결과물로 남습니다. 무료 도움과 유료 결과물을 구분하는 것이 현생의 사용법입니다.` }
     ]
   };
@@ -5482,10 +5611,10 @@ function buildPastLifeGoblinReport(report: SajuReportData): SajuReportData {
     title: '제2권 인연록',
     subtitle: '사람은 떠나도 매듭은 남는다.',
     details: [
-      { summary: '06. 전생에서 가장 사랑했던 사람', content: '말이 많고 화려한 사람보다 약속을 조용히 지키는 사람에게 마음을 내어준 서사입니다. 현생에서도 처음의 설렘보다 반복 행동에서 신뢰를 느낍니다. 다만 상대가 알아서 눈치채길 기다리면 관계가 늦게 무너질 수 있습니다.', open: true },
-      { summary: '07. 현생에서 다시 만난 전생 인연', content: '처음부터 설명을 생략해도 통할 것 같은 익숙함으로 나타납니다. 그러나 익숙함은 안전의 증거가 아닙니다. 연락 간격, 돈 쓰는 태도, 갈등 뒤 돌아오는 말투를 세 번 이상 확인한 뒤 관계의 이름을 정하세요.' },
-      { summary: '08. 당신을 배신한 사람', content: '노골적으로 해치는 사람보다 책임을 나누겠다고 말한 뒤 결정적인 순간에 빠지는 사람의 상징이 강합니다. 현생에서는 공동 작업과 연애 모두 “같이 하자”는 말보다 실제 분담표를 먼저 확인해야 합니다.' },
-      { summary: '09. 전생에서 원수가 된 사람', content: '악인이 아니라 서로의 침묵을 오해한 관계입니다. 한쪽은 기다렸고 다른 쪽은 이미 끝났다고 생각했습니다. 현생에서는 불편함을 오래 저장하지 말고 “나는 이 지점이 어렵다”는 한 문장을 먼저 꺼내야 같은 매듭을 만들지 않습니다.' }
+      { summary: '06. 장부가 그리는 가장 깊은 인연', content: '말이 많고 화려한 사람보다 약속을 조용히 지키는 사람에게 마음을 내어준 서사입니다. 연인·동료·가족 중 하나로 단정하지 않으며, 현생에서도 처음의 설렘보다 반복 행동에서 신뢰를 느끼는 관계 유형을 보여줍니다.', open: true },
+      { summary: '07. 현생에서 익숙하게 느끼는 인연의 유형', content: '처음부터 설명을 생략해도 통할 것 같은 익숙함으로 나타날 수 있습니다. 그러나 익숙함은 안전의 증거가 아닙니다. 연락 간격, 돈 쓰는 태도, 갈등 뒤 돌아오는 말투를 세 번 이상 확인한 뒤 관계의 이름을 정하세요.' },
+      { summary: '08. 배신으로 느끼기 쉬운 관계', content: '노골적으로 해치는 사람보다 책임을 나누겠다고 말한 뒤 결정적인 순간에 빠지는 사람에게 특히 크게 상처받는 패턴입니다. 현생에서는 공동 작업과 연애 모두 “같이 하자”는 말보다 실제 분담표를 먼저 확인해야 합니다.' },
+      { summary: '09. 원수처럼 꼬이기 쉬운 관계', content: '악인을 지목하는 이야기가 아니라 서로의 침묵을 오해한 관계의 상징입니다. 한쪽은 기다렸고 다른 쪽은 이미 끝났다고 생각했습니다. 현생에서는 불편함을 오래 저장하지 말고 “나는 이 지점이 어렵다”는 한 문장을 먼저 꺼내야 같은 매듭을 만들지 않습니다.' }
     ]
   };
 
@@ -5494,7 +5623,7 @@ function buildPastLifeGoblinReport(report: SajuReportData): SajuReportData {
     title: '제3권 업록',
     subtitle: '벌이 아니라 반복이 업을 드러낸다.',
     details: [
-      { summary: '10. 전생에 남긴 죄와 상처', content: '여기서 죄는 저주가 아니라 외면했던 책임을 뜻합니다. 틀린 것을 알고도 관계가 깨질까 침묵했고, 일이 커진 뒤 혼자 수습한 장면입니다. 현생에서는 작은 오류를 초기에 말하는 것이 가장 현실적인 해원입니다.', open: true },
+      { summary: '10. 상징 서사에 남은 책임과 상처', content: '여기서 업은 저주나 형벌이 아니라 외면했던 책임의 반복을 뜻합니다. 틀린 것을 알고도 관계가 깨질까 침묵했고, 일이 커진 뒤 혼자 수습한 장면입니다. 현생에서는 작은 오류를 초기에 말하는 것이 가장 현실적인 해원입니다.', open: true },
       { summary: '11. 아직 갚지 못한 빚', content: '돈의 액수보다 정당한 대가를 포기한 선택의 상징입니다. 도움을 주고도 값을 말하지 못해 서운함이 쌓였습니다. 지금은 가격, 수정 횟수, 마감일을 먼저 적어야 같은 부채가 생기지 않습니다.' },
       { summary: '12. 끝내 지키지 못한 약속', content: '누군가를 끝까지 지키겠다는 약속 때문에 자기 삶의 시기를 놓친 서사입니다. 현생에서 “내가 아니면 안 된다”는 부탁을 받을 때 특히 조심하세요. 도움의 끝나는 날짜를 정하는 것이 약속을 건강하게 지키는 방식입니다.' },
       { summary: '13. 운명을 바꾼 마지막 사건', content: '진실을 말할지 관계를 지킬지 선택해야 했던 장면입니다. 관계를 택했지만 결국 둘 다 잃었다는 상징으로 읽습니다. 지금은 중요한 사실을 감정이 폭발하기 전에 짧게 공유하는 연습이 필요합니다.' },
@@ -6173,10 +6302,20 @@ export default function Report() {
   const { formData, paymentMethod, orderId, reportAccessToken, reportData, reportProvider } =
     (location.state as ReportLocationState) || {};
   const service = findServiceById(id);
-  const hasReportSource = Boolean(reportData || formData?.birthDate);
-  const isLiveHost = typeof window !== 'undefined' && /(^|\.)unwoldang\.com$/i.test(window.location.hostname);
-  const shouldBlockPreview = isLiveHost && (!hasReportSource || (!reportData && !reportAccessToken));
-  const reportInput = formData?.birthDate ? formData : PREVIEW_FORM_DATA;
+  const reportAccess = evaluateReportAccess({
+    hostname: typeof window === 'undefined' ? '' : window.location.hostname,
+    isDevelopment: import.meta.env.DEV,
+    expectedServiceId: service.id,
+    orderId,
+    reportAccessToken,
+    reportData
+  });
+  const shouldBlockPreview = !reportAccess.canRender;
+  const reportInput = formData?.birthDate
+    ? formData
+    : reportAccess.usesPreviewData
+      ? PREVIEW_FORM_DATA
+      : formData || {};
   const reportCharacterVideo =
     reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
@@ -6184,10 +6323,22 @@ export default function Report() {
     const preserveAiQuestions = Boolean(reportData);
     const expandedReport = buildExpandedCoreReport(baseReport);
     let nextReport: SajuReportData;
-    const finalize = (candidate: SajuReportData) => preserveEngineEvidence(
-      preserveAiQuestions ? preserveGeneratedQuestionAnswers(candidate, baseReport) : candidate,
-      baseReport
-    );
+    const finalize = (candidate: SajuReportData) => {
+      const finalized = preserveEngineEvidence(
+        preserveAiQuestions ? preserveGeneratedQuestionAnswers(candidate, baseReport) : candidate,
+        baseReport
+      );
+
+      if (finalized.serviceId !== 'past-life-goblin') {
+        return finalized;
+      }
+
+      if (!formData?.birthDate && reportData?.pastLifeProfile) {
+        return { ...finalized, pastLifeProfile: reportData.pastLifeProfile };
+      }
+
+      return { ...finalized, pastLifeProfile: buildPastLifeProfile(finalized, reportInput) };
+    };
 
     if (expandedReport.serviceId === 'concern-reading') {
       nextReport = buildConcernReadingReportV2(expandedReport, { preserveQuestionAnswers: preserveAiQuestions });
@@ -6208,14 +6359,23 @@ export default function Report() {
       buildExpertSatisfactionReport(expandedReport, { preserveQuestionAnswers: preserveAiQuestions })
     );
     return finalize(nextReport);
-  }, [baseReport, reportData]);
+  }, [baseReport, formData?.birthDate, reportData, reportInput]);
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
+  const isLoveReadingShowcase = report.serviceId === 'love-reading';
+  const loveRelationshipStatus = mapIntakeRelationshipStatus(formData?.relationshipStatus);
+  const loveBirthTimeKnown = !formData
+    ? undefined
+    : formData.isUnknownTime === true
+      ? false
+      : formData.isUnknownTime === false
+        ? true
+        : undefined;
   const pageCopy = getReportPageCopy(report);
   const yearlyLead = report.yearLuck[0];
   const yearlyMomentum = report.yearLuck.slice(0, 3);
   const monthlyHotMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
-  const [isTocOpen, setIsTocOpen] = useState(false);
+  const [isTocOpen, setIsTocOpen] = useState(isPastLifeShowcase);
   const [activePastLifeChapter, setActivePastLifeChapter] = useState('seal');
   const [pastLifeShareFormat, setPastLifeShareFormat] = useState<'square' | 'story'>('square');
   const activePastLifeIndex = Math.max(
@@ -6375,13 +6535,15 @@ export default function Report() {
   }, [navigate, service.id, shouldBlockPreview]);
 
   useEffect(() => {
-    if (shouldBlockPreview) {
+    // The server that issues reports and accepts remote archives remains the
+    // authoritative payment validator; this client gate is defense in depth.
+    if (!reportAccess.canArchive || !orderId || !reportData) {
       return;
     }
 
     const archiveEntry = {
-      id: `${report.serviceId}:${orderId || report.serialNumber}`,
-      orderId: orderId || report.serialNumber,
+      id: `${report.serviceId}:${orderId}`,
+      orderId,
       productId: report.serviceId,
       customerName: report.customerName,
       title: report.title,
@@ -6404,7 +6566,7 @@ export default function Report() {
     }
 
     clearPendingPayment();
-  }, [formData, orderId, paymentMethod, report, reportAccessToken, reportProvider, shouldBlockPreview]);
+  }, [formData, orderId, paymentMethod, report, reportAccess.canArchive, reportAccessToken, reportData, reportProvider]);
 
   useEffect(
     () => () => {
@@ -6456,11 +6618,25 @@ export default function Report() {
 
   const tocItems = isPastLifeShowcase
     ? [
-        ...report.sections.map((section, index) => ({
-          id: section.id,
-          label: section.title,
-          number: `제${index + 1}권`
-        })),
+        { id: 'pastlife-prologue', label: '도깨비의 첫마디', number: '서문' },
+        { id: 'pastlife-identity', label: '전생의 나와 핵심 인연', number: '인물' },
+        ...report.sections
+          .filter((section) => PAST_LIFE_STORY_SECTION_IDS.has(section.id))
+          .map((section, index) => ({
+            id: section.id,
+            label: section.title,
+            number: `제${index + 1}권`
+          })),
+        { id: 'summary', label: '장부 핵심 판정', number: '결론' },
+        { id: 'qa', label: '나의 질문과 답', number: '문답' },
+        { id: 'glance', label: '원국과 명리 근거', number: '근거' },
+        ...report.sections
+          .filter((section) => !PAST_LIFE_STORY_SECTION_IDS.has(section.id))
+          .map((section, index) => ({
+            id: section.id,
+            label: section.title,
+            number: `근거 ${index + 1}`
+          })),
         { id: 'plan', label: '30일 봉인 해제', number: '실행' },
         { id: 'share-cards', label: '공유 카드', number: '저장' },
         { id: 'legal', label: '장부 이용 안내', number: '안내' }
@@ -6488,16 +6664,20 @@ export default function Report() {
   };
 
   const handleShareReport = async () => {
+    const shareData = isLoveReadingShowcase
+      ? createLoveReadingProductShareData(window.location.origin)
+      : {
+          title: `${report.customerName} ${report.title}`,
+          text: '운월당 사주 리포트',
+          url: window.location.href
+        };
+
     if (navigator.share) {
-      await navigator.share({
-        title: `${report.customerName} ${report.title}`,
-        text: '운월당 사주 리포트',
-        url: window.location.href
-      });
+      await navigator.share(shareData);
       return;
     }
 
-    await navigator.clipboard?.writeText(window.location.href);
+    await navigator.clipboard?.writeText(shareData.url);
   };
 
   const forceMuteReportVideo = () => {
@@ -6549,17 +6729,23 @@ export default function Report() {
 
       const clonedPaper = reportPaper.cloneNode(true) as HTMLElement;
 
+      prepareStaticReportExport(reportPaper, clonedPaper);
       clonedPaper.querySelectorAll('[data-export-remove="true"]').forEach((element) => {
         element.remove();
       });
+      await inlineExportImageSources(clonedPaper);
 
       const fileBaseName = createSafeReportFileName(`운월당-${report.serviceId}-리포트`);
-      const pageClassName = isYearlyShowcase
+      const pageClassName = isLoveReadingShowcase
+        ? 'premium-report-page mz-love-premium-page export-html-page'
+        : isYearlyShowcase
         ? 'premium-report-page yearly-premium-page export-html-page'
         : isPastLifeShowcase
           ? 'premium-report-page past-life-report-page export-html-page'
           : 'premium-report-page export-html-page';
-      const shellClassName = isYearlyShowcase
+      const shellClassName = isLoveReadingShowcase
+        ? 'premium-report-shell mz-love-premium-shell export-html-shell'
+        : isYearlyShowcase
         ? 'premium-report-shell yearly-report-shell export-html-shell'
         : isPastLifeShowcase
           ? 'premium-report-shell past-life-report-shell export-html-shell'
@@ -6744,6 +6930,91 @@ body {
     `리포트 번호: ${report.serialNumber}\n상품: ${report.title}\n이름: ${report.customerName}\n\n오타/불일치/개선이 필요한 부분을 적어주세요.\n`
   )}`;
 
+  if (isLoveReadingShowcase) {
+    return (
+      <main className="premium-report-page mz-love-premium-page">
+        <header className="premium-report-topbar">
+          <div className="premium-report-topbar-inner">
+            <Link to="/" className="premium-report-brand" aria-label="운월당 홈">
+              운월당
+            </Link>
+
+            <div className="premium-report-top-actions">
+              <button type="button" className="premium-icon-action" aria-label="MZ무당 팩폭 연애운 상품 공유" onClick={handleShareReport}>
+                <Share2 size={16} />
+              </button>
+              <button type="button" className="premium-icon-action" aria-label="인쇄 또는 PDF 저장" onClick={handlePrintReport}>
+                <Download size={16} />
+              </button>
+              <Link to="/my" className="app-profile-button" aria-label="마이페이지">
+                <User size={17} strokeWidth={2.2} />
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <div className="premium-report-shell mz-love-premium-shell">
+          <article className="premium-report-paper mz-love-report-paper">
+            {reportProvider === 'deterministic-fallback' ? (
+              <section className="premium-report-section" aria-label="리포트 생성 상태">
+                <div className="premium-callout">
+                  <strong>검증된 내부 명리 엔진 리포트</strong>
+                  <p>Gemini 근거 연결 검증이 지연되어도 원국·십성·합충·운 흐름과 개인화 문장이 잠긴 내부 엔진 결과로 제공합니다.</p>
+                </div>
+              </section>
+            ) : null}
+
+            <Suspense
+              fallback={(
+                <section className="premium-report-section mz-love-report-loading" role="status" aria-live="polite">
+                  <strong>MZ무당 상담록을 펼치는 중이에요.</strong>
+                  <p>개인화된 13개 연애 챕터를 불러오고 있습니다.</p>
+                </section>
+              )}
+            >
+              <LoveReadingStoryReport
+                report={report}
+                relationshipStatus={loveRelationshipStatus}
+                birthTimeKnown={loveBirthTimeKnown}
+                onShare={handleShareReport}
+                shareLabel="이 상품 공유하기"
+              />
+            </Suspense>
+
+            <section className="premium-report-section mz-love-report-support" data-export-remove="true">
+              <div className="premium-report-support-card">
+                <div>
+                  <strong>내 결과를 HTML로 보관할까요?</strong>
+                  <p>지금 보고 있는 웹툰형 리포트와 이미지를 한 파일로 저장할 수 있습니다.</p>
+                </div>
+                <div className="premium-report-support-actions">
+                  <button type="button" className="premium-html-download-button" onClick={handleDownloadHtmlReport}>
+                    <Download size={16} />
+                    HTML 다운로드
+                  </button>
+                  <a href={issueMailHref} className="premium-html-open-link">
+                    오타·불일치 신고
+                  </a>
+                  {htmlDownloadUrl ? (
+                    <a
+                      href={htmlDownloadUrl}
+                      download={htmlDownloadFileName || undefined}
+                      rel="noopener"
+                      className="premium-html-open-link"
+                    >
+                      다운로드 다시 시도
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+              {htmlDownloadMessage ? <p className="premium-html-download-message">{htmlDownloadMessage}</p> : null}
+            </section>
+          </article>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className={
       isYearlyShowcase
@@ -6874,12 +7145,12 @@ body {
           {isPastLifeShowcase ? (
             <section className="past-life-report-cover">
               <div className="past-life-report-cover-visual">
-                <img src="/media/dokkaebi-poster.webp" alt="도깨비 전생장부 봉인록 표지" />
+                <img src="/media/dokkaebi-guide-poster.webp" alt="도깨비 장부지기가 고객의 전생장부를 여는 봉인록 표지" />
                 <span className="past-life-report-moon" aria-hidden="true" />
                 <span className="past-life-report-thread" aria-hidden="true" />
               </div>
               <div className="past-life-report-cover-copy">
-                <span>{hasReportSource ? '개인 맞춤 전생장부' : '샘플 전생장부'}</span>
+                <span>{reportAccess.usesPreviewData ? '샘플 전생장부' : '개인 맞춤 전생장부'}</span>
                 <h1>{report.customerName}님의 도깨비 전생장부</h1>
                 <strong>{report.badge}</strong>
                 <p>{report.heroNote}</p>
@@ -6989,6 +7260,13 @@ body {
 
           <div className="premium-divider" />
 
+          {isPastLifeShowcase && report.pastLifeProfile ? (
+            <>
+              <PastLifeStoryReport report={report} profile={report.pastLifeProfile} />
+              <div className="premium-divider" />
+            </>
+          ) : null}
+
           <section className="premium-report-section" id="summary">
             <div className="premium-section-heading">
               <div>
@@ -7084,12 +7362,19 @@ body {
             </div>
           </section>
 
-          {report.sections.map((section, index) => (
-            <div key={section.id}>
-              <div className="premium-divider" />
-              <SectionBlock section={section} number={String(index + 3).padStart(2, '0')} report={report} />
-            </div>
-          ))}
+          {(isPastLifeShowcase
+            ? report.sections.filter((section) => !PAST_LIFE_STORY_SECTION_IDS.has(section.id))
+            : report.sections
+          ).map((section, index) => (
+                <div key={section.id}>
+                  <div className="premium-divider" />
+                  <SectionBlock
+                    section={section}
+                    number={isPastLifeShowcase ? `근거 ${index + 1}` : String(index + 3).padStart(2, '0')}
+                    report={report}
+                  />
+                </div>
+              ))}
 
           <div className="premium-divider" />
 

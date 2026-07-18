@@ -5,6 +5,17 @@ import {
   type PartnerBirthData,
   type ServiceId
 } from '../api/mockData';
+import { normalizeLoveReaction } from './mz-love-fact/microChoice';
+import { getRelationshipDurationLabel, getRelationshipStatusLabel } from './relationshipIntake';
+
+export interface PastLifeAnalysisContext {
+  topic: string;
+  repeatedScene: string;
+  frequentEmotion: string;
+  hiddenDesire: string;
+  chosenSymbol: string;
+  readingTone: string;
+}
 
 export interface AnalysisRequestPayload {
   serviceId: ServiceId;
@@ -28,37 +39,11 @@ export interface AnalysisRequestPayload {
   relationship: {
     status: IntakeFormData['relationshipStatus'] | null;
     duration: IntakeFormData['relationshipDuration'] | null;
+    microChoice: IntakeFormData['loveReaction'] | null;
     summary: string;
   };
+  pastLifeContext: PastLifeAnalysisContext | null;
   questions: string[];
-}
-
-function getRelationshipStatusLabel(status?: IntakeFormData['relationshipStatus']) {
-  switch (status) {
-    case 'dating':
-      return '연애중';
-    case 'single':
-      return '솔로';
-    case 'married':
-      return '기혼';
-    default:
-      return '미입력';
-  }
-}
-
-function getRelationshipDurationLabel(duration?: IntakeFormData['relationshipDuration']) {
-  switch (duration) {
-    case 'under1':
-      return '1년 미만';
-    case 'under3':
-      return '3년 미만';
-    case 'under5':
-      return '5년 미만';
-    case 'under10':
-      return '10년 미만';
-    default:
-      return '';
-  }
 }
 
 export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Partial<IntakeFormData>): AnalysisRequestPayload {
@@ -111,8 +96,20 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
     relationship: {
       status: formData.relationshipStatus || null,
       duration: formData.relationshipDuration || null,
+      microChoice: normalizeLoveReaction(formData.loveReaction),
       summary: relationshipSummary
     },
+    pastLifeContext:
+      serviceId === 'past-life-goblin'
+        ? {
+            topic: formData.pastLifeTopic?.trim() || '',
+            repeatedScene: formData.repeatedScene?.trim() || '',
+            frequentEmotion: formData.frequentEmotion?.trim() || '',
+            hiddenDesire: formData.hiddenDesire?.trim() || '',
+            chosenSymbol: formData.chosenSymbol?.trim() || '',
+            readingTone: formData.readingTone?.trim() || ''
+          }
+        : null,
     questions: [formData.q1, formData.q2]
       .filter((question): question is string => Boolean(question?.trim()))
       .map((question) => question.trim())

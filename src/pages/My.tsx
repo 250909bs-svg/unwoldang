@@ -2,6 +2,7 @@ import { Archive, ChevronDown, ChevronRight, LogOut, ScrollText, Sparkles } from
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { findServiceById } from '../api/mockData';
+import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -38,11 +39,11 @@ const replayPromos: ReplayPromo[] = [
     tone: '#1f4f98'
   },
   {
-    title: '연애비책',
-    subtitle: '올해 내 연애 흐름은?',
-    image: '/intake-blossom-girl.png',
-    to: '/form/love-reading',
-    tone: '#8a7258'
+    title: '팩폭 연애운',
+    subtitle: '반복되는 내 연애 패턴은?',
+    image: '/home-love-reading-card.png',
+    to: '/detail/love-reading',
+    tone: '#a80e30'
   },
   {
     title: '재회비책',
@@ -171,7 +172,11 @@ function ReportReplayCard({ report }: { report: ReportArchiveEntry }) {
 function PromoBanner({ promo }: { promo: ReplayPromo }) {
   return (
     <Link to={promo.to} className="my-promo-banner" style={{ '--promo-tone': promo.tone } as CSSProperties}>
-      <img src={promo.image} alt="" />
+      {promo.to === '/detail/love-reading' ? (
+        <LoveReadingCardPicture alt="" sizes="72px" />
+      ) : (
+        <img src={promo.image} alt="" loading="lazy" decoding="async" />
+      )}
       <div className="my-promo-overlay" />
       <div className="my-promo-copy">
         <span>운월당 추천</span>

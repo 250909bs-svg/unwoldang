@@ -1,6 +1,7 @@
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
 
 type SearchProduct = {
@@ -35,10 +36,10 @@ const searchProducts: SearchProduct[] = [
   },
   {
     id: 'love-reading',
-    title: '홍연아씨 연애운 리딩',
-    image: '/intake-blossom-girl.png',
-    to: '/form/love-reading',
-    keywords: ['연애', '썸', '인연', '소개팅', '연락', '고백', '애정']
+    title: 'MZ무당 팩폭 연애운',
+    image: '/home-love-reading-card.png',
+    to: '/detail/love-reading',
+    keywords: ['연애', '썸', '인연', '소개팅', '연락', '고백', '애정', '팩폭', 'MZ무당', '연애사주']
   },
   {
     id: 'love-reunion',
@@ -151,7 +152,11 @@ export default function Search() {
                 <Link key={product.id} to={product.to} state={{ tabOrigin: '/search' }} className="search-popular-card">
                   <span className="search-popular-rank">{index + 1}</span>
                   <span className="search-popular-image">
-                    <img src={product.image} alt={product.title} />
+                    {product.id === 'love-reading' ? (
+                      <LoveReadingCardPicture alt={product.title} sizes="60px" />
+                    ) : (
+                      <img src={product.image} alt={product.title} />
+                    )}
                   </span>
                   <strong>{product.title}</strong>
                 </Link>

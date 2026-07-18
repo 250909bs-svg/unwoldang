@@ -185,4 +185,39 @@ describe('saju report question answers', () => {
     expect(compatibility?.cards).toHaveLength(4);
     expect(compatibility?.subtitle).toContain('연애');
   });
+
+  it.each([
+    ['situationship', '현재 썸에서는'],
+    ['ambiguous', '이 애매한 관계에서는'],
+    ['breakup-reunion', '이별·재회 흐름에서는']
+  ] as const)('keeps the %s love-reading branch out of the unknown fallback', (relationshipStatus, branchCopy) => {
+    const report = buildSajuReport(
+      'love-reading',
+      makeFormData({
+        relationshipStatus,
+        relationshipDuration: '',
+        q1: '내 연애 패턴과 다음 행동이 궁금해요.',
+        q2: ''
+      })
+    );
+    const serialized = JSON.stringify(report);
+
+    expect(serialized).toContain(branchCopy);
+    expect(serialized).not.toContain('관계 상태 미입력');
+  });
+
+  it('turns the teaser micro choice into deterministic report guidance', () => {
+    const report = buildSajuReport(
+      'love-reading',
+      makeFormData({
+        relationshipStatus: 'ambiguous',
+        relationshipDuration: '',
+        loveReaction: 'D',
+        q1: '상대의 연락을 어디까지 기다려야 할까요?',
+        q2: ''
+      })
+    );
+
+    expect(JSON.stringify(report)).toContain('사실과 추측을 분리하고');
+  });
 });
