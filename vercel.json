@@ -1,4 +1,6 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -99,9 +101,32 @@
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
         { "key": "Cache-Control", "value": "no-store" }
       ]
+    },
+    {
+      "source": "/seo/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/detail/past-life-goblin/:path(immersion|about)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ],
   "redirects": [
+    {
+      "source": "/menu",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/tarot",
+      "destination": "/",
+      "permanent": true
+    },
     {
       "source": "/",
       "has": [{ "type": "host", "value": "unwoldang.com" }],
@@ -117,16 +142,24 @@
   ],
   "rewrites": [
     {
-      "source": "/detail/:slug",
-      "destination": "/seo/detail-:slug.html"
+      "source": "/detail/past-life-goblin",
+      "destination": "/seo/detail-past-life-goblin.html"
     },
     {
-      "source": "/menu",
-      "destination": "/seo/menu.html"
+      "source": "/detail/love-reading",
+      "destination": "/seo/detail-love-reading.html"
     },
     {
-      "source": "/tarot",
-      "destination": "/seo/tarot.html"
+      "source": "/detail/past-life-goblin/immersion",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/detail/past-life-goblin/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/detail/:path*",
+      "destination": "/api/retired-detail"
     },
     {
       "source": "/test",

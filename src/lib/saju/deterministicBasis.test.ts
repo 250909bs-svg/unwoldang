@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { IntakeFormData } from '../../api/mockData';
 import type { KasiCalendarVerification } from '../server/kasiCalendarService';
-import { buildDeterministicSajuBasis } from './deterministicBasis';
+import { buildDeterministicSajuBasis, selectCurrentDayun } from './deterministicBasis';
 
 function makeFormData(overrides: Partial<IntakeFormData> = {}): Partial<IntakeFormData> {
   return {
@@ -97,6 +97,12 @@ describe('deterministic saju basis', () => {
     expect(basis.fiveElements.length).toBe(5);
     expect(basis.calendarVerification).toEqual(verification);
     expect(basis.input.questions).toEqual(['올해 흐름이 궁금해요', '일에서 어떤 선택이 좋을까요?']);
+    expect(basis.commercialV2.calendar.precision).toBe('exact-minute');
+    expect(basis.commercialV2.interpretation?.yongsinOpinions).toHaveLength(5);
+    expect(basis.commercialV2.temporal?.layers.map((layer) => layer.layer)).toEqual(
+      expect.arrayContaining(['natal', 'seun', 'wolyun'])
+    );
+    expect(basis.commercialV2.evidenceSummary.total).toBeGreaterThan(0);
   });
 
   it('sets hour pillar to null when time is unknown', () => {
@@ -110,6 +116,84 @@ describe('deterministic saju basis', () => {
 
     expect(basis.input.birthTime).toBeNull();
     expect(basis.pillars.hour).toBeNull();
+    expect(basis.commercialV2.calendar.scenarioCount).toBe(13);
+    expect(basis.commercialV2.calendar.invariantPillars.day).toBe(true);
+  });
+
+  it('withholds a single expert conclusion when unknown time crosses the late-zi day boundary', () => {
+    const basis = buildDeterministicSajuBasis(
+      'general-signature',
+      makeFormData({
+        isUnknownTime: true,
+        birthTime: '',
+        dayBoundaryPolicy: 'late-zi'
+      })
+    );
+
+    expect(basis.commercialV2.calendar.invariantPillars.day).toBe(false);
+    expect(basis.commercialV2.calendar.stableSelection).toBe('unstable-day');
+    expect(basis.commercialV2.interpretation).toBeNull();
+    expect(basis.commercialV2.temporal).toBeNull();
+    expect(basis.commercialV2.uncertainty.join(' ')).toContain('단일 전문 용신');
+  });
+
+  it('records verified true-solar-time correction and legacy range sensitivity', () => {
+    const basis = buildDeterministicSajuBasis(
+      'general-signature',
+      makeFormData({
+        birthTime: '사/巳 (09:30-11:29)',
+        birthTimePrecision: 'branch-range',
+        birthLocation: {
+          label: '서울',
+          latitude: 37.5665,
+          longitude: 126.978,
+          timezone: 'Asia/Seoul',
+          utcOffsetMinutes: 540,
+          applySolarTimeCorrection: true
+        }
+      })
+    );
+
+    expect(basis.commercialV2.calendar.precision).toBe('legacy-range');
+    expect(basis.commercialV2.calendar.scenarioCount).toBe(3);
+    expect(basis.commercialV2.calendar.trueSolarTime.applied).toBe(true);
+    expect(basis.commercialV2.calendar.trace?.solarTimeCorrection.appliedCorrectionMinutes).not.toBe(0);
+  });
+
+  it('builds two-person compatibility from two stable natal charts', () => {
+    const basis = buildDeterministicSajuBasis(
+      'match-destiny',
+      makeFormData({
+        partner: {
+          name: '상대방',
+          gender: 'male',
+          calendar: 'solar',
+          isLeapMonth: false,
+          birthDate: '1989-04-12',
+          birthTime: '08:15',
+          isUnknownTime: false,
+          birthTimePrecision: 'exact',
+          dayBoundaryPolicy: 'midnight'
+        }
+      })
+    );
+
+    expect(basis.commercialV2.partner?.interpretation?.yongsinOpinions).toHaveLength(5);
+    expect(basis.commercialV2.compatibility?.purpose).toBe('marriage');
+    expect(basis.commercialV2.compatibility?.dimensions).toHaveLength(4);
+    expect(basis.commercialV2.compatibility?.overview.statement.length).toBeGreaterThan(20);
+  });
+
+  it('selects pre-dayun, active, and final dayun without wrapping to the first row', () => {
+    const rows = [
+      { period: 1, age: '5세 ~ 14세', year: 2004, ganzhi: '갑자', tenGod: '', luckStrength: 5 },
+      { period: 2, age: '15세 ~ 24세', year: 2014, ganzhi: '을축', tenGod: '', luckStrength: 5 }
+    ];
+
+    expect(selectCurrentDayun(rows, 2000)).toMatchObject({ phase: 'pre-dayun', current: null });
+    expect(selectCurrentDayun(rows, 2009).current?.period).toBe(1);
+    expect(selectCurrentDayun(rows, 2099).current?.period).toBe(2);
+    expect(selectCurrentDayun(rows, 2099).next).toBeNull();
   });
 
   it('throws on invalid birth date input', () => {

@@ -1,28 +1,28 @@
 # Search Engine Launch Setup
 
-Use the final production domain for search registration. Prefer `https://unwoldang.com` over the Vercel preview domain.
+Use the canonical production domain for search registration: `https://www.unwoldang.com`.
 
 ## Files Already Served
 
-- `https://unwoldang.com/robots.txt`
-- `https://unwoldang.com/sitemap.xml`
+- `https://www.unwoldang.com/robots.txt`
+- `https://www.unwoldang.com/sitemap.xml`
 
 The sitemap includes public landing/detail/legal pages only. Payment, report, login, my page, admin, auth callback, and loading pages are blocked or marked noindex.
 
 ## Google Search Console
 
 1. Open https://search.google.com/search-console
-2. Add property: `https://unwoldang.com`
+2. Add property: `https://www.unwoldang.com`
 3. Verify ownership with the method Google gives you.
-4. Submit sitemap: `https://unwoldang.com/sitemap.xml`
-5. Use URL Inspection for `https://unwoldang.com/` and request indexing.
+4. Submit sitemap: `https://www.unwoldang.com/sitemap.xml`
+5. Use URL Inspection for `https://www.unwoldang.com/` and request indexing.
 
 ## Naver Search Advisor
 
 1. Open https://searchadvisor.naver.com
-2. Add site: `https://unwoldang.com`
+2. Add site: `https://www.unwoldang.com`
 3. Verify ownership with the method Naver gives you.
-4. Submit sitemap: `https://unwoldang.com/sitemap.xml`
+4. Submit sitemap: `https://www.unwoldang.com/sitemap.xml`
 5. Check robots.txt in Webmaster Tools.
 6. Request collection for the home page and primary detail pages.
 
@@ -35,11 +35,13 @@ If using meta tag verification, paste the exact tag into the app head or ask Cod
 
 ## Primary URLs To Request First
 
-- `https://unwoldang.com/`
-- `https://unwoldang.com/menu`
-- `https://unwoldang.com/detail/general-signature`
-- `https://unwoldang.com/detail/concern-reading`
-- `https://unwoldang.com/detail/love-reading`
-- `https://unwoldang.com/terms`
-- `https://unwoldang.com/privacy`
-- `https://unwoldang.com/refund`
+- `https://www.unwoldang.com/`
+- `https://www.unwoldang.com/detail/past-life-goblin`
+- `https://www.unwoldang.com/detail/love-reading`
+- `https://www.unwoldang.com/terms`
+- `https://www.unwoldang.com/privacy`
+- `https://www.unwoldang.com/refund`
+
+## Retired Detail URLs
+
+The retired one-segment `/detail/*` pages return HTTP 410 and must not be added to the sitemap or robots.txt. To hide already indexed results quickly, submit only the exact retired URLs in Search Console Removals. Never submit the `/detail/` prefix because the two active products use it too.

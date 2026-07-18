@@ -3,6 +3,8 @@ export const PAST_LIFE_PRODUCT = {
   name: '도깨비 전생장부: 봉인록',
   price: '49,000원',
   poster: '/media/dokkaebi-poster.webp',
+  guideAvatar: '/media/dokkaebi-guide-avatar.webp',
+  intakeImage: '/media/dokkaebi-guide-intake.webp',
   film: '/media/dokkaebi-hero.mp4',
   immersionFilm: '/media/dokkaebi-immersion.mp4',
   immersionFilms: [
@@ -36,8 +38,8 @@ export const pastLifeChapters: PastLifeChapter[] = [
     topics: ['전생 봉인명', '시대와 장소', '신분·직업·재능'],
     symbol: '희미한 청염',
     crop: '50% 35%',
-    image: '/media/chapter-01-seal.webp',
-    imageAlt: '검은 달 앞에서 청염으로 흑장부의 봉인을 여는 장부지기'
+    image: '/media/dokkaebi-guide-chapter-01.webp',
+    imageAlt: '달빛 아래 같은 도깨비 장부지기가 청염으로 고객의 첫 장부를 여는 장면'
   },
   {
     id: 'relationship',
@@ -47,8 +49,8 @@ export const pastLifeChapters: PastLifeChapter[] = [
     topics: ['가장 사랑했던 사람', '다시 만난 인연', '귀인과 가족'],
     symbol: '이어지는 적연',
     crop: '50% 58%',
-    image: '/media/chapter-02-relationship.webp',
-    imageAlt: '달빛 아래 붉은 인연의 실로 이어진 두 사람과 이를 지켜보는 장부지기'
+    image: '/media/dokkaebi-guide-chapter-02.webp',
+    imageAlt: '비 내리는 달밤에 도깨비 장부지기가 붉은 인연의 실을 따라가는 장면'
   },
   {
     id: 'karma',
@@ -58,8 +60,8 @@ export const pastLifeChapters: PastLifeChapter[] = [
     topics: ['남긴 상처와 책임', '갚지 못한 빚', '끝내 못한 말'],
     symbol: '엉킨 적연',
     crop: '50% 66%',
-    image: '/media/chapter-03-karma.webp',
-    imageAlt: '먹빛 기록과 붉은 실, 깨진 금인이 놓인 오래된 흑장부'
+    image: '/media/dokkaebi-guide-chapter-03.webp',
+    imageAlt: '도깨비 장부지기가 흑장부 위에서 엉킨 붉은 실과 오래된 봉인을 풀어보는 장면'
   },
   {
     id: 'present',
@@ -69,8 +71,8 @@ export const pastLifeChapters: PastLifeChapter[] = [
     topics: ['연애의 반복', '돈·직업의 흔적', '복과 재능'],
     symbol: '손목을 비추는 청염',
     crop: '50% 52%',
-    image: '/media/chapter-04-present.webp',
-    imageAlt: '검은 유리에 비친 현생의 나와 전생의 내가 같은 손짓으로 마주한 장면'
+    image: '/media/dokkaebi-guide-chapter-04.webp',
+    imageAlt: '도깨비 장부지기가 거울 속 익명의 현생 인물과 반복되는 손짓을 마주한 장면'
   },
   {
     id: 'release',
@@ -80,8 +82,8 @@ export const pastLifeChapters: PastLifeChapter[] = [
     topics: ['피해야 할 악연', '이번 생의 숙제', '30일 봉인 해제'],
     symbol: '느슨해진 인연의 실',
     crop: '50% 52%',
-    image: '/media/chapter-05-release.webp',
-    imageAlt: '새벽빛이 열린 문 앞에서 붉은 실을 천천히 풀어주는 장부지기'
+    image: '/media/dokkaebi-guide-chapter-05.webp',
+    imageAlt: '새벽빛 문 앞에서 같은 도깨비 장부지기가 고객 손의 붉은 실을 풀어 돌려주는 장면'
   }
 ];
 

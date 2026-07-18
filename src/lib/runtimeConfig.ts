@@ -30,14 +30,22 @@ export function getPortOneConfirmEndpoint() {
   return import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim() || '';
 }
 
-export function getPaymentMode() {
-  const mode = import.meta.env.VITE_PAYMENT_MODE;
+export type PaymentMode = 'live' | 'test' | 'demo' | 'disabled';
 
-  if (mode === 'live' || mode === 'test') {
+export function resolvePaymentMode(mode: string | undefined, isProduction: boolean): PaymentMode {
+  if (isProduction) {
+    return mode === 'live' ? 'live' : 'disabled';
+  }
+
+  if (mode === 'live' || mode === 'test' || mode === 'demo') {
     return mode;
   }
 
   return 'demo';
+}
+
+export function getPaymentMode() {
+  return resolvePaymentMode(import.meta.env.VITE_PAYMENT_MODE, import.meta.env.PROD);
 }
 
 export function hasPortOneRuntimeConfig() {
@@ -49,5 +57,7 @@ export function hasPortOneRuntimeConfig() {
 }
 
 export function shouldUseDemoPayment() {
-  return getPaymentMode() !== 'live' || !hasPortOneRuntimeConfig();
+  const mode = getPaymentMode();
+
+  return !import.meta.env.PROD && (mode === 'demo' || mode === 'test');
 }

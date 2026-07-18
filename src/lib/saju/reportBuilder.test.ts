@@ -142,4 +142,82 @@ describe('saju report question answers', () => {
     expect(report.qualityAudit.bannedTerms).toEqual([]);
     expect(report.qualityAudit.typoSignals).toEqual([]);
   });
+
+  it('publishes auditable expert, calendar, and temporal evidence metadata', () => {
+    const report = buildSajuReport(
+      'general-signature',
+      makeFormData({ q1: '회사 계속 다녀도 될까?', q2: '' })
+    );
+    const ids = report.sections.map((section) => section.id);
+
+    expect(ids).toEqual(expect.arrayContaining([
+      'calculation-audit-v2',
+      'expert-evidence-v2',
+      'temporal-evidence-v2'
+    ]));
+    expect(report.engineMeta?.engineVersion).toContain('myeongri-v2');
+    expect(report.engineMeta?.evidenceCount).toBeGreaterThan(0);
+    expect(report.engineMeta?.calculationPrecision).toBe('exact-minute');
+  });
+
+  it('includes purpose-specific two-person compatibility evidence', () => {
+    const report = buildSajuReport(
+      'match-couple',
+      makeFormData({
+        q1: '우리 관계가 오래 가려면 무엇을 맞춰야 하나요?',
+        q2: '',
+        partner: {
+          name: '상대방',
+          gender: 'female',
+          calendar: 'solar',
+          isLeapMonth: false,
+          birthDate: '1993-03-21',
+          birthTime: '14:10',
+          isUnknownTime: false,
+          birthTimePrecision: 'exact',
+          dayBoundaryPolicy: 'midnight'
+        }
+      })
+    );
+    const compatibility = report.sections.find((section) => section.id === 'compatibility-evidence-v2');
+
+    expect(compatibility).toBeDefined();
+    expect(compatibility?.cards).toHaveLength(4);
+    expect(compatibility?.subtitle).toContain('연애');
+  });
+
+  it.each([
+    ['situationship', '현재 썸에서는'],
+    ['ambiguous', '이 애매한 관계에서는'],
+    ['breakup-reunion', '이별·재회 흐름에서는']
+  ] as const)('keeps the %s love-reading branch out of the unknown fallback', (relationshipStatus, branchCopy) => {
+    const report = buildSajuReport(
+      'love-reading',
+      makeFormData({
+        relationshipStatus,
+        relationshipDuration: '',
+        q1: '내 연애 패턴과 다음 행동이 궁금해요.',
+        q2: ''
+      })
+    );
+    const serialized = JSON.stringify(report);
+
+    expect(serialized).toContain(branchCopy);
+    expect(serialized).not.toContain('관계 상태 미입력');
+  });
+
+  it('turns the teaser micro choice into deterministic report guidance', () => {
+    const report = buildSajuReport(
+      'love-reading',
+      makeFormData({
+        relationshipStatus: 'ambiguous',
+        relationshipDuration: '',
+        loveReaction: 'D',
+        q1: '상대의 연락을 어디까지 기다려야 할까요?',
+        q2: ''
+      })
+    );
+
+    expect(JSON.stringify(report)).toContain('사실과 추측을 분리하고');
+  });
 });

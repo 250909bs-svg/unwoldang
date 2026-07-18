@@ -56,8 +56,12 @@ function flattenReportTexts(report: SajuReportData) {
 
   for (const section of report.sections) {
     texts.push(section.title, section.subtitle || '');
-    texts.push(...(section.paragraphs || []), ...(section.bullets || []));
-    if (section.callout) {
+    const isImmutableEvidenceSection = section.id.endsWith('-v2');
+    texts.push(...(section.paragraphs || []));
+    if (!isImmutableEvidenceSection) {
+      texts.push(...(section.bullets || []));
+    }
+    if (section.callout && !isImmutableEvidenceSection) {
       texts.push(section.callout.title || '', section.callout.body);
     }
     if (section.table) {
@@ -67,7 +71,9 @@ function flattenReportTexts(report: SajuReportData) {
       texts.push(card.title, card.body, card.badge || '');
     }
     for (const detail of section.details || []) {
-      texts.push(detail.summary, detail.content);
+      if (!isImmutableEvidenceSection) {
+        texts.push(detail.summary, detail.content);
+      }
     }
   }
 

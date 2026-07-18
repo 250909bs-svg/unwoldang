@@ -8,12 +8,21 @@ param(
   [string]$ImageName = "unwoldang-cloudrun",
   [string]$AllowedOrigins = "https://unwoldang.com,https://www.unwoldang.com",
   [string]$GeminiModel = "gemini-2.5-flash",
+  [string]$GeminiSecretName = "",
+  [string]$GeminiRequestTimeoutMs = "22000",
   [string]$KasiSecretName = "",
+  [string]$KasiRequestTimeoutMs = "5000",
   [string]$PortOneSecretName = "",
   [string]$PortOneStoreId = "",
   [string]$PortOneApiBaseUrl = "https://api.portone.io",
+  [string]$PortOnePaymentLedgerCollection = "portonePaymentConfirmations",
   [string]$ReportAccessSecretName = "REPORT_ACCESS_SECRET",
+  [string]$UserAccessSecretName = "USER_ACCESS_SECRET",
+  [string]$AdminAccessSecretName = "ADMIN_ACCESS_SECRET",
+  [string]$AdminCredentialHashSecretName = "",
   [string]$ReportAccessTokenTtlMs = "1800000",
+  [string]$PaymentOrderClaimTtlMs = "7200000",
+  [string]$ReportGenerationLockTtlMs = "120000",
   [string]$AuthAccessTokenTtlMs = "2592000000",
   [string]$AdminAccessTokenTtlMs = "43200000",
   [string]$ReportRateLimitWindowMs = "60000",
@@ -23,7 +32,8 @@ param(
   [string]$EnableFirestoreArchive = "true",
   [string]$FirestoreProjectId = "",
   [string]$FirestoreDatabaseId = "(default)",
-  [string]$AdminCredentialHash = ""
+  [string]$FirestoreArchiveCollection = "reportArchives",
+  [string]$RequireReportTokenForArchive = "true"
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,7 +49,10 @@ Write-Host "Region  : $Region"
   Write-Host "Image   : $image"
   Write-Host ""
 
-  $secretPairs = @("GEMINI_API_KEY=GEMINI_API_KEY:latest")
+  $secretPairs = @()
+  if ($GeminiSecretName.Trim()) {
+    $secretPairs += "GEMINI_API_KEY=$($GeminiSecretName):latest"
+  }
   if ($KasiSecretName.Trim()) {
     $secretPairs += "KASI_SERVICE_KEY=$($KasiSecretName):latest"
   }
@@ -49,11 +62,20 @@ Write-Host "Region  : $Region"
   if ($ReportAccessSecretName.Trim()) {
     $secretPairs += "REPORT_ACCESS_SECRET=$($ReportAccessSecretName):latest"
   }
+  if ($UserAccessSecretName.Trim()) {
+    $secretPairs += "USER_ACCESS_SECRET=$($UserAccessSecretName):latest"
+  }
+  if ($AdminAccessSecretName.Trim()) {
+    $secretPairs += "ADMIN_ACCESS_SECRET=$($AdminAccessSecretName):latest"
+  }
+  if ($AdminCredentialHashSecretName.Trim()) {
+    $secretPairs += "ADMIN_CREDENTIAL_HASH=$($AdminCredentialHashSecretName):latest"
+  }
   if ($KakaoClientSecretName.Trim()) {
     $secretPairs += "KAKAO_CLIENT_SECRET=$($KakaoClientSecretName):latest"
   }
   $secretArg = $secretPairs -join ","
-  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|PORTONE_API_BASE_URL=$PortOneApiBaseUrl|REPORT_ACCESS_TOKEN_TTL_MS=$ReportAccessTokenTtlMs|AUTH_ACCESS_TOKEN_TTL_MS=$AuthAccessTokenTtlMs|ADMIN_ACCESS_TOKEN_TTL_MS=$AdminAccessTokenTtlMs|REPORT_RATE_LIMIT_WINDOW_MS=$ReportRateLimitWindowMs|REPORT_RATE_LIMIT_MAX=$ReportRateLimitMax|ENABLE_FIRESTORE_ARCHIVE=$EnableFirestoreArchive|FIRESTORE_DATABASE_ID=$FirestoreDatabaseId"
+  $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|GEMINI_REQUEST_TIMEOUT_MS=$GeminiRequestTimeoutMs|KASI_REQUEST_TIMEOUT_MS=$KasiRequestTimeoutMs|PORTONE_API_BASE_URL=$PortOneApiBaseUrl|PORTONE_PAYMENT_LEDGER_COLLECTION=$PortOnePaymentLedgerCollection|REPORT_ACCESS_TOKEN_TTL_MS=$ReportAccessTokenTtlMs|PAYMENT_ORDER_CLAIM_TTL_MS=$PaymentOrderClaimTtlMs|REPORT_GENERATION_LOCK_TTL_MS=$ReportGenerationLockTtlMs|AUTH_ACCESS_TOKEN_TTL_MS=$AuthAccessTokenTtlMs|ADMIN_ACCESS_TOKEN_TTL_MS=$AdminAccessTokenTtlMs|REPORT_RATE_LIMIT_WINDOW_MS=$ReportRateLimitWindowMs|REPORT_RATE_LIMIT_MAX=$ReportRateLimitMax|ENABLE_FIRESTORE_ARCHIVE=$EnableFirestoreArchive|FIRESTORE_DATABASE_ID=$FirestoreDatabaseId|FIRESTORE_ARCHIVE_COLLECTION=$FirestoreArchiveCollection|REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=$RequireReportTokenForArchive"
   if ($PortOneStoreId.Trim()) {
     $envVars = "$envVars|PORTONE_STORE_ID=$PortOneStoreId"
   }
@@ -63,10 +85,6 @@ Write-Host "Region  : $Region"
   if ($FirestoreProjectId.Trim()) {
     $envVars = "$envVars|FIRESTORE_PROJECT_ID=$FirestoreProjectId"
   }
-  if ($AdminCredentialHash.Trim()) {
-    $envVars = "$envVars|ADMIN_CREDENTIAL_HASH=$AdminCredentialHash"
-  }
-
 Push-Location $root
 try {
   Write-Host "1) Artifact Registry repository check/create..." -ForegroundColor Yellow
@@ -82,17 +100,25 @@ try {
   gcloud builds submit --config cloudrun-api/cloudbuild.yaml .
 
   Write-Host "3) Deploy Cloud Run service..." -ForegroundColor Yellow
-  gcloud run deploy $ServiceName `
-    --image $image `
-    --region $Region `
-    --platform managed `
-    --allow-unauthenticated `
-    --set-env-vars "^|^$envVars" `
-    --set-secrets $secretArg
+  $deployArgs = @(
+    "run", "deploy", $ServiceName,
+    "--image", $image,
+    "--region", $Region,
+    "--platform", "managed",
+    "--allow-unauthenticated",
+    "--set-env-vars", "^|^$envVars"
+  )
+  if ($secretArg) {
+    $deployArgs += @("--set-secrets", $secretArg)
+  }
+  & gcloud @deployArgs
+  if ($LASTEXITCODE -ne 0) {
+    throw "gcloud run deploy failed with exit code $LASTEXITCODE"
+  }
 
   Write-Host ""
   Write-Host "Deploy finished." -ForegroundColor Green
-  Write-Host "Set frontend env to the Cloud Run URL + /api/report" -ForegroundColor Green
+  Write-Host "Set frontend report, payment-confirm, Kakao, archive, and admin endpoints to the Cloud Run URL." -ForegroundColor Green
   Write-Host ""
 }
 finally {

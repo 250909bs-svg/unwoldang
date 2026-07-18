@@ -25,12 +25,55 @@ export interface PendingPayment {
   tabOrigin?: string;
   paymentKey?: string;
   txId?: string;
+  orderClaim?: string;
   reportAccessToken?: string;
   createdAt: string;
 }
 
+export interface PaymentEntitlementReference {
+  orderId: string;
+  productId: ServiceId;
+  createdAt: string;
+}
+
+export interface PaymentOrderIntent {
+  orderId: string;
+  productId: ServiceId;
+  amount: number;
+  currency: 'KRW';
+  orderClaim: string;
+  orderClaimExpiresAt: string;
+}
+
+export interface PaymentEntitlement {
+  orderId: string;
+  productId: ServiceId;
+  amount: number;
+  currency: 'KRW';
+  confirmedAt: string;
+  status: 'active';
+}
+
+export interface RenewedPaymentEntitlement {
+  orderId: string;
+  productId: ServiceId;
+  amount: number;
+  currency: 'KRW';
+  reportAccessToken: string;
+  reportAccessTokenExpiresAt: string;
+}
+
+export interface ConfirmedPortOnePayment extends RenewedPaymentEntitlement {
+  paymentId: string;
+  txId: string;
+  status: string;
+  method?: string;
+  approvedAt?: string;
+}
+
 const AUTH_STORAGE_KEY = 'unwoldang.auth.user';
 const PAYMENT_STORAGE_KEY = 'unwoldang.payment.pending';
+const PAYMENT_ENTITLEMENT_STORAGE_KEY = 'unwoldang.payment.entitlements';
 const AUTH_STATE_STORAGE_KEY = 'unwoldang.auth.kakao.state';
 
 type AuthStatePayload = {
@@ -263,12 +306,69 @@ export const buildPortOneRedirectUrl = () => {
   return `${window.location.origin}/payment/portone/callback`;
 };
 
+export const readPaymentEntitlementReferences = (): PaymentEntitlementReference[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  const raw = window.localStorage.getItem(PAYMENT_ENTITLEMENT_STORAGE_KEY);
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('Invalid entitlement reference list.');
+    }
+
+    return parsed
+      .filter((entry): entry is PaymentEntitlementReference => {
+        if (!entry || typeof entry !== 'object') {
+          return false;
+        }
+
+        const candidate = entry as Record<string, unknown>;
+        return (
+          typeof candidate.orderId === 'string' &&
+          /^UW-[A-Za-z0-9._-]{12,116}$/.test(candidate.orderId) &&
+          typeof candidate.productId === 'string' &&
+          Boolean(candidate.productId.trim()) &&
+          typeof candidate.createdAt === 'string' &&
+          Number.isFinite(Date.parse(candidate.createdAt))
+        );
+      })
+      .slice(0, 20);
+  } catch {
+    window.localStorage.removeItem(PAYMENT_ENTITLEMENT_STORAGE_KEY);
+    return [];
+  }
+};
+
+const rememberPaymentEntitlementReference = (payment: PendingPayment) => {
+  const reference: PaymentEntitlementReference = {
+    orderId: payment.orderId,
+    productId: payment.productId,
+    createdAt: payment.createdAt
+  };
+  const remaining = readPaymentEntitlementReferences().filter((entry) => entry.orderId !== reference.orderId);
+
+  // Persist only the opaque order reference. Claims and bearer tokens remain session-only.
+  window.localStorage.setItem(
+    PAYMENT_ENTITLEMENT_STORAGE_KEY,
+    JSON.stringify([reference, ...remaining].slice(0, 20))
+  );
+};
+
 export const savePendingPayment = (payment: PendingPayment) => {
   if (typeof window === 'undefined') {
     return;
   }
 
   window.sessionStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify(payment));
+  rememberPaymentEntitlementReference(payment);
 };
 
 export const readPendingPayment = () => {
@@ -298,9 +398,24 @@ export const clearPendingPayment = () => {
   window.sessionStorage.removeItem(PAYMENT_STORAGE_KEY);
 };
 
+const createSecureRandomPart = () => {
+  const cryptoApi = globalThis.crypto;
+
+  if (!cryptoApi || typeof cryptoApi.getRandomValues !== 'function') {
+    throw new Error('안전한 결제 식별자를 만들 수 없는 브라우저입니다. 브라우저를 업데이트해 주세요.');
+  }
+
+  if (typeof cryptoApi.randomUUID === 'function') {
+    return cryptoApi.randomUUID().replace(/-/g, '');
+  }
+
+  const bytes = new Uint8Array(16);
+  cryptoApi.getRandomValues(bytes);
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
+};
+
 export const createOrderId = () => {
-  const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `UW-${Date.now()}-${randomPart}`;
+  return `UW-${Date.now()}-${createSecureRandomPart()}`;
 };
 
 export const createCustomerKey = (userId?: string) => {
@@ -316,13 +431,190 @@ export const createCustomerKey = (userId?: string) => {
     return stored;
   }
 
-  const randomPart =
-    typeof window.crypto !== 'undefined' && typeof window.crypto.randomUUID === 'function'
-      ? window.crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const randomPart = createSecureRandomPart();
   const created = `uw.${identity}.${randomPart}`.slice(0, 50);
   window.localStorage.setItem(storageKey, created);
   return created;
 };
 
 export const getPriceValue = (price: string) => Number(price.replace(/[^\d]/g, '')) || 0;
+
+type PaymentApiAction = 'order' | 'confirm' | 'entitlements' | 'entitlement/renew';
+
+export const getPortOnePaymentApiEndpoint = (confirmEndpoint: string, action: PaymentApiAction) => {
+  const normalized = confirmEndpoint.trim();
+
+  if (!normalized || !/\/confirm\/?(?:\?.*)?$/.test(normalized)) {
+    throw new Error('PortOne 결제 확인 API 주소가 올바르지 않습니다.');
+  }
+
+  return normalized.replace(/\/confirm\/?(?=\?|$)/, `/${action}`);
+};
+
+async function readAuthenticatedPaymentResponse<T>(response: Response): Promise<T> {
+  const parsed = (await response.json().catch(() => null)) as ({ message?: string } & Partial<T>) | null;
+
+  if (!response.ok) {
+    throw new Error(parsed?.message || '결제 권한 처리 중 오류가 발생했습니다.');
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('결제 권한 서버 응답 형식이 올바르지 않습니다.');
+  }
+
+  return parsed as T;
+}
+
+function assertPaymentOrderIntentShape(
+  value: PaymentOrderIntent,
+  expected: { orderId?: string; productId: ServiceId; amount: number }
+) {
+  if (
+    !/^UW-[A-Za-z0-9._-]{12,116}$/.test(value.orderId || '') ||
+    (expected.orderId && value.orderId !== expected.orderId) ||
+    value.productId !== expected.productId ||
+    value.amount !== expected.amount ||
+    value.currency !== 'KRW' ||
+    typeof value.orderClaim !== 'string' ||
+    value.orderClaim.length < 40 ||
+    !Number.isFinite(Date.parse(value.orderClaimExpiresAt || ''))
+  ) {
+    throw new Error('결제 주문 인증 서버 응답의 무결성을 확인할 수 없습니다.');
+  }
+}
+
+function assertRenewedEntitlementShape(
+  value: RenewedPaymentEntitlement,
+  expected: { orderId: string; productId?: ServiceId; amount?: number }
+) {
+  if (
+    value.orderId !== expected.orderId ||
+    (expected.productId && value.productId !== expected.productId) ||
+    (expected.amount !== undefined && value.amount !== expected.amount) ||
+    typeof value.productId !== 'string' ||
+    !Number.isSafeInteger(value.amount) ||
+    value.amount <= 0 ||
+    value.currency !== 'KRW' ||
+    typeof value.reportAccessToken !== 'string' ||
+    value.reportAccessToken.length < 40 ||
+    !Number.isFinite(Date.parse(value.reportAccessTokenExpiresAt || ''))
+  ) {
+    throw new Error('결제 리포트 권한 서버 응답의 무결성을 확인할 수 없습니다.');
+  }
+}
+
+export async function requestPaymentOrderIntent(options: {
+  confirmEndpoint: string;
+  authToken: string;
+  orderId?: string;
+  productId: ServiceId;
+  amount: number;
+}) {
+  const response = await fetch(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'order'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${options.authToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      orderId: options.orderId,
+      productId: options.productId,
+      amount: options.amount
+    })
+  });
+
+  const intent = await readAuthenticatedPaymentResponse<PaymentOrderIntent>(response);
+  assertPaymentOrderIntentShape(intent, options);
+  return intent;
+}
+
+export async function confirmAuthenticatedPortOnePayment(options: {
+  confirmEndpoint: string;
+  authToken: string;
+  paymentId: string;
+  txId?: string;
+  orderId: string;
+  productId: ServiceId;
+  amount: number;
+  orderClaim: string;
+}) {
+  const response = await fetch(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'confirm'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${options.authToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      paymentId: options.paymentId,
+      txId: options.txId,
+      orderId: options.orderId,
+      productId: options.productId,
+      amount: options.amount,
+      orderClaim: options.orderClaim
+    })
+  });
+
+  const confirmed = await readAuthenticatedPaymentResponse<ConfirmedPortOnePayment>(response);
+  assertRenewedEntitlementShape(confirmed, options);
+
+  if (
+    confirmed.paymentId !== options.paymentId ||
+    typeof confirmed.txId !== 'string' ||
+    !confirmed.txId.trim() ||
+    typeof confirmed.status !== 'string' ||
+    confirmed.status.toUpperCase() !== 'PAID'
+  ) {
+    throw new Error('PortOne 결제 확인 서버 응답의 무결성을 확인할 수 없습니다.');
+  }
+
+  return confirmed;
+}
+
+export async function fetchPaymentEntitlements(confirmEndpoint: string, authToken: string) {
+  const response = await fetch(getPortOnePaymentApiEndpoint(confirmEndpoint, 'entitlements'), {
+    headers: {
+      Authorization: `Bearer ${authToken}`
+    }
+  });
+  const payload = await readAuthenticatedPaymentResponse<{ entitlements: PaymentEntitlement[] }>(response);
+
+  if (!Array.isArray(payload.entitlements)) {
+    throw new Error('결제 권한 목록 서버 응답 형식이 올바르지 않습니다.');
+  }
+
+  const valid = payload.entitlements.every((entry) => (
+    entry &&
+    /^UW-[A-Za-z0-9._-]{12,116}$/.test(entry.orderId || '') &&
+    typeof entry.productId === 'string' &&
+    Number.isSafeInteger(entry.amount) &&
+    entry.amount > 0 &&
+    entry.currency === 'KRW' &&
+    entry.status === 'active' &&
+    Number.isFinite(Date.parse(entry.confirmedAt || ''))
+  ));
+
+  if (!valid) {
+    throw new Error('결제 권한 목록 서버 응답의 무결성을 확인할 수 없습니다.');
+  }
+
+  return payload.entitlements;
+}
+
+export async function renewPaymentEntitlement(
+  confirmEndpoint: string,
+  authToken: string,
+  orderId: string
+) {
+  const response = await fetch(getPortOnePaymentApiEndpoint(confirmEndpoint, 'entitlement/renew'), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ orderId })
+  });
+
+  const renewed = await readAuthenticatedPaymentResponse<RenewedPaymentEntitlement>(response);
+  assertRenewedEntitlementShape(renewed, { orderId });
+  return renewed;
+}

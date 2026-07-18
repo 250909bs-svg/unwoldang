@@ -7,6 +7,7 @@ import {
   useState
 } from 'react';
 import { Link } from 'react-router-dom';
+import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
 
@@ -107,10 +108,11 @@ const cardNewsSlides: CardNewsSlide[] = [
   {
     id: 'news-love',
     target: 'love-reading',
+    to: '/detail/love-reading',
     rank: 5,
-    kicker: '연애운',
-    title: '운월당 연애운',
-    subtitle: '끌림과 인연 흐름, 관계의 속도를 함께 분석',
+    kicker: 'MZ무당',
+    title: 'MZ무당 팩폭 연애운',
+    subtitle: '끌리는 사람과 오래 갈 사람, 반복되는 연애 패턴을 함께 분석',
     image: illustrationDeck.loveReading,
     tone: 'violet'
   },
@@ -136,6 +138,7 @@ type HomeProductCard = {
   image: string;
   video?: string;
   artworkTitle?: boolean;
+  fullPoster?: boolean;
   title: string;
   subtitle: string;
   imagePosition?: string;
@@ -162,10 +165,12 @@ const homeProductCards: HomeProductCard[] = [
   {
     id: 'love-reading',
     category: 'love',
-    to: '/form/love-reading',
+    to: '/detail/love-reading',
     image: illustrationDeck.loveReading,
-    title: '홍연아씨 연애운',
-    subtitle: '다가올 인연과 마음의 타이밍'
+    artworkTitle: true,
+    fullPoster: true,
+    title: 'MZ무당 팩폭 연애운',
+    subtitle: '반복 패턴부터 다음 인연의 조건까지'
   },
   {
     id: 'love-reunion',
@@ -249,12 +254,12 @@ const homeDiscoverySections = [
     cards: [
       {
         id: 'love-reading',
-        to: '/form/love-reading',
+        to: '/detail/love-reading',
         image: illustrationDeck.loveReading,
-        coverKicker: '홍연아씨',
-        coverTitle: '연애비책',
-        title: '홍연아씨 연애비책',
-        summary: '썸 단계부터 연락법까지'
+        coverKicker: 'MZ무당',
+        coverTitle: '팩폭 연애운',
+        title: 'MZ무당 팩폭 연애운',
+        summary: '반복되는 연애 패턴부터 30일 행동까지'
       },
       {
         id: 'love-reunion',
@@ -682,6 +687,12 @@ export default function Home() {
                         preload={slide.offset === 0 ? 'metadata' : 'none'}
                         aria-hidden="true"
                       />
+                    ) : slide.image === illustrationDeck.loveReading ? (
+                      <LoveReadingCardPicture
+                        alt={`${slide.kicker} 카드뉴스`}
+                        className="home-cardnews-image"
+                        sizes="(max-width: 640px) 92vw, 580px"
+                      />
                     ) : (
                       <img src={slide.image} alt={`${slide.kicker} 카드뉴스`} className="home-cardnews-image" />
                     )}
@@ -746,7 +757,15 @@ export default function Home() {
                             }`
                           }
                         >
-                          <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
+                          {card.image === illustrationDeck.loveReading ? (
+                            <LoveReadingCardPicture
+                              alt={card.title}
+                              className="home-showcase-cover-image"
+                              sizes="(max-width: 768px) 74vw, 320px"
+                            />
+                          ) : (
+                            <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
+                          )}
                           <div className="home-showcase-cover-overlay" />
                           <div className="home-showcase-cover-copy">
                             <small>{card.coverKicker}</small>
@@ -775,7 +794,10 @@ export default function Home() {
                 key={product.id}
                 to={product.to}
                 state={{ tabOrigin: '/' }}
-                className={product.artworkTitle ? 'home-filter-product-card artwork-title-card' : 'home-filter-product-card'}
+                className={`home-filter-product-card${product.artworkTitle ? ' artwork-title-card' : ''}${
+                  product.fullPoster ? ' full-poster-card' : ''
+                }`}
+                aria-label={product.fullPoster ? `${product.title} 상세페이지 보기` : undefined}
               >
                 {product.video ? (
                   <video
@@ -788,6 +810,13 @@ export default function Home() {
                     playsInline
                     preload="metadata"
                     aria-hidden="true"
+                  />
+                ) : product.image === illustrationDeck.loveReading ? (
+                  <LoveReadingCardPicture
+                    alt=""
+                    className="home-filter-product-image"
+                    sizes="(max-width: 640px) 46vw, 260px"
+                    style={product.imagePosition ? { objectPosition: product.imagePosition } : undefined}
                   />
                 ) : (
                   <img

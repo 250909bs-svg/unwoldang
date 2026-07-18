@@ -22,6 +22,18 @@ function parseAgeRange(ageText: string) {
 }
 
 describe('saju core engine regression coverage', () => {
+  it('converts and validates lunar dates using the actual lunar month length', () => {
+    const lunarNewYear = calcBazi(2024, 1, 1, 12, 0, 'lunar', 'normal', 'female', false);
+
+    expect(lunarNewYear.solar).toEqual([2024, 2, 10]);
+    expect(() => calcBazi(2024, 1, 30, 12, 0, 'lunar', 'normal', 'female', false)).toThrow(
+      /29일까지/
+    );
+    expect(() => calcBazi(2024, 2, 1, 12, 0, 'lunar', 'leap', 'female', false)).toThrow(
+      /Invalid leap month/
+    );
+  });
+
   it('calculates known four pillars for a fixed KST solar datetime', () => {
     const bazi = calcBazi(1990, 1, 1, 12, 30, 'solar', 'normal', 'male', false);
 

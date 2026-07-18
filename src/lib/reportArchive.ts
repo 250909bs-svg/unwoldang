@@ -1,4 +1,5 @@
 import type { ServiceId, IntakeFormData } from '../api/mockData';
+import type { AiReportProvider } from './aiReport';
 import type { PaymentMethodType } from './auth';
 import { getAdminReportsEndpoint, getReportArchiveEndpoint } from './runtimeConfig';
 import type { SajuReportData } from './saju/report';
@@ -14,6 +15,7 @@ export type ReportArchiveEntry = {
   paymentMethod?: PaymentMethodType | string;
   formData?: Partial<IntakeFormData>;
   reportData: SajuReportData;
+  reportProvider?: AiReportProvider;
 };
 
 const LEGACY_REPORT_ARCHIVE_KEY = 'unwoldang.report.archive';

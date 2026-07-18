@@ -2,7 +2,53 @@ import type { ServiceId } from '../../api/mockData';
 
 export type ReportKind = 'comprehensive' | 'yearly' | 'love' | 'reunion' | 'marriage' | 'compatibility' | 'career' | 'wealth';
 type CardTone = 'default' | 'good' | 'warn';
-type FiveElement = '목' | '화' | '토' | '금' | '수';
+export type FiveElement = '목' | '화' | '토' | '금' | '수';
+
+export interface PastLifePortrait {
+  image: string;
+  imageAlt: string;
+  eyebrow: string;
+  title: string;
+  role: string;
+  appearance: string[];
+  attire: string;
+  gaze: string;
+  caption: string;
+}
+
+export interface PastLifeStoryBeat {
+  title: string;
+  scene: string;
+  goblinLine: string;
+  presentEcho: string;
+}
+
+export interface PastLifeProfile {
+  version: 'past-life-profile-v2';
+  seed: number;
+  sealName: string;
+  archetype: string;
+  eraMood: string;
+  place: string;
+  vocation: string;
+  keepsake: string;
+  openingLine: string;
+  customerFocus: string;
+  repeatedScene: string;
+  frequentEmotion: string;
+  hiddenDesire: string;
+  readingTone: string;
+  selfPortrait: PastLifePortrait;
+  connectionPortrait: PastLifePortrait;
+  connectionRole: string;
+  firstMeeting: string;
+  unfinishedPromise: string;
+  finalSeparation: string;
+  presentEcho: string;
+  evidence: string[];
+  storyBeats: PastLifeStoryBeat[];
+  disclaimer: string;
+}
 
 export interface ReportCard {
   title: string;
@@ -107,6 +153,26 @@ export interface ReportQualityAudit {
   typoSignals: string[];
 }
 
+export interface ReportEngineMeta {
+  engineVersion: string;
+  validationStatus: string;
+  calendarVersion: string;
+  interpretationVersion: string;
+  interactionVersion: string;
+  calculationPrecision: 'exact-minute' | 'legacy-range' | 'unknown';
+  scenarioCount: number;
+  dayBoundaryPolicy: 'civil-midnight' | 'late-zi-next-day';
+  trueSolarTime: {
+    requested: boolean;
+    applied: boolean;
+    correctionMinutes: number | null;
+  };
+  evidenceCount: number;
+  confidence: number | null;
+  uncertainty: string[];
+  helpfulElementSource: 'expert-consensus' | 'legacy-fallback';
+}
+
 export interface SajuReportData {
   serviceId: ServiceId;
   kind: ReportKind;
@@ -152,4 +218,6 @@ export interface SajuReportData {
   monthLuck: MonthLuckItem[];
   actionPlan: ActionPlan;
   qualityAudit: ReportQualityAudit;
+  engineMeta?: ReportEngineMeta;
+  pastLifeProfile?: PastLifeProfile;
 }

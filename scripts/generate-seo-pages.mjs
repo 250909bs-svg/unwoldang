@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -260,6 +260,7 @@ function validatePage(route, seo, html) {
   JSON.parse(structuredDataMatch[1]);
 }
 
+await rm(path.join(distDir, 'seo'), { recursive: true, force: true });
 await mkdir(path.join(distDir, 'seo'), { recursive: true });
 
 const seenTitles = new Set();

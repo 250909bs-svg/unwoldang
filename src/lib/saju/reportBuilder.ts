@@ -1,6 +1,11 @@
 import { findServiceById, type IntakeFormData, type ServiceId } from '../../api/mockData';
 import { getReportCallName } from '../customerName';
-import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from './deterministicBasis';
+import { getRelationshipDurationLabel, getRelationshipStatusLabel } from '../relationshipIntake';
+import {
+  buildDeterministicSajuBasis,
+  selectCurrentDayun,
+  type DeterministicSajuBasis
+} from './deterministicBasis';
 import { calcBazi, tenGod } from './baziCalcs';
 import { BRANCH_ELEM, DZ, ELEMENT, TG, type EarthlyBranch, type HeavenlyStem } from './constants';
 import { scoreReportQuality } from './reportQuality';
@@ -442,25 +447,8 @@ function getTimeLabel(formData: Partial<IntakeFormData>) {
 }
 
 function getRelationshipLabel(formData: Partial<IntakeFormData>) {
-  const status =
-    formData.relationshipStatus === 'dating'
-      ? '연애 중'
-      : formData.relationshipStatus === 'married'
-        ? '기혼'
-        : formData.relationshipStatus === 'single'
-          ? '솔로'
-          : '관계 상태 미입력';
-
-  const duration =
-    formData.relationshipDuration === 'under1'
-      ? '1년 미만'
-      : formData.relationshipDuration === 'under3'
-        ? '3년 미만'
-        : formData.relationshipDuration === 'under5'
-          ? '5년 미만'
-          : formData.relationshipDuration === 'under10'
-            ? '10년 미만'
-            : '';
+  const status = getRelationshipStatusLabel(formData.relationshipStatus);
+  const duration = getRelationshipDurationLabel(formData.relationshipDuration);
 
   return duration ? `${status} / ${duration}` : status;
 }
@@ -724,22 +712,11 @@ function getYearLuckWarning(item: DeterministicSajuBasis['seun'][number], cautio
 
 function mapCurrentAndNextDayun(
   basis: DeterministicSajuBasis,
-  formData: Partial<IntakeFormData>,
   helpful: FiveElement[],
   cautious: FiveElement[]
 ): { currentDayun: FortuneWindow; nextDayun: FortuneWindow } {
-  const currentAge = computeCurrentAge(formData);
   const rows = basis.dayun;
-  const currentIndex = Math.max(
-    0,
-    rows.findIndex((row) => {
-      const range = parseAgeRange(row.age);
-      return currentAge >= range.start && currentAge <= range.end;
-    })
-  );
-
-  const currentRow = rows[currentIndex] || rows[0];
-  const nextRow = rows[currentIndex + 1] || rows[Math.min(currentIndex, rows.length - 1)];
+  const selection = selectCurrentDayun(rows, basis.commercialV2.generatedFor.year);
 
   const makeWindow = (row: DeterministicSajuBasis['dayun'][number], isCurrent: boolean): FortuneWindow => {
     const [stem, branch] = [...row.ganzhi] as [string, string];
@@ -760,9 +737,39 @@ function mapCurrentAndNextDayun(
     };
   };
 
+  if (!selection.current) {
+    const first = selection.next || rows[0];
+    return {
+      currentDayun: {
+        name: '대운 진입 전',
+        range: first ? `출생 ~ ${first.age.split('~')[0]?.trim() || '첫 대운 전'}` : '첫 대운 전',
+        summary: '아직 첫 대운 진입 전이므로 원국과 현재 세운·월운을 중심으로 읽습니다.',
+        focus: '생활 기반과 기본 리듬 형성',
+        caution: '대운이 시작된 것으로 앞당겨 단정하지 않기'
+      },
+      nextDayun: first
+        ? makeWindow(first, false)
+        : {
+            name: '대운 자료 없음',
+            range: '-',
+            summary: '표시할 다음 대운 자료가 없습니다.',
+            focus: '원국 중심 해석',
+            caution: '대운 단정 유보'
+          }
+    };
+  }
+
   return {
-    currentDayun: makeWindow(currentRow, true),
-    nextDayun: makeWindow(nextRow, false)
+    currentDayun: makeWindow(selection.current, true),
+    nextDayun: selection.next
+      ? makeWindow(selection.next, false)
+      : {
+          name: '다음 대운 범위 밖',
+          range: '-',
+          summary: '현재 계산표의 마지막 대운 구간이므로 다음 구간은 추가 산출이 필요합니다.',
+          focus: '현재 대운의 마무리와 재산출',
+          caution: '현재 대운을 다음 대운으로 중복 표기하지 않기'
+        }
   };
 }
 
@@ -1696,7 +1703,34 @@ function getRelationshipStageGuide(formData: Partial<IntakeFormData>, relationsh
     return `${relationshipLabel} 흐름에서는 무작정 소개를 늘리기보다 “어떤 사람을 만나야 오래 가는가”를 먼저 좁혀야 합니다. 만남의 양보다 선별 기준이 결과를 바꿉니다.`;
   }
 
+  if (formData.relationshipStatus === 'situationship') {
+    return `${relationshipLabel} 흐름에서는 상대의 속마음을 추측하기보다 연락의 꾸준함, 약속의 구체성, 관계를 정의하려는 행동을 확인해야 합니다. 설렘의 크기보다 반복해서 지켜지는 신호가 기준입니다.`;
+  }
+
+  if (formData.relationshipStatus === 'ambiguous') {
+    return `${relationshipLabel} 흐름에서는 기다림을 사랑으로 해석하지 않는 것이 중요합니다. 관계를 계속 볼 조건과 멈출 기준을 먼저 정하고, 말과 행동이 일치하는지를 짧은 기간 안에 확인해야 합니다.`;
+  }
+
+  if (formData.relationshipStatus === 'breakup-reunion') {
+    return `${relationshipLabel} 흐름에서는 다시 만날 가능성보다 헤어진 원인이 실제로 바뀌었는지를 먼저 봐야 합니다. 재회 여부는 연락 자체가 아니라 책임 있는 설명, 달라진 행동, 경계 존중으로 판단합니다.`;
+  }
+
   return `${relationshipLabel} 상태이므로, 이번 리포트는 원국과 대운 기준으로 인연상, 만남 경로, 결혼 현실성을 중심으로 읽었습니다. 실제 관계 정보가 더해지면 상대별 해석 밀도는 더 높아집니다.`;
+}
+
+function getLoveReactionGuide(formData: Partial<IntakeFormData>) {
+  switch (formData.loveReaction) {
+    case 'A':
+      return '입장 전 선택에서는 서운함을 바로 말하기보다 괜찮은 척 분위기를 지키는 반응을 골랐습니다. 리포트에서는 배려와 자기 억압을 구분하고, 감정을 작게라도 제때 말하는 기준을 함께 봅니다.';
+    case 'B':
+      return '입장 전 선택에서는 늦은 연락의 이유를 확인하는 반응을 골랐습니다. 리포트에서는 건강한 확인과 불안을 잠재우기 위한 추궁을 구분하고, 관계의 이름보다 반복 행동을 먼저 확인합니다.';
+    case 'C':
+      return '입장 전 선택에서는 상대에게 맞춰 일부러 답을 늦추는 반응을 골랐습니다. 리포트에서는 주도권 싸움과 건강한 속도 조절을 구분하고, 시험하지 않고도 경계를 세우는 방법을 함께 봅니다.';
+    case 'D':
+      return '입장 전 선택에서는 아무렇지 않은 척하면서 혼자 의미를 오래 해석하는 반응을 골랐습니다. 리포트에서는 사실과 추측을 분리하고, 기다릴 기한과 직접 물을 시점을 행동 기준으로 정리합니다.';
+    default:
+      return '';
+  }
 }
 
 function buildLoveProfile(
@@ -1712,7 +1746,10 @@ function buildLoveProfile(
   const meetingSignature = getElementLoveSignature((helpful[0] || dayElement) as FiveElement);
   const cautionSignature = getElementLoveSignature((cautious[0] || dayElement) as FiveElement);
   const dominantTenGods = basis.dominantTenGods.slice(0, 3).join(', ');
-  const stageGuide = getRelationshipStageGuide(formData, relationshipLabel);
+  const reactionGuide = getLoveReactionGuide(formData);
+  const stageGuide = [getRelationshipStageGuide(formData, relationshipLabel), reactionGuide]
+    .filter(Boolean)
+    .join(' ');
   const statusPrefix =
     formData.relationshipStatus === 'dating'
       ? '현재 관계에서는'
@@ -1720,7 +1757,13 @@ function buildLoveProfile(
         ? '현재 부부 흐름에서는'
         : formData.relationshipStatus === 'single'
           ? '새 인연을 볼 때는'
-          : '이번 관계운에서는';
+          : formData.relationshipStatus === 'situationship'
+            ? '현재 썸에서는'
+            : formData.relationshipStatus === 'ambiguous'
+              ? '이 애매한 관계에서는'
+              : formData.relationshipStatus === 'breakup-reunion'
+                ? '이별·재회 흐름에서는'
+                : '이번 관계운에서는';
   const marriageWindow = basis.seun
     .slice(0, 5)
     .map((item) => item.year)
@@ -2312,6 +2355,190 @@ function diversifyRepeatedReportPhrases(report: SajuReportData, repeatedCaution:
   return walk(report) as SajuReportData;
 }
 
+const YONGSIN_METHOD_LABELS: Record<string, string> = {
+  eokbu: '억부용신',
+  johu: '조후용신',
+  tonggwan: '통관용신',
+  byeongyak: '병약용신',
+  special: '특수격 후보'
+};
+
+function confidenceLabel(value: number) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportSection[] {
+  const engine = basis.commercialV2;
+  const precisionLabel = {
+    'exact-minute': '정확한 분 단위',
+    'legacy-range': '시간대 범위·민감도 비교',
+    unknown: '시간 미상·다중 시나리오'
+  }[engine.calendar.precision];
+  const correction = engine.calendar.trueSolarTime;
+  const sections: ReportSection[] = [
+    {
+      id: 'calculation-audit-v2',
+      title: '계산 정책 및 재현 기록',
+      subtitle: '같은 입력과 정책으로 결과를 다시 계산할 수 있도록 남긴 감사 정보',
+      paragraphs: [
+        `${engine.engineVersion}은 ${precisionLabel} 입력으로 ${engine.calendar.scenarioCount}개 계산 시나리오를 검사했습니다.`,
+        correction.requested
+          ? correction.applied
+            ? `검증된 경도와 방정시를 사용해 진태양시를 보정했습니다${correction.correctionMinutes === null ? '' : ` (대표 시나리오 ${correction.correctionMinutes}분)`}.`
+            : '진태양시 보정을 요청했지만 검증된 경도가 없어 적용하지 않았습니다.'
+          : '진태양시 보정은 요청되지 않았으며 입력 시간대의 표준시를 사용했습니다.',
+        `일주 경계 정책은 ${engine.calendar.dayBoundaryPolicy === 'late-zi-next-day' ? '야자시(23시 이후 다음 날 일주)' : '민간자정(00시 일주 변경)'}입니다.`
+      ],
+      table: {
+        headers: ['검사 항목', '결과'],
+        rows: [
+          ['엔진 검증 상태', engine.validationStatus],
+          ['년주 불변', engine.calendar.invariantPillars.year ? '예' : '아니오'],
+          ['월주 불변', engine.calendar.invariantPillars.month ? '예' : '아니오'],
+          ['일주 불변', engine.calendar.invariantPillars.day ? '예' : '아니오'],
+          ['근거 레코드', `${engine.evidenceSummary.total}건`],
+          ['종합 신뢰도', engine.confidence === null ? '판정 유보' : confidenceLabel(engine.confidence)]
+        ]
+      },
+      bullets: engine.uncertainty.length > 0 ? engine.uncertainty : ['추가로 표시할 계산 불확실성이 없습니다.']
+    }
+  ];
+
+  const interpretation = engine.interpretation;
+  if (!interpretation) {
+    sections.push({
+      id: 'expert-evidence-v2',
+      title: '전문 명리 판정',
+      subtitle: '시간 불확실성을 먼저 검증한 뒤 결론을 내립니다',
+      callout: {
+        title: '단일 결론 유보',
+        body: '출생시각 시나리오에 따라 일주가 달라질 수 있어 억부·조후·통관·병약·특수격의 단일 합의를 생성하지 않았습니다. 정확한 출생시각을 확인하면 다시 계산할 수 있습니다.'
+      }
+    });
+  } else {
+    const { foundations, yongsinOpinions, consensus } = interpretation;
+    const month = foundations.monthCommand.value;
+    const climate = foundations.climate.value;
+    const power = foundations.elementPower.value;
+    const roots = foundations.roots.value;
+    const exposures = foundations.exposures.value;
+    const shareText = Object.entries(power.shares)
+      .sort((left, right) => right[1] - left[1])
+      .map(([element, share]) => `${element} ${Math.round(share * 100)}%`)
+      .join(' · ');
+    const conflictText = consensus.value.conflicts.length > 0
+      ? consensus.value.conflicts.map((conflict) => conflict.description)
+      : ['독립 용신법 사이의 직접 충돌이 탐지되지 않았습니다.'];
+
+    sections.push({
+      id: 'expert-evidence-v2',
+      title: '월령·조후·용신 전문 판정',
+      subtitle: '다섯 용신법을 독립 계산하고 찬반 근거를 삭제하지 않은 합의 결과',
+      paragraphs: [
+        `${month.monthBranch}월의 사령 오행은 ${month.commandingElement}이며, 일간 ${month.dayMaster}은(는) ${month.obtainsCommand ? '득령' : month.receivesSeasonalSupport ? '계절 생조' : '계절 비득령'} 상태입니다.`,
+        `지장간 계절 가중까지 반영한 상대세력은 ${shareText}입니다. 한난은 ${climate.temperature}, 조습은 ${climate.moisture}로 판정했습니다.`,
+        `천간 ${roots.filter((item) => item.rooted).length}개가 통근하고, 투간 연결은 ${exposures.visibleStems.filter((item) => item.exposedFromHidden).length}개 천간에서 확인했습니다.`,
+        consensus.value.summary
+      ],
+      cards: [
+        {
+          title: '우선 검토 후보',
+          body: consensus.value.primaryCandidates.length > 0
+            ? consensus.value.primaryCandidates.join(' · ')
+            : '근거 부족으로 후보 유보',
+          tone: consensus.status === 'supported' ? 'good' : 'warn',
+          badge: `${consensus.status} · ${confidenceLabel(consensus.confidence.score)}`
+        },
+        {
+          title: '조후 요구',
+          body: climate.needs.length > 0
+            ? climate.needs.map((item) => `${item.element}: ${item.rationale}`).join(' / ')
+            : '한난조습 축에서 강한 추가 요구가 없습니다.'
+        },
+        {
+          title: '판정 출처',
+          body: `월령 ${foundations.monthCommand.ruleId}, 조후 ${foundations.climate.ruleId}, 합의 ${consensus.ruleId}`
+        }
+      ],
+      details: [
+        ...yongsinOpinions.map((opinion) => ({
+          summary: `${YONGSIN_METHOD_LABELS[opinion.method] || opinion.method} · ${opinion.status} · ${confidenceLabel(opinion.confidence.score)}`,
+          content: [
+            opinion.value.summary,
+            opinion.value.candidates.length > 0
+              ? `후보: ${opinion.value.candidates.map((item) => `${item.element}(${confidenceLabel(item.score)}) ${item.rationale}`).join(' / ')}`
+              : '후보: 판정 유보',
+            opinion.value.cautions.length > 0
+              ? `주의: ${opinion.value.cautions.map((item) => `${item.element} ${item.rationale}`).join(' / ')}`
+              : '직접 주의 후보 없음',
+            `규칙: ${opinion.ruleId} · 근거 ${opinion.evidence.length}건`,
+            opinion.caveats.join(' ')
+          ].filter(Boolean).join('\n\n'),
+          open: opinion.method === 'eokbu' || opinion.method === 'johu'
+        })),
+        {
+          summary: `학설 충돌 및 미해결 상태 · ${consensus.value.unresolved ? '추가 판단 필요' : '합의 지지'}`,
+          content: conflictText.join('\n\n'),
+          open: consensus.value.conflicts.length > 0
+        }
+      ]
+    });
+  }
+
+  if (engine.temporal) {
+    const temporal = engine.temporal;
+    sections.push({
+      id: 'temporal-evidence-v2',
+      title: '원국 × 대운 × 세운 × 월운 상호작용',
+      subtitle: '사건을 단정하지 않고 어떤 영역과 십성 주제가 활성화되는지 추적한 결과',
+      paragraphs: [
+        `현재 분석층은 ${temporal.layers.map((layer) => layer.label).join(' → ')}이며 신뢰도는 ${confidenceLabel(temporal.confidence)}입니다.`,
+        `교차 합·충·형·파·해 등 관계 ${temporal.relations.length}건, 십성 활성 ${temporal.tenGodActivations.length}건을 근거로 사용했습니다.`
+      ],
+      details: temporal.findings.slice(0, 16).map((finding, index) => ({
+        summary: `${finding.topic} · ${finding.tendency} · ${confidenceLabel(finding.confidence)}`,
+        content: `${finding.statement}\n\n근거 ID: ${finding.evidenceIds.join(', ') || '직접 활성 근거'}${finding.uncertainty.length ? `\n\n유보: ${finding.uncertainty.join(' ')}` : ''}`,
+        open: index < 3
+      })),
+      callout: temporal.uncertainty.length > 0
+        ? { title: '해석 한계', body: temporal.uncertainty.join(' ') }
+        : undefined
+    });
+  }
+
+  if (engine.compatibility) {
+    const compatibility = engine.compatibility;
+    sections.push({
+      id: 'compatibility-evidence-v2',
+      title: '두 사람 정밀 궁합 근거',
+      subtitle: `${engine.partner?.name || '상대방'}과의 ${compatibility.purpose === 'marriage' ? '결혼' : '연애'} 목적별 구조 분석`,
+      paragraphs: [
+        compatibility.overview.statement,
+        compatibility.dayMaster.conclusion.statement,
+        compatibility.spousePalace.conclusion.statement,
+        compatibility.elementExchange.conclusion.statement
+      ],
+      cards: compatibility.dimensions.map((dimension) => ({
+        title: dimension.label,
+        body: dimension.statement,
+        tone: dimension.tendency === 'supportive' ? 'good' : dimension.tendency === 'tension' ? 'warn' : 'default',
+        badge: `${dimension.tendency} · ${confidenceLabel(dimension.confidence)}`
+      })),
+      details: compatibility.facts.map((fact, index) => ({
+        summary: `${fact.category} · ${fact.tendency}`,
+        content: `${fact.statement}\n\n근거 ID: ${fact.relationIds.join(', ') || fact.id}${fact.uncertainty.length ? `\n\n유보: ${fact.uncertainty.join(' ')}` : ''}`,
+        open: index < 2
+      })),
+      callout: {
+        title: '궁합 판정 원칙',
+        body: compatibility.uncertainty.join(' ')
+      }
+    });
+  }
+
+  return sections;
+}
+
 export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFormData>, providedBasis?: DeterministicSajuBasis): SajuReportData {
   const service = findServiceById(serviceId);
   const kind = getKind(serviceId);
@@ -2337,7 +2564,6 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
 
   const { currentDayun, nextDayun } = mapCurrentAndNextDayun(
     basis,
-    formData,
     basis.helpfulElements as FiveElement[],
     basis.cautiousElements as FiveElement[]
   );
@@ -2363,7 +2589,10 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     basis.helpfulElements as FiveElement[],
     basis.cautiousElements as FiveElement[]
   );
-  const sections = buildSections(service.label, basis, formData, fiveElements, tenGods, currentDayun, nextDayun, yearLuck, monthLuck);
+  const sections = [
+    ...buildCommercialEvidenceSections(basis),
+    ...buildSections(service.label, basis, formData, fiveElements, tenGods, currentDayun, nextDayun, yearLuck, monthLuck)
+  ];
   const summary = buildYearlySummary(customerName, service.label, basis, currentDayun);
   const questionAnswers = buildQuestionAnswers(
     formData,
@@ -2437,7 +2666,22 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     yearLuck,
     monthLuck,
     actionPlan,
-    qualityAudit: EMPTY_QUALITY_AUDIT
+    qualityAudit: EMPTY_QUALITY_AUDIT,
+    engineMeta: {
+      engineVersion: basis.commercialV2.engineVersion,
+      validationStatus: basis.commercialV2.validationStatus,
+      calendarVersion: basis.commercialV2.calendar.version,
+      interpretationVersion: basis.commercialV2.interpretation?.version || 'not-run',
+      interactionVersion: basis.commercialV2.temporal?.engineVersion || '2.0.0',
+      calculationPrecision: basis.commercialV2.calendar.precision,
+      scenarioCount: basis.commercialV2.calendar.scenarioCount,
+      dayBoundaryPolicy: basis.commercialV2.calendar.dayBoundaryPolicy,
+      trueSolarTime: basis.commercialV2.calendar.trueSolarTime,
+      evidenceCount: basis.commercialV2.evidenceSummary.total,
+      confidence: basis.commercialV2.confidence,
+      uncertainty: basis.commercialV2.uncertainty,
+      helpfulElementSource: basis.helpfulElementSource
+    }
   };
 
   const polishedReport = diversifyRepeatedReportPhrases(report, cautionGuidance);

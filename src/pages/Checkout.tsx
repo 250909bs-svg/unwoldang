@@ -7,16 +7,24 @@ import { legalPages, type LegalPageKey } from '../content/legal';
 import { useAuth } from '../context/AuthContext';
 import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
+import { validateIntakeBirthInputs } from '../lib/birthInputValidation';
 import {
   buildPortOneRedirectUrl,
+  confirmAuthenticatedPortOnePayment,
   createCustomerKey,
   createOrderId,
   getPriceValue,
   readPendingPayment,
+  requestPaymentOrderIntent,
   savePendingPayment
 } from '../lib/auth';
 import { requestPortOnePayment } from '../lib/portonePayments';
-import { getPortOneConfirmEndpoint, hasPortOneRuntimeConfig, shouldUseDemoPayment } from '../lib/runtimeConfig';
+import {
+  getPaymentMode,
+  getPortOneConfirmEndpoint,
+  hasPortOneRuntimeConfig,
+  shouldUseDemoPayment
+} from '../lib/runtimeConfig';
 
 type CheckoutState = {
   product?: string;
@@ -35,6 +43,7 @@ export default function Checkout() {
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
   const service = findServiceById(product);
   const isPastLifeProduct = service.id === 'past-life-goblin';
+  const isLoveReadingProduct = service.id === 'love-reading';
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
@@ -66,12 +75,19 @@ export default function Checkout() {
   const confirmEndpoint = getPortOneConfirmEndpoint();
   const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || '01000000000';
   const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
+  const paymentMode = getPaymentMode();
   const isDemoPayment = shouldUseDemoPayment();
-  const canUsePortOneRuntime = Boolean(hasPortOneRuntimeConfig() && !isDemoPayment);
-  const hasRequiredBirthInfo = Boolean(formData?.name && formData?.birthDate && (formData?.birthTime || formData?.isUnknownTime));
+  const canUsePortOneRuntime = Boolean(paymentMode === 'live' && hasPortOneRuntimeConfig());
+  const requiresPartnerBirth = service?.id === 'match-couple' || service?.id === 'match-destiny';
+  const birthInputValidation = useMemo(
+    () => validateIntakeBirthInputs(formData || {}, { requirePartner: requiresPartnerBirth }),
+    [formData, requiresPartnerBirth]
+  );
+  const hasRequiredBirthInfo = birthInputValidation.self.valid;
+  const hasRequiredPartnerBirth = !requiresPartnerBirth || Boolean(birthInputValidation.partner?.valid);
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());
-  const paymentReady = isDemoPayment || canUsePortOneRuntime;
+  const paymentReady = isDemoPayment || (canUsePortOneRuntime && Boolean(user?.authToken));
   const canSubmit = Boolean(
     agreeService &&
       agreePrivacy &&
@@ -79,6 +95,7 @@ export default function Checkout() {
       service &&
       amount > 0 &&
       hasRequiredBirthInfo &&
+      hasRequiredPartnerBirth &&
       hasTwoQuestions &&
       reportReady &&
       paymentReady
@@ -105,7 +122,9 @@ export default function Checkout() {
     if (!canSubmit) {
       setError(
         !hasRequiredBirthInfo
-            ? '사주 정보를 먼저 입력해 주세요.'
+            ? birthInputValidation.self.errors[0]?.message || '사주 정보를 먼저 입력해 주세요.'
+            : !hasRequiredPartnerBirth
+              ? birthInputValidation.partner?.errors[0]?.message || '정밀 궁합을 위해 상대방의 생년월일과 출생 시각을 입력해 주세요.'
             : !hasTwoQuestions
               ? '질문 2개를 모두 입력해 주세요.'
               : !reportReady
@@ -129,11 +148,11 @@ export default function Checkout() {
       createdAt: new Date().toISOString()
     } as const;
 
-    savePendingPayment(pendingPayment);
     setIsSubmitting(true);
     setError(null);
 
     if (isDemoPayment) {
+      savePendingPayment(pendingPayment);
       navigate('/payment/portone/callback?payment=portone-success&mock=1', {
         replace: false
       });
@@ -146,11 +165,31 @@ export default function Checkout() {
       return;
     }
 
+    if (!user?.authToken) {
+      setError('안전한 결제 확인을 위해 카카오 로그인을 다시 진행해 주세요.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
+      const orderIntent = await requestPaymentOrderIntent({
+        confirmEndpoint,
+        authToken: user.authToken,
+        orderId,
+        productId: service.id,
+        amount
+      });
+      const authenticatedPendingPayment = {
+        ...pendingPayment,
+        orderId: orderIntent.orderId,
+        orderClaim: orderIntent.orderClaim
+      };
+      savePendingPayment(authenticatedPendingPayment);
+
       const paymentResponse = await requestPortOnePayment({
         storeId: portOneStoreId,
         channelKey: portOneChannelKey,
-        paymentId: orderId,
+        paymentId: orderIntent.orderId,
         orderName: service.label,
         totalAmount: amount,
         customerId: customerKey,
@@ -160,41 +199,33 @@ export default function Checkout() {
         redirectUrl: buildPortOneRedirectUrl(),
         customData: {
           productId: service.id,
-          paymentMethod: 'portone'
+          paymentMethod: 'portone',
+          orderClaim: orderIntent.orderClaim
         }
       });
 
       if (!paymentResponse) {
+        setError('결제창이 닫혔습니다. 결제를 다시 시도해 주세요.');
+        setIsSubmitting(false);
         return;
       }
 
-      const response = await fetch(confirmEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          paymentId: paymentResponse.paymentId || orderId,
-          txId: paymentResponse.txId,
-          orderId,
-          amount,
-          productId: service.id
-        })
+      const confirmed = await confirmAuthenticatedPortOnePayment({
+        confirmEndpoint,
+        authToken: user.authToken,
+        paymentId: paymentResponse.paymentId || orderIntent.orderId,
+        txId: paymentResponse.txId,
+        orderId: orderIntent.orderId,
+        amount,
+        productId: service.id,
+        orderClaim: orderIntent.orderClaim
       });
 
-      const parsed = (await response.json().catch(() => null)) as
-        | { message?: string; paymentId?: string; txId?: string; reportAccessToken?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(parsed?.message || 'PortOne KG이니시스 결제 검증에 실패했습니다.');
-      }
-
       savePendingPayment({
-        ...pendingPayment,
-        paymentKey: parsed?.paymentId || paymentResponse.paymentId || orderId,
-        txId: parsed?.txId || paymentResponse.txId,
-        reportAccessToken: parsed?.reportAccessToken
+        ...authenticatedPendingPayment,
+        paymentKey: confirmed.paymentId,
+        txId: confirmed.txId,
+        reportAccessToken: confirmed.reportAccessToken
       });
 
       navigate('/loading', {
@@ -203,9 +234,9 @@ export default function Checkout() {
           product: service.id,
           formData,
           paymentMethod: 'portone',
-          orderId,
+          orderId: confirmed.orderId,
           tabOrigin,
-          reportAccessToken: parsed?.reportAccessToken
+          reportAccessToken: confirmed.reportAccessToken
         }
       });
     } catch (caughtError) {
@@ -223,7 +254,9 @@ export default function Checkout() {
       className={
         isPastLifeProduct
           ? 'mobile-page-shell checkout-luxe-page past-life-checkout-page'
-          : 'mobile-page-shell checkout-luxe-page'
+          : isLoveReadingProduct
+            ? 'mobile-page-shell checkout-luxe-page love-reading-checkout-page'
+            : 'mobile-page-shell checkout-luxe-page'
       }
     >
       <div className="mobile-page-card checkout-luxe-card">
@@ -231,23 +264,55 @@ export default function Checkout() {
 
         <section className="checkout-luxe-stage" aria-label="결제 상품 미리보기">
           <div className="checkout-luxe-copy">
-            <span>{isPastLifeProduct ? '흑장부에 이름을 새기기 전' : '잠들어 있던 내 운의 흐름'}</span>
-            <strong>{formData?.name || '고객'}님의 {isPastLifeProduct ? '전생장부' : '사주 리포트'}</strong>
+            <span>
+              {isPastLifeProduct
+                ? '흑장부에 이름을 새기기 전'
+                : isLoveReadingProduct
+                  ? '붉은 실의 결말을 열기 전'
+                  : '잠들어 있던 내 운의 흐름'}
+            </span>
+            <strong>
+              {formData?.name || '고객'}님의 {isPastLifeProduct
+                ? '전생장부'
+                : isLoveReadingProduct
+                  ? '연애 패턴 리포트'
+                  : '사주 리포트'}
+            </strong>
           </div>
           <div className="checkout-luxe-preview-row">
             <article className="checkout-luxe-preview-card slim">
-              <img src={isPastLifeProduct ? '/media/dokkaebi-poster.webp' : '/intake-beauty-red.png'} alt="" />
+              <img
+                src={isPastLifeProduct
+                  ? '/media/dokkaebi-poster.webp'
+                  : isLoveReadingProduct
+                    ? '/images/mz-love-fact/generated/hero-fan-closed.webp'
+                    : '/intake-beauty-red.png'}
+                alt={isLoveReadingProduct ? '접힌 부채를 들고 연애운 장부를 여는 MZ무당' : ''}
+              />
               <div>
-                <span>{isPastLifeProduct ? '다섯 권' : '질문 2개'}</span>
-                <strong>{isPastLifeProduct ? '26개 주제' : '맞춤 분석'}</strong>
+                <span>{isPastLifeProduct ? '다섯 권' : isLoveReadingProduct ? '13개 챕터' : '질문 2개'}</span>
+                <strong>{isPastLifeProduct ? '26개 주제' : isLoveReadingProduct ? '맞춤 연애 분석' : '맞춤 분석'}</strong>
               </div>
             </article>
             <article className="checkout-luxe-preview-card featured">
-              <img src={isPastLifeProduct ? '/media/dokkaebi-poster.webp' : '/intake-night-blue.png'} alt="" />
+              <img
+                src={isPastLifeProduct
+                  ? '/media/dokkaebi-poster.webp'
+                  : isLoveReadingProduct
+                    ? '/images/mz-love-fact/generated/room-consultation.webp'
+                    : '/intake-night-blue.png'}
+                alt={isLoveReadingProduct ? '붉은 촛불과 부채가 놓인 MZ무당 연애 상담실' : ''}
+              />
               <div>
                 <span>운월당</span>
                 <strong>{service.label}</strong>
-                <p>{isPastLifeProduct ? '전생의 상징을 현생의 행동으로 연결하는 개인 장부' : '내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서'}</p>
+                <p>
+                  {isPastLifeProduct
+                    ? '전생의 상징을 현생의 행동으로 연결하는 개인 장부'
+                    : isLoveReadingProduct
+                      ? '끌림·관계 신호·12개월 흐름·30일 행동을 잇는 웹툰형 리포트'
+                      : '내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서'}
+                </p>
               </div>
             </article>
           </div>
@@ -265,8 +330,14 @@ export default function Checkout() {
           </div>
 
           <div className="checkout-luxe-benefit-pill">
-            <span>{isPastLifeProduct ? '개인 장부 구성' : '혜택 적용'}</span>
-            <strong>{isPastLifeProduct ? '한 번 결제로 다섯 권 전체를 받아요' : '결제 후 결과를 바로 확인할 수 있어요'}</strong>
+            <span>{isPastLifeProduct ? '개인 장부 구성' : isLoveReadingProduct ? '개인 리포트 구성' : '혜택 적용'}</span>
+            <strong>
+              {isPastLifeProduct
+                ? '한 번 결제로 다섯 권 전체를 받아요'
+                : isLoveReadingProduct
+                  ? '결제 후 13개 연애 챕터 전체를 바로 열어요'
+                  : '결제 후 결과를 바로 확인할 수 있어요'}
+            </strong>
           </div>
 
           <div className="checkout-luxe-package-stack">
@@ -277,7 +348,13 @@ export default function Checkout() {
               </span>
               <div>
                 <strong>{service.label}</strong>
-                <p>{isPastLifeProduct ? '봉인록·인연록·업록·현생록·해원록, 30일 봉인 해제' : '성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석'}</p>
+                <p>
+                  {isPastLifeProduct
+                    ? '봉인록·인연록·업록·현생록·해원록, 30일 봉인 해제'
+                    : isLoveReadingProduct
+                      ? '연애 패턴, 끌림·장기 인연 비교, 관계 신호, 12개월 흐름, 30일 행동 플랜'
+                      : '성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석'}
+                </p>
               </div>
               <b>{service.price}</b>
             </article>
@@ -299,7 +376,7 @@ export default function Checkout() {
               <strong>{service.price}</strong>
             </div>
             <div>
-              <span>{isPastLifeProduct ? '다섯 권 26개 맞춤 해석' : '질문 맞춤 분석'}</span>
+              <span>{isPastLifeProduct ? '다섯 권 26개 맞춤 해석' : isLoveReadingProduct ? '13개 맞춤 연애 챕터' : '질문 맞춤 분석'}</span>
               <strong>포함</strong>
             </div>
             <div className="total">
