@@ -26,7 +26,7 @@ export default function Navbar() {
             카테고리
           </NavLink>
           <NavLink
-            to="/form/general-signature"
+            to="/detail/general-saju"
             className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
           >
             <ScrollText size={14} />

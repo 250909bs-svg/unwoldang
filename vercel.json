@@ -23,8 +23,26 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.portone.io; connect-src 'self' https://*.run.app https://api.portone.io https://*.portone.io https://kauth.kakao.com https://kapi.kakao.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; media-src 'self' data: blob:; frame-src https://*.portone.io https://*.inicis.com https://*.kginicis.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://*.portone.io https://*.inicis.com https://*.kginicis.com"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.portone.io; connect-src 'self' https://*.run.app https://api.portone.io https://*.portone.io https://kauth.kakao.com https://kapi.kakao.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' data: blob:; frame-src https://*.portone.io https://*.inicis.com https://*.kginicis.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://*.portone.io https://*.inicis.com https://*.kginicis.com"
         }
+      ]
+    },
+    {
+      "source": "/assets/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/images/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/media/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
       ]
     },
     {
@@ -142,6 +160,10 @@
   ],
   "rewrites": [
     {
+      "source": "/detail/general-saju",
+      "destination": "/seo/detail-general-saju.html"
+    },
+    {
       "source": "/detail/past-life-goblin",
       "destination": "/seo/detail-past-life-goblin.html"
     },
@@ -182,8 +204,48 @@
       "destination": "/seo/refund.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/search",
       "destination": "/index.html"
+    },
+    {
+      "source": "/my",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/auth/kakao/callback",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment/portone/callback",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/form/:id(general-signature|life-flow|concern-reading|past-life-goblin|love-reading|love-reunion|match-couple|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/checkout",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/loading",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/report/:id(general-signature|life-flow|concern-reading|past-life-goblin|love-reading|love-reunion|match-couple|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/api/not-found"
     }
   ]
 }

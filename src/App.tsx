@@ -22,6 +22,7 @@ const PaymentCallback = lazy(() => import('./pages/PaymentCallback'));
 const My = lazy(() => import('./pages/My'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
+const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
 const LoveReadingLanding = lazy(() => import('./pages/LoveReadingLanding'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -60,6 +61,7 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
           <Route path="/detail/past-life-goblin" element={<PastLifeEntry />} />
           <Route path="/detail/past-life-goblin/immersion" element={<PastLifeImmersion />} />
           <Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />
+          <Route path="/detail/general-saju" element={<GeneralSajuLanding />} />
           <Route path="/detail/love-reading" element={<LoveReadingLanding />} />
           <Route path="/form/:id" element={<Form />} />
           <Route path="/checkout" element={<Checkout />} />
@@ -83,6 +85,7 @@ function AppShell() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isPastLifeLandingRoute = location.pathname.startsWith('/detail/past-life-goblin');
   const isPastLifeReportRoute = location.pathname === '/report/past-life-goblin';
+  const isGeneralDetailRoute = location.pathname === '/detail/general-saju';
   const isLoveDetailRoute = location.pathname === '/detail/love-reading';
   const isLoveFormRoute = location.pathname === '/form/love-reading';
   const isLoveReportRoute = location.pathname === '/report/love-reading';
@@ -95,6 +98,7 @@ function AppShell() {
     location.pathname.startsWith('/my') ||
     location.pathname.startsWith('/login') ||
     isPastLifeLandingRoute ||
+    isGeneralDetailRoute ||
     isImmersiveLoveRoute ||
     isLegalRoute;
 
@@ -111,6 +115,8 @@ function AppShell() {
       className={
         isAdminRoute
           ? 'app-container admin-app-container'
+          : isGeneralDetailRoute
+            ? 'app-container general-saju-app-container'
           : isLoveDetailRoute
             ? 'app-container mz-love-app-container'
             : isLoveFormRoute
@@ -124,7 +130,7 @@ function AppShell() {
             : 'app-container'
       }
     >
-      <AppRoutes hideGlobalChrome={isImmersiveLoveRoute} />
+      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PAST_LIFE_PRODUCT } from '../content/pastLifeExperience';
+import '../styles/past-life.css';
 
 const nextStoryState = { tabOrigin: '/' } as const;
 const CROSSFADE_SECONDS = 0.75;

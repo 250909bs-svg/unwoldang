@@ -35,7 +35,7 @@ const replayPromos: ReplayPromo[] = [
     title: '정통사주',
     subtitle: '나의 운명 전체 흐름은?',
     image: '/intake-night-blue.png',
-    to: '/form/general-signature',
+    to: '/detail/general-saju',
     tone: '#1f4f98'
   },
   {
@@ -134,7 +134,7 @@ function EmptyArchive() {
         <img src="/tarot-mascot.png" alt="" />
       </div>
       <p>앗, 아직 사주결과가 없어요!</p>
-      <Link to="/form/general-signature">첫 사주 리포트 보러가기</Link>
+      <Link to="/detail/general-saju">첫 사주 리포트 보러가기</Link>
     </section>
   );
 }

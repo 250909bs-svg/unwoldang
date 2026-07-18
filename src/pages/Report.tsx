@@ -14,6 +14,7 @@ import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
+import '../styles/past-life.css';
 
 const LoveReadingStoryReport = lazy(() => import('../components/LoveReadingStoryReport'));
 

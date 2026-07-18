@@ -9,9 +9,16 @@ type RouteSeo = {
   description: string;
   keywords: string;
   image: string;
+  imageAlt?: string;
   heading: string;
   intro: string;
   highlights: string[];
+  serviceId?: string;
+  productName?: string;
+  price?: number;
+  priceCurrency?: string;
+  sections?: Array<{ heading: string; body: string }>;
+  faqs?: Array<{ question: string; answer: string }>;
   indexable: boolean;
   lastmod: string;
 };
@@ -20,6 +27,7 @@ const routeSeo = seoRouteData as Record<string, RouteSeo>;
 const defaultSeo = routeSeo['/'];
 
 const detailAliases: Record<string, string> = {
+  'general-signature': '/detail/general-saju',
   'past-life-goblin': '/detail/past-life-goblin',
   'love-reading': '/detail/love-reading'
 };
@@ -106,61 +114,69 @@ function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, 
   const websiteId = `${SITE_URL}/#website`;
   const graph: Record<string, unknown>[] = [
     {
+      '@type': 'Organization',
+      '@id': organizationId,
+      name: '운월당',
+      legalName: '케이컴퍼니',
+      url: `${SITE_URL}/`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/apple-touch-icon.png`,
+        width: 180,
+        height: 180
+      },
+      email: '250909bs@gmail.com',
+      telephone: '050420111894',
+      areaServed: 'KR',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '050420111894',
+        email: '250909bs@gmail.com',
+        contactType: 'customer support',
+        areaServed: 'KR',
+        availableLanguage: 'ko'
+      }
+    },
+    {
+      '@type': 'WebSite',
+      '@id': websiteId,
+      name: '운월당',
+      alternateName: ['운월당 사주', 'Unwoldang'],
+      url: `${SITE_URL}/`,
+      inLanguage: 'ko-KR',
+      publisher: { '@id': organizationId }
+    },
+    {
       '@type': 'WebPage',
       '@id': `${canonicalUrl}#webpage`,
       url: canonicalUrl,
       name: seo.title,
       description: seo.description,
+      dateModified: seo.lastmod,
       inLanguage: 'ko-KR',
       isPartOf: { '@id': websiteId },
       primaryImageOfPage: {
         '@type': 'ImageObject',
-        url: imageUrl
+        url: imageUrl,
+        caption: seo.imageAlt || `${seo.heading} 대표 이미지`
       }
     }
   ];
 
   if (path === '/') {
-    graph.unshift(
-      {
-        '@type': 'Organization',
-        '@id': organizationId,
-        name: '운월당',
-        legalName: '케이컴퍼니',
-        url: `${SITE_URL}/`,
-        logo: {
-          '@type': 'ImageObject',
-          url: `${SITE_URL}/apple-touch-icon.png`,
-          width: 180,
-          height: 180
-        },
-        email: '250909bs@gmail.com',
-        telephone: '050420111894',
-        areaServed: 'KR'
-      },
-      {
-        '@type': 'WebSite',
-        '@id': websiteId,
-        name: '운월당',
-        alternateName: ['운월당 사주', 'Unwoldang'],
-        url: `${SITE_URL}/`,
-        inLanguage: 'ko-KR',
-        publisher: { '@id': organizationId }
-      },
-      {
-        '@type': 'ItemList',
-        '@id': `${SITE_URL}/#service-list`,
-        name: '운월당 개인 맞춤 사주 리포트',
-        itemListElement: Object.entries(routeSeo)
-          .filter(([route, item]) => route.startsWith('/detail/') && item.indexable)
-          .map(([route, item], index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            name: item.heading,
-            url: `${SITE_URL}${route}`
-          }))
-      }
-    );
+    graph.push({
+      '@type': 'ItemList',
+      '@id': `${SITE_URL}/#service-list`,
+      name: '운월당 대표 사주 리포트',
+      itemListElement: Object.entries(routeSeo)
+        .filter(([route, item]) => route.startsWith('/detail/') && item.indexable)
+        .map(([route, item], index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: item.productName || item.heading,
+          url: `${SITE_URL}${route}`
+        }))
+    });
   } else {
     graph.push({
       '@type': 'BreadcrumbList',
@@ -182,18 +198,39 @@ function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, 
     });
   }
 
-  if (path.startsWith('/detail/')) {
+  if (path.startsWith('/detail/') && seo.price && seo.priceCurrency) {
     graph.push({
-      '@type': 'Service',
-      '@id': `${canonicalUrl}#service`,
-      name: seo.heading,
-      serviceType: '개인 맞춤 사주 리포트',
+      '@type': 'Product',
+      '@id': `${canonicalUrl}#product`,
+      name: seo.productName || seo.heading,
       description: seo.description,
       url: canonicalUrl,
       image: imageUrl,
-      areaServed: 'KR',
-      availableLanguage: 'ko-KR',
-      provider: { '@id': organizationId }
+      category: '개인 맞춤 사주 리포트',
+      brand: { '@id': organizationId },
+      offers: {
+        '@type': 'Offer',
+        url: canonicalUrl,
+        price: String(seo.price),
+        priceCurrency: seo.priceCurrency,
+        availability: 'https://schema.org/InStock',
+        seller: { '@id': organizationId }
+      }
+    });
+  }
+
+  if (seo.faqs?.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${canonicalUrl}#faq`,
+      mainEntity: seo.faqs.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer
+        }
+      }))
     });
   }
 
@@ -239,11 +276,12 @@ export default function Seo() {
     setMeta('og:description', seo.description, 'property');
     setMeta('og:url', canonicalUrl, 'property');
     setMeta('og:image', imageUrl, 'property');
-    setMeta('og:image:alt', `${seo.heading} 대표 이미지`, 'property');
+    setMeta('og:image:alt', seo.imageAlt || `${seo.heading} 대표 이미지`, 'property');
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', seo.title);
     setMeta('twitter:description', seo.description);
     setMeta('twitter:image', imageUrl);
+    setMeta('twitter:image:alt', seo.imageAlt || `${seo.heading} 대표 이미지`);
 
     setStructuredData(buildStructuredData(seoPath, seo, canonicalUrl, imageUrl));
   }, [location.pathname]);
