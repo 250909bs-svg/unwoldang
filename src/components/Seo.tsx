@@ -20,16 +20,8 @@ const routeSeo = seoRouteData as Record<string, RouteSeo>;
 const defaultSeo = routeSeo['/'];
 
 const detailAliases: Record<string, string> = {
-  'general-signature': '/detail/general-signature',
-  'life-flow': '/detail/life-flow',
-  'concern-reading': '/detail/concern-reading',
   'past-life-goblin': '/detail/past-life-goblin',
-  'love-reading': '/detail/love-reading',
-  'love-reunion': '/detail/love-reunion',
-  'match-couple': '/detail/match-couple',
-  'match-destiny': '/detail/match-destiny',
-  'marriage-blueprint': '/detail/marriage-blueprint',
-  'marriage-timing': '/detail/marriage-timing'
+  'love-reading': '/detail/love-reading'
 };
 
 const noIndexPrefixes = ['/form/', '/report/', '/auth/', '/payment/'];

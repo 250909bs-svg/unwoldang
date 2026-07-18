@@ -9,7 +9,6 @@ const Home = lazy(() => import('./pages/Home'));
 const Test = lazy(() => import('./pages/Test'));
 const FaceAI = lazy(() => import('./pages/FaceAI'));
 const Search = lazy(() => import('./pages/Search'));
-const Detail = lazy(() => import('./pages/Detail'));
 const PastLifeEntry = lazy(() => import('./pages/PastLifeEntry'));
 const PastLifeImmersion = lazy(() => import('./pages/PastLifeImmersion'));
 const PastLifeLanding = lazy(() => import('./pages/PastLifeLanding'));
@@ -24,6 +23,7 @@ const My = lazy(() => import('./pages/My'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const LoveReadingLanding = lazy(() => import('./pages/LoveReadingLanding'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const callbackHashLocation = buildHashCallbackLocation();
 
@@ -61,7 +61,6 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
           <Route path="/detail/past-life-goblin/immersion" element={<PastLifeImmersion />} />
           <Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />
           <Route path="/detail/love-reading" element={<LoveReadingLanding />} />
-          <Route path="/detail/:id" element={<Detail />} />
           <Route path="/form/:id" element={<Form />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/loading" element={<Loading />} />
@@ -69,6 +68,7 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
           <Route path="/terms" element={<LegalPage pageKey="terms" />} />
           <Route path="/privacy" element={<LegalPage pageKey="privacy" />} />
           <Route path="/refund" element={<LegalPage pageKey="refund" />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
 

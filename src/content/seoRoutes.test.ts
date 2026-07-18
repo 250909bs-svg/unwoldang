@@ -1,0 +1,94 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import retiredDetailHandler from '../../api/retired-detail';
+import vercelConfig from '../../vercel.json';
+import seoRouteData from './seoRoutes.json';
+
+const activeDetailPaths = ['/detail/love-reading', '/detail/past-life-goblin'] as const;
+const retiredDetailPaths = [
+  '/detail/general-signature',
+  '/detail/life-flow',
+  '/detail/concern-reading',
+  '/detail/love-reunion',
+  '/detail/match-couple',
+  '/detail/match-destiny',
+  '/detail/marriage-blueprint',
+  '/detail/marriage-timing'
+] as const;
+const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
+
+describe('retired detail page indexing', () => {
+  it('keeps only the two current product detail pages indexable', () => {
+    const indexableDetailPaths = Object.entries(seoRouteData)
+      .filter(([path, seo]) => path.startsWith('/detail/') && seo.indexable)
+      .map(([path]) => path)
+      .sort();
+
+    expect(indexableDetailPaths).toEqual([...activeDetailPaths].sort());
+    retiredDetailPaths.forEach((path) => {
+      expect(seoRouteData[path].indexable).toBe(false);
+    });
+  });
+
+  it('routes active details to SEO pages and every other one-segment detail to the 410 handler', () => {
+    const activeRewrites = new Map(
+      vercelConfig.rewrites
+        .filter((rewrite) => activeDetailPaths.includes(rewrite.source as (typeof activeDetailPaths)[number]))
+        .map((rewrite) => [rewrite.source, rewrite.destination])
+    );
+    const retiredRewrite = vercelConfig.rewrites.find((rewrite) => rewrite.source === '/detail/:path*');
+
+    expect(activeRewrites.get('/detail/past-life-goblin')).toBe('/seo/detail-past-life-goblin.html');
+    expect(activeRewrites.get('/detail/love-reading')).toBe('/seo/detail-love-reading.html');
+    expect(retiredRewrite?.destination).toBe('/api/retired-detail');
+    expect(vercelConfig.trailingSlash).toBe(false);
+    expect(vercelConfig.headers).toContainEqual({
+      source: '/detail/past-life-goblin/:path(immersion|about)',
+      headers: [
+        { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        { key: 'Cache-Control', value: 'no-store' }
+      ]
+    });
+  });
+
+  it('permanently folds obsolete menu and tarot landings into the current home page', () => {
+    redirectedLegacyPaths.forEach((path) => {
+      expect(seoRouteData[path].indexable).toBe(false);
+      expect(vercelConfig.redirects).toContainEqual({ source: path, destination: '/', permanent: true });
+      expect(vercelConfig.rewrites.some((rewrite) => rewrite.source === path)).toBe(false);
+    });
+  });
+
+  it('returns a hard 410 response with noindex headers', () => {
+    const headers = new Map<string, string>();
+    let statusCode = 0;
+    let responseBody = '';
+    const response = {
+      setHeader(name: string, value: string) {
+        headers.set(name, value);
+      },
+      status(code: number) {
+        statusCode = code;
+        return this;
+      },
+      send(body: string) {
+        responseBody = body;
+        return this;
+      }
+    };
+
+    retiredDetailHandler({}, response);
+
+    expect(statusCode).toBe(410);
+    expect(headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
+    expect(responseBody).toContain('이 페이지는 종료되었어요.');
+  });
+
+  it('does not publish retired detail URLs in the sitemap', () => {
+    const sitemap = readFileSync(new URL('../../public/sitemap.xml', import.meta.url), 'utf8');
+
+    activeDetailPaths.forEach((path) => expect(sitemap).toContain(path));
+    retiredDetailPaths.forEach((path) => expect(sitemap).not.toContain(path));
+    redirectedLegacyPaths.forEach((path) => expect(sitemap).not.toContain(`<loc>https://www.unwoldang.com${path}</loc>`));
+  });
+});
