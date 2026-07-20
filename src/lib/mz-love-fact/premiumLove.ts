@@ -6,6 +6,7 @@ import {
   type PartnerAppearanceImageFamily,
   type PartnerAppearanceProfile
 } from './partnerAppearance';
+import { buildPartnerSpecificityProfile } from './partnerSpecificity';
 import { mzLoveCustomerNarrativeOrFallback } from './viewModel';
 
 export type SymbolicPartnerPortrait = {
@@ -136,11 +137,12 @@ function timingAnswer(report: SajuReportData) {
     strongest[0]?.focus,
     '새로운 접점을 늘리고 두 번째 약속이 잡히는지 확인해 보세요.',
   );
-  return `가장 먼저 볼 구간은 ${labels}입니다. ${focus}`;
+  return `절기 월운의 오행 흐름상 관계 행동을 먼저 늘려 볼 구간은 ${labels}입니다. ${focus} 이는 인연 성사를 보장하는 날짜가 아니라 우선 관찰 구간입니다.`;
 }
 
-export function getPremiumLoveAnswers(report: SajuReportData): readonly PremiumLoveAnswer[] {
+export function getPremiumLoveAnswers(report: SajuReportData, interestedIn?: LoveInterest): readonly PremiumLoveAnswer[] {
   const appearance = buildPartnerAppearanceProfile(report);
+  const specificity = buildPartnerSpecificityProfile(report, interestedIn);
 
   return [
     {
@@ -153,25 +155,25 @@ export function getPremiumLoveAnswers(report: SajuReportData): readonly PremiumL
       id: 'face',
       eyebrow: 'FACE',
       question: '그 사람은 어떤 얼굴과 분위기일까?',
-      answer: appearance.headline
+      answer: `${specificity.height.label}, ${specificity.face.label}로 읽힙니다. ${appearance.build}`
     },
     {
       id: 'timing',
       eyebrow: 'WHEN',
-      question: '언제 인연 가능성이 가장 높아질까?',
+      question: '전체 월운에서 관계를 움직여 볼 시기는?',
       answer: timingAnswer(report)
     },
     {
       id: 'meeting',
       eyebrow: 'WHERE',
       question: '어디서 어떻게 만나게 될까?',
-      answer: loveCard(report, '만남이 열리는 루트', '한 번 스치는 곳보다 대화와 약속이 반복되는 생활 반경에서 인연이 열립니다.')
+      answer: `1순위 장소는 ${specificity.meeting.primaryLocation}입니다. ${specificity.meeting.scene}. ${specificity.meeting.recognitionSignal}`
     },
     {
       id: 'work',
       eyebrow: 'LIFE',
       question: '그 사람의 일과 생활 결은 어떨까?',
-      answer: loveCard(report, '인연이 닿기 쉬운 직업군', '직업명보다 책임을 지는 방식과 일상을 운영하는 리듬을 먼저 확인해 보세요.')
+      answer: `직업 이미지는 1순위 ${specificity.professions[0].label}, 2순위 ${specificity.professions[1].label}, 3순위 ${specificity.professions[2].label}입니다. 실제 직업 확정이 아니라 ${specificity.professions[0].evidence.join('·')}에서 읽은 대표 사례예요.`
     },
     {
       id: 'contact',

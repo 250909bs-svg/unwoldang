@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, Sparkles } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { IntakeFormData, LoveFocus } from '../api/mockData';
 import { useAuth } from '../context/AuthContext';
@@ -7,13 +7,8 @@ import { validateBirthInput } from '../lib/birthInputValidation';
 import { buildMzLoveViewModel } from '../lib/mz-love-fact/viewModel';
 import { mapIntakeRelationshipStatus } from '../lib/mz-love-fact/relationshipStatusAdapter';
 import { getMzLoveScene } from '../lib/mz-love-fact/sceneManifest';
-import { buildPartnerAppearanceProfile } from '../lib/mz-love-fact/partnerAppearance';
-import {
-  getPartnerInterestLabel,
-  getPartnerPortraits,
-  getPremiumLoveAnswers,
-  SYMBOLIC_PARTNER_DISCLOSURE
-} from '../lib/mz-love-fact/premiumLove';
+import { buildPartnerSpecificityProfile } from '../lib/mz-love-fact/partnerSpecificity';
+import { getPremiumLoveAnswers } from '../lib/mz-love-fact/premiumLove';
 import type { MzLoveChapterId, SceneArtwork } from '../lib/mz-love-fact/types';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import '../styles/mz-love-intake.css';
@@ -96,10 +91,74 @@ function ScenePicture({
   );
 }
 
+function scrollToStoryScene(sceneId: string) {
+  document.getElementById(sceneId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function SpeechBalloon({
+  speaker,
+  side = 'left',
+  tone = 'character',
+  children
+}: {
+  speaker: string;
+  side?: 'left' | 'right';
+  tone?: 'character' | 'customer' | 'fact';
+  children: ReactNode;
+}) {
+  return (
+    <div className={['mz-love-speech', 'is-' + side, 'is-' + tone].join(' ')}>
+      <small>{speaker}</small>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function WebtoonScene({
+  id,
+  episode,
+  scene,
+  nextId,
+  nextLabel = '다음 장면',
+  className = '',
+  eager = false,
+  children
+}: {
+  id: string;
+  episode: string;
+  scene: SceneArtwork;
+  nextId?: string;
+  nextLabel?: string;
+  className?: string;
+  eager?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <article id={id} className={['mz-love-story-panel', className].filter(Boolean).join(' ')}>
+      <ScenePicture scene={scene} eager={eager} />
+      <span className="mz-love-story-shade" aria-hidden="true" />
+      <span className="mz-love-story-episode">{episode}</span>
+      <div className="mz-love-story-content">{children}</div>
+      {nextId ? (
+        <button
+          type="button"
+          className="mz-love-story-next"
+          onClick={() => scrollToStoryScene(nextId)}
+          aria-label={nextLabel + '으로 이동'}
+        >
+          <span>{nextLabel}</span>
+          <ArrowRight size={17} aria-hidden="true" />
+        </button>
+      ) : null}
+    </article>
+  );
+}
+
 export default function LoveReadingPreview() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
+  const previewRef = useRef<HTMLElement>(null);
   const locationState = (location.state as PreviewLocationState | null) ?? null;
   const tabOrigin = locationState?.tabOrigin || '/detail/love-reading';
   const draftKey = useMemo(
@@ -158,7 +217,8 @@ export default function LoveReadingPreview() {
       return;
     }
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    previewRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [location.hash, result?.report]);
 
   const editForm = () => {
@@ -176,7 +236,7 @@ export default function LoveReadingPreview() {
     const errorMessage = result?.error || validation.errors[0]?.message || '연애 상황과 관심 주제, 추가 질문 두 가지를 모두 입력해 주세요.';
 
     return (
-      <main className="mz-love-preview-page mz-love-preview-error">
+      <main ref={previewRef} className="mz-love-preview-page mz-love-preview-error">
         <section>
           <span>원국 확인이 필요해요</span>
           <h1>한 가지만 다시 볼게</h1>
@@ -194,19 +254,19 @@ export default function LoveReadingPreview() {
   const focus = isLoveFocus(formData.loveFocus) ? formData.loveFocus : 'my-attraction';
   const focusChapter = viewModel.chapters.find((chapter) => chapter.id === FOCUS_CHAPTERS[focus]);
   const openingScene = getMzLoveScene('hero-fan-closed');
+  const roomScene = getMzLoveScene('room-consultation');
   const whisperScene = getMzLoveScene('whisper-fact');
-  const lockedScenes = [
-    getMzLoveScene('first-meeting-scene'),
-    getMzLoveScene('waiting-for-message'),
-    getMzLoveScene('timing-rising-moon')
-  ];
-  const appearanceProfile = buildPartnerAppearanceProfile(report);
-  const partnerPortraits = getPartnerPortraits(formData.interestedIn, appearanceProfile);
-  const partnerInterestLabel = getPartnerInterestLabel(formData.interestedIn);
-  const premiumAnswers = getPremiumLoveAnswers(report);
-  const portraitEvidence = appearanceProfile.evidence
-    .map((item) => `${item.label} ${item.value}`)
-    .join(' · ');
+  const futurePartnerScene = getMzLoveScene('future-partner-fan');
+  const timingScene = getMzLoveScene('timing-rising-moon');
+  const finalScene = getMzLoveScene('final-fact-bomb');
+  const loveSelfChapter = viewModel.chapters.find((chapter) => chapter.id === 'love-self');
+  const specificity = buildPartnerSpecificityProfile(report, formData.interestedIn);
+  const heightTeaser = specificity.height.numericReference
+    ? `${specificity.height.representativeCm}cm 전후`
+    : specificity.height.label;
+  const premiumAnswers = getPremiumLoveAnswers(report, formData.interestedIn);
+  const premiumAnswerById = new Map(premiumAnswers.map((answer) => [answer.id, answer]));
+  const meetingScene = getMzLoveScene(specificity.meeting.sceneKey);
   const elementTotal = Math.max(1, report.fiveElements.reduce((sum, item) => sum + item.value, 0));
   const displayName = formData.name?.trim() || report.customerName;
   const helpful = report.helpfulElements.join('·') || '균형 기운';
@@ -251,7 +311,7 @@ export default function LoveReadingPreview() {
   };
 
   return (
-    <main className="mz-love-preview-page">
+    <main ref={previewRef} className="mz-love-preview-page">
       <header className="mz-love-preview-header">
         <button type="button" onClick={editForm} aria-label="입력 정보 수정하기">
           <ArrowLeft size={25} aria-hidden="true" />
@@ -263,236 +323,275 @@ export default function LoveReadingPreview() {
         <i aria-hidden="true" />
       </header>
 
-      <section className="mz-love-preview-opening">
-        <ScenePicture scene={openingScene} eager />
-        <span className="mz-love-preview-opening-shade" aria-hidden="true" />
-        <div className="mz-love-webtoon-bubble is-opening">
-          <small>MZ무당</small>
-          <p>왔네, {displayName}.<br />먼저 네 사주 원국부터 정확히 펼쳐볼게.</p>
-        </div>
-        <span className="mz-love-preview-scroll">아래로 내려서 원국 확인하기</span>
-      </section>
-
-      <section id="love-wonguk-preview" className="mz-love-wonguk-section">
-        <div className="mz-love-section-heading">
-          <span>命理 PREVIEW</span>
-          <h1>{displayName}님의 사주 원국</h1>
-          <p>생년월일과 출생시각을 만세력 엔진으로 계산한 기본 원국이에요.</p>
-        </div>
-
-        <article className="mz-love-wonguk-board" aria-label={`${displayName}님의 사주 원국`}>
-          <header>
-            <span>{report.birthLabel}</span>
-            <strong>{report.zodiac}띠 · {report.dayMaster} 일간</strong>
-          </header>
-          <div className="mz-love-wonguk-pillars">
-            {PILLARS.map((pillar) => {
-              const value = report.pillars[pillar.key];
-              const characters = value ? Array.from(value) : [];
-
-              return (
-                <section key={pillar.key} className={!value ? 'is-unknown' : undefined}>
-                  <span>{pillar.label}</span>
-                  {value ? (
-                    <strong aria-label={`${pillar.label} ${value}`}>
-                      <b>{characters[0]}</b>
-                      <em>{characters.slice(1).join('')}</em>
-                    </strong>
-                  ) : (
-                    <strong><b>미</b><em>상</em></strong>
-                  )}
-                </section>
-              );
-            })}
+      <section className="mz-love-webtoon-story" aria-label={displayName + '님의 연애 사주 웹툰 미리보기'}>
+        <WebtoonScene
+          id="love-story-opening"
+          episode="PROLOGUE · 00"
+          scene={openingScene}
+          nextId="love-story-chart"
+          nextLabel="내 원국 펼쳐보기"
+          eager
+        >
+          <div className="mz-love-dialogue-stack">
+            <SpeechBalloon speaker="MZ무당">
+              <p>왔네, <b>{displayName}</b>.</p>
+              <p>네가 만날 사람부터 묻고 싶겠지만, 먼저 그 사람을 끌어당기는 <b>네 원국</b>부터 정확히 펼쳐볼게.</p>
+            </SpeechBalloon>
+            <SpeechBalloon speaker={displayName} side="right" tone="customer">
+              <p>“{formData.q1?.trim()}”</p>
+            </SpeechBalloon>
           </div>
-          <footer>
-            <span><Check size={14} aria-hidden="true" /> {precisionLabel}</span>
-            <button type="button" onClick={editForm}>입력 수정</button>
-          </footer>
-        </article>
+        </WebtoonScene>
 
-        <div className="mz-love-wonguk-tags">
-          <span><small>나의 중심</small><strong>{report.dayMaster} · {report.dayMasterElement}</strong></span>
-          <span><small>일간 세력</small><strong>{report.strengthLabel}</strong></span>
-          <span><small>격국 참고</small><strong>{report.gyeokguk}</strong></span>
-        </div>
+        <WebtoonScene
+          id="love-story-chart"
+          episode="CHAPTER · 01"
+          scene={roomScene}
+          nextId="love-story-pattern"
+          nextLabel="연애 속 내 모습 보기"
+          className="is-chart"
+        >
+          <div className="mz-love-dialogue-stack is-chart-dialogue">
+            <SpeechBalloon speaker="MZ무당">
+              <p>네 중심은 <b>{report.dayMaster} {report.dayMasterElement} 일간</b>, 지금 원국의 힘은 <b>{report.strengthLabel}</b>으로 읽혀.</p>
+            </SpeechBalloon>
 
-        <article className="mz-love-element-card">
-          <header>
-            <span>오행 분포</span>
-            <strong>목 · 화 · 토 · 금 · 수</strong>
-          </header>
-          <div>
-            {report.fiveElements.map((item) => {
-              const percentage = Math.round((item.value / elementTotal) * 100);
-              return (
-                <section key={item.label}>
-                  <span>{item.label}</span>
-                  <i><em style={{ width: `${Math.max(item.value ? 7 : 0, percentage)}%`, background: item.color }} /></i>
-                  <strong>{percentage}%</strong>
-                </section>
-              );
-            })}
-          </div>
-          <p>도움이 되는 기운 <b>{helpful}</b> · 과하면 조심할 기운 <b>{cautious}</b></p>
-        </article>
-      </section>
+            <article className="mz-love-wonguk-board is-story" aria-label={displayName + '님의 사주 원국'}>
+              <header>
+                <span>{report.birthLabel}</span>
+                <strong>{report.zodiac}띠 · {precisionLabel}</strong>
+              </header>
+              <div className="mz-love-wonguk-pillars">
+                {PILLARS.map((pillar) => {
+                  const value = report.pillars[pillar.key];
+                  const characters = value ? Array.from(value) : [];
 
-      <section id="love-webtoon-preview" className="mz-love-webtoon-section">
-        <div className="mz-love-section-heading">
-          <span>WEBTOON READING</span>
-          <h2>이 원국, 연애에서는 어떻게 보일까?</h2>
-          <p>계산값을 사람 말로 바꿔서, MZ무당이 먼저 두 장면만 보여줄게요.</p>
-        </div>
-
-        <article className="mz-love-webtoon-panel">
-          <ScenePicture scene={whisperScene} />
-          <span className="mz-love-webtoon-panel-shade" aria-hidden="true" />
-          <div className="mz-love-webtoon-bubble">
-            <small>MZ무당 · 원국 풀이</small>
-            <p>{displayName}, 네 중심은 <b>{report.dayMaster} {report.dayMasterElement} 일간</b>이야. 지금 원국은 <b>{report.strengthLabel}</b> 흐름으로 읽혀.</p>
-            <em>연애운은 한 글자만 보지 않고 오행 균형과 관계 상태를 함께 판단해.</em>
-          </div>
-        </article>
-
-        {focusChapter?.scene ? (
-          <article className="mz-love-webtoon-panel is-focus">
-            <ScenePicture scene={focusChapter.scene} />
-            <span className="mz-love-webtoon-panel-shade" aria-hidden="true" />
-            <div className="mz-love-webtoon-bubble">
-              <small>네가 고른 주제 · {FOCUS_LABELS[focus]}</small>
-              <h3>{focusChapter.title}</h3>
-              <p>{focusChapter.factBomb}</p>
-              {focusChapter.characterLine !== focusChapter.factBomb ? (
-                <em>{focusChapter.characterLine}</em>
-              ) : focusChapter.interpretation !== focusChapter.factBomb ? (
-                <em>{focusChapter.interpretation}</em>
-              ) : null}
-            </div>
-          </article>
-        ) : null}
-
-        <section className="mz-love-partner-reveal" aria-labelledby="love-partner-reveal-title">
-          <header>
-            <span>SYMBOLIC PARTNER PORTRAIT</span>
-            <h2 id="love-partner-reveal-title">{displayName}의 다음 인연상,<br />얼굴부터 먼저 보여줄게</h2>
-            <p>{partnerInterestLabel}으로 표현한 명리 기반 창작 초상이에요.</p>
-          </header>
-
-          <div className={`mz-love-partner-portraits ${partnerPortraits.length > 1 ? 'is-pair' : ''}`}>
-            {partnerPortraits.map((portrait) => (
-              <article key={portrait.id}>
-                <picture>
-                  <source srcSet={portrait.avifSrc} type="image/avif" />
-                  <img
-                    src={portrait.src}
-                    alt={portrait.alt}
-                    width={portrait.width}
-                    height={portrait.height}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </picture>
-                <div>
-                  <small>{portrait.label}</small>
-                  <strong>{appearanceProfile.primaryArchetype.label}에 {appearanceProfile.secondaryArchetype.label}이 겹친 얼굴</strong>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <article className="mz-love-appearance-signature">
-            <span>FIRST IMPRESSION MIX</span>
-            <h3>{appearanceProfile.primaryArchetype.label}<i>+</i>{appearanceProfile.secondaryArchetype.label}</h3>
-            <p>{appearanceProfile.headline}</p>
-          </article>
-
-          <dl className="mz-love-appearance-traits" aria-label="다음 인연상 외모 세부 특징">
-            {[
-              ['키감', appearanceProfile.height],
-              ['체형', appearanceProfile.build],
-              ['얼굴형', appearanceProfile.faceShape],
-              ['눈매', appearanceProfile.eyes],
-              ['코선', appearanceProfile.nose],
-              ['스타일', appearanceProfile.style]
-            ].map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
+                  return (
+                    <section key={pillar.key} className={!value ? 'is-unknown' : undefined}>
+                      <span>{pillar.label}</span>
+                      {value ? (
+                        <strong aria-label={pillar.label + ' ' + value}>
+                          <b>{characters[0]}</b>
+                          <em>{characters.slice(1).join('')}</em>
+                        </strong>
+                      ) : (
+                        <strong><b>미</b><em>상</em></strong>
+                      )}
+                    </section>
+                  );
+                })}
               </div>
-            ))}
-          </dl>
-
-          <div className="mz-love-partner-proof">
-            <span>왜 이런 얼굴로 읽었을까?</span>
-            <strong>{portraitEvidence}</strong>
-            <p>배우자궁은 얼굴의 주 인상, 일간과 도움 오행은 키감·체형·피부·헤어, 상위 십성은 눈썹·표정·스타일의 보조 결로 번역했어요.</p>
-          </div>
-          <p className="mz-love-partner-disclosure">{SYMBOLIC_PARTNER_DISCLOSURE}</p>
-        </section>
-
-        <section className="mz-love-preview-answer-deck" aria-labelledby="love-answer-deck-title">
-          <header>
-            <span>PREMIUM ANSWER DECK</span>
-            <h2 id="love-answer-deck-title">사람들이 진짜 궁금한 것부터<br />9개 질문으로 답할게</h2>
-            <p>첫 세 가지는 지금 공개하고, 나머지는 13개 웹툰 본편에서 원국 근거와 함께 이어져요.</p>
-          </header>
-          <div>
-            {premiumAnswers.map((answer, index) => (
-              <article key={answer.id} className={index > 2 ? 'is-locked' : ''}>
-                <small>{answer.eyebrow}</small>
-                <h3>{answer.question}</h3>
-                {index <= 2 ? <p>{answer.answer}</p> : (
-                  <span><LockKeyhole size={15} aria-hidden="true" /> 본편에서 구체적으로 공개</span>
-                )}
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <article className="mz-love-preview-boundary">
-          <Sparkles size={19} aria-hidden="true" />
-          <div>
-            <strong>여기까지가 무료 원국 미리보기예요</strong>
-            <p>본편에서는 원국·대운·세운, 현재 관계와 두 질문을 교차해 9개 핵심 답과 13개 웹툰 챕터로 이어집니다.</p>
-          </div>
-        </article>
-      </section>
-
-      <section className="mz-love-locked-preview">
-        <div className="mz-love-section-heading">
-          <span>FULL STORY</span>
-          <h2>아직 잠겨 있는 다음 장면</h2>
-        </div>
-        <div>
-          {lockedScenes.map((scene, index) => (
-            <article key={scene.key}>
-              <ScenePicture scene={scene} />
-              <span aria-hidden="true" />
-              <LockKeyhole size={20} aria-hidden="true" />
-              <small>{['첫 만남이 열리는 장면', '연락과 밀당 패턴', '12개월 연애 타이밍'][index]}</small>
+              <footer>
+                <span><Check size={14} aria-hidden="true" /> 만세력 계산 완료</span>
+                <button type="button" onClick={editForm}>입력 수정</button>
+              </footer>
             </article>
-          ))}
-        </div>
-      </section>
 
-      {report.engineMeta?.uncertainty?.length ? (
-        <aside className="mz-love-preview-uncertainty">
-          <strong>계산 정확도 안내</strong>
-          <p>{report.engineMeta.uncertainty[0]}</p>
-        </aside>
-      ) : null}
+            <div className="mz-love-comic-facts" aria-label="원국 핵심 요약">
+              <span><small>일간</small><strong>{report.dayMasterElement}</strong></span>
+              <span><small>격국</small><strong>{report.gyeokguk}</strong></span>
+              <span><small>도움</small><strong>{helpful}</strong></span>
+              <span><small>주의</small><strong>{cautious}</strong></span>
+            </div>
 
-      <section className="mz-love-preview-cta">
-        <span>사주 원국 확인 완료</span>
-        <h2>이제 네 연애의 본편을 열어볼까?</h2>
-        <p>입력한 정보와 두 질문은 다음 화면에 그대로 이어집니다.</p>
-        <button type="button" onClick={continueToCheckout}>
-          <Sparkles size={18} aria-hidden="true" />
-          <strong>이 원국으로 팩폭 연애운 보기</strong>
-          <ArrowRight size={21} aria-hidden="true" />
-        </button>
-        <button type="button" className="mz-love-preview-edit" onClick={editForm}>입력 정보 다시 보기</button>
+            <SpeechBalloon speaker="MZ무당 · 근거" side="right" tone="fact">
+              <p>오행 분포는 {report.fiveElements.map((item) => item.label + ' ' + Math.round((item.value / elementTotal) * 100) + '%').join(' · ')}.</p>
+              <p>이 균형을 배우자궁·십성과 함께 봐야 연애 습관이 보여.</p>
+            </SpeechBalloon>
+          </div>
+        </WebtoonScene>
+
+        <WebtoonScene
+          id="love-story-pattern"
+          episode="CHAPTER · 02"
+          scene={whisperScene}
+          nextId="love-story-focus"
+          nextLabel="내 질문의 답 보기"
+        >
+          <div className="mz-love-dialogue-stack">
+            <SpeechBalloon speaker="MZ무당 · 첫 팩폭">
+              <p>{loveSelfChapter?.factBomb || '네가 사랑에 빠지는 방식부터 먼저 짚어볼게.'}</p>
+            </SpeechBalloon>
+            <SpeechBalloon speaker={displayName} side="right" tone="customer">
+              <p>“{formData.q2?.trim()}”</p>
+            </SpeechBalloon>
+            <SpeechBalloon speaker="MZ무당">
+              <p>{loveSelfChapter?.interpretation || '말보다 반복되는 행동을 봐야 네 연애의 답이 선명해져.'}</p>
+            </SpeechBalloon>
+            <aside className="mz-love-story-caption">
+              <small>현실에서 나타나는 장면</small>
+              <p>{loveSelfChapter?.realLifeScene}</p>
+              <strong>{loveSelfChapter?.checkSignal}</strong>
+            </aside>
+          </div>
+        </WebtoonScene>
+
+        <WebtoonScene
+          id="love-story-focus"
+          episode="CHAPTER · 03"
+          scene={focusChapter?.scene || whisperScene}
+          nextId="love-story-partner"
+          nextLabel="미래 인연 단서 보기"
+          className="is-focus"
+        >
+          <div className="mz-love-dialogue-stack">
+            <SpeechBalloon speaker={'선택한 질문 · ' + FOCUS_LABELS[focus]}>
+              <h2>{focusChapter?.title || FOCUS_LABELS[focus]}</h2>
+              <p>{focusChapter?.factBomb || premiumAnswerById.get('who')?.answer}</p>
+            </SpeechBalloon>
+            <SpeechBalloon speaker="MZ무당 · 더 구체적으로" side="right" tone="fact">
+              <p>{focusChapter?.interpretation}</p>
+            </SpeechBalloon>
+            <SpeechBalloon speaker="이번 주 행동">
+              <p>{focusChapter?.action}</p>
+            </SpeechBalloon>
+          </div>
+        </WebtoonScene>
+
+        <WebtoonScene
+          id="love-story-partner"
+          episode="CHAPTER · 04"
+          scene={futurePartnerScene}
+          nextId="love-story-meeting"
+          nextLabel="어디서 만나는지 보기"
+          className="is-partner-vault"
+        >
+          <div className="mz-love-dialogue-stack is-vault-dialogue">
+            <SpeechBalloon speaker="MZ무당">
+              <p>상징 프로필 1순위로는 <b>{heightTeaser}</b>, 얼굴은 <b>{specificity.face.label}</b> 쪽이 가장 강해.</p>
+              <em>배우자궁·십성·오행으로 만든 대표 인연상이며 실제 인물을 확정한 말은 아니야.</em>
+            </SpeechBalloon>
+
+            <section className="mz-love-portrait-vault" aria-label="잠긴 미래 인연 초상">
+              <div className="mz-love-vault-lock" aria-hidden="true">
+                <LockKeyhole size={30} />
+              </div>
+              <div className="mz-love-vault-portrait" aria-hidden="true">
+                <ScenePicture scene={futurePartnerScene} />
+                <span className="mz-love-vault-portrait__seal"><LockKeyhole size={36} /></span>
+              </div>
+              <span>FUTURE FACE · LOCKED</span>
+              <h2>네 인연 얼굴은 아직 봉인했어</h2>
+              <dl>
+                <div><dt>대표 키감</dt><dd>{heightTeaser}</dd></div>
+                <div><dt>얼굴 1순위</dt><dd>{specificity.face.primary}</dd></div>
+                <div className="is-locked"><dt>직업 Top 3</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
+                <div className="is-locked"><dt>정확한 만남 장소</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
+              </dl>
+              <button type="button" onClick={continueToCheckout}>
+                <LockKeyhole size={17} aria-hidden="true" />
+                잠금 풀고 인연 얼굴 보기
+              </button>
+            </section>
+
+            <SpeechBalloon speaker="MZ무당" side="right" tone="customer">
+              <p>궁금하지? <b>빨리 잠금 풀어봐.</b> 눈매·코선·스타일, 직업명 세 가지와 어디서 만나는지까지 이어서 보여줄게.</p>
+            </SpeechBalloon>
+          </div>
+        </WebtoonScene>
+
+        <WebtoonScene
+          id="love-story-meeting"
+          episode="CHAPTER · 05"
+          scene={meetingScene}
+          nextId="love-story-locked"
+          nextLabel="잠긴 본편 목차 보기"
+          className="is-meeting"
+        >
+          <div className="mz-love-dialogue-stack">
+            <SpeechBalloon speaker="MZ무당 · 만남 1순위">
+              <h2>{specificity.meeting.primaryContext}</h2>
+              <p>도움 오행 {report.helpfulElements[0] || specificity.meeting.evidence[0]}이 가리키는 만남의 결이야. 정확한 장소 한 곳은 본편에 봉인해뒀어.</p>
+            </SpeechBalloon>
+
+            <div className="mz-love-preview-sealed-grid" aria-label="본편에서 공개되는 미래 인연 상세 항목">
+              <article>
+                <LockKeyhole size={17} aria-hidden="true" />
+                <span>정확한 1순위 장소</span>
+                <strong>본편에서 공개</strong>
+              </article>
+              <article>
+                <LockKeyhole size={17} aria-hidden="true" />
+                <span>직업명 Top 3</span>
+                <strong>힌트 · {specificity.professions[0].fieldLabel}</strong>
+              </article>
+              <article>
+                <LockKeyhole size={17} aria-hidden="true" />
+                <span>첫 만남 뒤 확인 신호</span>
+                <strong>본편에서 공개</strong>
+              </article>
+            </div>
+
+            <SpeechBalloon speaker="MZ무당 · 계산 근거" side="right" tone="fact">
+              <p>배우자궁·상위 십성·도움 오행을 교차 계산했어.</p>
+              <em>{specificity.evidenceSummary}</em>
+            </SpeechBalloon>
+          </div>
+        </WebtoonScene>
+
+        <WebtoonScene
+          id="love-story-locked"
+          episode="CHAPTER · 06"
+          scene={timingScene}
+          nextId="love-story-final"
+          nextLabel="마지막 팩폭 보기"
+          className="is-locked-chapters"
+        >
+          <div className="mz-love-dialogue-stack">
+            <SpeechBalloon speaker="MZ무당 · 시기 미리보기">
+              <p>절기 기준 12개월을 모두 계산했고, 움직임이 큰 세 구간까지 좁혔어.</p>
+              <p>정확한 년·월과 그때 해야 할 행동은 본편에서 공개할게.</p>
+            </SpeechBalloon>
+            <div className="mz-love-locked-clues">
+              {[
+                '미래 인연 얼굴 전체와 이목구비 9항목',
+                '직업 Top 3별 성향·수입 리듬·연락 방식',
+                '첫 만남 장면·12개월 타이밍·결혼 흐름'
+              ].map((label) => (
+                <span key={label}><LockKeyhole size={16} aria-hidden="true" /> {label}</span>
+              ))}
+            </div>
+            <SpeechBalloon speaker="MZ무당" side="right">
+              <p>여기서 끝내면 얼굴의 절반만 본 거야. 본편에는 <b>13개 웹툰 장</b>으로 왜 그런지까지 풀어뒀어.</p>
+            </SpeechBalloon>
+          </div>
+        </WebtoonScene>
+
+        <WebtoonScene
+          id="love-story-final"
+          episode="EPILOGUE · 07"
+          scene={finalScene}
+          className="is-final"
+        >
+          <div className="mz-love-dialogue-stack">
+            <SpeechBalloon speaker="MZ무당 · 마지막 팩폭">
+              <h2>네 인연, 모호하게 말하지 않을게.</h2>
+              <p>얼굴·키감·직업·만남 장소를 1순위부터 짚고, 실제 관계에서 확인할 행동까지 이어서 보여줄게.</p>
+            </SpeechBalloon>
+
+            <aside className="mz-love-specificity-note">
+              <Sparkles size={17} aria-hidden="true" />
+              <p>{specificity.disclosure}</p>
+            </aside>
+
+            {report.engineMeta?.uncertainty?.length ? (
+              <aside className="mz-love-specificity-note is-uncertainty">
+                <strong>계산 정확도 안내</strong>
+                <p>{report.engineMeta.uncertainty[0]}</p>
+              </aside>
+            ) : null}
+
+            <button type="button" className="mz-love-story-unlock" onClick={continueToCheckout}>
+              <LockKeyhole size={19} aria-hidden="true" />
+              <span>
+                <small>미래 인연 얼굴부터 13개 본편까지</small>
+                <strong>이 원국으로 팩폭 연애운 잠금 풀기</strong>
+              </span>
+              <ArrowRight size={21} aria-hidden="true" />
+            </button>
+            <button type="button" className="mz-love-story-edit" onClick={editForm}>입력 정보 다시 보기</button>
+          </div>
+        </WebtoonScene>
       </section>
     </main>
   );

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { IntakeFormData } from '../../api/mockData';
 import { buildSajuReport } from '../saju/reportBuilder';
 import { buildPartnerAppearanceProfile } from './partnerAppearance';
+import { buildPartnerSpecificityProfile } from './partnerSpecificity';
 import { mzLoveCustomerNarrativeOrFallback } from './viewModel';
 import {
   getPartnerInterestLabel,
@@ -138,8 +139,6 @@ describe('premium love nine core answers', () => {
 
     const cardExpectations = [
       ['who', '실제로 오래 가는 사람', '말보다 약속과 생활 리듬으로 신뢰를 보여주는 사람이 오래 갑니다.'],
-      ['meeting', '만남이 열리는 루트', '한 번 스치는 곳보다 대화와 약속이 반복되는 생활 반경에서 인연이 열립니다.'],
-      ['work', '인연이 닿기 쉬운 직업군', '직업명보다 책임을 지는 방식과 일상을 운영하는 리듬을 먼저 확인해 보세요.'],
       ['contact', '연락 스타일', '답장 속도 하나보다 바쁜 날에도 관계의 맥락이 끊기지 않는지를 확인해야 합니다.'],
       ['marriage', '결혼 후 모습', '돈·시간·가족·휴식의 기준을 말로 합의할 수 있을 때 장기 관계가 안정됩니다.'],
       ['avoid', '피해야 할 사람', '관계를 정의하지 않으면서 필요할 때만 가까워지는 패턴은 초반부터 멈춰서 봐야 합니다.']
@@ -151,7 +150,18 @@ describe('premium love nine core answers', () => {
       );
     }
 
-    expect(byId.get('face')?.answer).toBe(buildPartnerAppearanceProfile(report).headline);
+    const appearance = buildPartnerAppearanceProfile(report);
+    const specificity = buildPartnerSpecificityProfile(report);
+
+    expect(byId.get('face')?.answer).toBe(
+      `${specificity.height.label}, ${specificity.face.label}로 읽힙니다. ${appearance.build}`
+    );
+    expect(byId.get('meeting')?.answer).toContain(specificity.meeting.primaryLocation);
+    expect(byId.get('meeting')?.answer).toContain(specificity.meeting.recognitionSignal);
+    for (const profession of specificity.professions) {
+      expect(byId.get('work')?.answer).toContain(profession.label);
+    }
+    expect(byId.get('work')?.answer).toContain('실제 직업 확정이 아니라');
   });
 
   it('시기 답변에 가장 점수가 높은 3개 월과 첫 행동 지침을 반영한다', () => {
