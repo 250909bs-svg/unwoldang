@@ -2,18 +2,25 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { findCategoryById, serviceCatalog, serviceCategories, type ServiceCategoryId } from '../api/mockData';
+import { canDiscoverProduct, getProductById } from '../products/registry';
 
 const accentPalette = ['rose', 'indigo', 'amber'] as const;
+const discoverableServices = serviceCatalog.filter((service) => canDiscoverProduct(service.id));
+const discoverableServiceCategories = serviceCategories.filter(
+  (category) =>
+    category.id === 'all' ||
+    discoverableServices.some((service) => service.category === category.id)
+);
 
 export default function Menu() {
   const [activeCategory, setActiveCategory] = useState<ServiceCategoryId>('all');
 
   const visibleServices = useMemo(() => {
     if (activeCategory === 'all') {
-      return serviceCatalog;
+      return discoverableServices;
     }
 
-    return serviceCatalog.filter((service) => service.category === activeCategory);
+    return discoverableServices.filter((service) => service.category === activeCategory);
   }, [activeCategory]);
 
   const activeCategoryInfo = findCategoryById(activeCategory);
@@ -37,7 +44,7 @@ export default function Menu() {
             </div>
 
             <div className="menu-mobile-chips">
-              {serviceCategories.map((category) => (
+              {discoverableServiceCategories.map((category) => (
                 <button
                   key={category.id}
                   type="button"
@@ -54,7 +61,7 @@ export default function Menu() {
             {visibleServices.map((service, index) => (
               <Link
                 key={service.id}
-                to={`/form/${service.id}`}
+                to={getProductById(service.id).routes.detail}
                 className={`app-report-card ${accentPalette[index % accentPalette.length]}`}
               >
                 <div className="app-report-badge">{service.heroTag}</div>

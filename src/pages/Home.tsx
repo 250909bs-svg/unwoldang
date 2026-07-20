@@ -10,6 +10,8 @@ import { Link } from 'react-router-dom';
 import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
+import { activeProducts, canDiscoverProduct, getProductById } from '../products/registry';
+import type { ProductId } from '../products/types';
 
 const illustrationDeck = {
   generalSaju: '/home-general-saju-card.webp',
@@ -28,12 +30,21 @@ const illustrationDeck = {
 const goblinPastLifePoster = '/media/dokkaebi-poster.webp';
 
 const homeMenuItems = [
-  { label: '종합사주', to: '/detail/general-saju', state: { tabOrigin: '/' } },
-  { label: 'MZ 도깨비 전생사주', to: '/detail/past-life-goblin', state: { tabOrigin: '/' } },
-  { label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
+  { productId: 'general-signature', label: '종합사주', to: '/detail/general-saju', state: { tabOrigin: '/' } },
+  {
+    productId: 'past-life-goblin',
+    label: 'MZ 도깨비 전생사주',
+    to: '/detail/past-life-goblin',
+    state: { tabOrigin: '/' }
+  },
+  { productId: 'concern-reading', label: '고민풀이', to: '/form/concern-reading', state: { tabOrigin: '/' } },
   { label: '심리테스트', to: '/test' },
   { label: '마이페이지', to: '/my' }
 ] as const;
+
+const discoverableHomeMenuItems = homeMenuItems.filter(
+  (item) => !('productId' in item) || canDiscoverProduct(item.productId)
+);
 
 const supportMailHref =
   'mailto:250909bs@gmail.com?subject=%EC%9A%B4%EC%9B%94%EB%8B%B9%20%EB%AC%B8%EC%9D%98';
@@ -50,8 +61,7 @@ const homeCategoryTabs = [
 
 type CardNewsSlide = {
   id: string;
-  target: string;
-  to?: string;
+  target: ProductId;
   rank: number;
   kicker: string;
   title: string;
@@ -66,7 +76,6 @@ const cardNewsSlides: CardNewsSlide[] = [
   {
     id: 'news-general',
     target: 'general-signature',
-    to: '/detail/general-saju',
     rank: 1,
     kicker: '종합사주',
     title: '운월 정통 종합사주',
@@ -77,7 +86,6 @@ const cardNewsSlides: CardNewsSlide[] = [
   {
     id: 'news-past-life-goblin',
     target: 'past-life-goblin',
-    to: '/detail/past-life-goblin',
     rank: 2,
     kicker: 'MZ 전생사주',
     title: 'MZ 도깨비 전생사주',
@@ -109,7 +117,6 @@ const cardNewsSlides: CardNewsSlide[] = [
   {
     id: 'news-love',
     target: 'love-reading',
-    to: '/detail/love-reading',
     rank: 5,
     kicker: 'MZ무당',
     title: 'MZ무당 팩폭 연애운',
@@ -129,123 +136,25 @@ const cardNewsSlides: CardNewsSlide[] = [
   }
 ] as const;
 
+const discoverableCardNewsSlides = cardNewsSlides
+  .filter((slide) => canDiscoverProduct(slide.target))
+  .map((slide) => ({
+    ...slide,
+    to: getProductById(slide.target).routes.detail
+  }));
+
 type HomeCategoryId = (typeof homeCategoryTabs)[number]['id'];
-type HomeProductCategory = Exclude<HomeCategoryId, 'all'> | 'all-only';
+const homeProductCards = activeProducts.map((product) => ({
+  id: product.id,
+  ...product.home,
+  to: product.routes.detail
+}));
 
-type HomeProductCard = {
-  id: string;
-  category: HomeProductCategory;
-  to: string;
-  image: string;
-  video?: string;
-  artworkTitle?: boolean;
-  fullPoster?: boolean;
-  title: string;
-  subtitle: string;
-  imagePosition?: string;
-};
-
-const homeProductCards: HomeProductCard[] = [
-  {
-    id: 'general-signature',
-    category: 'general',
-    to: '/detail/general-saju',
-    image: illustrationDeck.generalSaju,
-    title: '운월선생 정통 종합사주',
-    subtitle: '타고난 기질부터 인생 전체 흐름까지'
-  },
-  {
-    id: 'past-life-goblin',
-    category: 'general',
-    to: '/detail/past-life-goblin',
-    image: goblinPastLifePoster,
-    artworkTitle: true,
-    title: 'MZ 도깨비 전생사주',
-    subtitle: '전생 캐릭터와 현생에서 풀어야 할 미션'
-  },
-  {
-    id: 'love-reading',
-    category: 'love',
-    to: '/detail/love-reading',
-    image: illustrationDeck.loveReading,
-    artworkTitle: true,
-    fullPoster: true,
-    title: 'MZ무당 팩폭 연애운',
-    subtitle: '반복 패턴부터 다음 인연의 조건까지'
-  },
-  {
-    id: 'love-reunion',
-    category: 'reunion',
-    to: '/form/love-reunion',
-    image: illustrationDeck.loveReunion,
-    title: '홍연아씨 재회운',
-    subtitle: '다시 이어질 가능성과 연락 시기'
-  },
-  {
-    id: 'marriage-blueprint',
-    category: 'marriage',
-    to: '/form/marriage-blueprint',
-    image: illustrationDeck.blossom,
-    title: '청연부인 결혼운 설계도',
-    subtitle: '배우자 흐름과 현실적인 혼인 기준'
-  },
-  {
-    id: 'marriage-timing',
-    category: 'marriage',
-    to: '/form/marriage-timing',
-    image: illustrationDeck.lantern,
-    title: '청연부인 혼인 적기',
-    subtitle: '결혼이 안정되는 시기와 선택 포인트'
-  },
-  {
-    id: 'match-couple',
-    category: 'match',
-    to: '/form/match-couple',
-    image: illustrationDeck.matchCouple,
-    title: '월연도령 사주궁합',
-    subtitle: '두 사람의 속도와 생활 궁합 분석'
-  },
-  {
-    id: 'match-destiny',
-    category: 'match',
-    to: '/form/match-destiny',
-    image: illustrationDeck.red,
-    title: '월연도령 운명 궁합',
-    subtitle: '오래 이어질 인연인지 보는 깊은 궁합'
-  },
-  {
-    id: 'money-reading',
-    category: 'wealth',
-    to: '/form/money-reading',
-    image: illustrationDeck.sunlight,
-    title: '운월선생 재물운 설계도',
-    subtitle: '돈이 들어오고 머무는 나만의 흐름'
-  },
-  {
-    id: 'life-flow',
-    category: 'all-only',
-    to: '/form/life-flow',
-    image: illustrationDeck.yearlyFortune,
-    title: '운월선생 신년운세',
-    subtitle: '다가오는 12개월의 기회와 조심할 시기'
-  },
-  {
-    id: 'concern-reading',
-    category: 'all-only',
-    to: '/form/concern-reading',
-    image: illustrationDeck.concernReading,
-    title: '운월당 고민풀이',
-    subtitle: '지금 가장 답답한 고민을 사주로 정리'
-  },
-  {
-    id: 'career-reading',
-    category: 'all-only',
-    to: '/form/career-reading',
-    image: illustrationDeck.moon,
-    title: '운월선생 직업운 설계도',
-    subtitle: '직업 방향과 나에게 맞는 일의 방식'
-  }
-];
+const discoverableHomeCategoryTabs = homeCategoryTabs.filter(
+  (category) =>
+    category.id === 'all' ||
+    homeProductCards.some((product) => product.category === category.id)
+);
 
 const homeDiscoverySections = [
   {
@@ -255,7 +164,6 @@ const homeDiscoverySections = [
     cards: [
       {
         id: 'love-reading',
-        to: '/detail/love-reading',
         image: illustrationDeck.loveReading,
         coverKicker: 'MZ무당',
         coverTitle: '팩폭 연애운',
@@ -264,7 +172,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'love-reunion',
-        to: '/form/love-reunion',
         image: illustrationDeck.loveReunion,
         coverKicker: '홍연아씨',
         coverTitle: '재회비책',
@@ -273,7 +180,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'match-couple',
-        to: '/form/match-couple',
         image: illustrationDeck.matchCouple,
         coverKicker: '월연도령',
         coverTitle: '궁합비책',
@@ -289,7 +195,6 @@ const homeDiscoverySections = [
     cards: [
       {
         id: 'general-signature',
-        to: '/detail/general-saju',
         image: illustrationDeck.generalSaju,
         coverKicker: '운월선생',
         coverTitle: '종합사주',
@@ -298,7 +203,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'past-life-goblin',
-        to: '/detail/past-life-goblin',
         image: goblinPastLifePoster,
         artworkTitle: true,
         coverKicker: '도깨비 선생',
@@ -308,7 +212,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'concern-reading',
-        to: '/form/concern-reading',
         image: illustrationDeck.concernReading,
         coverKicker: '운월당',
         coverTitle: '고민풀이',
@@ -317,7 +220,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'life-flow',
-        to: '/form/life-flow',
         image: illustrationDeck.yearlyFortune,
         coverKicker: '운월선생',
         coverTitle: '월별운세',
@@ -333,7 +235,6 @@ const homeDiscoverySections = [
     cards: [
       {
         id: 'life-flow',
-        to: '/form/life-flow',
         image: illustrationDeck.yearlyFortune,
         coverKicker: '운월선생',
         coverTitle: '신년운세',
@@ -342,7 +243,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'match-destiny',
-        to: '/form/match-destiny',
         image: illustrationDeck.matchCouple,
         coverKicker: '월연도령',
         coverTitle: '운명궁합',
@@ -351,7 +251,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'marriage-blueprint',
-        to: '/form/marriage-blueprint',
         image: illustrationDeck.blossom,
         coverKicker: '청연부인',
         coverTitle: '결혼운',
@@ -366,8 +265,7 @@ const homeDiscoverySections = [
     title: '나도 상위 1% 가능하다고?',
     cards: [
       {
-        id: 'wealth',
-        to: '/form/money-reading',
+        id: 'money-reading',
         image: illustrationDeck.sunlight,
         coverKicker: '운월선생',
         coverTitle: '직업·재물',
@@ -375,8 +273,7 @@ const homeDiscoverySections = [
         summary: '일과 돈이 붙는 구조 읽기'
       },
       {
-        id: 'career',
-        to: '/form/career-reading',
+        id: 'career-reading',
         image: illustrationDeck.moon,
         coverKicker: '운월선생',
         coverTitle: '직업비책',
@@ -385,7 +282,6 @@ const homeDiscoverySections = [
       },
       {
         id: 'marriage-timing',
-        to: '/form/marriage-timing',
         image: illustrationDeck.lantern,
         coverKicker: '청연부인',
         coverTitle: '혼인적기',
@@ -395,6 +291,18 @@ const homeDiscoverySections = [
     ]
   }
 ] as const;
+
+const discoverableHomeDiscoverySections = homeDiscoverySections
+  .map((section) => ({
+    ...section,
+    cards: section.cards
+      .filter((card) => canDiscoverProduct(card.id))
+      .map((card) => ({
+        ...card,
+        to: getProductById(card.id).routes.detail
+      }))
+  }))
+  .filter((section) => section.cards.length > 0);
 
 export default function Home() {
   const [activeCardNewsIndex, setActiveCardNewsIndex] = useState(0);
@@ -415,21 +323,22 @@ export default function Home() {
     : '로그인 전';
   const menuAvatar = authUser?.avatar || illustrationDeck.sunlight;
   const activeCategoryLabel =
-    homeCategoryTabs.find((category) => category.id === activeHomeCategory)?.label || '전체';
+    discoverableHomeCategoryTabs.find((category) => category.id === activeHomeCategory)?.label || '전체';
   const visibleProducts =
     activeHomeCategory === 'all'
       ? []
       : homeProductCards.filter((product) => product.category === activeHomeCategory);
-  const visibleCardNews = cardNewsSlides
+  const visibleCardNews = discoverableCardNewsSlides
     .map((slide, index) => ({
       ...slide,
-      offset: (index - activeCardNewsIndex + cardNewsSlides.length) % cardNewsSlides.length
+      offset:
+        (index - activeCardNewsIndex + discoverableCardNewsSlides.length) % discoverableCardNewsSlides.length
     }))
     .filter((slide) => slide.offset <= 2);
 
   const moveCardNews = (direction: -1 | 1) => {
     setActiveCardNewsIndex((current) =>
-      (current + direction + cardNewsSlides.length) % cardNewsSlides.length
+      (current + direction + discoverableCardNewsSlides.length) % discoverableCardNewsSlides.length
     );
   };
 
@@ -509,7 +418,7 @@ export default function Home() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setActiveCardNewsIndex((prev) => (prev + 1) % cardNewsSlides.length);
+      setActiveCardNewsIndex((prev) => (prev + 1) % discoverableCardNewsSlides.length);
     }, 6000);
 
     return () => window.clearTimeout(timer);
@@ -595,7 +504,7 @@ export default function Home() {
               </div>
 
               <nav className="home-menu-list" aria-label="운월당 주요 메뉴">
-                {homeMenuItems.map((item) => (
+                {discoverableHomeMenuItems.map((item) => (
                   <Link
                     key={item.label}
                     to={item.to}
@@ -636,7 +545,7 @@ export default function Home() {
               }
             }}
           >
-            {homeCategoryTabs.map((category) => (
+            {discoverableHomeCategoryTabs.map((category) => (
               <button
                 key={category.id}
                 type="button"
@@ -665,7 +574,7 @@ export default function Home() {
                 {visibleCardNews.map((slide) => (
                   <Link
                     key={slide.id}
-                    to={slide.to || `/form/${slide.target}`}
+                    to={slide.to}
                     state={{ tabOrigin: '/' }}
                     className={`${
                       slide.offset === 0
@@ -727,7 +636,7 @@ export default function Home() {
               </div>
 
               <div className="home-cardnews-dots" role="tablist" aria-label="카드뉴스 선택">
-                {cardNewsSlides.map((slide, index) => (
+                {discoverableCardNewsSlides.map((slide, index) => (
                   <button
                     key={slide.id}
                     type="button"
@@ -742,7 +651,7 @@ export default function Home() {
             </section>
 
             <section className="home-showcase-stack">
-              {homeDiscoverySections.map((section) => (
+              {discoverableHomeDiscoverySections.map((section) => (
                 <section id={`home-${section.id}`} key={section.id} className="home-showcase-section">
                   <div className="home-showcase-head">
                     <small className="home-showcase-kicker">{section.eyebrow}</small>
