@@ -15,7 +15,6 @@ import {
   SYMBOLIC_PARTNER_DISCLOSURE
 } from '../lib/mz-love-fact/premiumLove';
 import type { MzLoveChapterId, SceneArtwork } from '../lib/mz-love-fact/types';
-import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import '../styles/mz-love-intake.css';
 
@@ -29,7 +28,8 @@ type PreviewLocationState = {
   };
 };
 
-const DRAFT_KEY_PREFIX = 'unwoldang.love-intake.v2';
+const DRAFT_KEY_PREFIX = 'unwoldang.love-intake.v3';
+const GUEST_DRAFT_KEY = `${DRAFT_KEY_PREFIX}.guest`;
 
 const FOCUS_CHAPTERS: Record<LoveFocus, MzLoveChapterId> = {
   'partner-type': 'lasting-partner',
@@ -103,14 +103,14 @@ export default function LoveReadingPreview() {
   const locationState = (location.state as PreviewLocationState | null) ?? null;
   const tabOrigin = locationState?.tabOrigin || '/detail/love-reading';
   const draftKey = useMemo(
-    () => user?.id ? `${DRAFT_KEY_PREFIX}.${user.id}` : null,
+    () => user?.id ? `${DRAFT_KEY_PREFIX}.${user.id}` : GUEST_DRAFT_KEY,
     [user?.id]
   );
-  const locationFormData = locationState?.draftOwnerId === user?.id
+  const locationFormData = !locationState?.draftOwnerId || locationState.draftOwnerId === user?.id
     ? locationState?.formData
     : undefined;
   const formData = useMemo(
-    () => locationFormData ?? readStoredFormData(draftKey),
+    () => locationFormData ?? readStoredFormData(draftKey) ?? readStoredFormData(GUEST_DRAFT_KEY),
     [draftKey, locationFormData]
   );
   const validation = useMemo(
@@ -120,7 +120,6 @@ export default function LoveReadingPreview() {
   const intakeComplete = Boolean(
     validation.valid &&
     formData?.relationshipStatus &&
-    (!isRelationshipDurationRequired(formData.relationshipStatus) || formData.relationshipDuration) &&
     isLoveFocus(formData?.loveFocus) &&
     formData?.q1?.trim().length && formData.q1.trim().length >= 4 &&
     formData?.q2?.trim().length && formData.q2.trim().length >= 4
@@ -147,13 +146,10 @@ export default function LoveReadingPreview() {
   }, [formData, intakeComplete]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login', {
-        replace: true,
-        state: { returnTo: location.pathname, tabOrigin }
-      });
+    if (typeof window !== 'undefined' && formData && draftKey && isAuthenticated) {
+      window.sessionStorage.setItem(draftKey, JSON.stringify(formData));
     }
-  }, [isAuthenticated, location.pathname, navigate, tabOrigin]);
+  }, [draftKey, formData, isAuthenticated]);
 
   useEffect(() => {
     if (location.hash) {
@@ -220,6 +216,16 @@ export default function LoveReadingPreview() {
     : '입력한 분 단위 출생시각 반영';
 
   const continueToCheckout = () => {
+    if (!isAuthenticated) {
+      window.sessionStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(formData));
+      navigate('/login', {
+        state: {
+          returnTo: '/preview/love-reading',
+          tabOrigin
+        }
+      });
+      return;
+    }
     if (locationState?.recoveredEntitlement) {
       navigate('/loading', {
         state: {

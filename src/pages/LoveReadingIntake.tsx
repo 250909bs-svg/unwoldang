@@ -30,7 +30,8 @@ type LoveIntakeDraft = Omit<IntakeFormData, 'gender' | 'interestedIn' | 'loveFoc
 type IntakeStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type BirthPeriod = '' | 'am' | 'pm';
 
-const DRAFT_KEY_PREFIX = 'unwoldang.love-intake.v2';
+const DRAFT_KEY_PREFIX = 'unwoldang.love-intake.v3';
+const GUEST_DRAFT_KEY = `${DRAFT_KEY_PREFIX}.guest`;
 const BACKGROUND_VIDEO = '/media/mz-love-intake-background.mp4';
 const BACKGROUND_POSTER = '/images/mz-love-fact/generated/room-corridor.webp';
 
@@ -41,11 +42,6 @@ const LOVE_FOCUS_OPTIONS: ReadonlyArray<{ value: LoveFocus; label: string; detai
   { value: 'repeated-pattern', label: '내가 반복하는 사랑의 패턴', detail: '매번 비슷하게 꼬이는 이유와 전환점' }
 ];
 
-const LOVE_INTEREST_OPTIONS: ReadonlyArray<{ value: LoveInterest; label: string; detail: string }> = [
-  { value: 'men', label: '남성 인연', detail: '남성으로 표현된 상징 인연상을 보여줄게' },
-  { value: 'women', label: '여성 인연', detail: '여성으로 표현된 상징 인연상을 보여줄게' },
-  { value: 'any', label: '성별은 상관없어', detail: '성별을 정하지 않고 두 인연상을 함께 볼게' }
-];
 
 const RELATIONSHIP_OPTIONS: ReadonlyArray<{
   value: Exclude<RelationshipStatus, '' | 'married'>;
@@ -58,15 +54,6 @@ const RELATIONSHIP_OPTIONS: ReadonlyArray<{
   { value: 'dating', label: '애인이 있어요', detail: '지금 관계의 방향과 미래가 궁금해요' }
 ];
 
-const DURATION_OPTIONS: ReadonlyArray<{
-  value: IntakeFormData['relationshipDuration'];
-  label: string;
-}> = [
-  { value: 'under1', label: '1년 미만' },
-  { value: 'under3', label: '1~3년' },
-  { value: 'under5', label: '3~5년' },
-  { value: 'under10', label: '5년 이상' }
-];
 
 const STEP_META: Record<IntakeStep, { title: string; guide: string }> = {
   1: {
@@ -123,7 +110,8 @@ function isLoveFocus(value: unknown): value is LoveFocus {
 }
 
 function isLoveInterest(value: unknown): value is LoveInterest {
-  return LOVE_INTEREST_OPTIONS.some((option) => option.value === value) || value === 'prefer-not-to-say';
+  return value === 'men' || value === 'women' || value === 'any' ||
+    value === 'prefer-not-to-say';
 }
 
 function readStoredDraft(draftKey: string | null): Partial<IntakeFormData> | null {
@@ -249,18 +237,18 @@ function validationStep(field: string): IntakeStep {
 export default function LoveReadingIntake() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
   const locationState = (location.state as IntakeLocationState | null) ?? null;
   const tabOrigin = locationState?.tabOrigin || '/detail/love-reading';
   const draftKey = useMemo(
-    () => user?.id ? `${DRAFT_KEY_PREFIX}.${user.id}` : null,
+    () => user?.id ? `${DRAFT_KEY_PREFIX}.${user.id}` : GUEST_DRAFT_KEY,
     [user?.id]
   );
   const locationFormData = !locationState?.draftOwnerId || locationState.draftOwnerId === user?.id
     ? locationState?.formData
     : undefined;
   const initialDraft = useMemo(
-    () => hydrateDraft(locationFormData ?? readStoredDraft(draftKey)),
+    () => hydrateDraft(locationFormData ?? readStoredDraft(draftKey) ?? readStoredDraft(GUEST_DRAFT_KEY)),
     [draftKey, locationFormData]
   );
   const initialBirthTime = useMemo(() => parseBirthTime(initialDraft.birthTime), [initialDraft.birthTime]);
@@ -273,25 +261,12 @@ export default function LoveReadingIntake() {
   const [videoFailed, setVideoFailed] = useState(false);
   const hourInputRef = useRef<HTMLInputElement>(null);
   const minuteInputRef = useRef<HTMLInputElement>(null);
-  const meta = step === 3 && draft.gender
-    ? {
-        title: '어떤 인연을 보여줄까?',
-        guide: '내 성별과 별개로, 보고 싶은 미래 인연의 표현을 골라줘.'
-      }
-    : STEP_META[step];
+  const meta = STEP_META[step];
   const hasSavedAnswers = Boolean(
     draft.birthDate || draft.birthTime || draft.name || draft.gender || draft.interestedIn ||
     draft.relationshipStatus || draft.loveFocus || draft.q1 || draft.q2
   );
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login', {
-        replace: true,
-        state: { returnTo: location.pathname, tabOrigin }
-      });
-    }
-  }, [isAuthenticated, location.pathname, navigate, tabOrigin]);
 
   useEffect(() => {
     setDraft(initialDraft);
@@ -301,10 +276,10 @@ export default function LoveReadingIntake() {
   }, [initialBirthTime, initialDraft]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && isAuthenticated && draftKey) {
+    if (typeof window !== 'undefined' && draftKey) {
       window.sessionStorage.setItem(draftKey, JSON.stringify(draft));
     }
-  }, [draft, draftKey, isAuthenticated]);
+  }, [draft, draftKey]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -410,12 +385,11 @@ export default function LoveReadingIntake() {
       case 2:
         return draft.isUnknownTime || /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(draft.birthTime);
       case 3:
-        return (draft.gender === 'male' || draft.gender === 'female') && Boolean(draft.interestedIn);
+        return draft.gender === 'male' || draft.gender === 'female';
       case 4:
         return Boolean(draft.name.trim());
       case 5:
-        return Boolean(draft.relationshipStatus) &&
-          (draft.relationshipStatus !== 'dating' || Boolean(draft.relationshipDuration));
+        return Boolean(draft.relationshipStatus);
       case 6:
         return Boolean(draft.loveFocus);
       case 7:
@@ -433,10 +407,6 @@ export default function LoveReadingIntake() {
       return;
     }
 
-    if (step === 3 && draft.gender) {
-      setDraft((current) => ({ ...current, gender: '', interestedIn: '' }));
-      return;
-    }
 
     setStep((current) => (current - 1) as IntakeStep);
   };
@@ -629,57 +599,54 @@ export default function LoveReadingIntake() {
       case 3:
         return (
           <div className="mz-love-intake-option-stack mz-love-intake-option-stack--gender">
-            {!draft.gender ? ([
-                ['male', '남자', '남성 기준 대운 방향으로 계산'],
-                ['female', '여자', '여성 기준 대운 방향으로 계산']
-              ] as const).map(([value, label, detail]) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={draft.gender === value}
-                  onClick={() => updateDraft('gender', value)}
-                >
-                  <span>
-                    <strong>{label}</strong>
-                    <small>{detail}</small>
-                  </span>
-                  <i />
-                </button>
-              )) : LOVE_INTEREST_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={draft.interestedIn === option.value}
-                  className={draft.interestedIn === option.value ? 'is-selected' : ''}
-                  onClick={() => advanceWithDraft({ interestedIn: option.value }, 4)}
-                >
-                  <span>
-                    <strong>{option.label}</strong>
-                    <small>{option.detail}</small>
-                  </span>
-                  <i>{draft.interestedIn === option.value ? <Check size={18} aria-hidden="true" /> : null}</i>
-                </button>
-              ))}
+            {([
+              ['male', '남자'],
+              ['female', '여자']
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={draft.gender === value}
+                className={draft.gender === value ? 'is-selected' : ''}
+                onClick={() => advanceWithDraft({
+                  gender: value,
+                  interestedIn: value === 'male' ? 'women' : 'men'
+                }, 4)}
+              >
+                <strong>{label}</strong>
+                <i>{draft.gender === value ? <Check size={18} aria-hidden="true" /> : null}</i>
+              </button>
+            ))}
           </div>
         );
       case 4:
         return (
           <div className="mz-love-intake-fields">
-            <label className="mz-love-intake-line-field">
-              <span className="sr-only">이름 또는 닉네임</span>
-              <input
-                autoFocus
-                type="text"
-                autoComplete="name"
-                maxLength={20}
-                value={draft.name}
-                placeholder="홍길동"
-                enterKeyHint="next"
-                onChange={(event) => updateDraft('name', event.target.value)}
-                onKeyDown={handleInputEnter}
-              />
-            </label>
-            <p className="mz-love-intake-note">이름을 적고 키보드의 ‘다음’을 눌러줘. 닉네임도 괜찮아요.</p>
+            <div className="mz-love-intake-name-row">
+              <label className="mz-love-intake-line-field">
+                <span className="sr-only">이름 또는 닉네임</span>
+                <input
+                  autoFocus
+                  type="text"
+                  autoComplete="name"
+                  maxLength={20}
+                  value={draft.name}
+                  placeholder="홍길동"
+                  enterKeyHint="next"
+                  onChange={(event) => updateDraft('name', event.target.value)}
+                  onKeyDown={handleInputEnter}
+                />
+              </label>
+              <button
+                type="button"
+                className="mz-love-intake-name-confirm"
+                disabled={!draft.name.trim()}
+                onClick={handleNext}
+              >
+                <Check size={18} aria-hidden="true" />
+                <span>확인</span>
+              </button>
+            </div>
           </div>
         );
       case 5:
@@ -691,17 +658,10 @@ export default function LoveReadingIntake() {
                 type="button"
                 aria-pressed={draft.relationshipStatus === option.value}
                 className={draft.relationshipStatus === option.value ? 'is-selected' : ''}
-                onClick={() => {
-                  const patch: Partial<LoveIntakeDraft> = {
-                    relationshipStatus: option.value,
-                    relationshipDuration: option.value === 'dating' ? draft.relationshipDuration : ''
-                  };
-                  if (option.value === 'dating') {
-                    setDraft((current) => ({ ...current, ...patch }));
-                  } else {
-                    advanceWithDraft(patch, 6);
-                  }
-                }}
+                onClick={() => advanceWithDraft({
+                  relationshipStatus: option.value,
+                  relationshipDuration: ''
+                }, 6)}
               >
                 <span>
                   <strong>{option.label}</strong>
@@ -710,24 +670,6 @@ export default function LoveReadingIntake() {
                 <i>{draft.relationshipStatus === option.value ? <Check size={18} aria-hidden="true" /> : null}</i>
               </button>
             ))}
-            {draft.relationshipStatus === 'dating' ? (
-              <div className="mz-love-intake-duration">
-                <span>만난 기간도 알려줘</span>
-                <div>
-                  {DURATION_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      aria-pressed={draft.relationshipDuration === option.value}
-                      className={draft.relationshipDuration === option.value ? 'is-selected' : ''}
-                      onClick={() => advanceWithDraft({ relationshipDuration: option.value }, 6)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
         );
       case 6:
