@@ -1,7 +1,8 @@
 // This is a high-precision Saju (Four Pillars) calculation engine.
 // It replaces the previous faulty implementation with accurate astronomical algorithms
 // for solar terms, lunar-to-solar calendar conversions, and Ganzhi calculations.
-// It is based on a simplified VSOP87 theory for high accuracy between 1900-2100.
+// It uses a compact apparent-solar-longitude model for 1900-2099. Commercial
+// boundary cases still require an external ephemeris cross-check.
 
 import type { GZ } from './types';
 
@@ -48,7 +49,9 @@ function normalizeAngle(angle: number): number {
 
 /**
  * Calculates the solar longitude for a given Julian Day.
- * Uses a simplified VSOP87 model, accurate for the 1900-2100 period.
+ * Uses the Sun's apparent geocentric longitude. Returning true longitude here
+ * moves solar-term boundaries by roughly 10-20 minutes because nutation and
+ * aberration are omitted, which is large enough to flip year/month pillars.
  */
 function getSolarLongitude(jd: number): number {
     const t = (jd - J2000) / 36525.0; // Julian centuries since J2000
@@ -66,7 +69,13 @@ function getSolarLongitude(jd: number): number {
 
     // True longitude
     const theta = L + C;
-    return normalizeAngle(theta);
+
+    // Apparent longitude correction (nutation + aberration approximation).
+    // This is the same compact correction used by standard solar-position
+    // algorithms and is materially safer at minute-level solar-term edges.
+    const omega = 125.04 - 1934.136 * t;
+    const apparent = theta - 0.00569 - 0.00478 * Math.sin(omega * Math.PI / 180);
+    return normalizeAngle(apparent);
 }
 
 /**
@@ -86,6 +95,23 @@ function getJDofSolarTerm(year: number, termAngle: number): number {
         jd += angleDiff / 0.9856; // 0.9856 is approx degrees sun moves per day
     }
     return jd;
+}
+
+/** Returns the UTC instant of a solar term occurring in a Gregorian year. */
+export function getSolarTermInstantForGregorianYear(year: number, termAngle: number): Date {
+    if (!Number.isInteger(year) || year < 1900 || year > 2099) {
+        throw new Error('절기 계산은 1900년부터 2099년까지 지원합니다.');
+    }
+    if (!Number.isFinite(termAngle) || termAngle < 0 || termAngle >= 360) {
+        throw new Error('절기 황경은 0도 이상 360도 미만이어야 합니다.');
+    }
+
+    // The solver's year anchor is January 1 (solar longitude ≈280°). Angles
+    // below that point need the following anchor year to land in this
+    // Gregorian year rather than the previous one.
+    const calculationYear = termAngle < 280 ? year + 1 : year;
+    const jd = getJDofSolarTerm(calculationYear, termAngle);
+    return new Date((jd - 2440587.5) * 86400000);
 }
 
 
@@ -280,7 +306,7 @@ export class DayUtil {
         return { tg: tg_idx, dz: dz_idx };
     }
 
-    getDaeyunInfo(gender: 'male' | 'female'): { start_age: number; forward: boolean; } {
+    getDaeyunInfo(gender: 'male' | 'female'): { start_age: number; start_instant: Date; forward: boolean; } {
         const yearGz = this.getYearGZ();
         const isYangYear = [0, 2, 4, 6, 8].includes(yearGz.tg);
         const forward = (gender === 'male' && isYangYear) || (gender === 'female' && !isYangYear);
@@ -307,7 +333,10 @@ export class DayUtil {
 
         const diffDays = diffMillis / 86400000;
         const start_age = diffDays / 3;
-        return { start_age, forward };
+        const start_instant = new Date(
+            this.birthDate.getTime() + start_age * 365.2422 * 86400000
+        );
+        return { start_age, start_instant, forward };
     }
 
     getCalculationBasis(): { ipchunDate: Date; birthDateAfterIpchun: boolean; } {

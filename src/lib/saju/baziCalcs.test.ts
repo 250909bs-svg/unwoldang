@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DZ, TG } from './constants';
+import { DZ, HIDDEN_STEMS, TG } from './constants';
 import {
   calcBazi,
   daymasterStrength,
@@ -9,6 +9,8 @@ import {
   getPillarLabels,
   getTwelveYunseong,
   seunRows,
+  tenGod,
+  tenGodFromBranch,
   tenGodDistribution,
   usefulElements
 } from './baziCalcs';
@@ -22,6 +24,18 @@ function parseAgeRange(ageText: string) {
 }
 
 describe('saju core engine regression coverage', () => {
+  it('derives every branch ten-god from its main hidden stem', () => {
+    for (let dayStem = 0; dayStem < TG.length; dayStem += 1) {
+      for (let branch = 0; branch < DZ.length; branch += 1) {
+        const hiddenStems = HIDDEN_STEMS[DZ[branch]];
+        const mainHiddenStem = hiddenStems[hiddenStems.length - 1];
+        expect(tenGodFromBranch(dayStem, branch)).toBe(tenGod(dayStem, mainHiddenStem));
+      }
+    }
+
+    expect(tenGodFromBranch(0, 0)).toBe('정인'); // 갑일간 × 자(본기 계)
+  });
+
   it('converts and validates lunar dates using the actual lunar month length', () => {
     const lunarNewYear = calcBazi(2024, 1, 1, 12, 0, 'lunar', 'normal', 'female', false);
 

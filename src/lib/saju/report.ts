@@ -106,6 +106,8 @@ export interface MonthLuckItem {
   summary: string;
   focus: string;
   warning: string;
+  validFrom?: string;
+  validTo?: string;
 }
 
 export interface FortuneWindow {
@@ -169,6 +171,23 @@ export interface ReportEngineMeta {
   };
   evidenceCount: number;
   confidence: number | null;
+  releaseDecision: 'eligible' | 'manual-review-required' | 'blocked';
+  releaseAuditVersion: string;
+  reproducibilityFingerprint: string;
+  evidenceCoverage: {
+    score: number;
+    passed: number;
+    total: number;
+  };
+  externalCalendarStatus:
+    | 'matched'
+    | 'mismatched'
+    | 'verified-date-only'
+    | 'not-comparable-policy'
+    | 'not-configured'
+    | 'failed';
+  releaseBlockers: string[];
+  reviewFlags: string[];
   uncertainty: string[];
   helpfulElementSource: 'expert-consensus' | 'legacy-fallback';
 }

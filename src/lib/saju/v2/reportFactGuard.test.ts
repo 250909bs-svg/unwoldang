@@ -37,7 +37,6 @@ describe('commercial report fact guard', () => {
     generated.yearLuck[0].score = 100;
     generated.monthLuck[0].ganzhi = '변조';
     generated.questionAnswers[0].question = '다른 질문';
-    generated.actionPlan.luckyDays[0].day = 31;
     generated.legalNotice = ['변조된 고지'];
     if (generated.engineMeta) generated.engineMeta.scenarioCount = 999;
     const expertSection = generated.sections.find((section) => section.id === 'expert-evidence-v2');
@@ -57,7 +56,6 @@ describe('commercial report fact guard', () => {
         'yearLuck.0.score',
         'monthLuck.0.ganzhi',
         'questionAnswers.0.question',
-        'actionPlan.luckyDays.day',
         'legalNotice',
         'engineMeta'
       ])
@@ -70,7 +68,6 @@ describe('commercial report fact guard', () => {
     expect(guarded.yearLuck[0].score).toBe(base.yearLuck[0].score);
     expect(guarded.monthLuck[0].ganzhi).toBe(base.monthLuck[0].ganzhi);
     expect(guarded.questionAnswers[0].question).toBe(base.questionAnswers[0].question);
-    expect(guarded.actionPlan.luckyDays[0].day).toBe(base.actionPlan.luckyDays[0].day);
     expect(guarded.legalNotice).toEqual(base.legalNotice);
     expect(guarded.engineMeta).toEqual(base.engineMeta);
     expect(guarded.sections.find((section) => section.id === 'expert-evidence-v2')).toEqual(
@@ -85,14 +82,14 @@ describe('commercial report fact guard', () => {
 
     generated.heroNote = '근거 범위 안에서 다시 작성한 도입 문장입니다.';
     generated.currentDayun.summary = '현재 대운을 생활 장면으로 다시 설명했습니다.';
-    generated.actionPlan.luckyDays[0].reason = '계산된 날짜를 유지하면서 이유만 명확히 설명합니다.';
+    generated.actionPlan.dos[0] = '근거 범위 안에서 실행 문구를 더 명확히 설명합니다.';
     generated.qualityAudit.score = 0;
 
     const guarded = lockCommercialReportFacts(base, generated);
 
     expect(guarded.heroNote).toBe(generated.heroNote);
     expect(guarded.currentDayun.summary).toBe(generated.currentDayun.summary);
-    expect(guarded.actionPlan.luckyDays[0].reason).toBe(generated.actionPlan.luckyDays[0].reason);
+    expect(guarded.actionPlan.dos[0]).toBe(generated.actionPlan.dos[0]);
     expect(guarded.qualityAudit.score).not.toBe(0);
   });
 

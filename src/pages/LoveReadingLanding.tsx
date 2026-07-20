@@ -200,6 +200,7 @@ function SceneImage({
 }) {
   const scene = getMzLoveScene(sceneKey);
   const avifSrc = scene.src.toLowerCase().endsWith('.webp') ? scene.src.slice(0, -5) + '.avif' : null;
+  const priorityAttribute = eager ? { fetchpriority: 'high' as const } : {};
 
   return (
     <picture className="mz-love-scene-picture">
@@ -214,7 +215,7 @@ function SceneImage({
         height={scene.height}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        fetchPriority={eager ? 'high' : 'auto'}
+        {...priorityAttribute}
         sizes="(max-width: 840px) 100vw, 820px"
         style={{ objectPosition: `${scene.focalPoint.x * 100}% ${scene.focalPoint.y * 100}%` }}
       />

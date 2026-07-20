@@ -23,7 +23,9 @@ const My = lazy(() => import('./pages/My'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
-const LoveReadingLanding = lazy(() => import('./pages/LoveReadingLanding'));
+const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
+const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
+const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const callbackHashLocation = buildHashCallbackLocation();
@@ -62,7 +64,9 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
           <Route path="/detail/past-life-goblin/immersion" element={<PastLifeImmersion />} />
           <Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />
           <Route path="/detail/general-saju" element={<GeneralSajuLanding />} />
-          <Route path="/detail/love-reading" element={<LoveReadingLanding />} />
+          <Route path="/detail/love-reading" element={<LoveReadingEntry />} />
+          <Route path="/form/love-reading" element={<LoveReadingIntake />} />
+          <Route path="/preview/love-reading" element={<LoveReadingPreview />} />
           <Route path="/form/:id" element={<Form />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/loading" element={<Loading />} />
@@ -88,8 +92,9 @@ function AppShell() {
   const isGeneralDetailRoute = location.pathname === '/detail/general-saju';
   const isLoveDetailRoute = location.pathname === '/detail/love-reading';
   const isLoveFormRoute = location.pathname === '/form/love-reading';
+  const isLovePreviewRoute = location.pathname === '/preview/love-reading';
   const isLoveReportRoute = location.pathname === '/report/love-reading';
-  const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLoveReportRoute;
+  const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
   const usesDarkAppShell =
     location.pathname === '/' ||
@@ -119,7 +124,7 @@ function AppShell() {
             ? 'app-container general-saju-app-container'
           : isLoveDetailRoute
             ? 'app-container mz-love-app-container'
-            : isLoveFormRoute
+            : isLoveFormRoute || isLovePreviewRoute
               ? 'app-container mz-love-intake-app-container'
               : isLoveReportRoute
                 ? 'app-container mz-love-report-app-container'

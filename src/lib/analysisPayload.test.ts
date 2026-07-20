@@ -13,13 +13,15 @@ describe('analysis request payload', () => {
       const payload = buildAnalysisRequestPayload('love-reading', {
         relationshipStatus: relationshipStatus as keyof typeof expectedLabels,
         relationshipDuration: '',
-        loveReaction: 'D'
+        loveReaction: 'D',
+        loveFocus: 'repeated-pattern'
       });
 
       expect(payload.relationship).toMatchObject({
         status: relationshipStatus,
         duration: null,
         microChoice: 'D',
+        focus: 'repeated-pattern',
         summary: expectedLabel
       });
     });

@@ -220,7 +220,7 @@ async function getSolarFromLunar(date: { year: number; month: number; day: numbe
     lunDay: twoDigit(date.day)
   });
 
-  const matched = items.find((item) => isLeapMatch(item, isLeapMonth)) || items[0];
+  const matched = items.find((item) => isLeapMatch(item, isLeapMonth));
   const solarDate = matched ? ymd(matched.solYear, matched.solMonth, matched.solDay) : '';
 
   return {

@@ -16,6 +16,55 @@ const TRACEABLE_EVIDENCE: EvidenceTag = {
   confidence: 0.82,
 };
 
+function personalizedLoveReport(): SajuReportData {
+  return {
+    serialNumber: 'PERSONAL-LOVE-001',
+    serviceId: 'love-reading',
+    dayMaster: '정화',
+    dayMasterElement: '화',
+    strengthLabel: '중화',
+    pillars: { year: '경오', month: '을유', day: '정묘', hour: '계사' },
+    helpfulElements: ['목', '화'],
+    cautiousElements: ['수'],
+    tenGods: [{ label: '정관', value: 30 }],
+    visibleTenGods: [],
+    engineMeta: { calculationPrecision: 'exact-minute', uncertainty: [], confidence: 0.86 },
+    customerName: '하린',
+    questionPreview: '다음 연애 시기가 궁금해요.',
+    createdAt: '2026-07-19T00:00:00.000Z',
+    summary: {
+      title: '연애 요약',
+      analysis: ['새로운 관계는 말보다 반복되는 만남과 약속에서 시작됩니다.'],
+      advice: ['마음이 움직일 때 다음 약속이 구체적으로 잡히는지 확인하세요.'],
+    },
+    keyTakeaways: [],
+    questionAnswers: [
+      {
+        question: '다음 연애는 언제 시작될까요?',
+        title: '관계가 움직이는 시기',
+        analysis: '다음 사랑은 연락만 이어지는 순간보다 실제 만남과 약속이 반복되는 흐름에서 시작될 가능성이 큽니다.',
+        advice: ['새로운 만남이 생기면 다음 약속이 구체적으로 이어지는지 확인하세요.'],
+      },
+      {
+        question: '제가 놓치면 안 될 사람의 신호는 무엇인가요?',
+        title: '오래 갈 관계의 신호',
+        analysis: '불편한 대화 뒤에도 연락을 끊지 않고 관계를 회복하려는 행동이 오래 갈 사람의 중요한 신호입니다.',
+        advice: ['말의 강도보다 약속과 경계 존중이 반복되는지 살펴보세요.'],
+      },
+    ],
+    sections: [],
+    actionPlan: {
+      title: '실천',
+      priorities: ['관계 행동 확인'],
+      dos: ['원하는 관계를 짧게 말하기'],
+      avoids: ['답장 속도 하나로 결론 내리기'],
+      luckyDays: [],
+      unluckyDays: [],
+    },
+    monthLuck: [],
+  } as unknown as SajuReportData;
+}
+
 describe('LoveReadingStoryReport evidence disclosure', () => {
   it('omits the evidence section when no traceable evidence exists', () => {
     const disclosure = createElement(EvidenceDisclosure, { evidence: [] });
@@ -80,5 +129,31 @@ describe('LoveReadingStoryReport evidence disclosure', () => {
     contaminated.forEach((text) => expect(markup).not.toContain(text));
     expect(markup).toContain('대화와 만남의 접점을 한 번 더 넓혀 보기 좋은 흐름이에요.');
     expect(markup).toContain('13개 연애 챕터');
+  });
+
+  it('shows the selected focus and both exact customer questions as a paid webtoon consultation', () => {
+    const report = personalizedLoveReport();
+    const customerQuestions = [
+      '다음 연애는 언제 시작될까요?',
+      '제가 놓치면 안 될 사람의 신호는 무엇인가요?',
+    ];
+    const markup = renderToStaticMarkup(createElement(LoveReadingStoryReport, {
+      report,
+      relationshipStatus: 'single',
+      relationshipDuration: 'under3',
+      birthTimeKnown: true,
+      loveFocus: 'next-love-timing',
+      customerQuestions,
+    }));
+
+    expect(markup).toContain('다음 연애를 하는 시기');
+    expect(markup).toContain('내가 고른 1순위 해석 · 지금부터 12개월 연애 흐름');
+    expect(markup).toContain('“다음 연애는 언제 시작될까요?”');
+    expect(markup).toContain('“제가 놓치면 안 될 사람의 신호는 무엇인가요?”');
+    expect(markup).toContain('실제 만남과 약속이 반복되는 흐름');
+    expect(markup).toContain('관계를 회복하려는 행동');
+    expect(markup).toContain('action-plan-calendar.avif');
+    expect(markup).toContain('report-seal-final.avif');
+    expect(markup.match(/명리·현실 근거 5단계 펼쳐보기/g)).toHaveLength(13);
   });
 });

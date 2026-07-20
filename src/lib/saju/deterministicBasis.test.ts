@@ -80,7 +80,11 @@ describe('deterministic saju basis', () => {
       solarTerms: []
     };
 
-    const basis = buildDeterministicSajuBasis('general-signature', makeFormData(), verification);
+    const basis = buildDeterministicSajuBasis(
+      'general-signature',
+      makeFormData({ loveFocus: 'my-attraction' }),
+      verification
+    );
 
     expect(basis.service.id).toBe('general-signature');
     expect(basis.service.label.length).toBeGreaterThan(0);
@@ -97,12 +101,15 @@ describe('deterministic saju basis', () => {
     expect(basis.fiveElements.length).toBe(5);
     expect(basis.calendarVerification).toEqual(verification);
     expect(basis.input.questions).toEqual(['올해 흐름이 궁금해요', '일에서 어떤 선택이 좋을까요?']);
+    expect(basis.input.loveFocus).toBe('my-attraction');
     expect(basis.commercialV2.calendar.precision).toBe('exact-minute');
     expect(basis.commercialV2.interpretation?.yongsinOpinions).toHaveLength(5);
     expect(basis.commercialV2.temporal?.layers.map((layer) => layer.layer)).toEqual(
       expect.arrayContaining(['natal', 'seun', 'wolyun'])
     );
     expect(basis.commercialV2.evidenceSummary.total).toBeGreaterThan(0);
+    expect(basis.commercialV2.releaseAudit.reproducibilityFingerprint).toMatch(/^uw-[0-9a-f]{16}$/);
+    expect(basis.commercialV2.releaseAudit.evidenceCoverage.total).toBe(8);
   });
 
   it('sets hour pillar to null when time is unknown', () => {
@@ -158,6 +165,27 @@ describe('deterministic saju basis', () => {
     expect(basis.commercialV2.calendar.scenarioCount).toBe(3);
     expect(basis.commercialV2.calendar.trueSolarTime.applied).toBe(true);
     expect(basis.commercialV2.calendar.trace?.solarTimeCorrection.appliedCorrectionMinutes).not.toBe(0);
+    expect(basis.commercialV2.calendar.stableSelection).toBe('stable-without-hour');
+    expect(basis.pillars.hour).toBeNull();
+  });
+
+  it('uses the birth timezone for the generated reference clock', () => {
+    const basis = buildDeterministicSajuBasis(
+      'general-signature',
+      makeFormData({
+        birthLocation: {
+          label: 'New York',
+          timezone: 'America/New_York',
+          utcOffsetMinutes: -300,
+          longitude: -74.006,
+          latitude: 40.7128,
+          applySolarTimeCorrection: true
+        }
+      })
+    );
+
+    expect(basis.commercialV2.generatedFor.timezone).toBe('America/New_York');
+    expect(basis.input.timezoneContext.utcOffsetMinutes).toBe(-300);
   });
 
   it('builds two-person compatibility from two stable natal charts', () => {
