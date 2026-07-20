@@ -172,6 +172,14 @@
       "destination": "/seo/detail-love-reading.html"
     },
     {
+      "source": "/detail/love-reunion",
+      "destination": "/seo/detail-love-reunion.html"
+    },
+    {
+      "source": "/detail/match-couple",
+      "destination": "/seo/detail-match-couple.html"
+    },
+    {
       "source": "/detail/past-life-goblin/immersion",
       "destination": "/index.html"
     },

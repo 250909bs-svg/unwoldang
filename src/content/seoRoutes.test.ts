@@ -5,28 +5,29 @@ import retiredDetailHandler from '../../api/retired-detail';
 import vercelConfig from '../../vercel.json';
 import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
 import seoRouteData from './seoRoutes.json';
+import { activeProducts, productRegistry } from '../products/registry';
 
-const activeDetailPaths = ['/detail/general-saju', '/detail/love-reading', '/detail/past-life-goblin'] as const;
+const activeDetailPaths = ['/detail/general-saju', '/detail/love-reading', '/detail/love-reunion', '/detail/match-couple', '/detail/past-life-goblin'] as const;
 const retiredDetailPaths = [
   '/detail/general-signature',
   '/detail/life-flow',
   '/detail/concern-reading',
-  '/detail/love-reunion',
-  '/detail/match-couple',
   '/detail/match-destiny',
   '/detail/marriage-blueprint',
   '/detail/marriage-timing'
 ] as const;
+const routeSeo = seoRouteData as Record<string, { indexable: boolean; serviceId?: string; price?: number }>;
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
 describe('retired detail page indexing', () => {
-  it('keeps only the three current product detail pages indexable', () => {
+  it('keeps only the five active product detail pages indexable', () => {
     const indexableDetailPaths = Object.entries(seoRouteData)
       .filter(([path, seo]) => path.startsWith('/detail/') && seo.indexable)
       .map(([path]) => path)
       .sort();
 
     expect(indexableDetailPaths).toEqual([...activeDetailPaths].sort());
+    expect(activeProducts.map((product) => product.routes.detail).sort()).toEqual([...activeDetailPaths].sort());
     retiredDetailPaths.forEach((path) => {
       expect(seoRouteData[path].indexable).toBe(false);
     });
@@ -43,6 +44,8 @@ describe('retired detail page indexing', () => {
     expect(activeRewrites.get('/detail/past-life-goblin')).toBe('/seo/detail-past-life-goblin.html');
     expect(activeRewrites.get('/detail/love-reading')).toBe('/seo/detail-love-reading.html');
     expect(activeRewrites.get('/detail/general-saju')).toBe('/seo/detail-general-saju.html');
+    expect(activeRewrites.get('/detail/love-reunion')).toBe('/seo/detail-love-reunion.html');
+    expect(activeRewrites.get('/detail/match-couple')).toBe('/seo/detail-match-couple.html');
     expect(retiredRewrite?.destination).toBe('/api/retired-detail');
     expect(vercelConfig.trailingSlash).toBe(false);
     expect(vercelConfig.headers).toContainEqual({
@@ -52,6 +55,29 @@ describe('retired detail page indexing', () => {
         { key: 'Cache-Control', value: 'no-store' }
       ]
     });
+  });
+
+  it('keeps SEO sale metadata aligned with the shared product registry', () => {
+    activeProducts.forEach((product) => {
+      expect(routeSeo[product.routes.detail]).toMatchObject({
+        indexable: true,
+        serviceId: product.id,
+        price: product.price
+      });
+    });
+
+    Object.values(productRegistry)
+      .filter((product) => product.status === 'archived')
+      .forEach((product) => {
+        const seo = routeSeo[product.routes.detail];
+        if (seo) {
+          expect(seo.indexable).toBe(false);
+        }
+      });
+
+    const generatorSource = readFileSync(new URL('../../scripts/generate-seo-pages.mjs', import.meta.url), 'utf8');
+    expect(generatorSource).toContain("src', 'products', 'manifest.json");
+    expect(generatorSource).toContain("=== 'active'");
   });
 
   it('permanently folds obsolete menu and tarot landings into the current home page', () => {
