@@ -132,6 +132,13 @@
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
         { "key": "Cache-Control", "value": "no-store" }
       ]
+    },
+    {
+      "source": "/detail/:id(life-flow|concern-reading|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ],
   "redirects": [
@@ -185,6 +192,10 @@
     },
     {
       "source": "/detail/past-life-goblin/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/detail/:id(life-flow|concern-reading|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
       "destination": "/index.html"
     },
     {

@@ -5,17 +5,20 @@ import retiredDetailHandler from '../../api/retired-detail';
 import vercelConfig from '../../vercel.json';
 import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
 import seoRouteData from './seoRoutes.json';
-import { activeProducts, productRegistry } from '../products/registry';
+import { activeProducts, getProductByRoute, productRegistry } from '../products/registry';
 
 const activeDetailPaths = ['/detail/general-saju', '/detail/love-reading', '/detail/love-reunion', '/detail/match-couple', '/detail/past-life-goblin'] as const;
-const retiredDetailPaths = [
-  '/detail/general-signature',
+const archivedDetailPaths = [
   '/detail/life-flow',
   '/detail/concern-reading',
   '/detail/match-destiny',
   '/detail/marriage-blueprint',
-  '/detail/marriage-timing'
+  '/detail/marriage-timing',
+  '/detail/career-reading',
+  '/detail/money-reading'
 ] as const;
+const legacyUnknownDetailPaths = ['/detail/general-signature'] as const;
+const archivedDetailPattern = `/detail/:id(${archivedDetailPaths.map((path) => path.slice('/detail/'.length)).join('|')})`;
 const routeSeo = seoRouteData as Record<string, { indexable: boolean; serviceId?: string; price?: number }>;
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
@@ -28,26 +31,59 @@ describe('retired detail page indexing', () => {
 
     expect(indexableDetailPaths).toEqual([...activeDetailPaths].sort());
     expect(activeProducts.map((product) => product.routes.detail).sort()).toEqual([...activeDetailPaths].sort());
-    retiredDetailPaths.forEach((path) => {
-      expect(seoRouteData[path].indexable).toBe(false);
+    [...archivedDetailPaths, ...legacyUnknownDetailPaths].forEach((path) => {
+      expect(routeSeo[path]?.indexable ?? false).toBe(false);
     });
   });
 
-  it('routes active details to SEO pages and every other one-segment detail to the 410 handler', () => {
+  it('keeps the five active detail rewrites on their static SEO pages', () => {
     const activeRewrites = new Map(
       vercelConfig.rewrites
         .filter((rewrite) => activeDetailPaths.includes(rewrite.source as (typeof activeDetailPaths)[number]))
         .map((rewrite) => [rewrite.source, rewrite.destination])
     );
-    const retiredRewrite = vercelConfig.rewrites.find((rewrite) => rewrite.source === '/detail/:path*');
 
     expect(activeRewrites.get('/detail/past-life-goblin')).toBe('/seo/detail-past-life-goblin.html');
     expect(activeRewrites.get('/detail/love-reading')).toBe('/seo/detail-love-reading.html');
     expect(activeRewrites.get('/detail/general-saju')).toBe('/seo/detail-general-saju.html');
     expect(activeRewrites.get('/detail/love-reunion')).toBe('/seo/detail-love-reunion.html');
     expect(activeRewrites.get('/detail/match-couple')).toBe('/seo/detail-match-couple.html');
-    expect(retiredRewrite?.destination).toBe('/api/retired-detail');
     expect(vercelConfig.trailingSlash).toBe(false);
+  });
+
+  it('routes registered archived details to the SPA before the unmatched 410 fallback', () => {
+    const archivedRewriteIndex = vercelConfig.rewrites.findIndex(
+      (rewrite) => rewrite.source === archivedDetailPattern
+    );
+    const fallbackRewriteIndex = vercelConfig.rewrites.findIndex(
+      (rewrite) => rewrite.source === '/detail/:path*'
+    );
+
+    expect(
+      Object.values(productRegistry)
+        .filter((product) => product.status === 'archived')
+        .map((product) => product.routes.detail)
+    ).toEqual(archivedDetailPaths);
+    archivedDetailPaths.forEach((path) => {
+      expect(getProductByRoute(path)?.status).toBe('archived');
+    });
+    expect(vercelConfig.rewrites[archivedRewriteIndex]).toEqual({
+      source: archivedDetailPattern,
+      destination: '/index.html'
+    });
+    expect(archivedRewriteIndex).toBeGreaterThanOrEqual(0);
+    expect(fallbackRewriteIndex).toBeGreaterThan(archivedRewriteIndex);
+    expect(vercelConfig.rewrites[fallbackRewriteIndex]).toEqual({
+      source: '/detail/:path*',
+      destination: '/api/retired-detail'
+    });
+    expect(vercelConfig.headers).toContainEqual({
+      source: archivedDetailPattern,
+      headers: [
+        { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        { key: 'Cache-Control', value: 'no-store' }
+      ]
+    });
     expect(vercelConfig.headers).toContainEqual({
       source: '/detail/past-life-goblin/:path(immersion|about)',
       headers: [
@@ -158,11 +194,12 @@ describe('retired detail page indexing', () => {
     expect(statSync(optimizedFilm).size).toBeLessThan(5_000_000);
   });
 
-  it('does not publish retired detail URLs in the sitemap', () => {
+  it('does not publish archived or unknown detail URLs in the sitemap', () => {
     const sitemap = readFileSync(new URL('../../public/sitemap.xml', import.meta.url), 'utf8');
 
     activeDetailPaths.forEach((path) => expect(sitemap).toContain(path));
-    retiredDetailPaths.forEach((path) => expect(sitemap).not.toContain(path));
+    archivedDetailPaths.forEach((path) => expect(sitemap).not.toContain(path));
+    legacyUnknownDetailPaths.forEach((path) => expect(sitemap).not.toContain(path));
     redirectedLegacyPaths.forEach((path) => expect(sitemap).not.toContain(`<loc>https://www.unwoldang.com${path}</loc>`));
   });
 });
