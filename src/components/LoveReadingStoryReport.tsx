@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import type { IntakeFormData, LoveFocus, LoveInterest } from '../api/mockData';
 import { getLoveFocusLabel, normalizeLoveFocus } from '../lib/loveFocus';
 import { buildPartnerAppearanceProfile } from '../lib/mz-love-fact/partnerAppearance';
+import { buildPartnerSpecificityProfile } from '../lib/mz-love-fact/partnerSpecificity';
 import { MZ_LOVE_SCENE_MANIFEST } from '../lib/mz-love-fact/sceneManifest';
 import {
   getPartnerInterestLabel,
@@ -407,8 +408,8 @@ function CustomerQuestionAnswers({
   );
 }
 
-function PremiumAnswerDeck({ report }: { report: SajuReportData }) {
-  const answers = getPremiumLoveAnswers(report);
+function PremiumAnswerDeck({ report, interestedIn }: { report: SajuReportData; interestedIn?: LoveInterest }) {
+  const answers = getPremiumLoveAnswers(report, interestedIn);
 
   return (
     <section className="mz-love-report__premium-answer-deck" id="mz-love-premium-answers" aria-labelledby="mz-love-premium-answers-title">
@@ -445,8 +446,9 @@ function FuturePartnerPortrait({
   interestedIn?: LoveInterest;
 }) {
   const appearanceProfile = buildPartnerAppearanceProfile(report);
+  const specificity = buildPartnerSpecificityProfile(report, interestedIn);
   const portraits = getPartnerPortraits(interestedIn, appearanceProfile);
-  const answers = getPremiumLoveAnswers(report);
+  const answers = getPremiumLoveAnswers(report, interestedIn);
   const whoAnswer = answers.find((answer) => answer.id === 'who');
 
   return (
@@ -481,11 +483,12 @@ function FuturePartnerPortrait({
       <article className="mz-love-report__appearance-signature">
         <span>FIRST IMPRESSION MIX</span>
         <h4>{appearanceProfile.primaryArchetype.label}<i>+</i>{appearanceProfile.secondaryArchetype.label}</h4>
-        <p>사진에서 먼저 보이는 인상과 실제로 마주쳤을 때 느껴질 윤곽을 함께 풀었어요.</p>
+        <p>{specificity.height.label} · {specificity.face.label}</p>
       </article>
       <dl className="mz-love-report__appearance-traits" aria-label="다음 인연상 외모 정밀 분석">
         {[
           ['키감', appearanceProfile.height],
+          ['대표 키 범위', specificity.height.label],
           ['체형', appearanceProfile.build],
           ['얼굴형', appearanceProfile.faceShape],
           ['눈매', appearanceProfile.eyes],
@@ -519,10 +522,18 @@ function FuturePartnerPortrait({
         <p>{whoAnswer?.answer}</p>
         <dl>
           <div><dt>배우자궁</dt><dd>{appearanceProfile.spousePalace.pillar} · {appearanceProfile.spousePalace.branch}({appearanceProfile.spousePalace.element})</dd></div>
+          {specificity.professions.map((profession) => (
+            <div key={profession.id}>
+              <dt>직업 {profession.rank}순위</dt>
+              <dd>{profession.label} · {profession.relatedRoles}<br /><small>명리 근거: {profession.evidence.join(' · ')}</small></dd>
+            </div>
+          ))}
+          <div><dt>만남 1순위</dt><dd>{specificity.meeting.primaryLocation}</dd></div>
+          <div><dt>알아볼 신호</dt><dd>{specificity.meeting.recognitionSignal}</dd></div>
           <div><dt>이미지 서명</dt><dd>{appearanceProfile.signatureKey}</dd></div>
         </dl>
       </article>
-      <p className="mz-love-report__partner-disclosure">{SYMBOLIC_PARTNER_DISCLOSURE}</p>
+      <p className="mz-love-report__partner-disclosure">{SYMBOLIC_PARTNER_DISCLOSURE} {specificity.disclosure}</p>
     </section>
   );
 }
@@ -1121,7 +1132,7 @@ export default function LoveReadingStoryReport({
         />
       ) : null}
 
-      <PremiumAnswerDeck report={report} />
+      <PremiumAnswerDeck report={report} interestedIn={interestedIn} />
 
       <div className="mz-love-report__chapters">
         {viewModel.chapters.map((chapter) => (

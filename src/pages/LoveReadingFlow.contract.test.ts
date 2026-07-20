@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const intakeSource = readFileSync(new URL('./LoveReadingIntake.tsx', import.meta.url), 'utf8');
 const introSource = readFileSync(new URL('../components/LoveReadingIntro.tsx', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+const previewSource = readFileSync(new URL('./LoveReadingPreview.tsx', import.meta.url), 'utf8');
 
 describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
   it('썸네일 상세에서 인트로 영상과 전용 입력 화면을 거친다', () => {
@@ -43,8 +44,21 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
 
   it('입력과 무료 원국 미리보기 앞에서는 로그인을 강제하지 않는다', () => {
     expect(intakeSource).not.toContain("navigate('/login'");
-    const checkoutIndex = new URL('../pages/LoveReadingPreview.tsx', import.meta.url);
-    const previewSource = readFileSync(checkoutIndex, 'utf8');
     expect(previewSource.indexOf("navigate('/login'")).toBeGreaterThan(previewSource.indexOf('const continueToCheckout'));
+  });
+  it('무료 미리보기는 웹툰 말풍선과 전용 봉인 이미지로 진행하고 유료 상세값을 렌더링하지 않는다', () => {
+    expect(previewSource).toContain('function SpeechBalloon');
+    expect(previewSource).toContain('function WebtoonScene');
+    expect(previewSource).toContain('mz-love-portrait-vault');
+    expect(previewSource).toContain('mz-love-vault-portrait');
+    expect(previewSource).toContain("getMzLoveScene('future-partner-fan')");
+    expect(previewSource).toContain('buildPartnerSpecificityProfile');
+    expect(previewSource).toContain('빨리 잠금 풀어봐');
+    expect(previewSource).toContain('상징 프로필 1순위');
+    expect(previewSource).not.toContain('specificity.meeting.primaryLocation');
+    expect(previewSource).not.toContain('specificity.professions[0].label');
+    expect(previewSource).not.toContain("premiumAnswerById.get('timing')");
+    expect(previewSource).not.toContain('getPartnerPortraits');
+    expect(previewSource).not.toMatch(/future-partner-(?:male|female)-/u);
   });
 });
