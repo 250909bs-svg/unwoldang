@@ -95,6 +95,32 @@ describe('saju report question answers', () => {
     expect(loveAnswer.advice.join('\n')).toContain('지인 소개');
   });
 
+  it('answers two love questions with different intent, relationship status, and selected focus', () => {
+    const q1 = '지금 마음에 걸리는 사람과 관계가 더 깊어질 수 있을까요?';
+    const q2 = '제가 놓치면 안 될 사람의 행동 신호는 무엇인가요?';
+    const report = buildSajuReport('love-reading', makeFormData({
+      relationshipStatus: 'situationship',
+      relationshipDuration: '',
+      loveFocus: 'my-attraction',
+      q1,
+      q2,
+    }));
+    const [currentRelation, partnerSignal] = report.questionAnswers;
+
+    expect(currentRelation.question).toBe(q1);
+    expect(partnerSignal.question).toBe(q2);
+    expect(currentRelation.title).toContain('이 관계가 깊어질 현실 조건');
+    expect(partnerSignal.title).toContain('오래 갈 사람의 행동 신호');
+    expect(currentRelation.analysis).toContain('썸 타는 중 흐름에서는');
+    expect(currentRelation.analysis).toContain('이성들이 보는 내 진짜 매력');
+    expect(currentRelation.advice.join('\n')).toContain('다음 약속');
+    expect(partnerSignal.advice.join('\n')).toContain('새 대안');
+    expect(currentRelation.analysis).not.toBe(partnerSignal.analysis);
+    expect(currentRelation.advice).toHaveLength(10);
+    expect(partnerSignal.advice).toHaveLength(10);
+    expect(new Set(currentRelation.advice.filter((item) => partnerSignal.advice.includes(item))).size).toBeLessThanOrEqual(2);
+  });
+
   it('separates visible ten-god readings and hidden-stem scores', () => {
     const report = buildSajuReport('general-signature', makeFormData({ q1: '회사 계속 다녀도 될까?', q2: '' }));
 
@@ -107,13 +133,15 @@ describe('saju report question answers', () => {
     expect(report.tenGodBasisNote).toContain('지장간 포함 기준');
     expect(report.currentDayun.name).toBe('壬子');
     expect(report.nextDayun.name).toBe('癸丑');
-    expect(report.yearLuck.slice(0, 5).map((item) => item.headline)).toEqual([
-      '丙午년, 공개와 검증이 동시에 열리는 해',
-      '丁未년, 관계 확장과 현실화가 맞물리는 해',
-      '戊申년, 구조 조정과 성과 검증의 해',
-      '己酉년, 반복 수익과 평판 고정의 해',
-      '庚戌년, 재정비와 기준 재설정의 해'
-    ]);
+    const headlines = report.yearLuck.slice(0, 5).map((item) => item.headline);
+    const expectedGanzhi = ['丙午', '丁未', '戊申', '己酉', '庚戌'];
+    expect(headlines).toHaveLength(expectedGanzhi.length);
+    expectedGanzhi.forEach((ganzhi, index) => {
+      expect(headlines[index]).toContain(`${ganzhi}년, `);
+      expect(headlines[index]).toContain('드러나는');
+    });
+    expect(new Set(headlines).size).toBe(5);
+    expect(headlines.join('\n')).not.toContain('공개와 검증이 동시에 열리는 해');
   });
 
   it('answers company and business questions with direct premium action plans', () => {
@@ -219,5 +247,22 @@ describe('saju report question answers', () => {
     );
 
     expect(JSON.stringify(report)).toContain('사실과 추측을 분리하고');
+  });
+
+  it('uses the selected love focus to prioritize the deterministic love reading', () => {
+    const report = buildSajuReport(
+      'love-reading',
+      makeFormData({
+        relationshipStatus: 'single',
+        relationshipDuration: '',
+        loveFocus: 'next-love-timing',
+        q1: '다음 인연을 어디에서 만나게 될까요?',
+        q2: ''
+      })
+    );
+
+    const loveSection = report.sections.find((section) => section.id === 'love');
+    expect(JSON.stringify(loveSection)).toContain('다음 연애를 하는 시기');
+    expect(JSON.stringify(loveSection)).toContain('대운·세운·월운');
   });
 });

@@ -5,6 +5,7 @@ import {
   type PartnerBirthData,
   type ServiceId
 } from '../api/mockData';
+import { normalizeLoveFocus } from './loveFocus';
 import { normalizeLoveReaction } from './mz-love-fact/microChoice';
 import { getRelationshipDurationLabel, getRelationshipStatusLabel } from './relationshipIntake';
 
@@ -40,6 +41,7 @@ export interface AnalysisRequestPayload {
     status: IntakeFormData['relationshipStatus'] | null;
     duration: IntakeFormData['relationshipDuration'] | null;
     microChoice: IntakeFormData['loveReaction'] | null;
+    focus: IntakeFormData['loveFocus'] | null;
     summary: string;
   };
   pastLifeContext: PastLifeAnalysisContext | null;
@@ -97,6 +99,7 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
       status: formData.relationshipStatus || null,
       duration: formData.relationshipDuration || null,
       microChoice: normalizeLoveReaction(formData.loveReaction),
+      focus: normalizeLoveFocus(formData.loveFocus),
       summary: relationshipSummary
     },
     pastLifeContext:

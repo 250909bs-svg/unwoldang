@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildDeterministicSajuBasis } from '../saju/deterministicBasis';
 import { buildSajuReport } from '../saju/reportBuilder';
 import {
+  assertCommercialReportRequest,
   assertGeminiEvidenceReferences,
   sanitizeGeminiDraft,
   stripGeminiEvidenceMetadata,
@@ -21,6 +22,32 @@ const formData = {
 };
 
 describe('Gemini commercial response validation', () => {
+  it('rejects missing server-side birth facts instead of applying gender/calendar defaults', () => {
+    const restored = toFormData({
+      serviceId: 'general-signature',
+      payload: {
+        user: { name: '누락 검사' },
+        birth: { date: '1992-09-09', time: '10:24', isUnknownTime: false },
+        questions: ['질문 1', '질문 2']
+      }
+    });
+
+    expect(restored.gender).toBeUndefined();
+    expect(restored.calendar).toBeUndefined();
+    expect(() => assertCommercialReportRequest('general-signature', restored)).toThrow();
+  });
+
+  it('blocks a paid single-chart report when unknown time changes the day pillar', () => {
+    expect(() => assertCommercialReportRequest('general-signature', {
+      ...formData,
+      birthTime: '',
+      isUnknownTime: true,
+      birthTimePrecision: 'unknown',
+      dayBoundaryPolicy: 'late-zi',
+      q2: '두 번째 질문입니다.'
+    })).toThrow(/일주가 달라/);
+  });
+
   it('restores the love micro choice and expanded relationship status', () => {
     const restored = toFormData({
       serviceId: 'love-reading',
@@ -28,7 +55,8 @@ describe('Gemini commercial response validation', () => {
         relationship: {
           status: 'breakup-reunion',
           duration: '',
-          microChoice: 'B'
+          microChoice: 'B',
+          focus: 'next-love-timing'
         }
       }
     });
@@ -36,7 +64,8 @@ describe('Gemini commercial response validation', () => {
     expect(restored).toMatchObject({
       relationshipStatus: 'breakup-reunion',
       relationshipDuration: '',
-      loveReaction: 'B'
+      loveReaction: 'B',
+      loveFocus: 'next-love-timing'
     });
   });
 
@@ -111,11 +140,7 @@ describe('Gemini commercial response validation', () => {
       },
       actionPlan: {
         title: cite(report.actionPlan.title),
-        priorities: [cite(report.actionPlan.priorities[0])],
-        luckyDays: [{
-          day: report.actionPlan.luckyDays[0].day,
-          reason: cite(report.actionPlan.luckyDays[0].reason, temporalId!)
-        }]
+        priorities: [cite(report.actionPlan.priorities[0])]
       }
     }, report);
 

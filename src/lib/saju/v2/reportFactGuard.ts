@@ -230,6 +230,9 @@ export function lockCommercialReportFacts(
       ? {
           ...base.engineMeta,
           trueSolarTime: { ...base.engineMeta.trueSolarTime },
+          evidenceCoverage: { ...base.engineMeta.evidenceCoverage },
+          releaseBlockers: [...base.engineMeta.releaseBlockers],
+          reviewFlags: [...base.engineMeta.reviewFlags],
           uncertainty: [...base.engineMeta.uncertainty]
         }
       : undefined,

@@ -7,7 +7,9 @@ import type {
   ServiceId
 } from '../../api/mockData';
 import type { PastLifeAnalysisContext } from '../analysisPayload';
+import { normalizeLoveFocus } from '../loveFocus';
 import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
+import { validateIntakeBirthInputs } from '../birthInputValidation';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from '../saju/deterministicBasis';
 import { buildPastLifeProfile } from '../saju/pastLifeProfile';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
@@ -59,6 +61,7 @@ export type ReportRequestBody = {
       status?: RelationshipStatus;
       duration?: RelationshipDuration;
       microChoice?: IntakeFormData['loveReaction'];
+      focus?: IntakeFormData['loveFocus'];
     };
     pastLifeContext?: PastLifeAnalysisContext | null;
     questions?: string[];
@@ -674,8 +677,8 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
 
   return {
     name: body.payload?.user?.name || '',
-    gender: body.payload?.user?.gender || 'female',
-    calendar: body.payload?.birth?.calendar || 'solar',
+    gender: body.payload?.user?.gender,
+    calendar: body.payload?.birth?.calendar,
     isLeapMonth: Boolean(body.payload?.birth?.isLeapMonth),
     birthDate: body.payload?.birth?.date || '',
     birthTime: body.payload?.birth?.time || '',
@@ -687,6 +690,7 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     relationshipStatus: body.payload?.relationship?.status || '',
     relationshipDuration: body.payload?.relationship?.duration || '',
     loveReaction: normalizeLoveReaction(body.payload?.relationship?.microChoice) ?? undefined,
+    loveFocus: normalizeLoveFocus(body.payload?.relationship?.focus) ?? undefined,
     pastLifeTopic: pastLifeContext?.topic || '',
     repeatedScene: pastLifeContext?.repeatedScene || '',
     frequentEmotion: pastLifeContext?.frequentEmotion || '',
@@ -696,6 +700,74 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     q1: body.payload?.questions?.[0] || '',
     q2: body.payload?.questions?.[1] || ''
   };
+}
+
+function assertTextLength(value: string | undefined, label: string, maxLength: number) {
+  if ((value?.trim().length || 0) > maxLength) {
+    throw new ReportRequestError(422, `${label}은(는) ${maxLength}자 이내로 입력해 주세요.`);
+  }
+}
+
+function assertSupportedBirthYear(value: string | undefined, label: string) {
+  const year = Number(value?.slice(0, 4));
+  if (!Number.isInteger(year) || year < 1900 || year > 2099) {
+    throw new ReportRequestError(
+      422,
+      `${label} 생년월일은 상용 검증 범위인 1900-2099년 안에서 입력해 주세요.`
+    );
+  }
+}
+
+function hasInvariantDay(calculation: NonNullable<ReturnType<typeof validateIntakeBirthInputs>['self']['calculation']>) {
+  return new Set(
+    calculation.scenarios.map(({ bazi }) => `${bazi.d_gz.tg}:${bazi.d_gz.dz}`)
+  ).size === 1;
+}
+
+/** Server-side release gate. Client validation is convenience, never authority. */
+export function assertCommercialReportRequest(
+  serviceId: ServiceId,
+  formData: Partial<IntakeFormData>
+) {
+  const requirePartner = serviceId === 'match-couple' || serviceId === 'match-destiny';
+  const validation = validateIntakeBirthInputs(formData, { requirePartner });
+
+  if (!validation.valid) {
+    throw new ReportRequestError(
+      422,
+      validation.errors.map((error) => error.message).join(' ')
+    );
+  }
+
+  assertTextLength(formData.name, '이름', 50);
+  assertTextLength(formData.q1, '첫 번째 질문', 500);
+  assertTextLength(formData.q2, '두 번째 질문', 500);
+  assertTextLength(formData.birthLocation?.label, '출생지', 120);
+  assertSupportedBirthYear(formData.birthDate, '본인');
+
+  if (!formData.q1?.trim() || !formData.q2?.trim()) {
+    throw new ReportRequestError(422, '유료 리포트는 개인화 질문 두 가지를 모두 입력해야 합니다.');
+  }
+
+  if (!validation.self.calculation || !hasInvariantDay(validation.self.calculation)) {
+    throw new ReportRequestError(
+      422,
+      '출생시간 시나리오에 따라 일주가 달라 단일 유료 리포트를 만들 수 없습니다. 출생시간 또는 자시 경계 정책을 확인해 주세요.'
+    );
+  }
+
+  if (formData.partner) {
+    assertTextLength(formData.partner.name, '상대방 이름', 50);
+    assertTextLength(formData.partner.birthLocation?.label, '상대방 출생지', 120);
+    assertSupportedBirthYear(formData.partner.birthDate, '상대방');
+  }
+
+  if (validation.partner?.calculation && !hasInvariantDay(validation.partner.calculation)) {
+    throw new ReportRequestError(
+      422,
+      '상대방 출생시간 시나리오에 따라 일주가 달라 정밀 궁합을 만들 수 없습니다. 상대방 출생시간을 확인해 주세요.'
+    );
+  }
 }
 
 function mergeCards(baseCards: ReportCard[], draftCards?: Partial<ReportCard>[]) {
@@ -1129,8 +1201,23 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
   }
 
   const inputFormData = toFormData(body);
+  assertCommercialReportRequest(serviceId, inputFormData);
   const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
+
+  if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
+    throw new ReportRequestError(
+      503,
+      '한국 음력 생일은 KASI 교차 검증이 완료되어야 유료 리포트를 생성할 수 있습니다. 잠시 후 다시 시도해 주세요.'
+    );
+  }
+
   const deterministicBasis = buildDeterministicSajuBasis(serviceId, formData, verification);
+  if (deterministicBasis.commercialV2.releaseAudit.decision === 'blocked') {
+    throw new ReportRequestError(
+      422,
+      `상용 리포트 생성이 중단되었습니다. ${deterministicBasis.commercialV2.releaseAudit.blockers.join(' ')}`
+    );
+  }
   const builtReport = buildSajuReport(serviceId, formData, deterministicBasis);
   const fallbackReport =
     serviceId === 'past-life-goblin'

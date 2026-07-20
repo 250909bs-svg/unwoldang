@@ -1,4 +1,5 @@
 import type { IntakeFormData, ServiceId } from '../../api/mockData';
+import { normalizeLoveFocus } from '../loveFocus';
 import type { KasiCalendarVerification } from '../server/kasiCalendarService';
 import { findServiceById } from '../../api/mockData';
 import type { DayunData, Bazi, GZ } from './types';
@@ -35,8 +36,9 @@ import {
 } from './v2/interpretation';
 import { analyzeTemporalInteractions } from './v2/interactions';
 import { analyzeCompatibility, type RelationshipPurpose } from './v2/compatibility';
+import { buildCommercialReleaseAudit } from './v2/commercialAudit';
 
-export const COMMERCIAL_MYEONGRI_ENGINE_VERSION = 'unwoldang-myeongri-v2.0.0-rc.1' as const;
+export const COMMERCIAL_MYEONGRI_ENGINE_VERSION = 'unwoldang-myeongri-v2.0.0-rc.2' as const;
 
 function normalizeBirthDate(value?: string) {
   if (!value) {
@@ -181,6 +183,20 @@ function chooseStableBazi(calculation: BirthCalculationResult): {
     if (!hasStableCore) {
       return { bazi: null, selection: 'unstable-day' };
     }
+
+    if (calculation.context.time.precision === 'legacy-range') {
+      const hourVariants = new Set(
+        calculation.scenarios.map(({ bazi }) => bazi.h_gz ? pillarSignature(bazi.h_gz) : 'unknown')
+      );
+
+      if (hourVariants.size > 1) {
+        return {
+          bazi: { ...calculation.primary.bazi, h_gz: null },
+          selection: 'stable-without-hour'
+        };
+      }
+    }
+
     return {
       bazi: calculation.primary.bazi,
       selection: calculation.context.time.precision === 'legacy-range'
@@ -200,10 +216,20 @@ function chooseStableBazi(calculation: BirthCalculationResult): {
     : { bazi: null, selection: 'unstable-day' };
 }
 
-export function selectCurrentDayun(rows: DayunData[], referenceYear: number) {
+export function selectCurrentDayun(
+  rows: DayunData[],
+  referenceYear: number,
+  referenceInstant?: Date
+) {
   let index = -1;
   for (let candidate = rows.length - 1; candidate >= 0; candidate -= 1) {
-    if (rows[candidate].year <= referenceYear) {
+    const startsAt = rows[candidate].startsAt ? Date.parse(rows[candidate].startsAt!) : Number.NaN;
+    const hasExactBoundary = referenceInstant && Number.isFinite(startsAt);
+    if (
+      hasExactBoundary
+        ? startsAt <= referenceInstant.getTime()
+        : rows[candidate].year <= referenceYear
+    ) {
       index = candidate;
       break;
     }
@@ -376,20 +402,26 @@ export function buildDeterministicSajuBasis(
     : legacyCautiousElements;
   const gyeokguk = getGyeokguk(bazi);
   const dayun = dayunRows(bazi);
-  const referenceClock = getZonedClock();
-  const seun = seunRows(referenceClock.year, 12);
+  const referenceTimezone = birthCalculation.context.timezone.id;
+  const referenceInstant = new Date();
+  const referenceClock = getZonedClock(referenceInstant, referenceTimezone);
+  const referenceClockKst = getZonedClock(referenceInstant, 'Asia/Seoul');
   const currentFlowBazi = calcBazi(
-    referenceClock.year,
-    referenceClock.month,
-    referenceClock.day,
-    referenceClock.hour,
-    referenceClock.minute,
+    referenceClockKst.year,
+    referenceClockKst.month,
+    referenceClockKst.day,
+    referenceClockKst.hour,
+    referenceClockKst.minute,
     'solar',
     'normal',
     gender,
     false
   );
-  const dayunSelection = selectCurrentDayun(dayun, referenceClock.year);
+  const currentSeunStartYear = currentFlowBazi.calculationBasis.isAfterIpchun
+    ? referenceClockKst.year
+    : referenceClockKst.year - 1;
+  const seun = seunRows(currentSeunStartYear, 12);
+  const dayunSelection = selectCurrentDayun(dayun, referenceClock.year, referenceInstant);
   const dayunGz = dayunSelection.current ? parseGanzhi(dayunSelection.current.ganzhi) : null;
   const temporalAnalysis = stableBirth.bazi
     ? analyzeTemporalInteractions({
@@ -404,12 +436,12 @@ export function buildDeterministicSajuBasis(
         seun: {
           gz: currentFlowBazi.y_gz,
           label: `${TG[currentFlowBazi.y_gz.tg]}${DZ[currentFlowBazi.y_gz.dz]} 세운`,
-          referenceYear: referenceClock.year
+          referenceYear: currentSeunStartYear
         },
         wolyun: {
           gz: currentFlowBazi.m_gz,
           label: `${TG[currentFlowBazi.m_gz.tg]}${DZ[currentFlowBazi.m_gz.dz]} 월운`,
-          referenceYear: referenceClock.year
+          referenceYear: referenceClockKst.year
         }
       })
     : null;
@@ -428,17 +460,17 @@ export function buildDeterministicSajuBasis(
   const partnerBazi = stablePartnerBirth?.bazi || null;
   const partnerInterpretation = partnerBazi ? analyzeExpertInterpretation(partnerBazi) : null;
   const partnerDayun = partnerBazi ? dayunRows(partnerBazi) : [];
-  const partnerDayunSelection = selectCurrentDayun(partnerDayun, referenceClock.year);
+  const partnerDayunSelection = selectCurrentDayun(partnerDayun, referenceClock.year, referenceInstant);
   const partnerDayunGz = partnerDayunSelection.current
     ? parseGanzhi(partnerDayunSelection.current.ganzhi)
     : null;
   const partnerCurrentFlow = partnerInput
     ? calcBazi(
-        referenceClock.year,
-        referenceClock.month,
-        referenceClock.day,
-        referenceClock.hour,
-        referenceClock.minute,
+        referenceClockKst.year,
+        referenceClockKst.month,
+        referenceClockKst.day,
+        referenceClockKst.hour,
+        referenceClockKst.minute,
         'solar',
         'normal',
         partnerInput.gender,
@@ -458,12 +490,12 @@ export function buildDeterministicSajuBasis(
         seun: {
           gz: partnerCurrentFlow.y_gz,
           label: `${TG[partnerCurrentFlow.y_gz.tg]}${DZ[partnerCurrentFlow.y_gz.dz]} 세운`,
-          referenceYear: referenceClock.year
+          referenceYear: currentSeunStartYear
         },
         wolyun: {
           gz: partnerCurrentFlow.m_gz,
           label: `${TG[partnerCurrentFlow.m_gz.tg]}${DZ[partnerCurrentFlow.m_gz.dz]} 월운`,
-          referenceYear: referenceClock.year
+          referenceYear: referenceClockKst.year
         }
       })
     : null;
@@ -529,6 +561,48 @@ export function buildDeterministicSajuBasis(
   const overallConfidence = confidenceValues.length > 0
     ? Number((confidenceValues.reduce((sum, value) => sum + value, 0) / confidenceValues.length).toFixed(3))
     : null;
+  const evidenceTotal = interpretationEvidenceCount + temporalEvidenceCount + compatibilityEvidenceCount;
+  const externalDayComparable = birthCalculation.scenarios.every(({ trace }) => {
+    const normalized = trace.normalizedSolarDate;
+    const effective = trace.dayBoundary.effectivePillarDate;
+    return normalized.year === effective.year &&
+      normalized.month === effective.month &&
+      normalized.day === effective.day;
+  });
+  const commercialReleaseAudit = buildCommercialReleaseAudit({
+    serviceId,
+    engineVersion: COMMERCIAL_MYEONGRI_ENGINE_VERSION,
+    calendarVersion: birthCalculation.version,
+    interpretationVersion: INTERPRETATION_ENGINE_VERSION,
+    birthDate: calendarVerification?.originalBirthDate || formData.birthDate || '',
+    birthTime: formData.isUnknownTime ? null : formData.birthTime || null,
+    calendar: calendarVerification?.originalCalendar || calendar,
+    timezoneId: birthCalculation.context.timezone.id,
+    utcOffsetMinutes: birthCalculation.context.timezone.utcOffsetMinutes,
+    dayBoundaryPolicy: birthCalculation.context.dayBoundaryPolicy,
+    precision: birthCalculation.context.time.precision,
+    stableSelection: stableBirth.selection,
+    scenarioPillars: calendarScenarios.scenarioPillars,
+    pillars: {
+      year: pillarLabels.year,
+      month: pillarLabels.month,
+      day: pillarLabels.day,
+      hour: pillarLabels.hour
+    },
+    trueSolarTime: {
+      requested: birthCalculation.context.trueSolarTime.enabled,
+      applied: birthCalculation.scenarios.some(({ trace }) => trace.solarTimeCorrection.applied)
+    },
+    externalDayComparable,
+    calendarVerification,
+    interpretationResolved: Boolean(
+      expertInterpretation &&
+      expertInterpretation.consensus.status === 'supported' &&
+      !expertInterpretation.consensus.value.unresolved
+    ),
+    helpfulElementSource: promoteExpertConsensus ? 'expert-consensus' : 'legacy-fallback',
+    evidenceCount: evidenceTotal
+  });
 
   return {
     service: {
@@ -560,6 +634,7 @@ export function buildDeterministicSajuBasis(
             birthLocation: partnerCalculation?.context.location || null
           }
         : null,
+      loveFocus: normalizeLoveFocus(formData.loveFocus),
       questions: [formData.q1, formData.q2]
         .filter((question): question is string => Boolean(question?.trim()))
         .map((question) => question.trim())
@@ -603,8 +678,10 @@ export function buildDeterministicSajuBasis(
     commercialV2: {
       engineVersion: COMMERCIAL_MYEONGRI_ENGINE_VERSION,
       validationStatus: '내부 규칙·회귀 검증 완료 / 외부 명리 전문가 감수 전' as const,
+      releaseAudit: commercialReleaseAudit,
       generatedFor: {
-        timezone: 'Asia/Seoul',
+        timezone: referenceTimezone,
+        instant: referenceInstant.toISOString(),
         ...referenceClock
       },
       calendar: {
@@ -686,7 +763,7 @@ export function buildDeterministicSajuBasis(
         interpretation: interpretationEvidenceCount,
         temporal: temporalEvidenceCount,
         compatibility: compatibilityEvidenceCount,
-        total: interpretationEvidenceCount + temporalEvidenceCount + compatibilityEvidenceCount
+        total: evidenceTotal
       },
       confidence: overallConfidence,
       uncertainty

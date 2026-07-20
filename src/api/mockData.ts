@@ -39,6 +39,14 @@ export type ServiceTheme =
 export type BirthTimePrecision = 'exact' | 'branch-range' | 'unknown';
 export type DayBoundaryPolicy = 'midnight' | 'late-zi';
 export type LoveReaction = 'A' | 'B' | 'C' | 'D';
+export type LoveInterest = 'men' | 'women' | 'any' | 'prefer-not-to-say';
+export const loveFocusValues = [
+  'partner-type',
+  'next-love-timing',
+  'my-attraction',
+  'repeated-pattern'
+] as const;
+export type LoveFocus = (typeof loveFocusValues)[number];
 export type RelationshipStatus =
   | ''
   | 'single'
@@ -73,6 +81,7 @@ export interface PartnerBirthData {
 export interface IntakeFormData {
   name: string;
   gender: 'male' | 'female';
+  interestedIn?: LoveInterest;
   calendar: 'solar' | 'lunar';
   isLeapMonth: boolean;
   birthDate: string;
@@ -85,6 +94,7 @@ export interface IntakeFormData {
   relationshipStatus: RelationshipStatus;
   relationshipDuration: '' | 'under1' | 'under3' | 'under5' | 'under10';
   loveReaction?: LoveReaction;
+  loveFocus?: LoveFocus;
   location: string;
   q1: string;
   q2: string;

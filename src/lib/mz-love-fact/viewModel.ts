@@ -10,6 +10,7 @@ import type {
   MzLoveChapterId,
   EvidenceSource,
   EvidenceTag,
+  MzLoveInput,
   MzLoveReport,
   MzLoveReportViewModel,
   MzLoveActionPlan,
@@ -45,7 +46,7 @@ function makeEvidence(
     source,
     sourcePath,
     immutable: true,
-    confidence: report.engineMeta?.confidence ?? undefined,
+    confidence: report.engineMeta?.evidenceCoverage?.score ?? report.engineMeta?.confidence ?? undefined,
   };
 }
 
@@ -180,7 +181,7 @@ const ADAPTER_CHAPTERS: readonly AdapterChapterDefinition[] = [
   { id: 'attracted-partner', title: '네가 끌리는 사람', sceneKey: 'future-partner-fan', layout: 'conversation', factBomb: '첫인상보다 관계를 명확히 만드는 행동을 함께 봐야 해.' },
   { id: 'lasting-partner', title: '오래 갈 사람은 따로 있어', sceneKey: 'stable-partner-signal', layout: 'cinematic', factBomb: '오래 갈 가능성은 말의 강도보다 행동의 일관성에서 확인돼.' },
   { id: 'attraction-comparison', title: '끌리는 사람 vs 오래 갈 사람', sceneKey: 'attraction-vs-longevity', layout: 'comparison', factBomb: '설렘과 안정감을 같은 기준으로 채점하지 마.' },
-  { id: 'next-partner', title: '다음 인연의 첫 신호', sceneKey: 'whisper-fact', layout: 'conversation', factBomb: '얼굴이나 직업을 맞히기보다 관계를 만드는 태도를 보는 게 먼저야.' },
+  { id: 'next-partner', title: '다음 인연의 얼굴과 첫 신호', sceneKey: 'whisper-fact', layout: 'conversation', factBomb: '인연의 분위기는 얼굴에서 시작되지만, 오래 갈지는 그 사람이 약속을 다루는 태도에서 드러나.' },
   { id: 'meeting-scenes', title: '어디서 어떻게 시작될까', sceneKey: 'first-meeting-scene', layout: 'cinematic', factBomb: '만남의 장소보다 대화가 반복되는 생활 반경을 먼저 넓혀 봐.' },
   { id: 'twelve-month-timing', title: '지금부터 12개월 연애 흐름', sceneKey: 'room-corridor', layout: 'timeline', factBomb: '좋은 흐름도 기다리는 날짜가 아니라 움직임을 조정하는 참고 신호야.' },
   { id: 'communication-pattern', title: '연락에서 네가 놓치는 포인트', sceneKey: 'waiting-for-message', layout: 'conversation', factBomb: '답장 속도 하나로 관계 전체를 해석하지 마.' },
@@ -240,11 +241,11 @@ const CHAPTER_FALLBACK_COPY: Record<MzLoveChapterId, ChapterFallbackCopy> = {
     action: '끌림, 약속, 대화 회복, 경계 존중을 네 칸으로 나눠 비교해.',
   },
   'next-partner': {
-    interpretation: '다음 인연의 외모를 맞히기보다 관계를 책임 있게 시작하는 태도를 알아보는 게 더 중요해.',
-    realLifeScene: '처음부터 과하게 다가오기보다 다음 만남을 구체적으로 잡고 연락의 리듬을 맞추는 사람으로 보일 수 있어.',
+    interpretation: '배우자궁에서 읽은 얼굴·키감·분위기는 알아보는 첫 단서고, 그 인연이 오래 갈지는 약속을 다루는 태도에서 완성돼.',
+    realLifeScene: '처음에는 눈매와 전체 실루엣이 먼저 들어오고, 대화를 나눈 뒤에는 다음 만남을 구체적으로 잡는 태도까지 함께 기억에 남을 수 있어.',
     counterpoint: '차분한 첫인상이 곧 좋은 관계를 뜻하지는 않으니, 중요한 질문에 답하는 태도까지 함께 봐야 해.',
     checkSignal: '호감 표현 뒤에 다음 약속, 시간 배려, 관계에 대한 분명한 대화가 이어지는지 확인해.',
-    action: '다음 사람에게 바라는 외형 대신 꼭 지켜졌으면 하는 관계 행동 세 가지를 적어.',
+    action: '인연상에서 눈에 들어온 외모 단서 세 가지와 꼭 지켜졌으면 하는 관계 행동 세 가지를 함께 적어.',
   },
   'meeting-scenes': {
     interpretation: '인연은 한 번 스치는 자리보다 자연스럽게 대화가 반복되는 생활 반경에서 시작될 가능성이 커.',
@@ -493,6 +494,33 @@ export function mzLoveCustomerNarrativeOrFallback(value: string | undefined, fal
   return isCustomerNarrativeText(value) ? normalizeCopy(value) : fallback;
 }
 
+/**
+ * Question answers are intentionally longer than chapter captions. Keep the
+ * same engine/business-copy safety boundary while allowing a full 상담 answer
+ * to remain intact in the paid report.
+ */
+export function mzLoveLongCustomerNarrativeOrFallback(value: string | undefined, fallback: string): string {
+  if (!value) return fallback;
+  const normalized = normalizeCopy(value);
+  if (normalized.length < 8 || normalized.length > 1800) return fallback;
+  const longAnswerAuditPatterns = [
+    /근거\s*(?:ID|아이디|식별자|경로)/iu,
+    /(?:후보|규칙|rule|source|finding|opinion)\s*:/iu,
+    /(?:MRE|TEMP|NATAL|REL|CALC)(?:-V?\d+)?[-:_][A-Z0-9:_-]+/iu,
+    /(?:교차\s*)?(?:합|충|형|파|해)(?:\s*[·,/+]\s*(?:합|충|형|파|해))+/u,
+    /(?:육합|삼합|방합|반합|암합|쟁합|투합|합화)(?:\s*[·,/+]\s*(?:육합|삼합|방합|반합|암합|쟁합|투합|합화))*/u,
+    /(?:억부|조후|용신|기신)\s*(?:관점|계산|판정|분포|비율|후보|근거|점수|검증)/u,
+    /(?:엔진|engine|calculation|audit|evidence|validation|sourcePath|engineMeta|calculationPrecision|validationStatus|scenarioCount|confidence)/iu,
+    /(?:결정론|원문\s*근거|산출\s*근거|계산\s*감사|검증\s*로그)/u,
+    /(?:후보|신뢰도|정확도|확률)\s*(?:는|은|:)?\s*[^.!?]{0,40}\d{1,3}\s*%/u,
+    /\d{1,3}\s*%/u,
+  ] as const;
+  if (longAnswerAuditPatterns.some((pattern) => pattern.test(normalized))) return fallback;
+  if (BUSINESS_COPY_PATTERNS.some((pattern) => pattern.test(normalized))) return fallback;
+  if (!RELATIONSHIP_NARRATIVE_PATTERNS.some((pattern) => pattern.test(normalized))) return fallback;
+  return auditMzLoveText(normalized).length === 0 ? normalized : fallback;
+}
+
 function isChapterCustomerNarrativeText(
   value: string | undefined,
   chapterId: MzLoveChapterId,
@@ -613,7 +641,7 @@ function partnerTendency(
 
 export function buildMzLoveReportFromSaju(
   report: SajuReportData,
-  options: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean } = {},
+  options: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean; interestedIn?: MzLoveInput['interestedIn'] } = {},
 ): MzLoveReport {
   const sajuSummary = adaptSajuReportToMzLoveSummary(report, options);
   const status = options.relationshipStatus ?? inferRelationshipStatus(report);
@@ -697,7 +725,12 @@ export function buildMzLoveReportFromSaju(
   });
   return {
     meta: { id: `mz-love:${report.serialNumber}`, version: 'mz-love-fact-v1', createdAt: report.createdAt, sourceReportSerial: report.serialNumber },
-    user: { displayName: report.customerName && report.customerName !== '고객' ? report.customerName : '당신', relationshipStatus: status, birthTimeKnown: sajuSummary.birthTimeKnown },
+    user: {
+      displayName: report.customerName && report.customerName !== '고객' ? report.customerName : '당신',
+      relationshipStatus: status,
+      interestedIn: options.interestedIn,
+      birthTimeKnown: sajuSummary.birthTimeKnown
+    },
     sajuSummary,
     openingFact,
     loveSelf: chapters[0].result,
@@ -810,11 +843,11 @@ function exactInterpretationEvidence(
 export function buildMzLoveViewModel(report: MzLoveReport): MzLoveReportViewModel;
 export function buildMzLoveViewModel(
   report: SajuReportData,
-  options?: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean },
+  options?: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean; interestedIn?: MzLoveInput['interestedIn'] },
 ): MzLoveReportViewModel;
 export function buildMzLoveViewModel(
   source: MzLoveReport | SajuReportData,
-  options: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean } = {},
+  options: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean; interestedIn?: MzLoveInput['interestedIn'] } = {},
 ): MzLoveReportViewModel {
   const report = isMzLoveReport(source) ? source : buildMzLoveReportFromSaju(source, options);
   const sceneByChapter = resolveMzLoveChapterScenes(report.chapters, report.user.relationshipStatus);

@@ -32,7 +32,7 @@ const detailAliases: Record<string, string> = {
   'love-reading': '/detail/love-reading'
 };
 
-const noIndexPrefixes = ['/form/', '/report/', '/auth/', '/payment/'];
+const noIndexPrefixes = ['/form/', '/preview/', '/report/', '/auth/', '/payment/'];
 const noIndexPaths = new Set(['/checkout', '/loading', '/login', '/my', '/admin', '/search']);
 
 function setMeta(name: string, content: string, attribute: 'name' | 'property' = 'name') {

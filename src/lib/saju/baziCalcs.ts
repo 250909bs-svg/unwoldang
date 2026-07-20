@@ -14,7 +14,6 @@ import {
   MONTH_STRONG,
   TG,
   TIANYI,
-  YANG_DZ_IDX,
   YANG_TG_IDX,
   ZODIAC_ANIMALS,
   type EarthlyBranch,
@@ -50,10 +49,6 @@ function gzToString(gz: GZ): string {
 
 function isYangStem(index: number) {
   return YANG_TG_IDX.has(index);
-}
-
-function isYangBranch(index: number) {
-  return YANG_DZ_IDX.has(index);
 }
 
 function getStemElement(index: number): FiveElement {
@@ -92,7 +87,7 @@ export function calcBazi(
   const dayUtil = new DayUtil(year, month, day, hour, minute, calendar, leap, timeCorrection);
   const d_gz = dayUtil.getDayGZ();
   const h_gz = hour === null ? null : dayUtil.getHourGZ(d_gz.tg);
-  const { start_age, forward } = dayUtil.getDaeyunInfo(gender);
+  const { start_age, start_instant, forward } = dayUtil.getDaeyunInfo(gender);
   const { ipchunDate, birthDateAfterIpchun } = dayUtil.getCalculationBasis();
 
   return {
@@ -103,6 +98,8 @@ export function calcBazi(
     solar: dayUtil.getSolarDateArray(),
     lunar_in: dayUtil.getLunarInputString(),
     start_age: Math.floor(start_age),
+    start_age_exact: Number(start_age.toFixed(6)),
+    dayun_start_iso: start_instant.toISOString(),
     forward,
     calculationBasis: {
       ipchun: formatKST(ipchunDate),
@@ -124,15 +121,18 @@ export function tenGod(dayTgIndex: number, otherTgIndex: number): TenGodLabel {
 }
 
 export function tenGodFromBranch(dayTgIndex: number, branchIndex: number): TenGodLabel {
-  const dayElement = getStemElement(dayTgIndex);
-  const otherElement = getBranchElement(branchIndex);
-  const samePolarity = isYangStem(dayTgIndex) === isYangBranch(branchIndex);
+  const branch = DZ[branchIndex];
+  const hiddenStems = HIDDEN_STEMS[branch] || [];
+  const mainHiddenStemIndex = hiddenStems[hiddenStems.length - 1];
 
-  if (dayElement === otherElement) return samePolarity ? '비견' : '겁재';
-  if (ELEM_NEXT[dayElement] === otherElement) return samePolarity ? '식신' : '상관';
-  if (ELEM_CTRL[dayElement] === otherElement) return samePolarity ? '편재' : '정재';
-  if (CTRL_BY[dayElement] === otherElement) return samePolarity ? '편관' : '정관';
-  return samePolarity ? '편인' : '정인';
+  if (mainHiddenStemIndex === undefined) {
+    throw new Error(`지지 ${branch}의 본기 지장간을 찾을 수 없습니다.`);
+  }
+
+  // A branch's ten-god polarity follows its main hidden stem (본기), not the
+  // branch index's alternating yin/yang sequence. 子·巳·午·亥 are the common
+  // counterexamples where using branch polarity produces the wrong ten-god.
+  return tenGod(dayTgIndex, mainHiddenStemIndex);
 }
 
 export function getGyeokguk(bazi: Bazi): string {
@@ -330,17 +330,36 @@ export function dayunRows(bazi: Bazi): DayunData[] {
   const [, strengthLabel] = daymasterStrength(bazi);
   const [helpfulElements, cautiousElements] = usefulElements(dayMasterElement, strengthLabel);
   const step = (stem: number, branch: number, forward: boolean) => (forward ? [(stem + 1) % 10, (branch + 1) % 12] : [(stem + 9) % 10, (branch + 11) % 12]);
+  const exactStartAge = bazi.start_age_exact ?? bazi.start_age;
+  const firstStartInstant = bazi.dayun_start_iso
+    ? new Date(bazi.dayun_start_iso)
+    : new Date(Date.UTC(bazi.solar[0] + bazi.start_age, bazi.solar[1] - 1, bazi.solar[2]));
+  const tropicalYearMs = 365.2422 * 86400000;
+  const formatStartAge = (value: number) => {
+    const totalMonths = Math.max(0, Math.round(value * 12));
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    return months > 0 ? `${years}년 ${months}개월` : `${years}년`;
+  };
 
   for (let index = 1; index <= 10; index += 1) {
     [tg, dz] = step(tg, dz, bazi.forward);
     const currentAge = bazi.start_age + (index - 1) * 10;
+    const exactCurrentAge = exactStartAge + (index - 1) * 10;
+    const startsAt = new Date(firstStartInstant.getTime() + (index - 1) * 10 * tropicalYearMs);
+    const endsAt = new Date(firstStartInstant.getTime() + index * 10 * tropicalYearMs);
+    const startsAtKst = new Date(startsAt.getTime() + KST_OFFSET_MS);
     rows.push({
       period: index,
       age: `${currentAge}세 ~ ${currentAge + 9}세`,
-      year: bazi.solar[0] + currentAge - 1,
+      year: startsAtKst.getUTCFullYear(),
       ganzhi: `${TG[tg]}${DZ[dz]}`,
       tenGod: `${tenGod(bazi.d_gz.tg, tg)} / ${tenGodFromBranch(bazi.d_gz.tg, dz)}`,
-      luckStrength: scoreLuckByElements(getStemElement(tg), getBranchElement(dz), helpfulElements, cautiousElements)
+      luckStrength: scoreLuckByElements(getStemElement(tg), getBranchElement(dz), helpfulElements, cautiousElements),
+      startAgeExact: Number(exactCurrentAge.toFixed(6)),
+      startAgeLabel: formatStartAge(exactCurrentAge),
+      startsAt: startsAt.toISOString(),
+      endsAt: endsAt.toISOString()
     });
   }
 

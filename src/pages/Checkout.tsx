@@ -30,6 +30,7 @@ type CheckoutState = {
   product?: string;
   formData?: Partial<IntakeFormData>;
   tabOrigin?: string;
+  draftOwnerId?: string;
 };
 
 export default function Checkout() {
@@ -39,8 +40,10 @@ export default function Checkout() {
   const restoredPayment = readPendingPayment();
   const locationState = (location.state as CheckoutState | null) ?? null;
   const product = locationState?.product || restoredPayment?.productId;
-  const formData = locationState?.formData || restoredPayment?.formData;
+  const ownsLocationDraft = !locationState?.draftOwnerId || locationState.draftOwnerId === user?.id;
+  const formData = (ownsLocationDraft ? locationState?.formData : undefined) || restoredPayment?.formData;
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
+  const draftOwnerId = user?.id;
   const service = findServiceById(product);
   const isPastLifeProduct = service.id === 'past-life-goblin';
   const isLoveReadingProduct = service.id === 'love-reading';
@@ -260,7 +263,7 @@ export default function Checkout() {
       }
     >
       <div className="mobile-page-card checkout-luxe-card">
-        <MobileTopBar title="운월당" backTo={`/form/${service.id}`} backLabel="이전" backState={{ tabOrigin }} />
+        <MobileTopBar title="운월당" backTo={`/form/${service.id}`} backLabel="이전" backState={{ formData, tabOrigin, draftOwnerId }} />
 
         <section className="checkout-luxe-stage" aria-label="결제 상품 미리보기">
           <div className="checkout-luxe-copy">
@@ -324,7 +327,7 @@ export default function Checkout() {
               <h1>{service.label} 결제 안내</h1>
               <p>{birthSummary} · {calendarSummary}</p>
             </div>
-            <Link to={`/form/${service.id}`} state={{ formData, tabOrigin }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
+            <Link to={`/form/${service.id}`} state={{ formData, tabOrigin, draftOwnerId }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
               <X size={18} />
             </Link>
           </div>

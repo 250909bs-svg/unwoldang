@@ -157,6 +157,16 @@ const PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
   q2: '재물운과 직업운 중 어떤 쪽에 집중해야 하나요?'
 };
 
+const LOVE_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
+  ...PREVIEW_FORM_DATA,
+  name: '김하린',
+  relationshipStatus: 'situationship',
+  relationshipDuration: '',
+  loveFocus: 'my-attraction',
+  q1: '지금 마음에 걸리는 사람과 관계가 더 깊어질 수 있을까요?',
+  q2: '제가 놓치면 안 될 사람의 행동 신호는 무엇인가요?'
+};
+
 const PILLAR_LABELS = [
   { key: 'year', label: '연주', hanja: '年', note: '배경과 성장 환경' },
   { key: 'month', label: '월주', hanja: '月', note: '월령과 사회적 흐름' },
@@ -5563,7 +5573,9 @@ function buildMonthStageSection(report: SajuReportData, title = '월별 흐름 �
 function buildProductQuestionAnswers(report: SajuReportData, productLabel: string, focusSentence: string) {
   return report.questionAnswers.map((qa, index) => ({
     ...qa,
-    title: `${productLabel} 질문 ${index + 1}: ${qa.title.replace(/^첫 번째 질문 핵심 판정:\s*|^두 번째 질문 핵심 판정:\s*/, '')}`,
+    title: `${productLabel} 질문 ${index + 1}: ${qa.title
+      .replace(/^첫 번째 질문 핵심 판정:\s*|^두 번째 질문 핵심 판정:\s*/, '')
+      .replace(/^\d+\.\s*/, '')}`,
     analysis: `${qa.analysis} ${focusSentence}`,
     advice: [
       ...qa.advice.slice(0, 2),
@@ -6315,12 +6327,21 @@ export default function Report() {
   const reportInput = formData?.birthDate
     ? formData
     : reportAccess.usesPreviewData
-      ? PREVIEW_FORM_DATA
+      ? service.id === 'love-reading'
+        ? LOVE_PREVIEW_FORM_DATA
+        : PREVIEW_FORM_DATA
       : formData || {};
   const reportCharacterVideo =
     reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
   const report = useMemo(() => {
+    // Paid/server reports are canonical artifacts that already passed the
+    // immutable-fact guard. Rewriting them again in the browser can reintroduce
+    // preview-only sample prose, so client expansion is strictly preview-only.
+    if (reportData) {
+      return reportData;
+    }
+
     const preserveAiQuestions = Boolean(reportData);
     const expandedReport = buildExpandedCoreReport(baseReport);
     let nextReport: SajuReportData;
@@ -6332,10 +6353,6 @@ export default function Report() {
 
       if (finalized.serviceId !== 'past-life-goblin') {
         return finalized;
-      }
-
-      if (!formData?.birthDate && reportData?.pastLifeProfile) {
-        return { ...finalized, pastLifeProfile: reportData.pastLifeProfile };
       }
 
       return { ...finalized, pastLifeProfile: buildPastLifeProfile(finalized, reportInput) };
@@ -6364,14 +6381,15 @@ export default function Report() {
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
   const isLoveReadingShowcase = report.serviceId === 'love-reading';
-  const loveRelationshipStatus = mapIntakeRelationshipStatus(formData?.relationshipStatus);
-  const loveBirthTimeKnown = !formData
-    ? undefined
-    : formData.isUnknownTime === true
+  const loveRelationshipStatus = mapIntakeRelationshipStatus(reportInput.relationshipStatus);
+  const loveBirthTimeKnown = reportInput.isUnknownTime === true
       ? false
-      : formData.isUnknownTime === false
+      : reportInput.isUnknownTime === false
         ? true
         : undefined;
+  const loveCustomerQuestions = [reportInput.q1, reportInput.q2]
+    .filter((question): question is string => Boolean(question?.trim()))
+    .map((question) => question.trim());
   const pageCopy = getReportPageCopy(report);
   const yearlyLead = report.yearLuck[0];
   const yearlyMomentum = report.yearLuck.slice(0, 3);
@@ -6976,7 +6994,11 @@ body {
               <LoveReadingStoryReport
                 report={report}
                 relationshipStatus={loveRelationshipStatus}
+                relationshipDuration={reportInput.relationshipDuration}
                 birthTimeKnown={loveBirthTimeKnown}
+                interestedIn={reportInput.interestedIn}
+                loveFocus={reportInput.loveFocus}
+                customerQuestions={loveCustomerQuestions}
                 onShare={handleShareReport}
                 shareLabel="이 상품 공유하기"
               />
@@ -7421,7 +7443,8 @@ body {
               </article>
             </div>
 
-            {!isPastLifeShowcase ? (
+            {!isPastLifeShowcase &&
+            (report.actionPlan.luckyDays.length > 0 || report.actionPlan.unluckyDays.length > 0) ? (
               <div className="premium-grid2 premium-plan-days">
                 <article className="premium-card">
                   <h3>행운일</h3>

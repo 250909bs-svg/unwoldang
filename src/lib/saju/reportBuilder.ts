@@ -1,4 +1,5 @@
 import { findServiceById, type IntakeFormData, type ServiceId } from '../../api/mockData';
+import { getLoveFocusLabel, normalizeLoveFocus } from '../loveFocus';
 import { getReportCallName } from '../customerName';
 import { getRelationshipDurationLabel, getRelationshipStatusLabel } from '../relationshipIntake';
 import {
@@ -7,6 +8,7 @@ import {
   type DeterministicSajuBasis
 } from './deterministicBasis';
 import { calcBazi, tenGod } from './baziCalcs';
+import { getSolarTermInstantForGregorianYear } from './sxtwl';
 import { BRANCH_ELEM, DZ, ELEMENT, TG, type EarthlyBranch, type HeavenlyStem } from './constants';
 import { scoreReportQuality } from './reportQuality';
 import type {
@@ -595,34 +597,23 @@ function formatGanzhiHanja(stem: HeavenlyStem, branch: EarthlyBranch) {
   return `${STEM_HANJA[stem] || stem}${BRANCH_HANJA[branch] || branch}`;
 }
 
-function getYearLuckHeadline(item: DeterministicSajuBasis['seun'][number], score: number) {
-  if (item.ganzhi === '병오') {
-    return '丙午년, 공개와 검증이 동시에 열리는 해';
-  }
-
-  if (item.ganzhi === '정미') {
-    return '丁未년, 관계 확장과 현실화가 맞물리는 해';
-  }
-
-  if (item.ganzhi === '무신') {
-    return '戊申년, 구조 조정과 성과 검증의 해';
-  }
-
-  if (item.ganzhi === '기유') {
-    return '己酉년, 반복 수익과 평판 고정의 해';
-  }
-
-  if (item.ganzhi === '경술') {
-    return '庚戌년, 재정비와 기준 재설정의 해';
-  }
-
-  return score >= 80
-    ? '확장과 성과가 비교적 선명하게 드러나는 해'
+function getYearLuckHeadline(
+  item: DeterministicSajuBasis['seun'][number],
+  score: number,
+  basis: DeterministicSajuBasis
+) {
+  const [stem, branch] = [...item.ganzhi] as [HeavenlyStem, EarthlyBranch];
+  const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
+  const phase = score >= 80
+    ? '활용 폭이 넓어지는 해'
     : score >= 68
-      ? '기회를 잘 고르면 결과가 붙는 해'
+      ? '선택과 집중이 중요한 해'
       : score >= 56
-        ? '정비와 기준 재설정이 중요한 해'
-        : '속도보다 관리가 더 중요한 해';
+        ? '조건을 조율하는 해'
+        : '손실을 줄이며 정비하는 해';
+
+  const role = TEN_GOD_ROLE[stemGod] || '운의 겉주제';
+  return `${formatGanzhiHanja(stem, branch)}년, ${role}${getSubjectParticle(role)} 드러나는 ${phase}`;
 }
 
 function getYearLuckSummary(
@@ -631,83 +622,55 @@ function getYearLuckSummary(
   branch: EarthlyBranch,
   stemElement: FiveElement,
   branchElement: FiveElement,
-  helpful: FiveElement[]
+  helpful: FiveElement[],
+  basis: DeterministicSajuBasis
 ) {
   const ganzhiHanja = formatGanzhiHanja(stem, branch);
+  const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
+  const hidden = HIDDEN_STEMS_KO[branch] || [];
+  const mainHiddenStem = hidden[hidden.length - 1];
+  const branchGod = mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '';
+  const support = helpful.includes(stemElement) || helpful.includes(branchElement);
 
-  if (item.ganzhi === '병오') {
-    return `${item.year}년은 ${ganzhiHanja}년, 준비한 것을 밖으로 꺼내고 시장 반응을 확인하는 해입니다. 공개 자체보다 검증이 중요하므로 상품, 관계, 제안을 작게 열고 실제 반응을 숫자와 기록으로 남겨야 합니다.`;
-  }
-
-  if (item.ganzhi === '정미') {
-    return `${item.year}년은 ${ganzhiHanja}년입니다. 사람과 일이 늘어날 수 있지만, 핵심은 무리한 확장이 아니라 관계를 현실 조건으로 정착시키는 데 있습니다. 약속, 역할, 비용, 체력 배분을 정리해야 좋은 연결이 오래 갑니다.`;
-  }
-
-  if (item.ganzhi === '무신') {
-    return `${item.year}년은 ${ganzhiHanja}년입니다. 벌린 판에서 무엇이 실제 성과로 남는지 검증하는 해입니다. 고객 반응, 정산, 반복 구매, 업무 시간을 숫자로 확인하고 수익이 남지 않는 구조는 과감히 줄여야 합니다.`;
-  }
-
-  if (item.ganzhi === '기유') {
-    return `${item.year}년은 ${ganzhiHanja}년입니다. 평판, 후기, 반복 고객, 정산 기준이 고정되는 해로 읽습니다. 새로움보다 신뢰 축적이 중요하므로 결과물의 품질과 응대 기준을 안정적으로 유지해야 합니다.`;
-  }
-
-  if (item.ganzhi === '경술') {
-    return `${item.year}년은 ${ganzhiHanja}년입니다. 지나온 흐름을 다시 정리하고 오래 가져갈 기준만 남기는 해입니다. 역할, 책임, 지출, 건강 루틴을 재설정하면 다음 단계의 기반이 단단해집니다.`;
-  }
-
-  return `${item.year}년은 ${ganzhiHanja}년, ${stemElement}·${branchElement} 흐름이 들어오면서 ${
-    helpful.includes(stemElement) || helpful.includes(branchElement)
-      ? '새로운 기회를 현실 성과로 연결하기 좋은 해'
-      : '기존 구조를 점검하고 손실을 줄이는 감각이 중요한 해'
-  }로 읽습니다.`;
+  return `${item.year}년 ${ganzhiHanja}의 천간 ${stem}은 ${stemGod || '십성 미판정'}(${TEN_GOD_ROLE[stemGod] || '겉주제'}), ` +
+    `지지 ${branch}의 본기는 ${branchGod || '십성 미판정'}(${TEN_GOD_ROLE[branchGod] || '바탕주제'})로 작동합니다. ` +
+    `${item.ganzhi} 세운의 ${stemElement}·${branchElement} 흐름은 ${support ? '현재 도움 오행과 연결되어 활용 여지가 커지지만' : '현재 균형축과 직접 맞지 않아 조건 점검이 더 필요하며'}, ` +
+    `${item.ganzhi} 세운에서는 사건을 단정하기보다 실제 선택·관계·업무에서 두 주제가 반복되는지를 확인해야 합니다.`;
 }
 
-function getYearLuckFocus(item: DeterministicSajuBasis['seun'][number], helpful: FiveElement[]) {
-  if (item.ganzhi === '병오') {
-    return '대표 결과물을 작게 공개하고 반응을 검증하세요. 가격, 일정, 제공 범위를 먼저 적어두면 관심이 몰려도 흔들리지 않습니다.';
-  }
+function getYearLuckFocus(
+  item: DeterministicSajuBasis['seun'][number],
+  helpful: FiveElement[],
+  basis: DeterministicSajuBasis
+) {
+  const [stem] = [...item.ganzhi] as [HeavenlyStem, EarthlyBranch];
+  const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
+  const actionByGroup = stemGod.includes('비') || stemGod === '겁재'
+    ? '내 역할과 타인의 역할, 협업 범위와 경쟁 기준을 문서로 나누세요.'
+    : stemGod === '식신' || stemGod === '상관'
+      ? '생각을 결과물·대화·제안으로 내보내되 반응과 수정 범위를 기록하세요.'
+      : stemGod === '편재' || stemGod === '정재'
+        ? '수입·지출·정산·계약 조건을 숫자로 확인하고 현금 흐름을 먼저 지키세요.'
+        : stemGod === '편관' || stemGod === '정관'
+          ? '책임과 평가 기준을 선명히 하고 감당 가능한 일정만 약속하세요.'
+          : '배움·문서·자격·지원 체계를 실제 일정과 결과물로 연결하세요.';
 
-  if (item.ganzhi === '정미') {
-    return '새 연결을 받되 관계와 일의 조건을 현실화하세요. 계약, 고정비, 책임 범위, 생활 체력을 정리해야 좋은 인연이 부담으로 변하지 않습니다.';
-  }
-
-  if (item.ganzhi === '무신') {
-    return '감으로 좋다는 말보다 숫자와 구조로 검증해야 합니다. 매출, 정산, 반복 고객, 포트폴리오, 업무 시간이 실제로 남는지 확인하세요.';
-  }
-
-  if (item.ganzhi === '기유') {
-    return '반복 수익과 평판을 고정하세요. 후기 정리, 고객 응대 기준, 재구매 상품, 정산일을 선명하게 만들수록 성과가 오래 갑니다.';
-  }
-
-  if (item.ganzhi === '경술') {
-    return '남길 것과 줄일 것을 다시 정하세요. 지출, 업무 범위, 관계 경계, 건강 루틴을 재설정하면 다음 흐름을 받을 공간이 생깁니다.';
-  }
-
-  return `${helpful.join(', ')} 기운을 살리려면 말로 넘긴 약속을 실제 일정, 가격, 제공 범위로 내려놓아야 합니다. 새 일을 늘리기 전에 이미 잡은 일에서 돈과 신뢰가 남는지 보세요.`;
+  return `${item.ganzhi} 세운에서는 ${actionByGroup} ${item.ganzhi} 세운의 ${helpful.join(', ')} 기운은 반복 가능한 행동으로 옮길 때만 도움축으로 확인됩니다.`;
 }
 
-function getYearLuckWarning(item: DeterministicSajuBasis['seun'][number], cautionGuidance: string) {
-  if (item.ganzhi === '병오') {
-    return '관심이 올라오는 만큼 성급한 약속과 즉흥 결제가 따라오기 쉽습니다. 공개 전에는 가격, 수정 횟수, 마감일을 먼저 고정하세요.';
-  }
+function getYearLuckWarning(
+  item: DeterministicSajuBasis['seun'][number],
+  cautionGuidance: string,
+  basis: DeterministicSajuBasis
+) {
+  const [stem, branch] = [...item.ganzhi] as [HeavenlyStem, EarthlyBranch];
+  const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
+  const hidden = HIDDEN_STEMS_KO[branch] || [];
+  const mainHiddenStem = hidden[hidden.length - 1];
+  const branchGod = mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '';
 
-  if (item.ganzhi === '정미') {
-    return '사람과 일이 늘어나는 해에는 좋은 관계도 체력 부담이 될 수 있습니다. 약속을 받기 전에 이동 시간, 고정비, 책임 범위를 확인하세요.';
-  }
-
-  if (item.ganzhi === '무신') {
-    return '성과 검증의 해에는 감정적으로 아까운 일도 정리 대상이 됩니다. 매출은 있는데 시간이 남지 않는 구조라면 가격이나 제공 범위를 조정하세요.';
-  }
-
-  if (item.ganzhi === '기유') {
-    return '평판이 고정되는 해에는 작은 응대 실수도 오래 남을 수 있습니다. 상담 기록, 환불 기준, 고객 안내 문구를 표준화하세요.';
-  }
-
-  if (item.ganzhi === '경술') {
-    return '재정비의 해에는 오래 끌던 관계와 비용 구조를 다시 보게 됩니다. 감정으로 끊기보다 남길 기준과 줄일 기준을 문서로 나누세요.';
-  }
-
-  return `${cautionGuidance} 계약, 결제, 이직, 관계 정리는 바로 끝내지 말고 비용·사람·마감·체력 조건을 따로 적어 비교하세요.`;
+  return `${item.ganzhi} 세운에서는 ${stemGod || '천간 주제'}와 ${branchGod || '지지 주제'}가 동시에 과열될 때 한 가지 신호만 보고 결론 내리지 마세요. ` +
+    `${item.ganzhi} 세운의 주의 기준은 ${cautionGuidance} ${item.ganzhi} 세운의 계약·결제·이직·관계 정리는 비용·사람·마감·체력 조건을 따로 적어 비교해야 합니다.`;
 }
 
 function mapCurrentAndNextDayun(
@@ -716,7 +679,11 @@ function mapCurrentAndNextDayun(
   cautious: FiveElement[]
 ): { currentDayun: FortuneWindow; nextDayun: FortuneWindow } {
   const rows = basis.dayun;
-  const selection = selectCurrentDayun(rows, basis.commercialV2.generatedFor.year);
+  const selection = selectCurrentDayun(
+    rows,
+    basis.commercialV2.generatedFor.year,
+    new Date(basis.commercialV2.generatedFor.instant)
+  );
 
   const makeWindow = (row: DeterministicSajuBasis['dayun'][number], isCurrent: boolean): FortuneWindow => {
     const [stem, branch] = [...row.ganzhi] as [string, string];
@@ -790,10 +757,10 @@ function buildYearLuck(
       year: item.year,
       ganzhi: item.ganzhi,
       score,
-      headline: getYearLuckHeadline(item, score),
-      summary: getYearLuckSummary(item, stem, branch, stemElement, branchElement, helpful),
-      focus: getYearLuckFocus(item, helpful),
-      warning: getYearLuckWarning(item, cautionGuidance)
+      headline: getYearLuckHeadline(item, score, basis),
+      summary: getYearLuckSummary(item, stem, branch, stemElement, branchElement, helpful, basis),
+      focus: getYearLuckFocus(item, helpful, basis),
+      warning: getYearLuckWarning(item, cautionGuidance, basis)
     };
   });
 }
@@ -805,21 +772,58 @@ function buildMonthLuck(
   cautious: FiveElement[],
   mode: 'rolling' | 'calendar-year' = 'rolling'
 ): MonthLuckItem[] {
-  const now = new Date();
   const gender = formData.gender === 'male' ? 'male' : 'female';
   const cautionGuidance = formatElementGuidance(cautious, basis);
+  const reference = basis.commercialV2.generatedFor;
+  const baseMonth = mode === 'calendar-year' ? 1 : reference.month;
+  const termAnglesByMonth = [285, 315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255] as const;
+  const timezone = basis.input.timezone || 'Asia/Seoul';
+  const formatInstant = (instant: Date) => new Intl.DateTimeFormat('ko-KR', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).format(instant);
+  const getKstParts = (instant: Date) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(instant);
+    const read = (type: Intl.DateTimeFormatPartTypes) =>
+      Number(parts.find((part) => part.type === type)?.value || 0);
+    return {
+      year: read('year'),
+      month: read('month'),
+      day: read('day'),
+      hour: read('hour'),
+      minute: read('minute')
+    };
+  };
 
   return Array.from({ length: 12 }, (_, index) => {
-    const date =
-      mode === 'calendar-year'
-        ? new Date(now.getFullYear(), index, 15, 12, 0, 0)
-        : new Date(now.getFullYear(), now.getMonth() + index, 15, 12, 0, 0);
+    const absoluteMonth = baseMonth - 1 + index;
+    const year = reference.year + Math.floor(absoluteMonth / 12);
+    const month = ((absoluteMonth % 12) + 12) % 12 + 1;
+    const nextAbsoluteMonth = absoluteMonth + 1;
+    const nextYear = reference.year + Math.floor(nextAbsoluteMonth / 12);
+    const nextMonth = ((nextAbsoluteMonth % 12) + 12) % 12 + 1;
+    const validFromInstant = getSolarTermInstantForGregorianYear(year, termAnglesByMonth[month - 1]);
+    const validToInstant = getSolarTermInstantForGregorianYear(nextYear, termAnglesByMonth[nextMonth - 1]);
+    const sampleParts = getKstParts(new Date(validFromInstant.getTime() + 60_000));
     const sample = calcBazi(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
-      12,
-      0,
+      sampleParts.year,
+      sampleParts.month,
+      sampleParts.day,
+      sampleParts.hour,
+      sampleParts.minute,
       'solar',
       'normal',
       gender,
@@ -830,15 +834,19 @@ function buildMonthLuck(
     const stemElement = ELEMENT[stem] as FiveElement;
     const branchElement = BRANCH_ELEM[branch] as FiveElement;
     const score = scoreByElements(stemElement, branchElement, helpful, cautious);
+    const validFrom = formatInstant(validFromInstant);
+    const validTo = formatInstant(validToInstant);
 
     return {
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
+      year,
+      month,
       ganzhi: `${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]}`,
       score,
-      summary: `${date.getMonth() + 1}월은 ${stemElement}·${branchElement} 흐름이 강조되는 달입니다. ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 월운에서는 ${score >= 70 ? '선택을 분명하게 가져갈수록' : '리듬을 정돈할수록'} 일과 관계의 안정감이 높아집니다.`,
-      focus: `${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 흐름의 실제 과제는 생활 리듬, 제공 범위, 우선순위 정리입니다. ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 달에는 고객, 연인, 가족과의 약속도 말로만 두지 말고 일정과 역할을 남기면 흔들림이 줄어듭니다.`,
-      warning: `${cautionGuidance} ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 달은 무리해서 끌고 가기보다 덜어내서 선명해지는 방식으로 운영하세요.`
+      summary: `${validFrom}부터 ${validTo} 직전까지는 ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 월운입니다. ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 월운의 ${stemElement}·${branchElement} 흐름에서는 ${score >= 70 ? '선택을 분명하게 가져갈수록' : '리듬을 정돈할수록'} 일과 관계의 안정감이 높아집니다.`,
+      focus: `${year}년 ${month}월 ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 흐름의 실제 과제는 생활 리듬, 제공 범위, 우선순위 정리입니다. ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 월운에는 고객·연인·가족과의 약속도 말로만 두지 말고 일정과 역할을 남기면 흔들림이 줄어듭니다.`,
+      warning: `${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 월운의 주의 기준은 ${cautionGuidance} ${year}년 ${month}월 ${TG[sample.m_gz.tg]}${DZ[sample.m_gz.dz]} 흐름은 무리해서 끌고 가기보다 덜어내서 선명해지는 방식으로 운영하세요.`,
+      validFrom,
+      validTo
     };
   });
 }
@@ -855,7 +863,7 @@ function getQuestionCategory(question: string): QuestionCategory {
   if (/살기싫|죽고싶|자살|극단|사라지고싶|끝내고싶|죽어버|못살겠|포기하고싶|목숨|해치고싶|왜살|살이유|사는이유|살아야할이유/.test(normalized)) {
     return 'crisis';
   }
-  if (/연애|결혼|재회|상대|인연|배우자|궁합|썸|애정/.test(normalized)) return 'relationship';
+  if (/연애|결혼|재회|상대|인연|배우자|궁합|썸|애정|관계|호감|연락|마음에걸|사람.*신호|행동신호/.test(normalized)) return 'relationship';
   if (/돈|재물|수익|매출|사업|투자|가격|결제|고가|상품|월급|부업|벌이|빚|대출/.test(normalized)) return 'money';
   if (/뭐먹고살|먹고살|벌어먹|돈벌|일|직업|커리어|이직|퇴사|취업|직무|업종|창업|브랜드|콘텐츠|회사|진로|적성|뭘해야|뭐해야/.test(normalized)) return 'career';
   if (/언제|시기|올해|내년|2026|2027|타이밍|기회/.test(normalized)) return 'timing';
@@ -1136,11 +1144,182 @@ function buildPremiumQuestionTitle(answer: QuestionAnswerBlock, category: Questi
     return `${prefix} 반복해서 얼굴이 익는 생활권 만남이 맞습니다`.trim();
   }
 
+  if (category === 'relationship') {
+    if (/언제|시기|다음연애|몇월|몇년/.test(normalized)) {
+      return `${prefix} 관계가 움직이는 시기와 조건`.trim();
+    }
+    if (/놓치|신호|특징|어떤사람|오래갈/.test(normalized)) {
+      return `${prefix} 오래 갈 사람의 행동 신호`.trim();
+    }
+    if (/깊어|발전|이어질|가능|마음에걸|썸|상대/.test(normalized)) {
+      return `${prefix} 이 관계가 깊어질 현실 조건`.trim();
+    }
+    if (/매력|첫인상|어떻게보|보는나/.test(normalized)) {
+      return `${prefix} 상대가 느끼는 매력과 오해 지점`.trim();
+    }
+    if (/반복|패턴|왜늘|끌리/.test(normalized)) {
+      return `${prefix} 반복되는 끌림을 끊는 기준`.trim();
+    }
+    return `${prefix} 관계의 가능성과 확인 기준`.trim();
+  }
+
   if (answer.title.includes('종합 질문 직답')) {
     return `${prefix} 돈·사람·시간·체력이 같이 버티는 답을 봐야 합니다`.trim();
   }
 
   return answer.title;
+}
+
+type LoveQuestionIntent = 'timing' | 'meeting-place' | 'current-relation' | 'partner-signal' | 'attraction' | 'pattern' | 'general';
+
+function getLoveQuestionIntent(question: string): LoveQuestionIntent {
+  const normalized = question.replace(/\s/g, '');
+  if (/어디.*연애|연애.*어디|어디.*만나|만날곳|만남장소|소개받|인연.*어디/.test(normalized)) return 'meeting-place';
+  if (/언제|시기|다음연애|몇월|몇년/.test(normalized)) return 'timing';
+  if (/놓치|신호|특징|어떤사람|오래갈/.test(normalized)) return 'partner-signal';
+  if (/깊어|발전|이어질|가능|마음에걸|썸|상대/.test(normalized)) return 'current-relation';
+  if (/매력|첫인상|어떻게보|보는나/.test(normalized)) return 'attraction';
+  if (/반복|패턴|왜늘|끌리/.test(normalized)) return 'pattern';
+  return 'general';
+}
+
+function buildPremiumLoveQuestionAnalysis(
+  answer: QuestionAnswerBlock,
+  basis: DeterministicSajuBasis,
+  currentDayunName: string,
+  helpfulText: string,
+  formData: Partial<IntakeFormData> = {},
+  questionIndex = 0
+) {
+  const intent = getLoveQuestionIntent(answer.question);
+  const relationshipLabel = getRelationshipLabel(formData);
+  const statusGuide = getRelationshipStageGuide(formData, relationshipLabel);
+  const focusLabel = getLoveFocusLabel(formData.loveFocus);
+  const profile = getElementLoveSignature(basis.dayMaster.element as FiveElement);
+  const dominantTenGodText = getTopTenGodsForQuestion(basis);
+  const friendlyName = getFriendlyAddressName(basis.input.name || '');
+  const address = friendlyName === '당신' ? '당신' : `${friendlyName}님`;
+  const focusSentence = focusLabel
+    ? `입력에서 고른 1순위가 “${focusLabel}”이므로 이 질문도 그 기준을 앞에 두고 읽었습니다.`
+    : '이번 질문은 인연의 결과보다 관계가 실제로 만들어지는 조건을 앞에 두고 읽었습니다.';
+  const basisSentence = questionIndex % 2 === 0
+    ? `${address}의 원국은 ${basis.pillars.day} 일주와 ${basis.pillars.month} 월령, ${basis.dayMaster.stem} 일간을 중심으로 보고, 지장간을 포함한 주요 십성 ${dominantTenGodText}와 ${currentDayunName} 대운을 함께 겹쳤습니다.`
+    : `${address}의 두 번째 질문은 같은 원국이라도 다른 장면을 봅니다. ${basis.pillars.day} 일주가 관계에서 반응하는 방식과 ${currentDayunName} 대운의 생활 압력, ${helpfulText} 기운을 쓸 때 마음이 안정되는 조건을 중심으로 읽었습니다.`;
+  const directAnswer: Record<LoveQuestionIntent, string> = {
+    timing: `결론부터 말하면 다음 사랑은 특정 날짜에 자동으로 생기는 사건이 아닙니다. ${currentDayunName} 대운 안에서 만남과 대화의 접점을 넓혔을 때, 다음 약속까지 구체적으로 이어지는 구간을 실제 시작점으로 봐야 합니다.`,
+    'meeting-place': '결론부터 말하면 완전히 낯선 헌팅식 만남보다 지인 소개, 반복 방문하는 취미 공간, 일과 연결된 모임처럼 같은 사람과 다시 대화할 이유가 있는 곳이 더 잘 맞습니다.',
+    'current-relation': '결론부터 말하면 지금 관계가 더 깊어질 가능성은 있지만 호감만으로 확정할 수는 없습니다. 다음 만남을 먼저 정하는지, 연락의 간격을 함께 맞추는지, 애매한 질문을 피하지 않는지가 실제 분기점입니다.',
+    'partner-signal': '결론부터 말하면 놓치지 말아야 할 사람은 강하게 설레게 하는 사람보다 약속이 바뀌었을 때 새 대안을 먼저 제시하고, 불편한 대화 뒤에도 관계를 다시 여는 사람입니다.',
+    attraction: `결론부터 말하면 ${address}의 매력은 처음부터 과하게 드러나는 화려함보다, 대화가 깊어질수록 보이는 기준과 책임감에서 오래 남습니다. 다만 차분함이 거리감으로 오해되지 않도록 호감 표현은 짧게라도 제때 보여 주는 편이 좋습니다.`,
+    pattern: '결론부터 말하면 반복되는 문제는 사람의 유형 하나보다 관계가 시작될 때의 속도에서 생깁니다. 설렘이 커질수록 확인해야 할 현실 조건을 뒤로 미루고, 실망이 쌓인 뒤 한 번에 닫는 순서를 끊어야 합니다.',
+    general: `결론부터 말하면 이 질문의 답은 상대의 속마음을 맞히는 데 있지 않습니다. ${address}가 편안함을 느끼는 관계 조건과 상대가 실제로 책임지는 행동이 같은 방향인지 확인하는 데 있습니다.`
+  };
+  const realityAnswer: Record<LoveQuestionIntent, string> = {
+    timing: `만남 가능성이 열리는 때에도 기다리기만 하면 변화는 작습니다. ${profile.meetingRoute}처럼 대화가 반복되는 생활 반경을 넓히고, 한 번의 연락보다 두 번째 만남이 잡히는지를 보세요.`,
+    'meeting-place': `${profile.meetingRoute} 한 번 스친 장소의 분위기보다 두 번째 약속이 자연스럽게 생기는지, 대화와 시간 약속이 실제로 이어지는지를 확인하세요.`,
+    'current-relation': `${statusGuide} 그래서 지금은 감정 확인을 길게 요구하기보다 “다음에 언제 볼까”, “우리는 어떤 속도가 편할까”처럼 행동으로 답할 수 있는 질문 하나가 더 정확합니다.`,
+    'partner-signal': `원국에서 오래 갈 관계를 설명하는 문장은 이렇습니다. ${profile.longTermType} 첫인상보다 세 번의 약속, 갈등 뒤 회복, 서로의 시간과 경계를 존중하는 장면을 묶어 보세요.`,
+    attraction: `이 매력은 ${profile.perceivedStyle} 상대가 호감을 보여도 추측으로 채우지 말고, 약속과 연락에서 실제로 시간을 내는지 확인해야 오해가 줄어듭니다.`,
+    pattern: `${profile.failingPattern} 반대로 실수가 있어도 인정하고 다음 행동을 바꾸는 사람이라면 같은 패턴으로 단정할 필요는 없습니다.`,
+    general: `${statusGuide} ${profile.fitPoint} 이 조건이 실제 생활 장면에서 반복될 때 관계의 가능성을 높게 볼 수 있습니다.`
+  };
+
+  return `${directAnswer[intent]} ${basisSentence} ${focusSentence} ${realityAnswer[intent]} 이 해석은 상대의 마음이나 미래 사건을 확정하는 예언이 아니라, 지금 확인할 행동과 기다릴 기준을 좁히는 상담 답변입니다.`;
+}
+
+function getPremiumLoveQuestionAdvice(
+  answer: QuestionAnswerBlock,
+  basis: DeterministicSajuBasis,
+  currentDayunName: string,
+  helpfulText: string,
+  formData: Partial<IntakeFormData> = {}
+) {
+  const intent = getLoveQuestionIntent(answer.question);
+  const profile = getElementLoveSignature(basis.dayMaster.element as FiveElement);
+  const byIntent: Record<LoveQuestionIntent, string[]> = {
+    timing: [
+      '한 달에 새로운 접점 두 곳만 열고, 한 번 만난 사람보다 두 번째 약속이 잡힌 관계를 기록하세요.',
+      `만남 장소는 ${profile.meetingRoute}처럼 같은 사람과 대화가 반복되는 곳을 우선하세요.`,
+      '연락이 시작된 뒤 7일 안에 구체적인 만남 제안이 생기는지 확인하세요.',
+      '좋은 흐름에도 상대 행동이 불분명하면 기다릴 이유가 생긴다고 해석하지 마세요.',
+      '마음이 지치는 달에는 새 결론보다 수면과 생활 리듬을 먼저 회복하세요.',
+      '소개를 받을 때 외형 조건보다 지켜졌으면 하는 관계 행동 세 가지를 먼저 말하세요.',
+      '한 번의 강한 우연보다 약속·대화·시간 배려가 두 번 이상 이어지는지를 시작 신호로 보세요.',
+      '매달 말 연락 수가 아니라 편안했던 만남과 지켜진 약속을 하나씩 돌아보세요.'
+    ],
+    'meeting-place': [
+      '지인 소개를 받을 때 외형 조건보다 지켜졌으면 하는 관계 행동 세 가지를 먼저 말하세요.',
+      '한 번 참여하고 끝나는 행사보다 4주 이상 같은 사람을 만나는 취미·운동·스터디를 고르세요.',
+      '일과 연결된 모임에서는 직업보다 시간 약속과 대화 균형을 먼저 보세요.',
+      '생활권 카페나 공방처럼 다시 마주칠 이유가 있는 장소를 한 곳 정하세요.',
+      '첫 만남 뒤 7일 안에 두 번째 대화를 자연스럽게 여는 사람이 있는지 확인하세요.',
+      '낯선 장소의 강한 분위기를 운명으로 해석하지 말고 반복 행동을 보세요.',
+      '소개자에게 상대의 스펙보다 갈등과 약속을 대하는 태도를 물어보세요.',
+      '한 달에 새 접점 두 곳만 열고, 실제로 편안했던 장소와 사람을 기록하세요.'
+    ],
+    'current-relation': [
+      '앞으로 7일 안에 다음 약속을 누가 어떻게 구체화하는지 확인하세요.',
+      '원하는 연락 간격과 관계 속도를 짧은 문장 하나로 직접 말하세요.',
+      '상대의 답변 내용보다 질문을 피하지 않고 대화를 이어 가는 태도를 보세요.',
+      '좋아한다는 말과 실제 시간 배분이 같은 방향인지 일주일 단위로 비교하세요.',
+      '약속이 바뀌면 미안하다는 말 뒤에 새로운 대안을 먼저 제시하는지 확인하세요.',
+      '애매함을 견딜 기한을 스스로 정하고 그 날짜를 계속 미루지 마세요.',
+      '서운함을 일부러 답장 늦추기나 잠수로 시험하지 말고 필요한 행동 하나를 요청하세요.',
+      '갈등 뒤 연락을 끊는지, 감정을 정리한 뒤 해결 대화를 다시 여는지 보세요.'
+    ],
+    'partner-signal': [
+      '작은 약속을 꾸준히 지키고 변경 시 먼저 새 대안을 제시하는 사람을 기억하세요.',
+      '불편한 질문에도 비난하거나 사라지지 않고 대화를 이어 가는지 보세요.',
+      '내 시간과 경계를 존중하면서도 다음 만남을 구체적으로 만드는지 확인하세요.',
+      '사람들 앞과 단둘이 있을 때의 말투와 태도가 크게 다르지 않은지 살펴보세요.',
+      '실수 뒤 사과만 반복하지 않고 같은 문제가 실제로 줄어드는지 보세요.',
+      '호감 표현의 강도보다 연락·약속·돈·시간 사용이 안정적인지 확인하세요.',
+      '평온한 사람을 지루하다고 밀어내고, 불안한 사람을 운명이라고 붙잡는지 돌아보세요.',
+      `오래 갈 상대는 ${profile.longTermType}라는 기준으로 세 번의 만남을 비교하세요.`
+    ],
+    attraction: [
+      `상대가 느끼는 첫인상은 ${profile.perceivedStyle}`,
+      '호감이 있어도 무표정과 침묵으로만 두지 말고 짧은 칭찬이나 다음 제안을 보여 주세요.',
+      '잘 들어주는 능력이 감정노동이 되지 않도록 내 이야기와 질문의 비율을 맞추세요.',
+      '완벽하게 준비된 모습보다 작은 실수와 취향을 자연스럽게 공유해 거리감을 줄이세요.',
+      '상대 반응이 늦을 때 내 매력을 의심하지 말고 확인된 행동과 해석을 나눠 적으세요.',
+      '처음부터 상대에게 맞추기보다 내가 편안한 시간과 장소를 하나 제안하세요.',
+      '호감을 주는 사람과 나를 존중하는 사람을 같은 뜻으로 보지 마세요.',
+      '세 번의 만남 뒤 들뜬 정도와 편안해진 정도를 각각 따로 기록하세요.'
+    ],
+    pattern: [
+      '강하게 끌린 순간과 실제로 편안했던 순간을 두 칸으로 나눠 적으세요.',
+      '답장이 늦은 날 확인된 사실과 내가 붙인 해석을 따로 기록하세요.',
+      '초반에 마음이 커질수록 돈, 시간, 약속, 경계 네 가지를 먼저 확인하세요.',
+      '서운함을 오래 저장하지 말고 작을 때 한 문장으로 말하세요.',
+      '상대를 시험하려고 연락을 끊거나 일부러 답을 늦추지 마세요.',
+      '한 번의 강한 표현이 이전의 불안을 모두 지우게 두지 마세요.',
+      '실망이 생겨도 한 번에 끝내기 전에 해결 대화가 가능한지 확인하세요.',
+      '같은 문제가 세 번 반복되면 가능성보다 반복 행동을 판단 기준으로 삼으세요.'
+    ],
+    general: [
+      '원하는 관계와 원하지 않는 관계를 각각 한 문장으로 적으세요.',
+      '상대의 말과 실제 행동을 일주일 동안 분리해 기록하세요.',
+      '연락 횟수보다 끊긴 대화를 다시 잇는지 확인하세요.',
+      '다음 약속이 구체적으로 잡히는 사람에게 시간을 더 배분하세요.',
+      '불편한 질문 뒤 비난, 회피, 해결 중 어떤 반응이 나오는지 보세요.',
+      '내 감정을 설명하되 상대의 속마음까지 대신 결론 내리지 마세요.',
+      '경계를 말했을 때 존중하는 사람과 계속 볼 관계를 만드세요.',
+      '설렘과 안정감을 서로 다른 기준으로 채점하세요.'
+    ]
+  };
+  const statusLine = formData.relationshipStatus
+    ? `현재 ${getRelationshipStatusLabel(formData.relationshipStatus)} 상태에서 가장 먼저 확인할 행동부터 실행하세요.`
+    : '현재 관계의 이름보다 두 사람이 실제로 합의한 행동을 먼저 확인하세요.';
+  const common = [
+    statusLine,
+    `${helpfulText} 기운을 생활에서 쓸 수 있도록 흔들린 날에는 메시지를 길게 보내기보다 사실과 요청을 한 문장씩 적으세요.`,
+    `최종 판단은 ${currentDayunName} 대운의 이름보다 3주 동안 반복된 약속, 연락, 회복, 경계 존중 네 항목으로 내리세요.`
+  ];
+
+  return [...byIntent[intent], ...common]
+    .slice(0, PREMIUM_QUESTION_ADVICE_COUNT)
+    .map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`);
 }
 
 function buildPremiumQuestionAnalysis(
@@ -1150,8 +1329,20 @@ function buildPremiumQuestionAnalysis(
   currentDayunName: string,
   helpfulText: string,
   cautionGuidance: string,
-  questionIndex = 0
+  questionIndex = 0,
+  formData: Partial<IntakeFormData> = {}
 ) {
+  if (category === 'relationship') {
+    return buildPremiumLoveQuestionAnalysis(
+      answer,
+      basis,
+      currentDayunName,
+      helpfulText,
+      formData,
+      questionIndex
+    );
+  }
+
   const customerLabel = getPremiumCustomerLabel(basis);
   const intent = getQuestionIntent(answer.question, category);
   const directAnswer = buildQuestionDirectAnswer(answer.question, category, basis);
@@ -1195,7 +1386,8 @@ function getPremiumQuestionAdvice(
   category: QuestionCategory,
   currentDayunName: string,
   helpfulText: string,
-  cautionGuidance: string
+  cautionGuidance: string,
+  formData: Partial<IntakeFormData> = {}
 ) {
   if (category === 'crisis') {
     const address = getCasualAddressParts(basis.input.name || '');
@@ -1212,6 +1404,10 @@ function getPremiumQuestionAdvice(
       `${helpfulText} 기운은 거창한 결심이 아니라 불 켜기, 씻기, 사람에게 연락하기처럼 몸을 살리는 작은 순서로 써.`,
       '이 감정이 반복되면 병원, 상담센터, 지역 정신건강복지센터를 예약해. 약해져서가 아니라 혼자 들기엔 너무 무거운 짐이라 도움을 붙이는 거야.'
     ].map((item, index) => `${index + 1}. ${item}`);
+  }
+
+  if (category === 'relationship') {
+    return getPremiumLoveQuestionAdvice(answer, basis, currentDayunName, helpfulText, formData);
   }
 
   const question = answer.question;
@@ -1299,7 +1495,8 @@ export function strengthenQuestionAnswerQuality(
     currentDayunName,
     helpfulText,
     cautionGuidance,
-    options.questionIndex || 0
+    options.questionIndex || 0,
+    options.formData
   );
   const analysis = category === 'crisis'
     ? getQuestionTextLength(answer.analysis) >= PREMIUM_QUESTION_MIN_ANALYSIS_CHARS
@@ -1312,7 +1509,15 @@ export function strengthenQuestionAnswerQuality(
     .slice(0, PREMIUM_QUESTION_ADVICE_COUNT);
   const advice = category === 'crisis' && existingAdvice.length >= PREMIUM_QUESTION_ADVICE_COUNT
     ? existingAdvice.map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`)
-    : getPremiumQuestionAdvice(answer, basis, category, currentDayunName, helpfulText, cautionGuidance);
+    : getPremiumQuestionAdvice(
+        answer,
+        basis,
+        category,
+        currentDayunName,
+        helpfulText,
+        cautionGuidance,
+        options.formData
+      );
 
   return {
     ...answer,
@@ -1514,16 +1719,10 @@ function buildActionPlan(
       '모든 요청을 직접 다 받으면서 리듬을 무너뜨리기',
       `${cautious.join(', ')} 기운이 강한 시기에 과한 약속이나 지출을 늘리기`
     ],
-    luckyDays: [
-      { day: 5, reason: `${helpful[0]} 기운이 가볍게 열리면서 시작을 잡기 좋은 날입니다.` },
-      { day: 14, reason: '관계와 대화의 기준을 정리하기에 적절한 날입니다.' },
-      { day: 23, reason: '일정과 선택을 함께 정리하면서 결론을 내리기 좋은 날입니다.' }
-    ],
-    unluckyDays: [
-      { day: 8, reason: `${cautious[0]} 기운이 치우치면 피로와 조급함이 함께 올라올 수 있습니다.` },
-      { day: 17, reason: '말의 속도보다 의도를 먼저 점검해야 하는 날입니다.' },
-      { day: 27, reason: '무리한 지출이나 무리한 일정이 후폭풍으로 돌아오기 쉬운 날입니다.' }
-    ]
+    // Date recommendations stay empty until a real daily-pillar engine evaluates
+    // an explicit year/month interval. Fixed day-of-month lists are not saju facts.
+    luckyDays: [],
+    unluckyDays: []
   };
 }
 
@@ -1733,6 +1932,23 @@ function getLoveReactionGuide(formData: Partial<IntakeFormData>) {
   }
 }
 
+function getLoveFocusGuide(formData: Partial<IntakeFormData>) {
+  const focus = normalizeLoveFocus(formData.loveFocus);
+  if (!focus) return '';
+
+  const label = getLoveFocusLabel(focus);
+  switch (focus) {
+    case 'partner-type':
+      return `이번 해석의 1순위는 “${label}”입니다. 순간적인 끌림과 실제로 오래 갈 사람을 나눠, 일간·월령·도움 기운에 맞는 연락 방식과 생활 기준을 중심으로 읽습니다.`;
+    case 'next-love-timing':
+      return `이번 해석의 1순위는 “${label}”입니다. 대운·세운·월운에서 관계가 열리는 구간과 그때 실제로 움직여야 할 장소·행동을 중심으로 읽습니다.`;
+    case 'my-attraction':
+      return `이번 해석의 1순위는 “${label}”입니다. 일간과 십성, 일지의 관계 반응을 묶어 첫인상·대화·친밀해진 뒤 드러나는 매력과 오해 지점을 중심으로 읽습니다.`;
+    case 'repeated-pattern':
+      return `이번 해석의 1순위는 “${label}”입니다. 관계가 시작될 때의 속도, 불안이 커지는 순간, 갈등 뒤 거리 두기까지 반복되는 순서를 중심으로 읽습니다.`;
+  }
+}
+
 function buildLoveProfile(
   basis: DeterministicSajuBasis,
   formData: Partial<IntakeFormData>,
@@ -1747,7 +1963,8 @@ function buildLoveProfile(
   const cautionSignature = getElementLoveSignature((cautious[0] || dayElement) as FiveElement);
   const dominantTenGods = basis.dominantTenGods.slice(0, 3).join(', ');
   const reactionGuide = getLoveReactionGuide(formData);
-  const stageGuide = [getRelationshipStageGuide(formData, relationshipLabel), reactionGuide]
+  const focusGuide = getLoveFocusGuide(formData);
+  const stageGuide = [getRelationshipStageGuide(formData, relationshipLabel), focusGuide, reactionGuide]
     .filter(Boolean)
     .join(' ');
   const statusPrefix =
@@ -2364,11 +2581,20 @@ const YONGSIN_METHOD_LABELS: Record<string, string> = {
 };
 
 function confidenceLabel(value: number) {
-  return `${Math.round(value * 100)}%`;
+  if (value >= 0.8) return '근거 강함';
+  if (value >= 0.65) return '근거 보통';
+  if (value >= 0.5) return '근거 제한';
+  return '판정 유보';
 }
 
 function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportSection[] {
   const engine = basis.commercialV2;
+  const releaseAudit = engine.releaseAudit;
+  const releaseDecisionLabel = {
+    eligible: '자동 발행 조건 충족',
+    'manual-review-required': '전문가 수동 검토 필요',
+    blocked: '발행 차단'
+  }[releaseAudit.decision];
   const precisionLabel = {
     'exact-minute': '정확한 분 단위',
     'legacy-range': '시간대 범위·민감도 비교',
@@ -2387,7 +2613,8 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
             ? `검증된 경도와 방정시를 사용해 진태양시를 보정했습니다${correction.correctionMinutes === null ? '' : ` (대표 시나리오 ${correction.correctionMinutes}분)`}.`
             : '진태양시 보정을 요청했지만 검증된 경도가 없어 적용하지 않았습니다.'
           : '진태양시 보정은 요청되지 않았으며 입력 시간대의 표준시를 사용했습니다.',
-        `일주 경계 정책은 ${engine.calendar.dayBoundaryPolicy === 'late-zi-next-day' ? '야자시(23시 이후 다음 날 일주)' : '민간자정(00시 일주 변경)'}입니다.`
+        `일주 경계 정책은 ${engine.calendar.dayBoundaryPolicy === 'late-zi-next-day' ? '야자시(23시 이후 다음 날 일주)' : '민간자정(00시 일주 변경)'}입니다.`,
+        '아래 근거 충족도는 입력·규칙·외부 대조 항목의 완결도를 뜻하며 미래 사건의 적중 확률이 아닙니다.'
       ],
       table: {
         headers: ['검사 항목', '결과'],
@@ -2397,10 +2624,23 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
           ['월주 불변', engine.calendar.invariantPillars.month ? '예' : '아니오'],
           ['일주 불변', engine.calendar.invariantPillars.day ? '예' : '아니오'],
           ['근거 레코드', `${engine.evidenceSummary.total}건`],
-          ['종합 신뢰도', engine.confidence === null ? '판정 유보' : confidenceLabel(engine.confidence)]
+          ['상용 발행 판정', releaseDecisionLabel],
+          ['근거 충족 항목', `${releaseAudit.evidenceCoverage.passed}/${releaseAudit.evidenceCoverage.total}`],
+          ['외부 역법 대조', releaseAudit.externalCalendar.status],
+          ['재현 지문', releaseAudit.reproducibilityFingerprint]
         ]
       },
-      bullets: engine.uncertainty.length > 0 ? engine.uncertainty : ['추가로 표시할 계산 불확실성이 없습니다.']
+      bullets: [
+        ...releaseAudit.blockers,
+        ...releaseAudit.reviewFlags,
+        ...engine.uncertainty
+      ].length > 0
+        ? [...new Set([
+            ...releaseAudit.blockers,
+            ...releaseAudit.reviewFlags,
+            ...engine.uncertainty
+          ])]
+        : ['추가로 표시할 계산 불확실성이 없습니다.']
     }
   ];
 
@@ -2492,7 +2732,7 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
       title: '원국 × 대운 × 세운 × 월운 상호작용',
       subtitle: '사건을 단정하지 않고 어떤 영역과 십성 주제가 활성화되는지 추적한 결과',
       paragraphs: [
-        `현재 분석층은 ${temporal.layers.map((layer) => layer.label).join(' → ')}이며 신뢰도는 ${confidenceLabel(temporal.confidence)}입니다.`,
+        `현재 분석층은 ${temporal.layers.map((layer) => layer.label).join(' → ')}이며 근거 상태는 ${confidenceLabel(temporal.confidence)}입니다.`,
         `교차 합·충·형·파·해 등 관계 ${temporal.relations.length}건, 십성 활성 ${temporal.tenGodActivations.length}건을 근거로 사용했습니다.`
       ],
       details: temporal.findings.slice(0, 16).map((finding, index) => ({
@@ -2679,6 +2919,13 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
       trueSolarTime: basis.commercialV2.calendar.trueSolarTime,
       evidenceCount: basis.commercialV2.evidenceSummary.total,
       confidence: basis.commercialV2.confidence,
+      releaseDecision: basis.commercialV2.releaseAudit.decision,
+      releaseAuditVersion: basis.commercialV2.releaseAudit.version,
+      reproducibilityFingerprint: basis.commercialV2.releaseAudit.reproducibilityFingerprint,
+      evidenceCoverage: basis.commercialV2.releaseAudit.evidenceCoverage,
+      externalCalendarStatus: basis.commercialV2.releaseAudit.externalCalendar.status,
+      releaseBlockers: basis.commercialV2.releaseAudit.blockers,
+      reviewFlags: basis.commercialV2.releaseAudit.reviewFlags,
       uncertainty: basis.commercialV2.uncertainty,
       helpfulElementSource: basis.helpfulElementSource
     }
