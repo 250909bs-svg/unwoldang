@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { PAST_LIFE_PRODUCT, pastLifeChapters } from '../content/pastLifeExperience';
+import { PAST_LIFE_PRODUCT, PAST_LIFE_REPORT_VOLUMES, pastLifeChapters } from '../content/pastLifeExperience';
 import type { PastLifePortrait, PastLifeProfile, ReportSection, SajuReportData } from '../lib/saju/report';
 
 type PastLifeStoryReportProps = {
@@ -7,16 +7,10 @@ type PastLifeStoryReportProps = {
   profile: PastLifeProfile;
 };
 
-const chapterSectionIds = [
-  'pastlife-seal',
-  'pastlife-relationship',
-  'pastlife-karma',
-  'pastlife-present',
-  'pastlife-release'
-] as const;
+const chapterSectionIds = PAST_LIFE_REPORT_VOLUMES.map((volume) => volume.sectionId);
 
 const chapterGuideOpenings = [
-  '첫 권은 네가 누구였는지보다, 무엇을 지키며 살았는지 보여줘.',
+  '첫 권은 네가 누구였다는 사실보다, 사주에 어떤 역할의 기질이 반복되는지 보여줘.',
   '이 인연을 운명이라 부르진 않을게. 다만 네 선택이 가장 크게 흔들린 관계야.',
   '업은 벌이 아니야. 끝내지 않은 선택이 같은 모양으로 돌아오는 거지.',
   '낯익은 장면이 있으면 표시해 둬. 사람은 달라도 선택의 순서는 반복될 수 있으니까.',
@@ -43,7 +37,7 @@ function PortraitCard({ portrait, tone }: { portrait: PastLifePortrait; tone: 's
   return (
     <article className={`past-life-portrait-card ${tone}`}>
       <div className="past-life-portrait-frame">
-        <img src={portrait.image} alt={portrait.imageAlt} loading="eager" />
+        <img src={portrait.image} alt={portrait.imageAlt} loading="lazy" decoding="async" />
         <span className="past-life-portrait-vignette" aria-hidden="true" />
         <span className="past-life-portrait-mark">象</span>
       </div>
@@ -74,16 +68,16 @@ function PortraitCard({ portrait, tone }: { portrait: PastLifePortrait; tone: 's
 function chapterPersonalRecord(index: number, profile: PastLifeProfile) {
   if (index === 0) {
     return [
-      { label: '봉인명', value: profile.sealName },
-      { label: '살던 곳', value: profile.place },
-      { label: '맡았던 일', value: profile.vocation },
-      { label: '남은 물건', value: profile.keepsake }
+      { label: '상징 봉인명', value: profile.sealName },
+      { label: '상징 무대', value: profile.place },
+      { label: '상징 역할', value: profile.vocation },
+      { label: '상징 물건', value: profile.keepsake }
     ];
   }
 
   if (index === 1) {
     return [
-      { label: '그 사람', value: profile.connectionRole },
+      { label: '관계 캐릭터', value: profile.connectionRole },
       { label: '인연의 온도', value: '설렘보다 신뢰가 먼저였고, 서로의 피로를 말없이 알아보던 관계' },
       { label: '약속의 빈틈', value: '서로가 맡을 책임의 범위와 돌아올 시점을 끝내 정하지 못한 관계' }
     ];
@@ -91,7 +85,7 @@ function chapterPersonalRecord(index: number, profile: PastLifeProfile) {
 
   if (index === 2) {
     return [
-      { label: '마지막 장면', value: profile.finalSeparation },
+      { label: '상징 서사의 마지막 장면', value: profile.finalSeparation },
       { label: '끝내 못 한 말', value: `숨겨 온 감정을 “${profile.frequentEmotion}”이라고 이름 붙여 털어놓는 일` },
       { label: '업의 정체', value: '초자연적 벌이 아니라, 책임의 끝을 말하지 못한 반복 선택' }
     ];
@@ -135,7 +129,8 @@ function StoryChapter({
         <img
           src={chapter.image}
           alt={chapter.imageAlt}
-          loading={index < 2 ? 'eager' : 'lazy'}
+          loading="lazy"
+          decoding="async"
           style={{ objectPosition: chapter.crop }}
         />
         <div className="past-life-story-art-shade" aria-hidden="true" />
@@ -180,9 +175,9 @@ function StoryChapter({
               <article className="past-life-story-page">
                 <div className="past-life-story-page-number">
                   {String(
-                    chapterSectionIds
+                    PAST_LIFE_REPORT_VOLUMES
                       .slice(0, index)
-                      .reduce((total, id) => total + (id === 'pastlife-seal' ? 5 : id === 'pastlife-relationship' ? 4 : id === 'pastlife-karma' ? 6 : 5), 0) +
+                      .reduce((total, volume) => total + volume.topics.length, 0) +
                       detailIndex +
                       1
                   ).padStart(2, '0')}
@@ -232,15 +227,22 @@ function StoryChapter({
 }
 
 export default function PastLifeStoryReport({ report, profile }: PastLifeStoryReportProps) {
-  const sections = chapterSectionIds
-    .map((id) => report.sections.find((section) => section.id === id))
-    .filter((section): section is ReportSection => Boolean(section));
+  const sections = PAST_LIFE_REPORT_VOLUMES.flatMap((volume, index) => {
+    const section = report.sections.find((candidate) => candidate.id === volume.sectionId);
+    return section ? [{ section, index }] : [];
+  });
 
   return (
     <div className="past-life-story-report">
       <section className="past-life-story-prologue" id="pastlife-prologue">
         <div className="past-life-guide-prologue-visual">
-          <img src={pastLifeChapters[0].image} alt="달빛 아래 장부를 열어 보이며 말을 거는 도깨비 장부지기" loading="eager" />
+          <img
+            src={pastLifeChapters[0].image}
+            alt="달빛 아래 상징 장부를 열어 보이며 말을 거는 도깨비 장부지기"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
           <span className="past-life-story-art-shade" aria-hidden="true" />
           <div className="past-life-guide-prologue-dialogues" aria-label="도깨비 장부지기의 안내">
             <p>“먼저 약속할게. 이건 과거를 증명하는 기록이 아니야.”</p>
@@ -266,7 +268,7 @@ export default function PastLifeStoryReport({ report, profile }: PastLifeStoryRe
       <section className="past-life-identity-ledger" id="pastlife-identity">
         <header>
           <span>CHARACTER LEDGER</span>
-          <h2>전생의 나와 가장 깊게 얽힌 사람</h2>
+          <h2>상징 서사의 나와 가장 깊게 얽힌 관계</h2>
           <p>이야기의 중심이 되는 두 사람의 얼굴과 관계를 먼저 장부에 고정했습니다. 장별 삽화는 각 사건의 분위기를 상징적으로 보여줍니다.</p>
         </header>
         <div className="past-life-portrait-grid">
@@ -282,7 +284,7 @@ export default function PastLifeStoryReport({ report, profile }: PastLifeStoryRe
       </section>
 
       <div className="past-life-story-volume-list">
-        {sections.map((section, index) => (
+        {sections.map(({ section, index }) => (
           <StoryChapter key={section.id} index={index} section={section} profile={profile} />
         ))}
       </div>
