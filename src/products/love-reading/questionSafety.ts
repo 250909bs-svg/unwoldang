@@ -3,16 +3,18 @@ export interface LoveReadingQuestionSafetyCopy {
   readonly message: string;
   readonly actions: readonly string[];
 }
+export type LoveReadingQuestionSafetyClassification = 'crisis' | 'relationship-decision' | 'unknown';
+
 
 /** High-confidence self-harm phrases that should never be interpreted as love advice. */
 export const LOVE_READING_CRISIS_PATTERN =
-  /살기싫|죽고싶|자살|자해|죽어버|차라리죽는게|죽을것같|목숨(?:을)?끊|(?:나|내몸|내자신|스스로)(?:을|를)?해치고싶|왜살(?:아|지)?|살이유|사는이유|살아야할이유|(?:그냥|영원히|세상에서)사라지고싶|극단(?:적인?)?(?:선택|생각)/;
+  /살기싫|죽고싶|자살|자해|죽어버|차라리죽는게|죽을것같|목숨(?:을)?끊|(?:나|나자신|내몸|내자신|제몸|제자신|저|저자신|자신|자기자신|몸|본인|스스로)(?:을|를)?해치고싶|왜살(?:아|지)?|살이유|사는이유|살아야할이유|(?:그냥|영원히|세상에서)사라지고싶|극단(?:적인?)?(?:선택|생각)/;
 
 const LOVE_READING_LIFE_CONTEXT_PATTERN =
   /(?:인생|삶|목숨|생명|세상|모든것|모든걸|전부)(?:을|를|은|는|도|만)?[^.!?]{0,12}(?:끝내고싶|포기하고싶|그만두고싶)|(?:끝내고싶|포기하고싶|그만두고싶)[^.!?]{0,12}(?:인생|삶|목숨|생명|세상|모든것|모든걸|전부)/;
 
 const LOVE_READING_RELATIONSHIP_DECISION_PATTERN =
-  /(?:관계|연애|썸|만남|사이|결혼|약속|연락)(?:을|를|은|는|도|만)?[^.!?]{0,12}(?:끝내고싶|포기하고싶|그만두고싶)/;
+  /(?:관계|연애|썸|만남|사이|결혼|약속|연락)(?:을|를|은|는|도|만)?[^.!?]{0,12}(?:끝내고싶|포기하고싶|그만두고싶)|(?:끝내고싶|포기하고싶|그만두고싶)[^.!?]{0,12}(?:관계|연애|썸|만남|사이|결혼|약속|연락)|(?:상대|연인)(?:을|를)?[^.!?]{0,12}(?:극단적으로)?밀어내/;
 
 const LOVE_READING_TOTAL_ABANDONMENT_PATTERN =
   /(?:그냥|이제|정말|너무)?다(?:포기하고싶|끝내고싶|그만두고싶)/;
@@ -33,10 +35,10 @@ export const LOVE_READING_CRISIS_SAFETY_COPY: LoveReadingQuestionSafetyCopy = {
   ]
 };
 
-export function getLoveReadingQuestionSafety(
+export function classifyLoveReadingQuestionSafety(
   question: unknown
-): LoveReadingQuestionSafetyCopy | null {
-  if (typeof question !== 'string') return null;
+): LoveReadingQuestionSafetyClassification {
+  if (typeof question !== 'string') return 'unknown';
 
   const normalized = question.normalize('NFKC').toLowerCase().replace(/\s/g, '');
 
@@ -44,12 +46,22 @@ export function getLoveReadingQuestionSafety(
     LOVE_READING_CRISIS_PATTERN.test(normalized)
     || LOVE_READING_LIFE_CONTEXT_PATTERN.test(normalized)
   ) {
-    return LOVE_READING_CRISIS_SAFETY_COPY;
+    return 'crisis';
   }
 
-  if (LOVE_READING_RELATIONSHIP_DECISION_PATTERN.test(normalized)) return null;
+  if (LOVE_READING_RELATIONSHIP_DECISION_PATTERN.test(normalized)) {
+    return 'relationship-decision';
+  }
 
   return LOVE_READING_TOTAL_ABANDONMENT_PATTERN.test(normalized)
+    ? 'crisis'
+    : 'unknown';
+}
+
+export function getLoveReadingQuestionSafety(
+  question: unknown
+): LoveReadingQuestionSafetyCopy | null {
+  return classifyLoveReadingQuestionSafety(question) === 'crisis'
     ? LOVE_READING_CRISIS_SAFETY_COPY
     : null;
 }

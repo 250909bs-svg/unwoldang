@@ -32,7 +32,11 @@ import {
   LOVE_REACTION_PROFILES,
   getLoveReactionProfile
 } from '../products/love-reading/reactionProfiles';
-import { getLoveReadingQuestionSafety } from '../products/love-reading/questionSafety';
+import {
+  LOVE_READING_CRISIS_SAFETY_COPY,
+  classifyLoveReadingQuestionSafety,
+  getLoveReadingQuestionSafety
+} from '../products/love-reading/questionSafety';
 import '../styles/mz-love-fact.css';
 import '../styles/mz-love-report.css';
 
@@ -395,8 +399,17 @@ function CustomerQuestionAnswers({
       : undefined;
     const sourceCandidate = matchedAnswer ?? sourceAnswers[index];
     const question = requestedQuestion || sourceCandidate?.question || `연애 질문 ${index + 1}`;
-    const safety = getLoveReadingQuestionSafety(question);
-    const source = isLegacyGeneratedCrisisAnswer(sourceCandidate) ? undefined : sourceCandidate;
+    const safetyClassification = classifyLoveReadingQuestionSafety(question);
+    const legacyCrisisAnswer = isLegacyGeneratedCrisisAnswer(sourceCandidate);
+    const safety = getLoveReadingQuestionSafety(question) ?? (
+      safetyClassification === 'unknown' && legacyCrisisAnswer
+        ? LOVE_READING_CRISIS_SAFETY_COPY
+        : null
+    );
+    const source = safetyClassification === 'relationship-decision'
+      && legacyCrisisAnswer
+      ? undefined
+      : sourceCandidate;
 
     if (safety) {
       return {

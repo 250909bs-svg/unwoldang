@@ -1602,6 +1602,61 @@
   line-height: 1.6;
 }
 
+.mz-love-preview-safety {
+  max-width: 460px;
+  text-align: left !important;
+}
+
+.mz-love-preview-safety > p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.mz-love-preview-safety ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 0 20px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.mz-love-preview-safety li::marker {
+  color: #ff6c82;
+}
+
+.mz-love-preview-safety nav {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 24px 0 10px;
+}
+
+.mz-love-preview-safety nav a {
+  display: flex;
+  min-height: 48px;
+  padding: 0 14px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.mz-love-preview-safety nav a:first-child {
+  border-color: rgba(255, 108, 130, 0.5);
+  background: rgba(226, 34, 70, 0.18);
+}
+
+.mz-love-preview-safety > button {
+  margin-top: 8px;
+}
+
 @keyframes mz-love-intake-rise {
   from {
     opacity: 0;

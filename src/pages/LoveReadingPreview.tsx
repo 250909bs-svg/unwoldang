@@ -13,6 +13,7 @@ import type { MzLoveChapterId, SceneArtwork } from '../lib/mz-love-fact/types';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { validateLoveReadingIntakeContext } from '../products/love-reading/intakeContract';
 import { getLoveReactionProfile } from '../products/love-reading/reactionProfiles';
+import { getLoveReadingQuestionSafety } from '../products/love-reading/questionSafety';
 import '../styles/mz-love-intake.css';
 
 type PreviewLocationState = {
@@ -106,6 +107,30 @@ function hasValidGuestDraftHandoff(nonce: string | null): boolean {
     return false;
   }
 }
+type LoveReadingPreviewDraftSelection = {
+  locationDraft?: Partial<IntakeFormData> | null;
+  accountDraft?: Partial<IntakeFormData> | null;
+  guestDraft?: Partial<IntakeFormData> | null;
+  hasGuestHandoff: boolean;
+};
+
+export function selectLoveReadingPreviewDraft(
+  selection: LoveReadingPreviewDraftSelection
+): Partial<IntakeFormData> | null {
+  return (selection.hasGuestHandoff ? selection.guestDraft : null)
+    ?? selection.locationDraft ?? selection.accountDraft ?? null;
+}
+
+export function getLoveReadingPreviewSafety(questions: readonly unknown[]) {
+  for (const question of questions) {
+    const safety = getLoveReadingQuestionSafety(question);
+    if (safety) return safety;
+  }
+
+  return null;
+}
+
+
 
 function isLoveFocus(value: unknown): value is LoveFocus {
   return typeof value === 'string' && value in FOCUS_CHAPTERS;
@@ -225,10 +250,17 @@ export default function LoveReadingPreview() {
     : !user?.id || hasGuestHandoff;
   const locationFormData = canUseLocationDraft ? locationState?.formData : undefined;
   const formData = useMemo(
-    () => locationFormData ?? readStoredFormData(draftKey) ?? (
-      hasGuestHandoff ? readStoredFormData(GUEST_DRAFT_KEY) : null
-    ),
+    () => selectLoveReadingPreviewDraft({
+      locationDraft: locationFormData,
+      accountDraft: readStoredFormData(draftKey),
+      guestDraft: hasGuestHandoff ? readStoredFormData(GUEST_DRAFT_KEY) : null,
+      hasGuestHandoff
+    }),
     [draftKey, hasGuestHandoff, locationFormData]
+  );
+  const previewSafety = useMemo(
+    () => getLoveReadingPreviewSafety([formData?.q1, formData?.q2]),
+    [formData?.q1, formData?.q2]
   );
   const birthValidation = useMemo(
     () => validateBirthInput(formData || {}, { subjectLabel: '본인' }),
@@ -241,7 +273,7 @@ export default function LoveReadingPreview() {
   const reactionProfile = getLoveReactionProfile(formData?.loveReaction);
   const intakeComplete = birthValidation.valid && contextValidation.valid;
   const result = useMemo(() => {
-    if (!formData || !intakeComplete) return null;
+    if (!formData || !intakeComplete || previewSafety) return null;
 
     try {
       const report = buildSajuReport('love-reading', formData);
@@ -263,7 +295,7 @@ export default function LoveReadingPreview() {
         error: error instanceof Error ? error.message : '사주 원국을 계산하지 못했습니다.'
       };
     }
-  }, [formData, intakeComplete]);
+  }, [formData, intakeComplete, previewSafety]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && formData && draftKey && isAuthenticated) {
@@ -297,6 +329,31 @@ export default function LoveReadingPreview() {
     });
   };
 
+
+  if (previewSafety) {
+    return (
+      <main ref={previewRef} className="mz-love-preview-page mz-love-preview-error">
+        <section className="mz-love-preview-safety" role="alert" aria-labelledby="mz-love-preview-safety-title">
+          <span>지금 바로 안전 연결</span>
+          <h1 id="mz-love-preview-safety-title">{previewSafety.title}</h1>
+          <p>{previewSafety.message}</p>
+          <ul>
+            {previewSafety.actions.map((action) => (
+              <li key={action}>{action}</li>
+            ))}
+          </ul>
+          <nav aria-label="긴급 연락처">
+            <a href="tel:109">자살예방 상담전화 109</a>
+            <a href="tel:119">응급 119</a>
+            <a href="tel:112">경찰 112</a>
+          </nav>
+          <button type="button" onClick={editForm}>
+            입력한 질문 다시 보기
+          </button>
+        </section>
+      </main>
+    );
+  }
   if (!formData || !intakeComplete || !reactionProfile || !result?.report || !result.viewModel) {
     const errorMessage = result?.error
       || birthValidation.errors[0]?.message
@@ -341,6 +398,7 @@ export default function LoveReadingPreview() {
     : '입력한 분 단위 출생시각 반영';
 
   const continueToCheckout = () => {
+    if (previewSafety) return;
     if (!isAuthenticated) {
       window.sessionStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(formData));
       const guestHandoffNonce = createGuestDraftHandoff();

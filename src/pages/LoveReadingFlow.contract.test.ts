@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { getLoveReadingPreviewSafety, selectLoveReadingPreviewDraft } from './LoveReadingPreview';
 
 const intakeSource = readFileSync(new URL('./LoveReadingIntake.tsx', import.meta.url), 'utf8');
 const introSource = readFileSync(new URL('../components/LoveReadingIntro.tsx', import.meta.url), 'utf8');
@@ -81,6 +82,47 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
     expect(previewSource).toContain('loveHandoff=${encodeURIComponent(guestHandoffNonce)}');
     expect(previewSource).toContain(': !user?.id || hasGuestHandoff;');
     expect(previewSource).not.toContain('readStoredFormData(draftKey) ?? readStoredFormData(GUEST_DRAFT_KEY)');
+  });
+
+  it('유효한 handoff의 새 게스트 초안을 기존 계정 초안보다 우선한다', () => {
+    const accountDraft = { name: '이전 계정 초안' };
+    const guestDraft = { name: '현재 게스트 초안' };
+
+    const selected = selectLoveReadingPreviewDraft({
+      locationDraft: accountDraft,
+      accountDraft,
+      guestDraft,
+      hasGuestHandoff: true
+    });
+
+    expect(selected).toBe(guestDraft);
+    expect(selectLoveReadingPreviewDraft({
+      locationDraft: null,
+      accountDraft,
+      guestDraft,
+      hasGuestHandoff: false
+    })).toBe(accountDraft);
+  });
+
+  it.each([0, 1])('위기 질문이 q%i에 있으면 Preview에서 무료 안전 안내를 우선하고 결제를 막는다', (questionIndex) => {
+    const questions = ['다음 연애는 언제 시작될까요?', '어떤 관계 신호를 볼까요?'];
+    questions[questionIndex] = '나 자신을 해치고 싶어요';
+    const safety = getLoveReadingPreviewSafety(questions);
+
+    expect(safety?.title).toBe('지금은 연애 해석보다 안전이 먼저예요.');
+    expect(safety?.actions.join(' ')).toContain('109');
+    expect(previewSource).toContain('if (previewSafety) {');
+    expect(previewSource).toContain('if (previewSafety) return;');
+    expect(previewSource).toContain('href="tel:109"');
+    const safetyBranch = previewSource.slice(
+      previewSource.indexOf('if (previewSafety) {'),
+      previewSource.indexOf('if (!formData || !intakeComplete')
+    );
+    expect(safetyBranch).not.toContain('continueToCheckout');
+  });
+
+  it('일반 관계 질문은 Preview 안전 분기를 활성화하지 않는다', () => {
+    expect(getLoveReadingPreviewSafety(['이 관계를 끝내고 싶어요', '정리 기준이 궁금해요'])).toBeNull();
   });
 
   it('무료 미리보기는 개인화 컨텍스트를 쓰되 미래 인물을 확정하지 않는다', () => {

@@ -259,6 +259,34 @@ describe('LoveReadingStoryReport evidence disclosure', () => {
     expect(markup).not.toContain('119나 112');
   });
 
+  it('keeps fixed safety guidance when a legacy crisis answer has an unknown phrasing', () => {
+    const base = personalizedLoveReport();
+    const question = '제가 지금 위험할 수도 있을 것 같아요';
+    const legacy = {
+      ...base,
+      questionAnswers: [
+        {
+          question,
+          title: '혼자 버티는 날이 아니야',
+          analysis: '이 말은 그냥 운세 문장으로 넘길 말이 아니야. 안전이 먼저야.',
+          advice: ['한국이면 자살예방 상담전화 109, 당장 위험하면 119나 112로 연락해.']
+        },
+        ...base.questionAnswers.slice(1)
+      ]
+    };
+    const markup = renderToStaticMarkup(createElement(LoveReadingStoryReport, {
+      report: legacy,
+      relationshipStatus: 'single',
+      customerQuestions: [question],
+    }));
+
+    expect(markup).toContain(`“${question}”`);
+    expect(markup).toContain('지금은 연애 해석보다 안전이 먼저예요.');
+    expect(markup).toContain('자살예방 상담전화 109');
+    expect(markup).toContain('다음 10분');
+    expect(markup).not.toContain('혼자 버티는 날이 아니야');
+  });
+
   it('labels month values and future-partner details as non-deterministic references', () => {
     const markup = renderToStaticMarkup(createElement(LoveReadingStoryReport, {
       report: personalizedLoveReport(),

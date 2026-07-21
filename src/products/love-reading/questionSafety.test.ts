@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  classifyLoveReadingQuestionSafety,
   getLoveReadingQuestionSafety,
   LOVE_READING_CRISIS_SAFETY_COPY
 } from './questionSafety';
@@ -14,7 +15,10 @@ describe('love-reading question safety', () => {
     '정말 죽을 것 같아요',
     '인생을 끝내고 싶어요',
     '삶을 포기하고 싶어요',
-    '이제 다 포기하고 싶어요'
+    '이제 다 포기하고 싶어요',
+    '제 몸을 해치고 싶어요',
+    '나 자신을 해치고 싶어요',
+    '몸을 해치고 싶어요'
   ])('detects a high-confidence self-harm context: %s', (question) => {
     expect(getLoveReadingQuestionSafety(question)).toBe(LOVE_READING_CRISIS_SAFETY_COPY);
   });
@@ -36,11 +40,22 @@ describe('love-reading question safety', () => {
     '이 관계를 끝내고 싶어요',
     '이 연애를 포기하고 싶어요',
     '상대를 극단적으로 밀어내는 패턴을 고치고 싶어요',
-    '너 때문에 못 살겠어'
+    '너 때문에 못 살겠어',
+    '끝내고 싶은 관계라서 정리 방법이 궁금해요',
+    '포기하고 싶은 연애예요'
   ])('does not replace an ordinary relationship decision: %s', (question) => {
     expect(getLoveReadingQuestionSafety(question)).toBeNull();
   });
 
+
+  it.each([
+    '이 관계를 끝내고 싶어요',
+    '끝내고 싶은 관계라서 정리 방법이 궁금해요',
+    '포기하고 싶은 연애예요',
+    '상대를 극단적으로 밀어내는 패턴을 고치고 싶어요'
+  ])('marks relationship-ending context explicitly: %s', (question) => {
+    expect(classifyLoveReadingQuestionSafety(question)).toBe('relationship-decision');
+  });
   it('ignores missing questions', () => {
     expect(getLoveReadingQuestionSafety(undefined)).toBeNull();
   });
