@@ -3,15 +3,35 @@ import { PaymentRequestError } from './errors.ts';
 
 export const PRODUCT_STATUS = Object.freeze({
   ACTIVE: 'active',
+  DRAFT: 'draft',
   ARCHIVED: 'archived'
 } as const);
 
 export type ProductStatus = (typeof PRODUCT_STATUS)[keyof typeof PRODUCT_STATUS];
 
-function getManifestStatus(productId: string): ProductStatus {
-  const status = (productManifest as Record<string, unknown>)[productId];
+export type ServerProductContract = Readonly<{
+  amount: number;
+  currency: 'KRW';
+  status: ProductStatus;
+}>;
 
-  if (status !== PRODUCT_STATUS.ACTIVE && status !== PRODUCT_STATUS.ARCHIVED) {
+export type ServerProductCatalog = Readonly<Record<string, ServerProductContract>>;
+
+export function isProductStatus(status: unknown): status is ProductStatus {
+  return (
+    status === PRODUCT_STATUS.ACTIVE ||
+    status === PRODUCT_STATUS.DRAFT ||
+    status === PRODUCT_STATUS.ARCHIVED
+  );
+}
+
+export function getManifestStatus(
+  productId: string,
+  manifest: Readonly<Record<string, unknown>> = productManifest
+): ProductStatus {
+  const status = manifest[productId];
+
+  if (!isProductStatus(status)) {
     throw new Error(`Server product catalog has an unsupported status for "${productId}".`);
   }
 
@@ -35,8 +55,11 @@ export const SERVER_PRODUCT_CATALOG = Object.freeze({
 
 export type ProductId = keyof typeof SERVER_PRODUCT_CATALOG;
 
-export function getProductContract(productId: string) {
-  const product = SERVER_PRODUCT_CATALOG[productId as ProductId];
+export function getProductContract(
+  productId: string,
+  catalog: ServerProductCatalog = SERVER_PRODUCT_CATALOG
+) {
+  const product = catalog[productId];
 
   if (!product || !Number.isSafeInteger(product.amount) || product.amount <= 0) {
     throw new PaymentRequestError(400, '서버 상품표에서 확인할 수 없는 productId입니다.');
@@ -45,12 +68,36 @@ export function getProductContract(productId: string) {
   return product;
 }
 
-export function getCatalogAmount(productId: string) {
-  return getProductContract(productId).amount;
+export function getCatalogAmount(
+  productId: string,
+  catalog: ServerProductCatalog = SERVER_PRODUCT_CATALOG
+) {
+  return getProductContract(productId, catalog).amount;
 }
 
-export function assertProductAvailableForNewOrder(productId: string) {
-  const product = getProductContract(productId);
+export function isProductAvailableForExistingAccess(status: unknown) {
+  return status === PRODUCT_STATUS.ACTIVE || status === PRODUCT_STATUS.ARCHIVED;
+}
+
+export function assertProductAvailableForExistingAccess(
+  productId: string,
+  catalog: ServerProductCatalog = SERVER_PRODUCT_CATALOG
+) {
+  const product = getProductContract(productId, catalog);
+
+  if (!isProductAvailableForExistingAccess(product.status)) {
+    throw new PaymentRequestError(
+      409,
+      'This product is not available for existing payment or entitlement access.'
+    );
+  }
+}
+
+export function assertProductAvailableForNewOrder(
+  productId: string,
+  catalog: ServerProductCatalog = SERVER_PRODUCT_CATALOG
+) {
+  const product = getProductContract(productId, catalog);
 
   if (product.status !== PRODUCT_STATUS.ACTIVE) {
     throw new PaymentRequestError(409, '현재 신규 판매 중인 상품이 아닙니다.');
