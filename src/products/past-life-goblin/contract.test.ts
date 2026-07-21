@@ -7,6 +7,7 @@ import {
   PAST_LIFE_REPORT_VOLUMES,
   formatPastLifeReportTopic
 } from './contract';
+import { pastLifeGoblinProduct } from './index';
 
 describe('past-life-goblin product contract', () => {
   it('keeps the contractual product identity and commercial display values', () => {
@@ -15,6 +16,12 @@ describe('past-life-goblin product contract', () => {
     expect(PAST_LIFE_PRODUCT.brand).toBe('MZ 도깨비 전생사주');
     expect(PAST_LIFE_PRODUCT.name).toBe('도깨비 전생장부: 봉인록');
     expect(PAST_LIFE_PRODUCT.price).toBe('49,000원');
+  });
+
+  it('stays aligned with the active product registry module', () => {
+    expect(pastLifeGoblinProduct.id).toBe(PAST_LIFE_PRODUCT_ID);
+    expect(pastLifeGoblinProduct.displayName).toBe(PAST_LIFE_PRODUCT.brand);
+    expect(pastLifeGoblinProduct.price).toBe(49_000);
   });
 
   it('defines exactly five ordered volumes and 26 consecutive topics', () => {

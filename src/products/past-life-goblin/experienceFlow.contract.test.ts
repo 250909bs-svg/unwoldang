@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { pastLifeGoblinProduct } from './index';
 
 const appSource = readFileSync(new URL('../../App.tsx', import.meta.url), 'utf8');
 const entrySource = readFileSync(new URL('../../pages/PastLifeEntry.tsx', import.meta.url), 'utf8');
@@ -17,15 +18,25 @@ const compact = (source: string) => source.replace(/\s+/gu, ' ').trim();
 describe('past-life-goblin route and purchase flow contract', () => {
   it('keeps the entry, immersion, about, intake, checkout, and report routes', () => {
     const expectedRoutes = [
-      '<Route path="/detail/past-life-goblin" element={<PastLifeEntry />} />',
-      '<Route path="/detail/past-life-goblin/immersion" element={<PastLifeImmersion />} />',
-      '<Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />',
-      '<Route path="/form/:id" element={<Form />} />',
-      '<Route path="/checkout" element={<Checkout />} />',
-      '<Route path="/report/:id" element={<Report />} />'
+      '/detail/past-life-goblin',
+      '/detail/past-life-goblin/immersion',
+      '/detail/past-life-goblin/about',
+      '/form/:id',
+      '/checkout',
+      '/report/:id'
     ];
 
-    expectedRoutes.forEach((route) => expect(appSource).toContain(route));
+    expectedRoutes.forEach((route) => expect(appSource).toContain(`path="${route}"`));
+    expect(appSource.match(/<ProductRouteBoundary productId="past-life-goblin">/gu)).toHaveLength(3);
+    expect(appSource).toContain('<ProductIntakeRouteBoundary>');
+    expect(appSource).toContain('<ProductCheckoutRouteBoundary>');
+    expect(appSource).toContain('<HistoricalReportRouteBoundary>');
+    expect(pastLifeGoblinProduct.routes).toMatchObject({
+      detail: '/detail/past-life-goblin',
+      intake: '/form/past-life-goblin',
+      checkout: '/checkout',
+      report: '/report/past-life-goblin'
+    });
     expect(entrySource).toContain('actionHref="/detail/past-life-goblin/immersion"');
     expect(immersionSource).toContain("navigate('/form/past-life-goblin'");
     expect(immersionSource).toContain('to="/form/past-life-goblin"');
@@ -35,7 +46,7 @@ describe('past-life-goblin route and purchase flow contract', () => {
     const normalized = compact(formSource);
 
     expect(formSource).toContain('type IntakeStep = 1 | 2 | 3 | 4;');
-    expect(formSource).toContain("const isPastLifeFlow = service.id === 'past-life-goblin';");
+    expect(formSource).toContain("const isPastLifeFlow = product.flow.intakeVariant === 'past-life';");
     expect(normalized).toContain(
       'const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;'
     );
@@ -56,8 +67,11 @@ describe('past-life-goblin route and purchase flow contract', () => {
       'reportAccessToken: locationState.recoveredEntitlement.reportAccessToken'
     );
 
-    expect(checkoutSource).toContain("const isPastLifeProduct = service.id === 'past-life-goblin';");
-    expect(checkoutSource).toContain("const amount = getPriceValue(service?.price || '0');");
+    expect(checkoutSource).toContain('const product = getProductById(requestedProductId)!;');
+    expect(checkoutSource).toContain(
+      "const isPastLifeProduct = product.flow.intakeVariant === 'past-life';"
+    );
+    expect(checkoutSource).toContain('const amount = product.price;');
     expect(normalizedCheckout).toMatch(
       /requestPaymentOrderIntent\(\{ confirmEndpoint, authToken: user\.authToken, orderId, productId: service\.id, amount \}\)/u
     );

@@ -91,7 +91,9 @@ describe('past-life-goblin media and style regression contract', () => {
     expect(storyReportSource).toContain(
       'const sections = PAST_LIFE_REPORT_VOLUMES.flatMap((volume, index) => {'
     );
-    expect(storyReportSource).toContain('PAST_LIFE_REPORT_VOLUMES\n                      .slice(0, index)');
+    expect(storyReportSource).toMatch(
+      /PAST_LIFE_REPORT_VOLUMES\s*\.slice\(0, index\)\s*\.reduce/gu
+    );
     expect(storyReportSource).not.toContain("['pastlife-seal', 'pastlife-relationship'");
   });
 });

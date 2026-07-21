@@ -15,7 +15,7 @@ export const pastLifeGoblinProduct = {
   },
   discovery: {
     title: 'MZ 도깨비 전생사주',
-    summary: '전생 캐릭터와 현생에서 풀어야 할 미션',
+    summary: '사주의 반복 기질을 상징 캐릭터와 현생 미션으로',
     category: 'general',
     featured: true,
     recommendationRank: 2
@@ -23,11 +23,11 @@ export const pastLifeGoblinProduct = {
   search: {
     title: 'MZ 도깨비 전생사주',
     image: '/media/dokkaebi-poster.webp',
-    keywords: ['전생', '전생사주', '도깨비', 'MZ', '업보', '인연', '반복패턴', '현생미션']
+    keywords: ['전생', '전생사주', '도깨비', 'MZ', '반복기질', '인연', '반복패턴', '현생미션']
   },
   home: {
     title: 'MZ 도깨비 전생사주',
-    subtitle: '전생 캐릭터와 현생에서 풀어야 할 미션',
+    subtitle: '사주의 반복 기질을 상징 캐릭터와 현생 미션으로',
     image: '/media/dokkaebi-poster.webp',
     category: 'general',
     artworkTitle: true

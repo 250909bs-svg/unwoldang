@@ -4,11 +4,13 @@ import { PAST_LIFE_NARRATIVE_POLICY } from './contract';
 
 const ownedNarrativeSources = [
   './contract.ts',
+  './index.ts',
   './reportBuilder.ts',
   '../../content/pastLifeExperience.ts',
   '../../pages/PastLifeEntry.tsx',
   '../../pages/PastLifeImmersion.tsx',
   '../../pages/PastLifeLanding.tsx',
+  '../../components/HeroFilm.tsx',
   '../../components/PastLifeStoryReport.tsx'
 ].map((path) => ({
   path,
