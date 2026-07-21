@@ -1,13 +1,12 @@
 import { ArrowRight, Hand, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 const VIDEO_SRC = '/media/mz-love-reading-intro.mp4';
 const FALLBACK_IMAGE = '/home-love-reading-card.webp';
-const reviewMoments = [
-  '사람은 달라도 왜 같은 연애를 반복했는지 보였어요',
-  '팩폭인데 이상하게 위로받는 기분이었어요',
-  '다음 연애에서 뭘 바꿔야 할지 딱 알겠어요'
+const reportFeatures = [
+  '끌리는 타입과 오래 갈 타입을 명리 근거로 나눠 봐요',
+  '반복 패턴과 위험 신호를 현실 행동으로 확인해요',
+  '12개월 흐름과 30일 행동 계획을 함께 정리해요'
 ] as const;
 
 export default function LoveReadingIntro() {
@@ -15,7 +14,7 @@ export default function LoveReadingIntro() {
   const [hasStarted, setHasStarted] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [reviewIndex, setReviewIndex] = useState(0);
+  const [featureIndex, setFeatureIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
@@ -54,12 +53,12 @@ export default function LoveReadingIntro() {
 
   useEffect(() => {
     if (prefersReducedMotion) {
-      setReviewIndex(0);
+      setFeatureIndex(0);
       return;
     }
 
     const timer = window.setInterval(() => {
-      setReviewIndex((current) => (current + 1) % reviewMoments.length);
+      setFeatureIndex((current) => (current + 1) % reportFeatures.length);
     }, 4600);
 
     return () => window.clearInterval(timer);
@@ -122,26 +121,22 @@ export default function LoveReadingIntro() {
 
         <span className="mz-love-intro-shade" aria-hidden="true" />
 
-        <div className="mz-love-intro-review" aria-label="체험 반응 예시">
-          <small>후기 예시</small>
-          <strong key={reviewIndex}>{reviewMoments[reviewIndex]}</strong>
+        <div className="mz-love-intro-review" aria-label="개인화 리포트 구성">
+          <small>리포트 구성</small>
+          <strong key={featureIndex}>{reportFeatures[featureIndex]}</strong>
           <span className="mz-love-intro-review-dots" aria-hidden="true">
-            {reviewMoments.map((review, index) => (
-              <i key={review} className={index === reviewIndex ? 'is-active' : ''} />
+            {reportFeatures.map((feature, index) => (
+              <i key={feature} className={index === featureIndex ? 'is-active' : ''} />
             ))}
           </span>
         </div>
 
         <div className="mz-love-intro-action">
-          <Link
-            to="/form/love-reading"
-            state={{ tabOrigin: '/detail/love-reading' }}
-            aria-label="팩폭 연애운 사주정보 입력하기"
-          >
+          <a href="#mz-love-choice" aria-label="팩폭 연애운 상세의 연애 반응 선택으로 이동">
             <Sparkles size={18} aria-hidden="true" />
-            <strong>팩폭 연애운 보기</strong>
+            <strong>내 연애 반응부터 보기</strong>
             <ArrowRight size={20} aria-hidden="true" />
-          </Link>
+          </a>
         </div>
       </div>
     </section>
