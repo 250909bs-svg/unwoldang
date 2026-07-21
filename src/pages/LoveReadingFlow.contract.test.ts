@@ -6,11 +6,10 @@ const intakeSource = readFileSync(new URL('./LoveReadingIntake.tsx', import.meta
 const introSource = readFileSync(new URL('../components/LoveReadingIntro.tsx', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
 const entrySource = readFileSync(new URL('./LoveReadingEntry.tsx', import.meta.url), 'utf8');
-const landingSource = readFileSync(new URL('./LoveReadingLanding.tsx', import.meta.url), 'utf8');
 const previewSource = readFileSync(new URL('./LoveReadingPreview.tsx', import.meta.url), 'utf8');
 
 describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
-  it('상세 경로에서 영상 인트로 뒤에 반응 선택과 전체 랜딩을 이어서 보여준다', () => {
+  it('상세 경로에서는 영상·후기·하단 시작 버튼만 보여주고 입력으로 바로 연결한다', () => {
     expect(appSource).toMatch(
       /path="\/detail\/love-reading"[\s\S]*?<ProductRouteBoundary productId="love-reading">[\s\S]*?<LoveReadingEntry \/>/u
     );
@@ -22,15 +21,12 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
     );
     expect(introSource).toContain("const VIDEO_SRC = '/media/mz-love-reading-intro.mp4'");
     expect(entrySource).toContain('<LoveReadingIntro />');
-    expect(entrySource).toContain('<LoveReadingLanding />');
-    expect(introSource).toContain('href="#mz-love-choice"');
-    expect(introSource).toContain('내 연애 반응부터 보기');
-    expect(introSource).not.toContain('to="/form/love-reading"');
-    expect(introSource).not.toContain('후기 예시');
-    expect(landingSource).toContain('id="mz-love-choice"');
-    expect(landingSource).toContain('LOVE_REACTION_PROFILES.map');
-    expect(landingSource).not.toContain('가상의 샘플 사용자');
-    expect(landingSource).not.toContain('SAMPLE REPORT');
+    expect(entrySource).not.toContain('<LoveReadingLanding');
+    expect(introSource).toContain('<small>후기 예시</small>');
+    expect(introSource).toContain('to="/form/love-reading"');
+    expect(introSource).toContain('팩폭 연애운 보기');
+    expect(introSource).not.toContain('href="#mz-love-choice"');
+    expect(introSource).not.toContain('내 연애 반응부터 보기');
   });
 
   it('생년월일부터 질문까지 8단계 순서를 유지한다', () => {
@@ -128,6 +124,8 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
   it('무료 미리보기는 개인화 컨텍스트를 쓰되 미래 인물을 확정하지 않는다', () => {
     expect(previewSource).toContain('function SpeechBalloon');
     expect(previewSource).toContain('function WebtoonScene');
+    expect((previewSource.match(/<WebtoonScene\b/gu) ?? []).length).toBe(8);
+    expect((previewSource.match(/<SpeechBalloon\b/gu) ?? []).length).toBe(17);
     expect(previewSource).toContain('mz-love-portrait-vault');
     expect(previewSource).toContain('mz-love-vault-portrait');
     expect(previewSource).toContain("getMzLoveScene('future-partner-fan')");
@@ -138,6 +136,10 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
     expect(previewSource).toContain('loveFocus: formData.loveFocus');
     expect(previewSource).toContain('primaryQuestion: formData.q1?.trim()');
     expect(previewSource).toContain('reactionProfile.profileTitle');
+    expect(previewSource).toContain('대표 키감 단서');
+    expect(previewSource).toContain('얼굴 인상 상징');
+    expect(previewSource).toContain('직업 환경 Top 3 후보');
+    expect(previewSource).toContain('만남 장소·장면 후보');
     expect(previewSource).toContain('상대의 속마음이나 미래를 단정하지 않을게');
     expect(previewSource).toContain('특정 년·월에 사건이 생긴다고 단정하지 않고');
     expect(previewSource).not.toContain('heightTeaser');

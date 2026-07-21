@@ -1831,41 +1831,45 @@ body:has(.mz-love-preview-page) {
 .mz-love-dialogue-stack {
   display: grid;
   width: 100%;
-  gap: 12px;
+  padding-top: 18px;
+  gap: 22px;
 }
 
 .mz-love-speech {
   position: relative;
-  width: min(88%, 402px);
-  padding: 16px 18px;
+  width: min(79%, 366px);
+  padding: 13px 16px 14px;
   justify-self: start;
-  border: 1px solid rgba(72, 34, 43, 0.12);
-  border-radius: 22px 22px 22px 7px;
-  background: rgba(255, 249, 240, 0.97);
+  border: 2px solid rgba(43, 24, 30, 0.94);
+  border-radius: 21px 21px 21px 6px;
+  background: #fffaf1;
   color: #29161c;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(16px);
+  box-shadow: 5px 6px 0 rgba(7, 3, 5, 0.62);
+  backdrop-filter: none;
+  transform: rotate(-0.35deg);
 }
 
 .mz-love-speech::after {
   position: absolute;
-  bottom: -9px;
-  left: 18px;
-  width: 18px;
-  height: 18px;
-  border-right: 1px solid rgba(72, 34, 43, 0.1);
-  border-bottom: 1px solid rgba(72, 34, 43, 0.1);
+  bottom: -10px;
+  left: 20px;
+  width: 19px;
+  height: 19px;
+  border-right: 2px solid rgba(43, 24, 30, 0.94);
+  border-bottom: 2px solid rgba(43, 24, 30, 0.94);
   background: inherit;
   content: "";
-  transform: rotate(45deg);
+  transform: rotate(45deg) skew(7deg, 7deg);
 }
 
 .mz-love-speech.is-right {
   justify-self: end;
-  border-radius: 22px 22px 7px 22px;
-  border-color: rgba(255, 164, 180, 0.24);
-  background: rgba(121, 16, 43, 0.95);
+  border-radius: 21px 21px 6px 21px;
+  border-color: rgba(255, 190, 201, 0.82);
+  background: #81152f;
   color: #fffaf7;
+  box-shadow: -5px 6px 0 rgba(7, 3, 5, 0.62);
+  transform: rotate(0.35deg);
 }
 
 .mz-love-speech.is-right::after {
@@ -1880,39 +1884,49 @@ body:has(.mz-love-preview-page) {
 }
 
 .mz-love-speech.is-customer {
-  width: min(78%, 350px);
+  width: min(72%, 326px);
 }
 
 .mz-love-speech > small {
   display: block;
-  margin-bottom: 7px;
-  color: #a41335;
-  font-size: 10px;
+  position: absolute;
+  top: -19px;
+  left: 10px;
+  margin: 0;
+  color: #fff8ee;
+  font-size: 9px;
   font-weight: 900;
-  letter-spacing: 0.055em;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 7px rgba(0, 0, 0, 0.9);
 }
 
 .mz-love-speech.is-right > small,
 .mz-love-speech.is-fact > small {
-  color: #f1ce88;
+  color: #ffe09e;
+}
+
+.mz-love-speech.is-right > small {
+  right: 10px;
+  left: auto;
+  text-align: right;
 }
 
 .mz-love-speech h2 {
-  margin: 0 0 7px;
+  margin: 0 0 6px;
   color: inherit;
-  font-size: clamp(20px, 5.8vw, 29px);
+  font-size: clamp(18px, 5.1vw, 25px);
   font-weight: 920;
   letter-spacing: -0.052em;
-  line-height: 1.24;
+  line-height: 1.27;
 }
 
 .mz-love-speech p {
   margin: 0;
   color: inherit;
-  font-size: clamp(15px, 4.15vw, 19px);
-  font-weight: 720;
+  font-size: clamp(15px, 4vw, 18px);
+  font-weight: 760;
   letter-spacing: -0.035em;
-  line-height: 1.52;
+  line-height: 1.44;
 }
 
 .mz-love-speech p + p {
@@ -1932,10 +1946,15 @@ body:has(.mz-love-preview-page) {
 .mz-love-speech em {
   display: block;
   margin-top: 8px;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 9px;
+  color: rgba(67, 44, 50, 0.72);
+  font-size: 10px;
   font-style: normal;
-  line-height: 1.5;
+  line-height: 1.55;
+}
+
+.mz-love-speech.is-right em,
+.mz-love-speech.is-fact em {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .mz-love-story-caption {

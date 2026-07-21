@@ -17,7 +17,6 @@ import { findServiceById, type LoveReaction } from '../api/mockData';
 import seoRouteData from '../content/seoRoutes.json';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { getMzLoveScene } from '../lib/mz-love-fact/sceneManifest';
-import { LOVE_REACTION_PROFILES } from '../products/love-reading/reactionProfiles';
 import type { MzLoveSceneKey } from '../lib/mz-love-fact/types';
 import '../styles/mz-love-fact.css';
 
@@ -26,6 +25,35 @@ const FORM_PATH = `/form/${SERVICE_ID}`;
 const seoLoveFaqs = seoRouteData['/detail/love-reading'].faqs;
 
 type LoveChoiceId = LoveReaction;
+
+type LoveChoice = {
+  id: LoveChoiceId;
+  label: string;
+  response: string;
+};
+
+const loveChoices: LoveChoice[] = [
+  {
+    id: 'A',
+    label: '“괜찮아ㅎㅎ”라고 바로 답한다',
+    response: '괜찮은 척부터 하는 타입이네. 서운함보다 관계가 깨질까 봐 먼저 분위기를 지키는 편.'
+  },
+  {
+    id: 'B',
+    label: '왜 늦었는지 확인한다',
+    response: '확신이 없으면 바로 답을 찾으려 하고. 애매함을 오래 견디기보다 관계의 이름부터 확인하는 편.'
+  },
+  {
+    id: 'C',
+    label: '나도 일부러 늦게 답한다',
+    response: '상대보다 덜 좋아하는 사람처럼 보이려 하지. 마음보다 주도권을 먼저 지키려는 순간이 있어.'
+  },
+  {
+    id: 'D',
+    label: '별 의미 없는 척하지만 계속 신경 쓴다',
+    response: '겉으론 조용한데 혼자 관계를 백 번 돌려보네. 말하지 않은 가능성까지 대신 해석하는 편.'
+  }
+];
 
 const recommendationLines = [
   '연락은 오는데 관계는 안 정해지고',
@@ -60,13 +88,13 @@ const chapterScenes: Array<{
   },
   {
     number: '04',
-    title: '오래 갈 관계 신호는 따로 있어',
+    title: '오래 갈 사람은 따로 있어',
     teaser: '말보다 약속·연락·만남이 일정한 사람의 신호를 구체적으로 짚어요.',
     scene: 'stable-partner-signal'
   },
   {
     number: '05',
-    title: '다음 인연에서 볼 분위기',
+    title: '다음에 들어오는 사람',
     teaser: '얼굴을 단정하지 않고 분위기, 관계 속도, 만남의 조건을 읽어요.',
     scene: 'future-partner-fan'
   },
@@ -127,6 +155,13 @@ const faqItems = [
     answer:
       '아니요. 명리 해석은 선택을 대신하는 예언이 아니라 패턴을 점검하는 참고 자료예요. 중요한 관계 결정은 실제 행동, 대화, 안전을 함께 살펴 결정해 주세요.'
   }
+] as const;
+
+const sampleTimeline = [
+  { month: '1–3개월', mood: '정리', copy: '애매한 연락을 선별하고 내 기준을 다시 세우는 흐름' },
+  { month: '4–6개월', mood: '접점', copy: '일·취미처럼 반복적으로 만나는 환경에서 접점이 커지는 흐름' },
+  { month: '7–9개월', mood: '조율', copy: '빠른 결론보다 연락과 약속의 일관성을 확인해야 하는 흐름' },
+  { month: '10–12개월', mood: '선택', copy: '관계를 실제로 만드는 사람에게 에너지를 모으는 흐름' }
 ] as const;
 
 function readStoredChoice(): LoveChoiceId | null {
@@ -206,7 +241,7 @@ export default function LoveReadingLanding() {
   const [showStickyCta, setShowStickyCta] = useState(false);
 
   const selectedChoiceData = useMemo(
-    () => LOVE_REACTION_PROFILES.find((choice) => choice.id === selectedChoice) ?? null,
+    () => loveChoices.find((choice) => choice.id === selectedChoice) ?? null,
     [selectedChoice]
   );
 
@@ -314,7 +349,7 @@ export default function LoveReadingLanding() {
         </div>
 
         <div className="mz-love-choice-grid" role="group" aria-label="연애 반응 선택">
-          {LOVE_REACTION_PROFILES.map((choice, index) => (
+          {loveChoices.map((choice, index) => (
             <button
               key={choice.id}
               type="button"
@@ -413,11 +448,46 @@ export default function LoveReadingLanding() {
         </ol>
       </section>
 
+      <section className="mz-love-fact-sample" aria-labelledby="mz-love-fact-sample-title">
+        <div className="mz-love-fact-visual">
+          <SceneImage sceneKey="whisper-fact" />
+        </div>
+        <div className="mz-love-fact-card">
+          <span className="mz-love-act-label">ACT 05 · 샘플 팩폭</span>
+          <div className="mz-love-sample-notice">가상의 샘플 사용자 예시</div>
+          <h2 id="mz-love-fact-sample-title">
+            평소엔 판단이 빠른 사람인데,
+            <br />
+            좋아하는 사람 앞에서는 행동보다 가능성을 더 오래 믿는 편.
+          </h2>
+          <div className="mz-love-evidence-tags" aria-label="명리 근거 예시">
+            <span>일지</span>
+            <span>편관</span>
+            <span>현재 대운</span>
+          </div>
+          <dl className="mz-love-fact-breakdown">
+            <div>
+              <dt>쉽게 풀면</dt>
+              <dd>확신을 늦게 주는 상대일수록 관계를 더 오래 확인하려는 경향으로 읽힙니다.</dd>
+            </div>
+            <div>
+              <dt>다른 가능성</dt>
+              <dd>다만 상대가 행동을 꾸준히 보여주고 있다면 표현 속도가 느린 관계일 수 있어요.</dd>
+            </div>
+            <div className="is-action">
+              <dt>지금 할 일</dt>
+              <dd>3주 동안 말이 아니라 약속·연락·만남의 일관성을 확인하세요.</dd>
+            </div>
+          </dl>
+          <p className="mz-love-method-note">실제 리포트도 ‘팩폭 → 근거 → 반대 가능성 → 행동’ 순서로 읽혀요.</p>
+        </div>
+      </section>
+
       <section className="mz-love-reversal" aria-labelledby="mz-love-reversal-title">
         <SceneImage sceneKey="final-fact-bomb" className="mz-love-reversal-image" />
         <div className="mz-love-reversal-overlay" aria-hidden="true" />
         <div className="mz-love-reversal-copy">
-          <span className="mz-love-act-label">ACT 05 · 반전</span>
+          <span className="mz-love-act-label">ACT 06 · 반전</span>
           <h2 id="mz-love-reversal-title">다음 사람이 궁금하지?</h2>
           <Dialogue>
             근데 다음 사람 얼굴보다
@@ -444,7 +514,7 @@ export default function LoveReadingLanding() {
           </div>
         </div>
         <div className="mz-love-trust-copy">
-          <span className="mz-love-act-label">ACT 06 · 계산과 해석</span>
+          <span className="mz-love-act-label">ACT 07 · 계산과 해석</span>
           <h2 id="mz-love-trust-title">
             AI가 사주를
             <br />
@@ -470,8 +540,84 @@ export default function LoveReadingLanding() {
         </div>
       </section>
 
+      <section className="mz-love-report-preview" aria-labelledby="mz-love-report-title">
+        <div className="mz-love-section-heading mz-love-section-heading--center">
+          <span className="mz-love-act-label">ACT 08 · 결과 미리보기</span>
+          <h2 id="mz-love-report-title">스크린샷이 아닌, 실제 결과의 읽는 방식</h2>
+          <p>아래 내용은 가상의 샘플 데이터이며 실제 결과는 입력한 명식과 고민에 맞춰 달라집니다.</p>
+        </div>
+
+        <div className="mz-love-report-shell">
+          <header className="mz-love-report-header">
+            <span>SAMPLE REPORT</span>
+            <h3>김연화 님의 연애 결</h3>
+            <p>계수 일간 · 일지 배우자궁 · 현재 대운 흐름</p>
+          </header>
+
+          <article className="mz-love-report-fact">
+            <small>첫 팩폭</small>
+            <h3>마음이 커질수록 상대의 행동보다 가능성을 먼저 믿는 편.</h3>
+            <p>기다림이 배려가 되는 관계와, 나만 해석하는 관계를 구분하는 게 이번 흐름의 핵심이에요.</p>
+          </article>
+
+          <div className="mz-love-report-versus">
+            <article>
+              <span>끌리는 타입</span>
+              <h3>초반 온도가 높고 예측하기 어려운 사람</h3>
+              <p>긴장감이 호기심으로 느껴지기 쉬워요.</p>
+            </article>
+            <div aria-hidden="true">VS</div>
+            <article>
+              <span>오래 갈 타입</span>
+              <h3>약속과 연락의 속도가 일정한 사람</h3>
+              <p>조용해 보여도 관계를 실제로 쌓는 쪽이에요.</p>
+            </article>
+          </div>
+
+          <article className="mz-love-report-next">
+            <div>
+              <span>다음 인연의 분위기</span>
+              <h3>처음보다 세 번째 만남에서 편안함이 커지는 사람</h3>
+              <p>빠른 설렘보다 대화의 리듬과 반복되는 접점을 먼저 확인해 보세요.</p>
+            </div>
+            <SceneImage sceneKey="first-meeting-scene" />
+          </article>
+
+          <article className="mz-love-report-timeline">
+            <span>12개월 연애 흐름</span>
+            <div>
+              {sampleTimeline.map((item) => (
+                <section key={item.month}>
+                  <small>{item.month}</small>
+                  <strong>{item.mood}</strong>
+                  <p>{item.copy}</p>
+                </section>
+              ))}
+            </div>
+          </article>
+
+          <article className="mz-love-report-plan">
+            <span>30일 행동 플랜</span>
+            <ol>
+              <li>
+                <strong>DAY 01–07</strong>
+                <p>내가 추측한 것과 상대가 실제로 한 행동을 두 칸으로 나눠 적기</p>
+              </li>
+              <li>
+                <strong>DAY 08–21</strong>
+                <p>약속·연락·만남의 일관성을 확인하고 애매한 호의에 의미 더하지 않기</p>
+              </li>
+              <li>
+                <strong>DAY 22–30</strong>
+                <p>원하는 관계의 속도를 한 문장으로 말하고 상대의 행동으로 답 확인하기</p>
+              </li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
       <section className="mz-love-offer" aria-labelledby="mz-love-offer-title">
-        <span className="mz-love-act-label">ACT 07 · 내 결과 열기</span>
+        <span className="mz-love-act-label">ACT 09 · 내 결과 열기</span>
         <div className="mz-love-offer-icon" aria-hidden="true">
           <HeartHandshake size={31} />
         </div>
@@ -495,7 +641,7 @@ export default function LoveReadingLanding() {
 
       <section className="mz-love-faq" aria-labelledby="mz-love-faq-title">
         <div className="mz-love-section-heading">
-          <span className="mz-love-act-label">ACT 08 · 들어가기 전에</span>
+          <span className="mz-love-act-label">ACT 10 · 들어가기 전에</span>
           <h2 id="mz-love-faq-title">자주 묻는 질문</h2>
         </div>
         <div className="mz-love-faq-list">

@@ -462,7 +462,7 @@ export default function LoveReadingPreview() {
           <div className="mz-love-dialogue-stack">
             <SpeechBalloon speaker="MZ무당">
               <p>왔네, <b>{displayName}</b>.</p>
-              <p>네가 만날 사람부터 묻고 싶겠지만, 먼저 그 사람을 끌어당기는 <b>네 원국</b>부터 정확히 펼쳐볼게.</p>
+              <p>상대부터 보기 전에, 네 연애가 왜 반복되는지부터 펼쳐볼게.</p>
             </SpeechBalloon>
             <SpeechBalloon speaker={displayName} side="right" tone="customer">
               <p>“{formData.q1?.trim()}”</p>
@@ -536,10 +536,8 @@ export default function LoveReadingPreview() {
           nextLabel="내 질문의 답 보기"
         >
           <div className="mz-love-dialogue-stack">
-            <SpeechBalloon speaker={`연애 반응 ${reactionProfile.id} · ${reactionProfile.profileTitle}`} tone="fact">
-              <p>{reactionProfile.response}</p>
-            </SpeechBalloon>
             <SpeechBalloon speaker="MZ무당 · 첫 팩폭">
+              <p>네 답은 <b>반응 {reactionProfile.id} · {reactionProfile.profileTitle}</b>.</p>
               <p>{loveSelfChapter?.factBomb || '네가 사랑에 빠지는 방식부터 먼저 짚어볼게.'}</p>
             </SpeechBalloon>
             <SpeechBalloon speaker={displayName} side="right" tone="customer">
@@ -550,8 +548,9 @@ export default function LoveReadingPreview() {
             </SpeechBalloon>
             <aside className="mz-love-story-caption">
               <small>현실에서 나타나는 장면</small>
+              <p>{reactionProfile.response}</p>
               <p>{loveSelfChapter?.realLifeScene}</p>
-              <strong>{loveSelfChapter?.checkSignal}</strong>
+              <strong>현실 체크 · {loveSelfChapter?.checkSignal}</strong>
             </aside>
           </div>
         </WebtoonScene>
@@ -565,14 +564,15 @@ export default function LoveReadingPreview() {
           className="is-focus"
         >
           <div className="mz-love-dialogue-stack">
-            <SpeechBalloon speaker={'선택한 질문 · ' + FOCUS_LABELS[focus]}>
+            <SpeechBalloon speaker={displayName} side="right" tone="customer">
+              <p>“{FOCUS_LABELS[focus]}이 제일 궁금해요.”</p>
+            </SpeechBalloon>
+            <SpeechBalloon speaker="MZ무당">
               <h2>{focusChapter?.title || FOCUS_LABELS[focus]}</h2>
               <p>{focusChapter?.factBomb || premiumAnswerById.get('who')?.answer}</p>
-            </SpeechBalloon>
-            <SpeechBalloon speaker="MZ무당 · 더 구체적으로" side="right" tone="fact">
               <p>{focusChapter?.interpretation}</p>
             </SpeechBalloon>
-            <SpeechBalloon speaker="이번 주 행동">
+            <SpeechBalloon speaker="MZ무당 · 이번 주" side="right" tone="fact">
               <p>{focusChapter?.action}</p>
             </SpeechBalloon>
           </div>
@@ -588,8 +588,8 @@ export default function LoveReadingPreview() {
         >
           <div className="mz-love-dialogue-stack is-vault-dialogue">
             <SpeechBalloon speaker="MZ무당">
-              <p>배우자궁·십성·오행에서는 <b>{specificity.face.label}</b> 같은 인상이 여러 상징 후보 중 하나로 읽혀.</p>
-              <em>상징 후보는 관계 신호를 살펴보는 참고이며 실제 사람의 얼굴·키·직업을 예측하거나 확정하지 않아.</em>
+              <p>배우자궁·십성·오행을 겹치면 <b>{specificity.height.label}</b>, <b>{specificity.face.label}</b> 같은 대표 단서가 보여.</p>
+              <em>명리상 상징 후보일 뿐, 실제 사람의 얼굴·키·직업이나 미래를 확정하는 말은 아니야.</em>
             </SpeechBalloon>
 
             <section className="mz-love-portrait-vault" aria-label="잠긴 관계 상징 후보">
@@ -600,22 +600,22 @@ export default function LoveReadingPreview() {
                 <ScenePicture scene={futurePartnerScene} />
                 <span className="mz-love-vault-portrait__seal"><LockKeyhole size={36} /></span>
               </div>
-              <span>SYMBOLIC CLUES · LOCKED</span>
-              <h2>관계에서 알아볼 상징 후보</h2>
+              <span>MYEONGRI CLUES · LOCKED</span>
+              <h2>다음 인연의 대표 단서</h2>
               <dl>
-                <div><dt>인상 후보</dt><dd>{specificity.face.primary}</dd></div>
-                <div><dt>해석 방식</dt><dd>상징·조건 비교</dd></div>
-                <div className="is-locked"><dt>생활 환경 후보</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
-                <div className="is-locked"><dt>만남 조건 후보</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
+                <div><dt>대표 키감 단서</dt><dd>{specificity.height.label}</dd></div>
+                <div><dt>얼굴 인상 상징</dt><dd>{specificity.face.primary}</dd></div>
+                <div className="is-locked"><dt>직업 환경 Top 3 후보</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
+                <div className="is-locked"><dt>만남 장소·장면 후보</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
               </dl>
               <button type="button" onClick={continueToCheckout}>
                 <LockKeyhole size={17} aria-hidden="true" />
-                상징 후보와 확인 조건 보기
+                본편에서 직업·장소 후보 보기
               </button>
             </section>
 
-            <SpeechBalloon speaker="MZ무당" side="right" tone="customer">
-              <p>본편에서는 후보가 나온 명리 근거와, 현실 관계에서 직접 확인할 행동 신호를 함께 보여줄게.</p>
+            <SpeechBalloon speaker="해석 메모" side="right" tone="fact">
+              <p>본편에서는 이 후보가 나온 근거와, 현실에서 확인할 행동 신호를 함께 보여줄게.</p>
             </SpeechBalloon>
           </div>
         </WebtoonScene>
@@ -629,26 +629,26 @@ export default function LoveReadingPreview() {
           className="is-meeting"
         >
           <div className="mz-love-dialogue-stack">
-            <SpeechBalloon speaker="MZ무당 · 만남 조건 후보">
-              <h2>{specificity.meeting.primaryContext}</h2>
-              <p>도움 오행 {report.helpfulElements[0] || specificity.meeting.evidence[0]}에서 읽은 접점 환경 후보야. 실제 만남을 보장하거나 특정 장소를 예언하는 뜻은 아니야.</p>
+            <SpeechBalloon speaker="MZ무당">
+              <p>만남 장면은 <b>{specificity.meeting.primaryContext}</b> 쪽을 먼저 봐.</p>
+              <em>도움 오행 {report.helpfulElements[0] || specificity.meeting.evidence[0]}에서 읽은 후보이며, 특정 장소나 만남을 예언하는 뜻은 아니야.</em>
             </SpeechBalloon>
 
             <div className="mz-love-preview-sealed-grid" aria-label="본편에서 설명하는 관계 조건 후보">
               <article>
                 <LockKeyhole size={17} aria-hidden="true" />
-                <span>접점 환경 후보</span>
-                <strong>조건과 근거 공개</strong>
+                <span>만남 장소 후보</span>
+                <strong>장면·조건 공개</strong>
               </article>
               <article>
                 <LockKeyhole size={17} aria-hidden="true" />
-                <span>활동 분야 후보</span>
-                <strong>상징 · {specificity.professions[0].fieldLabel}</strong>
+                <span>직업 환경 Top 3</span>
+                <strong>대표 상징 · {specificity.professions[0].fieldLabel}</strong>
               </article>
               <article>
                 <LockKeyhole size={17} aria-hidden="true" />
-                <span>관계에서 확인할 신호</span>
-                <strong>행동 기준 공개</strong>
+                <span>알아볼 행동 신호</span>
+                <strong>현실 확인 기준 공개</strong>
               </article>
             </div>
 
@@ -668,9 +668,10 @@ export default function LoveReadingPreview() {
           className="is-locked-chapters"
         >
           <div className="mz-love-dialogue-stack">
-            <SpeechBalloon speaker="MZ무당 · 12개월 흐름 미리보기">
-              <p>절기 기준 다음 12개월을 비교해 대화·조율·거리두기에 상대적으로 유리한 조건을 나눴어.</p>
-              <p>특정 년·월에 사건이 생긴다고 단정하지 않고, 각 구간에서 선택할 행동을 본편에 담았어.</p>
+            <SpeechBalloon speaker="MZ무당">
+              <p>다음 12개월도 한 줄 예언으로 끝내지 않았어.</p>
+              <p>대화할 때, 기다릴 때, 멈출 때를 조건별로 나눠뒀어.</p>
+              <em>특정 년·월에 사건이 생긴다고 단정하지 않고, 각 구간에서 선택할 행동만 짚어줄게.</em>
             </SpeechBalloon>
             <div className="mz-love-locked-clues">
               {[
@@ -681,8 +682,8 @@ export default function LoveReadingPreview() {
                 <span key={label}><LockKeyhole size={16} aria-hidden="true" /> {label}</span>
               ))}
             </div>
-            <SpeechBalloon speaker="MZ무당" side="right">
-              <p>미리보기 한 장면만으로 단정하지 마. 본편에는 <b>13개 웹툰 장</b>으로 근거와 반대 가능성까지 풀어뒀어.</p>
+            <SpeechBalloon speaker="MZ무당" side="right" tone="fact">
+              <p>한 장면만 보고 결론 내리지 마. 본편 <b>13개 웹툰 장</b>에 근거와 반대 가능성까지 풀어뒀어.</p>
             </SpeechBalloon>
           </div>
         </WebtoonScene>
@@ -695,8 +696,8 @@ export default function LoveReadingPreview() {
         >
           <div className="mz-love-dialogue-stack">
             <SpeechBalloon speaker="MZ무당 · 마지막 팩폭">
-              <h2>상대의 속마음이나 미래를 단정하지 않을게.</h2>
-              <p>인상·활동 환경·만남 장면은 상징 후보로, 12개월은 조건별 흐름으로 읽고 현실에서 확인할 행동까지 이어서 보여줄게.</p>
+              <p><b>상대의 속마음이나 미래를 단정하지 않을게.</b></p>
+              <p>대신 네가 현실에서 확인할 신호는 분명하게 짚어줄게.</p>
             </SpeechBalloon>
 
             <aside className="mz-love-specificity-note">
@@ -714,8 +715,8 @@ export default function LoveReadingPreview() {
             <button type="button" className="mz-love-story-unlock" onClick={continueToCheckout}>
               <LockKeyhole size={19} aria-hidden="true" />
               <span>
-                <small>관계 상징 후보와 13개 본편까지</small>
-                <strong>이 원국으로 팩폭 연애운 잠금 풀기</strong>
+                <small>대표 인연상 후보와 13개 본편까지</small>
+                <strong>이 원국으로 웹툰 본편 잠금 풀기</strong>
               </span>
               <ArrowRight size={21} aria-hidden="true" />
             </button>
