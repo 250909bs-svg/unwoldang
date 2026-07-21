@@ -69,6 +69,11 @@ export function loadPortOneSdk() {
     script.onload = resolveLoadedSdk;
     script.onerror = () => reject(new Error('PortOne SDK 로드에 실패했습니다.'));
     document.head.appendChild(script);
+  }).catch((error) => {
+    // A transient CDN failure must not poison every later payment retry in this tab.
+    document.querySelector<HTMLScriptElement>(`script[src=${PORTONE_SDK_URL}]`)?.remove();
+    sdkPromise = null;
+    throw error;
   });
 
   return sdkPromise;

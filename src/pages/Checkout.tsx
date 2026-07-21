@@ -5,19 +5,26 @@ import { type IntakeFormData, findServiceById } from '../api/mockData';
 import MobileTopBar from '../components/MobileTopBar';
 import { legalPages, type LegalPageKey } from '../content/legal';
 import { useAuth } from '../context/AuthContext';
+import {
+  PaymentApiError,
+  canRetryPaymentConfirmation,
+  confirmPaymentSession,
+  createPaymentOrder,
+  isCancellationMessage,
+  openPortOnePayment,
+  readPaymentSession,
+  updatePaymentSession,
+  writePaymentSession
+} from '../features/payments';
+import type {
+  PaymentOrderIntent,
+  PaymentSession,
+  PaymentUiPhase
+} from '../features/payments/contracts';
 import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
 import { validateIntakeBirthInputs } from '../lib/birthInputValidation';
-import {
-  buildPortOneRedirectUrl,
-  confirmAuthenticatedPortOnePayment,
-  createCustomerKey,
-  createOrderId,
-  readPendingPayment,
-  requestPaymentOrderIntent,
-  savePendingPayment
-} from '../lib/auth';
-import { requestPortOnePayment } from '../lib/portonePayments';
+import { buildPortOneRedirectUrl, createOrderId } from '../lib/auth';
 import {
   getPaymentMode,
   getPortOneConfirmEndpoint,
@@ -37,7 +44,7 @@ export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const restoredPayment = readPendingPayment();
+  const restoredPayment = readPaymentSession(user?.id);
   const locationState = (location.state as CheckoutState | null) ?? null;
   const requestedProductId = locationState?.product || restoredPayment?.productId;
   const product = getProductById(requestedProductId)!;
@@ -54,6 +61,15 @@ export default function Checkout() {
   const [legalModal, setLegalModal] = useState<Extract<LegalPageKey, 'terms' | 'privacy'> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<PaymentUiPhase>(
+    canRetryPaymentConfirmation(restoredPayment) ? 'retryable' : 'idle'
+  );
+  const [serverAmount, setServerAmount] = useState<number | null>(
+    restoredPayment?.status === 'created' || restoredPayment?.status === 'pending'
+      ? restoredPayment.amount
+      : null
+  );
+  const [nextOrderId, setNextOrderId] = useState(() => createOrderId());
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -61,9 +77,11 @@ export default function Checkout() {
     }
   }, [isAuthenticated, navigate]);
 
-  const orderId = useMemo(() => createOrderId(), []);
-  const amount = product.price;
-  const customerKey = createCustomerKey(user?.id);
+  const recoverableAmount =
+    restoredPayment?.status === 'created' || restoredPayment?.status === 'pending'
+      ? restoredPayment.amount
+      : null;
+  const amount = serverAmount ?? recoverableAmount ?? product.price;
   const analysisPayload = useMemo(
     () => buildAnalysisRequestPayload(product.id, formData || {}),
     [formData, product.id]
@@ -71,8 +89,8 @@ export default function Checkout() {
   const portOneStoreId = import.meta.env.VITE_PORTONE_STORE_ID?.trim();
   const portOneChannelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY?.trim();
   const confirmEndpoint = getPortOneConfirmEndpoint();
-  const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || '01000000000';
-  const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
+  const customerPhone = import.meta.env.VITE_PORTONE_DEFAULT_PHONE_NUMBER?.trim() || undefined;
+  const customerEmail = user?.email?.trim() || undefined;
   const paymentMode = getPaymentMode();
   const isDemoPayment = shouldUseDemoPayment();
   const canUsePortOneRuntime = Boolean(paymentMode === 'live' && hasPortOneRuntimeConfig());
@@ -106,12 +124,104 @@ export default function Checkout() {
   const activeLegalContent = legalModal ? legalPages[legalModal] : null;
   const activeLegalTitle =
     legalModal === 'terms' ? '운월당 서비스 이용약관' : legalModal === 'privacy' ? '운월당 개인정보처리방침' : '';
+  const hasRetryableConfirmation = canRetryPaymentConfirmation(restoredPayment);
+  const paymentStatusMessage =
+    paymentPhase === 'creating-order'
+      ? '서버 상품표에서 주문 금액과 판매 상태를 확인하고 있습니다.'
+      : paymentPhase === 'opening-payment'
+        ? 'PortOne 결제창을 열고 있습니다.'
+        : paymentPhase === 'confirming'
+          ? '승인된 결제를 서버에서 확인하고 있습니다. 창을 닫지 마세요.'
+          : paymentPhase === 'success'
+            ? '결제 확인이 완료되었습니다. 리포트로 이동합니다.'
+            : paymentPhase === 'cancelled'
+              ? '결제가 취소되었습니다. 승인된 금액은 없습니다.'
+              : paymentPhase === 'retryable'
+                ? '결제창을 다시 열지 않고 같은 결제의 승인 상태만 다시 확인할 수 있습니다.'
+                : paymentPhase === 'failed'
+                  ? '결제 또는 승인 확인에 실패했습니다. 안내를 확인해 주세요.'
+                  : null;
 
   const handleEasyPayPreview = (label: string) => {
     setError(`${label}는 간편결제 심사 후 연결 예정입니다. 지금은 아래 일반 결제로 진행해 주세요.`);
   };
 
+  const moveToPaidReport = (session: PaymentSession, confirmed: Awaited<ReturnType<typeof confirmPaymentSession>>) => {
+    const paidSession = updatePaymentSession(session, 'paid', {
+      paymentId: confirmed.paymentId,
+      paymentKey: confirmed.paymentId,
+      txId: confirmed.txId,
+      orderClaim: undefined,
+      entitlementId: confirmed.entitlement.id,
+      entitlementStatus: confirmed.entitlement.status,
+      reportAccessToken: confirmed.reportAccessToken,
+      reportAccessTokenExpiresAt: confirmed.reportAccessTokenExpiresAt
+    });
+
+    setPaymentPhase('success');
+    setError(null);
+    navigate(product.routes.loading, {
+      replace: true,
+      state: {
+        product: paidSession.productId,
+        formData: paidSession.formData,
+        paymentMethod: 'portone',
+        orderId: paidSession.orderId,
+        tabOrigin: paidSession.tabOrigin,
+        reportAccessToken: paidSession.reportAccessToken
+      }
+    });
+  };
+
+  const confirmExistingPayment = async (session: PaymentSession) => {
+    if (!confirmEndpoint || !user?.authToken) {
+      setPaymentPhase('retryable');
+      setError('결제창을 다시 열지 마세요. 로그인한 뒤 같은 결제의 승인 상태를 다시 확인해 주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setPaymentPhase('confirming');
+    setError(null);
+
+    try {
+      const confirmed = await confirmPaymentSession({
+        confirmEndpoint,
+        authToken: user.authToken,
+        session
+      });
+      moveToPaidReport(session, confirmed);
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error ? caughtError.message : '결제 승인 상태를 확인하지 못했습니다.';
+      const isRetryable =
+        caughtError instanceof PaymentApiError &&
+        caughtError.retryable &&
+        canRetryPaymentConfirmation(session);
+      const retryHint =
+        caughtError instanceof PaymentApiError && !caughtError.retryable
+          ? ' 주문 정보가 일치하지 않으면 고객센터 확인이 필요합니다.'
+          : '';
+
+      if (isRetryable) {
+        setPaymentPhase('retryable');
+      } else {
+        const terminalStatus = isCancellationMessage(message) ? 'cancelled' : 'failed';
+        updatePaymentSession(session, terminalStatus);
+        setPaymentPhase(terminalStatus);
+      }
+      setError(`결제창을 다시 열지 마세요. ${message}${retryHint}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handlePayment = async () => {
+    if (hasRetryableConfirmation && restoredPayment) {
+      await confirmExistingPayment(restoredPayment);
+      return;
+    }
+
     if (!service) {
       setError('주문할 상품을 찾을 수 없습니다.');
       return;
@@ -134,23 +244,30 @@ export default function Checkout() {
       return;
     }
 
-    const pendingPayment = {
-      orderId,
-      productId: service.id,
-      paymentMethod: 'portone',
-      amount,
-      customerKey,
-      formData,
-      analysisPayload,
-      tabOrigin,
-      createdAt: new Date().toISOString()
-    } as const;
-
     setIsSubmitting(true);
     setError(null);
 
     if (isDemoPayment) {
-      savePendingPayment(pendingPayment);
+      const now = new Date().toISOString();
+      writePaymentSession({
+        schemaVersion: 1,
+        ownerId: user?.id || 'development-demo',
+        orderId: nextOrderId,
+        productId: service.id,
+        paymentMethod: 'portone',
+        amount,
+        currency: 'KRW',
+        status: 'paid',
+        customerKey: `uw.${nextOrderId.replace(/^UW-/, '').slice(-40)}`,
+        formData,
+        analysisPayload,
+        tabOrigin,
+        paymentId: nextOrderId,
+        paymentKey: nextOrderId,
+        createdAt: now,
+        updatedAt: now,
+        isDemo: true
+      });
       navigate('/payment/portone/callback?payment=portone-success&mock=1', {
         replace: false
       });
@@ -170,75 +287,117 @@ export default function Checkout() {
     }
 
     try {
-      const orderIntent = await requestPaymentOrderIntent({
-        confirmEndpoint,
-        authToken: user.authToken,
-        orderId,
-        productId: service.id,
-        amount
-      });
-      const authenticatedPendingPayment = {
-        ...pendingPayment,
-        orderId: orderIntent.orderId,
-        orderClaim: orderIntent.orderClaim
-      };
-      savePendingPayment(authenticatedPendingPayment);
+      const reusableCreatedSession =
+        restoredPayment?.status === 'created' &&
+        restoredPayment.productId === service.id &&
+        restoredPayment.orderClaim &&
+        restoredPayment.orderClaimExpiresAt &&
+        Date.parse(restoredPayment.orderClaimExpiresAt) > Date.now()
+          ? restoredPayment
+          : null;
+      let orderIntent: PaymentOrderIntent;
+      let createdSession: PaymentSession;
 
-      const paymentResponse = await requestPortOnePayment({
+      if (reusableCreatedSession) {
+        orderIntent = {
+          orderId: reusableCreatedSession.orderId,
+          productId: reusableCreatedSession.productId,
+          amount: reusableCreatedSession.amount,
+          currency: 'KRW',
+          orderStatus: 'created',
+          orderClaim: reusableCreatedSession.orderClaim!,
+          orderClaimExpiresAt: reusableCreatedSession.orderClaimExpiresAt!
+        };
+        createdSession = reusableCreatedSession;
+      } else {
+        setPaymentPhase('creating-order');
+        orderIntent = await createPaymentOrder({
+          confirmEndpoint,
+          authToken: user.authToken,
+          orderId: nextOrderId,
+          productId: service.id
+        });
+        const now = new Date().toISOString();
+        createdSession = {
+          schemaVersion: 1,
+          ownerId: user.id,
+          orderId: orderIntent.orderId,
+          productId: orderIntent.productId,
+          paymentMethod: 'portone',
+          amount: orderIntent.amount,
+          currency: orderIntent.currency,
+          status: orderIntent.orderStatus,
+          customerKey: `uw.${orderIntent.orderId.replace(/^UW-/, '').slice(-40)}`,
+          formData,
+          analysisPayload,
+          tabOrigin,
+          orderClaim: orderIntent.orderClaim,
+          orderClaimExpiresAt: orderIntent.orderClaimExpiresAt,
+          createdAt: now,
+          updatedAt: now
+        };
+        writePaymentSession(createdSession);
+        setServerAmount(orderIntent.amount);
+
+        if (orderIntent.amount !== product.price) {
+          setPaymentPhase('idle');
+          setError(
+            `서버 최종 가격은 ${orderIntent.amount.toLocaleString('ko-KR')}원입니다. 금액을 확인한 뒤 결제 버튼을 다시 눌러 주세요.`
+          );
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const pendingSession = updatePaymentSession(createdSession, 'pending', {
+        paymentId: orderIntent.orderId
+      });
+      setPaymentPhase('opening-payment');
+
+      const paymentResult = await openPortOnePayment({
+        intent: orderIntent,
         storeId: portOneStoreId,
         channelKey: portOneChannelKey,
-        paymentId: orderIntent.orderId,
         orderName: service.label,
-        totalAmount: amount,
-        customerId: customerKey,
+        customerId:
+          createdSession.customerKey ||
+          `uw.${orderIntent.orderId.replace(/^UW-/, '').slice(-40)}`,
         customerName: formData?.name || user?.nickname || '운월당 고객',
         customerEmail,
         customerPhone,
-        redirectUrl: buildPortOneRedirectUrl(),
-        customData: {
-          productId: service.id,
-          paymentMethod: 'portone',
-          orderClaim: orderIntent.orderClaim
-        }
+        redirectUrl: buildPortOneRedirectUrl()
       });
 
-      if (!paymentResponse) {
-        setError('결제창이 닫혔습니다. 결제를 다시 시도해 주세요.');
+      if (paymentResult.kind === 'cancelled') {
+        setError(`${paymentResult.message} 서버 결제 상태를 한 번 더 확인합니다.`);
+        await confirmExistingPayment(pendingSession);
+        return;
+      }
+
+      if (paymentResult.kind === 'failed') {
+        setError(`${paymentResult.message} 중복 결제를 막기 위해 서버 상태를 확인합니다.`);
+        await confirmExistingPayment(pendingSession);
+        return;
+      }
+
+      if (paymentResult.paymentId !== orderIntent.orderId) {
+        updatePaymentSession(pendingSession, 'failed');
+        setPaymentPhase('failed');
+        setError('PortOne 결제 ID가 서버 주문번호와 일치하지 않습니다. 고객센터 확인이 필요합니다.');
+        setNextOrderId(createOrderId());
         setIsSubmitting(false);
         return;
       }
 
-      const confirmed = await confirmAuthenticatedPortOnePayment({
-        confirmEndpoint,
-        authToken: user.authToken,
-        paymentId: paymentResponse.paymentId || orderIntent.orderId,
-        txId: paymentResponse.txId,
-        orderId: orderIntent.orderId,
-        amount,
-        productId: service.id,
-        orderClaim: orderIntent.orderClaim
+      const submittedSession = updatePaymentSession(pendingSession, 'pending', {
+        paymentId: paymentResult.paymentId,
+        txId: paymentResult.txId
       });
-
-      savePendingPayment({
-        ...authenticatedPendingPayment,
-        paymentKey: confirmed.paymentId,
-        txId: confirmed.txId,
-        reportAccessToken: confirmed.reportAccessToken
-      });
-
-      navigate(product.routes.loading, {
-        replace: true,
-        state: {
-          product: service.id,
-          formData,
-          paymentMethod: 'portone',
-          orderId: confirmed.orderId,
-          tabOrigin,
-          reportAccessToken: confirmed.reportAccessToken
-        }
-      });
+      await confirmExistingPayment(submittedSession);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : '결제창을 열지 못했습니다.');
+      setPaymentPhase('failed');
+      setError(caughtError instanceof Error ? caughtError.message : '서버 주문을 만들지 못했습니다.');
+      setNextOrderId(createOrderId());
       setIsSubmitting(false);
     }
   };
@@ -400,9 +559,20 @@ export default function Checkout() {
               onClick={handlePayment}
               disabled={isSubmitting}
               aria-disabled={!canSubmit && !isSubmitting}
+              aria-describedby='checkout-payment-status'
             >
               <WalletCards size={17} />
-              <strong>{isSubmitting ? '처리 중' : isDemoPayment ? '일반 결제 데모' : '일반 결제'}</strong>
+              <strong id='checkout-payment-status'>
+                {isSubmitting
+                  ? paymentPhase === 'confirming'
+                    ? '결제 확인 중'
+                    : '처리 중'
+                  : hasRetryableConfirmation
+                    ? '결제 확인 다시 시도'
+                    : isDemoPayment
+                      ? '일반 결제 데모'
+                      : '일반 결제'}
+              </strong>
             </button>
           </div>
 
@@ -450,9 +620,10 @@ export default function Checkout() {
           {error ? <div className="checkout-luxe-error">{error}</div> : null}
 
           <p className="checkout-luxe-safe-copy">
-            {isDemoPayment
-              ? '현재는 결제사 연동 전 데모 결제로 진행되며, 실제 결제 승인 없이 입력한 사주정보 기준 리포트를 확인할 수 있습니다.'
-              : '결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.'}
+            {paymentStatusMessage ||
+              (isDemoPayment
+                ? '현재는 개발 전용 데모이며 실제 결제·실제 entitlement 없이 입력값 기준 리포트를 확인합니다.'
+                : '서버가 현재 판매 상태와 최종 금액을 확인하고, 결제 완료 후에만 리포트 권한을 발급합니다.')}
           </p>
         </section>
 

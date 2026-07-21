@@ -1,13 +1,22 @@
 import { createHash } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadConfig } from '../../../cloudrun-api/src/config/env.ts';
-import { ReportRequestError } from '../../../cloudrun-api/src/contracts/errors.ts';
+import { PaymentRequestError, ReportRequestError } from '../../../cloudrun-api/src/contracts/errors.ts';
 import { TokenService } from '../../../cloudrun-api/src/domains/auth/tokenService.ts';
+import {
+  assertPaymentOrderTransition,
+  ENTITLEMENT_STATUS,
+  PAYMENT_ORDER_STATUS,
+  type PaymentOrderStatus
+} from '../../../cloudrun-api/src/domains/payments/paymentContracts.ts';
 import {
   PaymentService,
   type ConfirmedPaymentLedgerRecord,
   type PaymentLedgerRecord,
-  type PaymentLedgerRepository
+  type PaymentLedgerRepository,
+  type PaymentOrderRecord,
+  type PaymentOrderRepository,
+  type PaymentOrderTransition
 } from '../../../cloudrun-api/src/domains/payments/paymentService.ts';
 import type {
   PortOnePayment,
@@ -18,14 +27,15 @@ const FIXED_NOW = Date.parse('2026-07-21T00:00:00.000Z');
 const ORDER_ID = 'UW-20260721-payment-contract-0001';
 const PRODUCT_ID = 'general-signature';
 const PRODUCT_PRICE = 79_000;
-const ARCHIVED_ORDER_ID = 'UW-20260721-archived-contract-0001';
-const ARCHIVED_PRODUCT_ID = 'life-flow';
-const ARCHIVED_PRODUCT_PRICE = 59_000;
-const ARCHIVED_TRANSACTION_ID = 'tx-archived-contract-fixture-0001';
 const STORE_ID = 'store-contract-fixture';
 const TRANSACTION_ID = 'tx-contract-fixture-0001';
 const USER = { userId: 'kakao-contract-user-001' };
 const OTHER_USER = { userId: 'kakao-contract-user-002' };
+
+const ARCHIVED_ORDER_ID = 'UW-20260721-archived-contract-0001';
+const ARCHIVED_PRODUCT_ID = 'life-flow';
+const ARCHIVED_PRODUCT_PRICE = 59_000;
+const ARCHIVED_TRANSACTION_ID = 'tx-archived-contract-fixture-0001';
 
 class FakePortOneClient implements PortOnePaymentClient {
   payment: PortOnePayment = {};
@@ -40,23 +50,122 @@ class FakePortOneClient implements PortOnePaymentClient {
 class FakePaymentLedgerRepository implements PaymentLedgerRepository {
   readonly records = new Map<string, PaymentLedgerRecord>();
   listRecords: unknown;
-  lastListRequest: { userId: string; limit: number } | null = null;
 
   async createPaymentLedger(record: ConfirmedPaymentLedgerRecord) {
-    if (this.records.has(record.entitlementId)) {
-      throw new ReportRequestError(409, 'Firestore document already exists.');
+    const existing = this.records.get(record.entitlementId);
+
+    if (existing) {
+      return { kind: 'existing' as const, ledger: existing };
     }
 
     this.records.set(record.entitlementId, { ...record });
+    return { kind: 'created' as const, ledger: { ...record } };
   }
 
   async getPaymentLedger(entitlementId: string) {
     return this.records.get(entitlementId) || null;
   }
 
-  async listPaymentLedgersByUserId(userId: string, limit: number) {
-    this.lastListRequest = { userId, limit };
+  async listPaymentLedgersByUserId(_userId: string, _limit: number) {
     return this.listRecords === undefined ? [...this.records.values()] : this.listRecords;
+  }
+
+  async revokePaymentEntitlement(
+    entitlementId: string,
+    input: Parameters<PaymentLedgerRepository['revokePaymentEntitlement']>[1]
+  ) {
+    const existing = this.records.get(entitlementId);
+
+    if (!existing) {
+      throw new ReportRequestError(404, 'Payment ledger not found.');
+    }
+
+    if (
+      existing.entitlementStatus === input.status &&
+      existing.entitlementRevocationId === input.revocationId
+    ) {
+      return existing;
+    }
+
+    const canRevoke =
+      existing.entitlementStatus === ENTITLEMENT_STATUS.ACTIVE ||
+      (existing.entitlementStatus === ENTITLEMENT_STATUS.REVOKED &&
+        input.status === ENTITLEMENT_STATUS.REFUNDED);
+
+    if (!canRevoke) {
+      throw new ReportRequestError(409, 'Invalid entitlement transition.');
+    }
+
+    const updated = {
+      ...existing,
+      entitlementStatus: input.status,
+      entitlementUpdatedAt: input.revokedAt,
+      entitlementRevokedAt: input.revokedAt,
+      entitlementRevocationId: input.revocationId,
+      entitlementRevocationReason: input.reason,
+      entitlementRevocationProviderStatus: input.providerStatus
+    };
+    this.records.set(entitlementId, updated);
+    return updated;
+  }
+}
+
+class FakePaymentOrderRepository implements PaymentOrderRepository {
+  readonly records = new Map<string, PaymentOrderRecord>();
+  failNextTransition = false;
+
+  async createPaymentOrder(
+    record: Parameters<PaymentOrderRepository['createPaymentOrder']>[0]
+  ) {
+    const existing = this.records.get(record.orderId);
+
+    if (existing) {
+      return { kind: 'existing' as const, order: existing };
+    }
+
+    const stored: PaymentOrderRecord = {
+      ...record,
+      providerStatus: '',
+      paymentId: '',
+      transactionId: '',
+      statusUpdatedAt: record.createdAt,
+      adjustmentId: '',
+      adjustmentKind: '',
+      adjustmentReason: '',
+      adjustmentAt: ''
+    };
+    this.records.set(record.orderId, stored);
+    return { kind: 'created' as const, order: stored };
+  }
+
+  async getPaymentOrder(orderId: string) {
+    return this.records.get(orderId) || null;
+  }
+
+  async transitionPaymentOrder(
+    order: PaymentOrderRecord,
+    input: PaymentOrderTransition
+  ) {
+    if (this.failNextTransition) {
+      this.failNextTransition = false;
+      throw new ReportRequestError(503, 'Fixture transition failure.');
+    }
+
+    assertPaymentOrderTransition(order.status as PaymentOrderStatus, input.status);
+    const updated: PaymentOrderRecord = {
+      ...order,
+      status: input.status,
+      providerStatus: input.providerStatus,
+      paymentId: input.paymentId,
+      transactionId: input.transactionId,
+      statusUpdatedAt: input.statusUpdatedAt,
+      adjustmentId: input.adjustment?.id || '',
+      adjustmentKind: input.adjustment?.kind || '',
+      adjustmentReason: input.adjustment?.reason || '',
+      adjustmentAt: input.adjustment?.occurredAt || ''
+    };
+    this.records.set(String(order.orderId), updated);
+    return updated;
   }
 }
 
@@ -72,6 +181,7 @@ function createHarness() {
   const tokenService = new TokenService(config);
   const portOneClient = new FakePortOneClient();
   const ledgerRepository = new FakePaymentLedgerRepository();
+  const orderRepository = new FakePaymentOrderRepository();
   const paymentService = new PaymentService({
     config: {
       storeId: STORE_ID,
@@ -80,6 +190,7 @@ function createHarness() {
     },
     portOneClient,
     ledgerRepository,
+    orderRepository,
     tokenService,
     now: () => FIXED_NOW,
     randomBytes: (size) => Buffer.alloc(size, 7)
@@ -90,35 +201,20 @@ function createHarness() {
     tokenService,
     portOneClient,
     ledgerRepository,
+    orderRepository,
     paymentService
   };
 }
 
-function createOrder(harness: ReturnType<typeof createHarness>) {
+function entitlementIdFor(paymentId: string) {
+  return createHash('sha256').update(`portone:${paymentId}`).digest('hex');
+}
+
+async function createOrder(harness: ReturnType<typeof createHarness>) {
   return harness.paymentService.createOrderIntent(USER, {
     orderId: ORDER_ID,
     productId: PRODUCT_ID
   });
-}
-
-function setPaidPayment(
-  harness: ReturnType<typeof createHarness>,
-  orderClaim: string
-) {
-  harness.portOneClient.payment = {
-    id: ORDER_ID,
-    status: 'PAID',
-    storeId: STORE_ID,
-    currency: 'KRW',
-    amount: { total: PRODUCT_PRICE },
-    transactionId: TRANSACTION_ID,
-    customData: {
-      productId: PRODUCT_ID,
-      orderClaim
-    },
-    method: { type: 'CARD' },
-    paidAt: '2026-07-21T00:00:01.000Z'
-  };
 }
 
 function confirmationBody(orderClaim: string) {
@@ -132,101 +228,103 @@ function confirmationBody(orderClaim: string) {
   };
 }
 
-function createLegacyArchivedOrderClaim(harness: ReturnType<typeof createHarness>) {
-  return harness.tokenService.createPaymentOrderClaim({
-    userId: USER.userId,
-    orderId: ARCHIVED_ORDER_ID,
-    productId: ARCHIVED_PRODUCT_ID,
-    amount: ARCHIVED_PRODUCT_PRICE
-  });
-}
-
-function setArchivedPaidPayment(
+function setPayment(
   harness: ReturnType<typeof createHarness>,
-  orderClaim: string
+  orderClaim: string,
+  overrides: Record<string, unknown> = {}
 ) {
   harness.portOneClient.payment = {
-    id: ARCHIVED_ORDER_ID,
+    id: ORDER_ID,
     status: 'PAID',
     storeId: STORE_ID,
     currency: 'KRW',
-    amount: { total: ARCHIVED_PRODUCT_PRICE },
-    transactionId: ARCHIVED_TRANSACTION_ID,
-    customData: {
-      productId: ARCHIVED_PRODUCT_ID,
-      orderClaim
-    },
+    amount: { total: PRODUCT_PRICE },
+    transactionId: TRANSACTION_ID,
+    customData: { productId: PRODUCT_ID, orderClaim },
     method: { type: 'CARD' },
-    paidAt: '2026-07-20T00:00:01.000Z'
+    paidAt: '2026-07-21T00:00:01.000Z',
+    ...overrides
   };
-}
-
-function archivedConfirmationBody(orderClaim: string) {
-  return {
-    paymentId: ARCHIVED_ORDER_ID,
-    orderId: ARCHIVED_ORDER_ID,
-    productId: ARCHIVED_PRODUCT_ID,
-    amount: ARCHIVED_PRODUCT_PRICE,
-    txId: ARCHIVED_TRANSACTION_ID,
-    orderClaim
-  };
-}
-
-async function confirmOnce(harness: ReturnType<typeof createHarness>) {
-  const order = createOrder(harness);
-  setPaidPayment(harness, order.orderClaim);
-  return harness.paymentService.confirmPayment(USER, confirmationBody(order.orderClaim));
 }
 
 describe('Cloud Run payment contracts', () => {
-  it('uses the server catalog price and binds the signed order claim to the user and order', () => {
+  it('defines six guarded order states and separate entitlement states', () => {
+    expect(Object.values(PAYMENT_ORDER_STATUS)).toEqual([
+      'created',
+      'pending',
+      'paid',
+      'failed',
+      'cancelled',
+      'refunded'
+    ]);
+    expect(Object.values(ENTITLEMENT_STATUS)).toEqual([
+      'active',
+      'revoked',
+      'refunded'
+    ]);
+    expect(() =>
+      assertPaymentOrderTransition(
+        PAYMENT_ORDER_STATUS.PAID,
+        PAYMENT_ORDER_STATUS.REFUNDED
+      )
+    ).not.toThrow();
+    expect(() =>
+      assertPaymentOrderTransition(
+        PAYMENT_ORDER_STATUS.FAILED,
+        PAYMENT_ORDER_STATUS.PAID
+      )
+    ).toThrow(PaymentRequestError);
+  });
+
+  it('persists a server-priced, user-bound created order before returning its claim', async () => {
     const harness = createHarness();
-    const order = createOrder(harness);
+    const order = await createOrder(harness);
     const claims = harness.tokenService.verifyPaymentOrderClaim(order.orderClaim, USER.userId);
 
     expect(order).toMatchObject({
       orderId: ORDER_ID,
       productId: PRODUCT_ID,
       amount: PRODUCT_PRICE,
-      currency: 'KRW'
+      currency: 'KRW',
+      orderStatus: 'created'
     });
-    expect(Date.parse(order.orderClaimExpiresAt)).toBe(
-      FIXED_NOW + harness.config.report.orderClaimTtlMs
-    );
+    expect(harness.orderRepository.records.get(ORDER_ID)).toMatchObject({
+      orderId: ORDER_ID,
+      productId: PRODUCT_ID,
+      amount: PRODUCT_PRICE,
+      currency: 'KRW',
+      productStatusSnapshot: 'active',
+      userId: USER.userId,
+      userBinding: harness.tokenService.createUserBinding(USER.userId),
+      orderClaimHash: createHash('sha256').update(order.orderClaim).digest('hex'),
+      status: 'created',
+      providerStatus: ''
+    });
     expect(claims).toMatchObject({
       orderId: ORDER_ID,
       productId: PRODUCT_ID,
       amount: PRODUCT_PRICE,
-      version: 1,
       userBinding: harness.tokenService.createUserBinding(USER.userId)
     });
     expect(() =>
       harness.paymentService.createOrderIntent(USER, {
-        orderId: ORDER_ID,
+        orderId: 'UW-price-tamper-contract-0001',
         productId: PRODUCT_ID,
-        amount: PRODUCT_PRICE - 1
+        amount: 1
       })
-    ).toThrow('주문 금액이 서버 상품 가격과 일치하지 않습니다.');
+    ).toThrow(PaymentRequestError);
   });
 
-  it('confirms a matching PAID/KRW/store/product/orderClaim/transaction payment', async () => {
+  it('confirms PAID exactly once and returns a stable entitlement on retries', async () => {
     const harness = createHarness();
-    const order = createOrder(harness);
-    setPaidPayment(harness, order.orderClaim);
+    const order = await createOrder(harness);
+    setPayment(harness, order.orderClaim);
+    const body = confirmationBody(order.orderClaim);
+    const first = await harness.paymentService.confirmPayment(USER, body);
+    const second = await harness.paymentService.confirmPayment(USER, body);
+    const entitlementId = entitlementIdFor(ORDER_ID);
 
-    const confirmed = await harness.paymentService.confirmPayment(
-      USER,
-      confirmationBody(order.orderClaim)
-    );
-    const reportClaims = harness.tokenService.verifyReportAccessToken(
-      confirmed.reportAccessToken
-    );
-    const entitlementId = createHash('sha256')
-      .update(`portone:${ORDER_ID}`)
-      .digest('hex');
-
-    expect(harness.portOneClient.requestedPaymentIds).toEqual([ORDER_ID]);
-    expect(confirmed).toMatchObject({
+    expect(first).toMatchObject({
       paymentId: ORDER_ID,
       txId: TRANSACTION_ID,
       orderId: ORDER_ID,
@@ -234,288 +332,212 @@ describe('Cloud Run payment contracts', () => {
       amount: PRODUCT_PRICE,
       currency: 'KRW',
       status: 'PAID',
-      method: 'CARD',
-      approvedAt: '2026-07-21T00:00:01.000Z'
+      orderStatus: 'paid',
+      entitlement: {
+        id: entitlementId,
+        status: 'active',
+        createdAt: '2026-07-21T00:00:00.000Z'
+      }
     });
-    expect(reportClaims).toMatchObject({
-      orderId: ORDER_ID,
+    expect(second.entitlement.id).toBe(first.entitlement.id);
+    expect(second.reportAccessToken).not.toBe(first.reportAccessToken);
+    expect(harness.ledgerRepository.records.size).toBe(1);
+    expect(harness.orderRepository.records.get(ORDER_ID)).toMatchObject({
+      status: 'paid',
+      providerStatus: 'PAID',
       paymentId: ORDER_ID,
-      productId: PRODUCT_ID,
-      amount: PRODUCT_PRICE,
-      entitlementId
+      transactionId: TRANSACTION_ID
     });
-    expect(harness.ledgerRepository.records.get(entitlementId)).toMatchObject({
-      paymentId: ORDER_ID,
-      orderId: ORDER_ID,
-      productId: PRODUCT_ID,
-      amount: PRODUCT_PRICE,
-      currency: 'KRW',
-      storeId: STORE_ID,
-      transactionId: TRANSACTION_ID,
-      userId: USER.userId,
-      entitlementStatus: 'active'
-    });
+    expect(
+      harness.tokenService.verifyReportAccessToken(first.reportAccessToken)
+    ).toMatchObject({ entitlementId, amount: PRODUCT_PRICE, productId: PRODUCT_ID });
   });
 
-  it('confirms a legacy signed order claim for an archived catalog product', async () => {
+  it('reuses a persisted entitlement after the original order claim expires', async () => {
     const harness = createHarness();
-    const legacyOrderClaim = createLegacyArchivedOrderClaim(harness);
-    setArchivedPaidPayment(harness, legacyOrderClaim);
+    const order = await createOrder(harness);
+    setPayment(harness, order.orderClaim);
+    const body = confirmationBody(order.orderClaim);
+    const first = await harness.paymentService.confirmPayment(USER, body);
+    const verifyClaim = vi
+      .spyOn(harness.tokenService, 'verifyPaymentOrderClaim')
+      .mockImplementation(() => {
+        throw new ReportRequestError(401, 'Access token has expired.');
+      });
 
-    const confirmed = await harness.paymentService.confirmPayment(
-      USER,
-      archivedConfirmationBody(legacyOrderClaim)
-    );
-    const reportClaims = harness.tokenService.verifyReportAccessToken(
-      confirmed.reportAccessToken
-    );
-    const entitlementId = createHash('sha256')
-      .update(`portone:${ARCHIVED_ORDER_ID}`)
-      .digest('hex');
+    const retried = await harness.paymentService.confirmPayment(USER, body);
 
-    expect(harness.portOneClient.requestedPaymentIds).toEqual([ARCHIVED_ORDER_ID]);
-    expect(confirmed).toMatchObject({
-      paymentId: ARCHIVED_ORDER_ID,
-      txId: ARCHIVED_TRANSACTION_ID,
-      orderId: ARCHIVED_ORDER_ID,
-      productId: ARCHIVED_PRODUCT_ID,
-      amount: ARCHIVED_PRODUCT_PRICE,
-      currency: 'KRW',
-      status: 'PAID'
-    });
-    expect(reportClaims).toMatchObject({
-      orderId: ARCHIVED_ORDER_ID,
-      paymentId: ARCHIVED_ORDER_ID,
-      productId: ARCHIVED_PRODUCT_ID,
-      amount: ARCHIVED_PRODUCT_PRICE,
-      entitlementId
-    });
-    expect(harness.ledgerRepository.records.get(entitlementId)).toMatchObject({
-      productId: ARCHIVED_PRODUCT_ID,
-      amount: ARCHIVED_PRODUCT_PRICE,
-      entitlementStatus: 'active'
-    });
+    expect(retried.entitlement.id).toBe(first.entitlement.id);
+    expect(harness.ledgerRepository.records.size).toBe(1);
+    expect(verifyClaim).not.toHaveBeenCalled();
   });
 
   it.each([
-    ['status', (payment: Record<string, unknown>) => { payment.status = 'READY'; }],
+    ['provider payment id', (payment: Record<string, unknown>) => { payment.id = 'other-payment'; }],
+    ['amount', (payment: Record<string, unknown>) => { payment.amount = { total: 1 }; }],
+    ['store id', (payment: Record<string, unknown>) => { payment.storeId = 'other-store'; }],
     ['currency', (payment: Record<string, unknown>) => { payment.currency = 'USD'; }],
-    ['store', (payment: Record<string, unknown>) => { payment.storeId = 'store-other'; }],
-    ['product', (payment: Record<string, unknown>) => {
+    ['product custom data', (payment: Record<string, unknown>) => {
       payment.customData = { ...(payment.customData as object), productId: 'love-reading' };
     }],
     ['order claim', (payment: Record<string, unknown>) => {
-      payment.customData = { ...(payment.customData as object), orderClaim: 'other-order-claim' };
+      payment.customData = { ...(payment.customData as object), orderClaim: 'other-claim' };
     }],
-    ['transaction', (_payment: Record<string, unknown>, body: Record<string, unknown>) => {
-      body.txId = 'tx-other';
-    }]
-  ])('rejects a mismatched PortOne %s contract', async (_label, mutate) => {
+    ['transaction id', (payment: Record<string, unknown>) => { payment.transactionId = 'other-tx'; }],
+    ['missing transaction id', (payment: Record<string, unknown>) => { delete payment.transactionId; }]
+  ])('rejects mismatched PortOne %s without issuing access', async (_label, mutate) => {
     const harness = createHarness();
-    const order = createOrder(harness);
-    setPaidPayment(harness, order.orderClaim);
-    const body: Record<string, unknown> = confirmationBody(order.orderClaim);
-    mutate(harness.portOneClient.payment, body);
+    const order = await createOrder(harness);
+    setPayment(harness, order.orderClaim);
+    mutate(harness.portOneClient.payment);
 
-    await expect(harness.paymentService.confirmPayment(USER, body)).rejects.toMatchObject({
-      status: 409
-    });
+    await expect(
+      harness.paymentService.confirmPayment(USER, confirmationBody(order.orderClaim))
+    ).rejects.toMatchObject({ status: 409 });
+    expect(harness.ledgerRepository.records.size).toBe(0);
   });
 
-  it('accepts an identical duplicate ledger and issues a fresh report token', async () => {
+  it.each([
+    ['READY', 'pending'],
+    ['PENDING', 'pending'],
+    ['PAY_PENDING', 'pending'],
+    ['VIRTUAL_ACCOUNT_ISSUED', 'pending'],
+    ['FAILED', 'failed'],
+    ['CANCELLED', 'cancelled']
+  ] as const)(
+    'persists provider %s as %s without an entitlement',
+    async (providerStatus, orderStatus) => {
+      const harness = createHarness();
+      const order = await createOrder(harness);
+      setPayment(harness, order.orderClaim, { status: providerStatus });
+
+      await expect(
+        harness.paymentService.confirmPayment(USER, confirmationBody(order.orderClaim))
+      ).rejects.toMatchObject({ status: 409 });
+      expect(harness.orderRepository.records.get(ORDER_ID)).toMatchObject({
+        status: orderStatus,
+        providerStatus
+      });
+      expect(harness.ledgerRepository.records.size).toBe(0);
+    }
+  );
+
+  it('repairs a ledger/order partial failure before issuing a report token', async () => {
     const harness = createHarness();
-    const order = createOrder(harness);
-    setPaidPayment(harness, order.orderClaim);
-    const body = confirmationBody(order.orderClaim);
+    const order = await createOrder(harness);
+    setPayment(harness, order.orderClaim);
+    harness.orderRepository.failNextTransition = true;
 
-    const first = await harness.paymentService.confirmPayment(USER, body);
-    const second = await harness.paymentService.confirmPayment(USER, body);
-    const firstClaims = harness.tokenService.verifyReportAccessToken(first.reportAccessToken);
-    const secondClaims = harness.tokenService.verifyReportAccessToken(second.reportAccessToken);
-
+    await expect(
+      harness.paymentService.confirmPayment(USER, confirmationBody(order.orderClaim))
+    ).rejects.toMatchObject({ status: 503 });
     expect(harness.ledgerRepository.records.size).toBe(1);
-    expect(second.reportAccessToken).not.toBe(first.reportAccessToken);
-    expect(secondClaims).toMatchObject({
-      entitlementId: firstClaims.entitlementId,
-      paymentId: firstClaims.paymentId,
-      orderId: firstClaims.orderId,
-      productId: firstClaims.productId,
-      amount: firstClaims.amount
-    });
+    expect(harness.orderRepository.records.get(ORDER_ID)).toMatchObject({ status: 'created' });
+
+    const repaired = await harness.paymentService.confirmPayment(
+      USER,
+      confirmationBody(order.orderClaim)
+    );
+    expect(repaired.entitlement.id).toBe(entitlementIdFor(ORDER_ID));
+    expect(repaired.orderStatus).toBe('paid');
+    expect(harness.ledgerRepository.records.size).toBe(1);
   });
 
-  it('rejects a duplicate when the existing ledger does not exactly match', async () => {
+  it('reconciles provider cancellation idempotently and revokes paid access', async () => {
     const harness = createHarness();
-    const first = await confirmOnce(harness);
-    const claims = harness.tokenService.verifyReportAccessToken(first.reportAccessToken);
-    const existing = harness.ledgerRepository.records.get(claims.entitlementId);
+    const order = await createOrder(harness);
+    setPayment(harness, order.orderClaim);
+    const paid = await harness.paymentService.confirmPayment(
+      USER,
+      confirmationBody(order.orderClaim)
+    );
+    harness.portOneClient.payment.status = 'PARTIAL_CANCELLED';
 
-    harness.ledgerRepository.records.set(claims.entitlementId, {
-      ...existing,
-      transactionId: 'tampered-transaction'
-    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await expect(
+        harness.paymentService.confirmPayment(USER, confirmationBody(order.orderClaim))
+      ).rejects.toMatchObject({ status: 409 });
+    }
 
-    await expect(confirmOnce(harness)).rejects.toMatchObject({
-      status: 409,
-      message: '이미 확인된 결제 원장과 현재 주문 정보가 일치하지 않습니다.'
+    expect(harness.orderRepository.records.get(ORDER_ID)).toMatchObject({
+      status: 'refunded',
+      providerStatus: 'PARTIAL_CANCELLED',
+      adjustmentKind: 'refund',
+      adjustmentId: expect.any(String)
     });
+    expect(harness.ledgerRepository.records.get(paid.entitlement.id)).toMatchObject({
+      entitlementStatus: 'refunded',
+      entitlementRevocationProviderStatus: 'PARTIAL_CANCELLED',
+      entitlementRevocationId: expect.any(String)
+    });
+    await expect(
+      harness.paymentService.renewEntitlement(USER, { orderId: ORDER_ID })
+    ).rejects.toMatchObject({ status: 409 });
+    expect(await harness.paymentService.queryEntitlements(USER)).toEqual([]);
   });
 
-  it('masks an entitlement owned by another account as not found', async () => {
+  it('masks ownership and never renews a revoked entitlement', async () => {
     const harness = createHarness();
-    await confirmOnce(harness);
+    const order = await createOrder(harness);
+    setPayment(harness, order.orderClaim);
+    const paid = await harness.paymentService.confirmPayment(
+      USER,
+      confirmationBody(order.orderClaim)
+    );
 
     await expect(
       harness.paymentService.renewEntitlement(OTHER_USER, { orderId: ORDER_ID })
-    ).rejects.toMatchObject({
-      status: 404,
-      message: '이 계정에서 복구할 수 있는 결제 권한을 찾지 못했습니다.'
+    ).rejects.toMatchObject({ status: 404 });
+
+    const ledger = harness.ledgerRepository.records.get(paid.entitlement.id);
+    harness.ledgerRepository.records.set(paid.entitlement.id, {
+      ...ledger,
+      entitlementStatus: ENTITLEMENT_STATUS.REVOKED
     });
+    await expect(
+      harness.paymentService.renewEntitlement(USER, { orderId: ORDER_ID })
+    ).rejects.toMatchObject({ status: 409 });
+    expect(await harness.paymentService.queryEntitlements(USER)).toEqual([]);
   });
 
-  it('renews an active entitlement backed by an archived catalog product', async () => {
+  it('preserves legacy archived-order confirmation with current catalog fallback', async () => {
     const harness = createHarness();
-    const entitlementId = createHash('sha256')
-      .update(`portone:${ARCHIVED_ORDER_ID}`)
-      .digest('hex');
-
-    harness.ledgerRepository.records.set(entitlementId, {
-      paymentId: ARCHIVED_ORDER_ID,
+    const orderClaim = harness.tokenService.createPaymentOrderClaim({
+      userId: USER.userId,
       orderId: ARCHIVED_ORDER_ID,
       productId: ARCHIVED_PRODUCT_ID,
-      amount: ARCHIVED_PRODUCT_PRICE,
+      amount: ARCHIVED_PRODUCT_PRICE
+    });
+    harness.portOneClient.payment = {
+      id: ARCHIVED_ORDER_ID,
+      status: 'PAID',
+      storeId: STORE_ID,
       currency: 'KRW',
-      userId: USER.userId,
-      userBinding: harness.tokenService.createUserBinding(USER.userId),
-      entitlementId,
-      entitlementStatus: 'active'
-    });
-
-    const renewed = await harness.paymentService.renewEntitlement(USER, {
-      orderId: ARCHIVED_ORDER_ID
-    });
-    const reportClaims = harness.tokenService.verifyReportAccessToken(
-      renewed.reportAccessToken
-    );
-
-    expect(renewed).toMatchObject({
-      orderId: ARCHIVED_ORDER_ID,
-      productId: ARCHIVED_PRODUCT_ID,
-      amount: ARCHIVED_PRODUCT_PRICE,
-      currency: 'KRW'
-    });
-    expect(reportClaims).toMatchObject({
-      orderId: ARCHIVED_ORDER_ID,
-      paymentId: ARCHIVED_ORDER_ID,
-      productId: ARCHIVED_PRODUCT_ID,
-      amount: ARCHIVED_PRODUCT_PRICE,
-      entitlementId
-    });
-  });
-
-  it('lists active entitlements for active and archived catalog products while excluding unknown products', async () => {
-    const harness = createHarness();
-    const binding = harness.tokenService.createUserBinding(USER.userId);
-    const base = {
-      userId: USER.userId,
-      userBinding: binding,
-      entitlementStatus: 'active',
-      currency: 'KRW'
+      amount: { total: ARCHIVED_PRODUCT_PRICE },
+      transactionId: ARCHIVED_TRANSACTION_ID,
+      customData: { productId: ARCHIVED_PRODUCT_ID, orderClaim }
     };
 
-    harness.ledgerRepository.listRecords = [
-      {
-        ...base,
-        orderId: 'UW-list-valid-older-0001',
-        productId: 'general-signature',
-        amount: 79_000,
-        confirmedAt: '2026-07-20T10:00:00.000Z'
-      },
-      {
-        ...base,
-        orderId: 'UW-list-valid-newer-0002',
-        productId: 'love-reading',
-        amount: 49_000,
-        confirmedAt: '2026-07-21T10:00:00.000Z'
-      },
-      {
-        ...base,
-        orderId: 'UW-list-archived-newest-0008',
-        productId: ARCHIVED_PRODUCT_ID,
-        amount: ARCHIVED_PRODUCT_PRICE,
-        confirmedAt: '2026-07-22T10:00:00.000Z'
-      },
-      {
-        ...base,
-        userId: OTHER_USER.userId,
-        orderId: 'UW-list-other-user-0003',
-        productId: 'general-signature',
-        amount: 79_000,
-        confirmedAt: '2026-07-22T10:00:00.000Z'
-      },
-      {
-        ...base,
-        userBinding: 'wrong-binding',
-        orderId: 'UW-list-wrong-binding-0004',
-        productId: 'general-signature',
-        amount: 79_000,
-        confirmedAt: '2026-07-22T10:00:00.000Z'
-      },
-      {
-        ...base,
-        entitlementStatus: 'revoked',
-        orderId: 'UW-list-inactive-0005',
-        productId: 'general-signature',
-        amount: 79_000,
-        confirmedAt: '2026-07-22T10:00:00.000Z'
-      },
-      {
-        ...base,
-        orderId: 'UW-list-wrong-price-0006',
-        productId: 'general-signature',
-        amount: 1,
-        confirmedAt: '2026-07-22T10:00:00.000Z'
-      },
-      {
-        ...base,
-        orderId: 'UW-list-unknown-product-0007',
-        productId: 'unknown-product',
-        amount: 79_000,
-        confirmedAt: '2026-07-22T10:00:00.000Z'
-      }
-    ];
-
-    const entitlements = await harness.paymentService.queryEntitlements(USER);
-
-    expect(harness.ledgerRepository.lastListRequest).toEqual({
-      userId: USER.userId,
-      limit: 100
+    const confirmed = await harness.paymentService.confirmPayment(USER, {
+      paymentId: ARCHIVED_ORDER_ID,
+      orderId: ARCHIVED_ORDER_ID,
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      txId: ARCHIVED_TRANSACTION_ID,
+      orderClaim
     });
-    expect(entitlements).toEqual([
-      {
-        orderId: 'UW-list-archived-newest-0008',
-        productId: ARCHIVED_PRODUCT_ID,
-        amount: ARCHIVED_PRODUCT_PRICE,
-        currency: 'KRW',
-        confirmedAt: '2026-07-22T10:00:00.000Z',
-        status: 'active'
-      },
-      {
-        orderId: 'UW-list-valid-newer-0002',
-        productId: 'love-reading',
-        amount: 49_000,
-        currency: 'KRW',
-        confirmedAt: '2026-07-21T10:00:00.000Z',
-        status: 'active'
-      },
-      {
-        orderId: 'UW-list-valid-older-0001',
-        productId: 'general-signature',
-        amount: 79_000,
-        currency: 'KRW',
-        confirmedAt: '2026-07-20T10:00:00.000Z',
-        status: 'active'
-      }
-    ]);
+
+    expect(confirmed).toMatchObject({
+      status: 'PAID',
+      orderStatus: 'paid',
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      entitlement: { status: 'active' }
+    });
+    expect(harness.orderRepository.records.get(ARCHIVED_ORDER_ID)).toMatchObject({
+      source: 'legacy',
+      productStatusSnapshot: 'archived',
+      status: 'paid'
+    });
   });
 });

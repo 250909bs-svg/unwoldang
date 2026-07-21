@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
 import { ReportRequestError } from '../contracts/errors.ts';
+import {
+  ENTITLEMENT_STATUS,
+  type EntitlementStatus
+} from '../domains/payments/paymentContracts.ts';
 import { FirestoreRepository } from './firestoreRepository.ts';
 
 type FirestoreValue = {
@@ -36,6 +40,11 @@ export type PaymentLedger = {
   orderClaimHash: string;
   entitlementStatus: string;
   entitlementCreatedAt: string;
+  entitlementUpdatedAt: string;
+  entitlementRevokedAt: string;
+  entitlementRevocationId: string;
+  entitlementRevocationReason: string;
+  entitlementRevocationProviderStatus: string;
   reportInputHash: string;
   reportGenerationStatus: string;
   reportGenerationLockId: string;
@@ -68,6 +77,15 @@ export type CreatePaymentLedgerInput = {
   orderClaimHash: string;
   entitlementStatus: string;
   entitlementCreatedAt: string;
+  entitlementUpdatedAt: string;
+};
+
+export type RevokePaymentEntitlementInput = {
+  status: Exclude<EntitlementStatus, typeof ENTITLEMENT_STATUS.ACTIVE>;
+  revokedAt: string;
+  revocationId: string;
+  reason: string;
+  providerStatus: string;
 };
 
 export type CreatePaymentLedgerResult =
@@ -137,6 +155,15 @@ const FAIL_REPORT_GENERATION_UPDATE_MASK = [
   'reportJsonHash'
 ];
 
+const REVOKE_ENTITLEMENT_UPDATE_MASK = [
+  'entitlementStatus',
+  'entitlementUpdatedAt',
+  'entitlementRevokedAt',
+  'entitlementRevocationId',
+  'entitlementRevocationReason',
+  'entitlementRevocationProviderStatus'
+];
+
 function readString(document: FirestoreDocument, fieldName: string) {
   const value = document.fields?.[fieldName];
 
@@ -185,6 +212,17 @@ function parsePaymentLedger(
     orderClaimHash: readString(document, 'orderClaimHash'),
     entitlementStatus: readString(document, 'entitlementStatus'),
     entitlementCreatedAt: readTimestamp(document, 'entitlementCreatedAt'),
+    entitlementUpdatedAt: readTimestamp(document, 'entitlementUpdatedAt'),
+    entitlementRevokedAt: readTimestamp(document, 'entitlementRevokedAt'),
+    entitlementRevocationId: readString(document, 'entitlementRevocationId'),
+    entitlementRevocationReason: readString(
+      document,
+      'entitlementRevocationReason'
+    ),
+    entitlementRevocationProviderStatus: readString(
+      document,
+      'entitlementRevocationProviderStatus'
+    ),
     reportInputHash: readString(document, 'reportInputHash'),
     reportGenerationStatus: readString(document, 'reportGenerationStatus'),
     reportGenerationLockId: readString(document, 'reportGenerationLockId'),
@@ -281,7 +319,11 @@ export class PaymentLedgerRepository {
               entitlementId: { stringValue: input.entitlementId },
               orderClaimHash: { stringValue: input.orderClaimHash },
               entitlementStatus: { stringValue: input.entitlementStatus },
-              entitlementCreatedAt: { timestampValue: input.entitlementCreatedAt }
+              entitlementCreatedAt: { timestampValue: input.entitlementCreatedAt },
+              entitlementUpdatedAt: { timestampValue: input.entitlementUpdatedAt },
+              entitlementRevocationId: { stringValue: '' },
+              entitlementRevocationReason: { stringValue: '' },
+              entitlementRevocationProviderStatus: { stringValue: '' }
             }
           })
         }
@@ -415,6 +457,70 @@ export class PaymentLedgerRepository {
     return this.parseDocument(document, ledger.documentId);
   }
 
+  async revokeEntitlement(
+    entitlementId: string,
+    input: RevokePaymentEntitlementInput
+  ) {
+    const ledger = await this.getByDocumentId(entitlementId);
+
+    if (
+      ledger.entitlementStatus === input.status &&
+      ledger.entitlementRevocationId === input.revocationId
+    ) {
+      return ledger;
+    }
+
+    const canRevoke =
+      ledger.entitlementStatus === ENTITLEMENT_STATUS.ACTIVE ||
+      (ledger.entitlementStatus === ENTITLEMENT_STATUS.REVOKED &&
+        input.status === ENTITLEMENT_STATUS.REFUNDED);
+
+    if (!canRevoke) {
+      throw new ReportRequestError(
+        409,
+        'Entitlement cannot transition to the requested inactive status.'
+      );
+    }
+
+    try {
+      const document = await this.firestore.request<FirestoreDocument>(
+        this.getPatchPath(ledger, REVOKE_ENTITLEMENT_UPDATE_MASK),
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            fields: {
+              entitlementStatus: { stringValue: input.status },
+              entitlementUpdatedAt: { timestampValue: input.revokedAt },
+              entitlementRevokedAt: { timestampValue: input.revokedAt },
+              entitlementRevocationId: { stringValue: input.revocationId },
+              entitlementRevocationReason: { stringValue: input.reason },
+              entitlementRevocationProviderStatus: {
+                stringValue: input.providerStatus
+              }
+            }
+          })
+        }
+      );
+
+      return this.parseDocument(document, ledger.documentId);
+    } catch (error) {
+      if (!isFirestorePreconditionConflict(error)) {
+        throw error;
+      }
+
+      const current = await this.getByDocumentId(entitlementId);
+
+      if (
+        current.entitlementStatus === input.status &&
+        current.entitlementRevocationId === input.revocationId
+      ) {
+        return current;
+      }
+
+      throw error;
+    }
+  }
+
   createPaymentLedger(input: CreatePaymentLedgerInput) {
     return this.create(input);
   }
@@ -425,6 +531,13 @@ export class PaymentLedgerRepository {
 
   listPaymentLedgersByUserId(userId: string, limit = 100) {
     return this.listByUser(userId, limit);
+  }
+
+  revokePaymentEntitlement(
+    entitlementId: string,
+    input: RevokePaymentEntitlementInput
+  ) {
+    return this.revokeEntitlement(entitlementId, input);
   }
 
   isPreconditionConflict(error: unknown) {

@@ -7,6 +7,11 @@ import type {
   PaymentOrderIntent,
   RenewedPaymentEntitlement
 } from './model';
+import {
+  assertConfirmedPayment,
+  assertPaymentOrderIntent,
+  type PaymentSession
+} from './contracts';
 
 type PaymentApiAction = 'order' | 'confirm' | 'entitlements' | 'entitlement/renew';
 
@@ -238,4 +243,144 @@ export async function renewPaymentEntitlement(
   const renewed = await readAuthenticatedPaymentResponse<RenewedPaymentEntitlement>(response);
   assertRenewedEntitlementShape(renewed, { orderId });
   return renewed;
+}
+
+type AuthoritativePaymentApiPayload = {
+  message?: string;
+  code?: string;
+  retryable?: boolean;
+};
+
+export class PaymentApiError extends Error {
+  readonly httpStatus: number;
+  readonly code?: string;
+  readonly retryable: boolean;
+
+  constructor(
+    message: string,
+    options: { httpStatus?: number; code?: string; retryable?: boolean } = {}
+  ) {
+    super(message);
+    this.name = 'PaymentApiError';
+    this.httpStatus = options.httpStatus || 0;
+    this.code = options.code;
+    this.retryable = options.retryable ?? this.httpStatus === 0;
+  }
+}
+
+function isRetryableAuthoritativeResponse(
+  status: number,
+  payload: AuthoritativePaymentApiPayload | null
+) {
+  if (typeof payload?.retryable === 'boolean') {
+    return payload.retryable;
+  }
+
+  if (status === 408 || status === 425 || status === 429 || status >= 500) {
+    return true;
+  }
+
+  return Boolean(
+    status === 409 &&
+      /pending|ready|processing|아직|대기|처리 중/i.test(
+        `${payload?.code || ''} ${payload?.message || ''}`
+      )
+  );
+}
+
+async function requestAuthoritativePaymentApi<T>(
+  url: string,
+  authToken: string,
+  body: unknown
+) {
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+  } catch (error) {
+    throw new PaymentApiError(
+      error instanceof Error
+        ? `결제 서버에 연결하지 못했습니다. ${error.message}`
+        : '결제 서버에 연결하지 못했습니다.',
+      { retryable: true }
+    );
+  }
+
+  const parsed = (await response.json().catch(() => null)) as
+    | (AuthoritativePaymentApiPayload & Partial<T>)
+    | null;
+
+  if (!response.ok) {
+    throw new PaymentApiError(parsed?.message || PAYMENT_HTTP_USER_MESSAGE, {
+      httpStatus: response.status,
+      code: parsed?.code,
+      retryable: isRetryableAuthoritativeResponse(response.status, parsed)
+    });
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new PaymentApiError('결제 권한 서버 응답 형식이 올바르지 않습니다.');
+  }
+
+  return parsed as T;
+}
+
+export async function createPaymentOrder(options: {
+  confirmEndpoint: string;
+  authToken: string;
+  orderId?: string;
+  productId: PaymentSession['productId'];
+}) {
+  const payload = await requestAuthoritativePaymentApi<unknown>(
+    getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'order'),
+    options.authToken,
+    {
+      orderId: options.orderId,
+      productId: options.productId
+    }
+  );
+
+  return assertPaymentOrderIntent(payload, options);
+}
+
+export async function confirmPaymentSession(options: {
+  confirmEndpoint: string;
+  authToken: string;
+  session: PaymentSession;
+}) {
+  const { session } = options;
+  const paymentId = session.paymentId || session.paymentKey;
+
+  if (!paymentId || !session.orderClaim) {
+    throw new PaymentApiError(
+      '동일 결제를 다시 확인할 결제 ID 또는 주문 인증 정보가 없습니다.'
+    );
+  }
+
+  const payload = await requestAuthoritativePaymentApi<unknown>(
+    getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'confirm'),
+    options.authToken,
+    {
+      paymentId,
+      txId: session.txId,
+      orderId: session.orderId,
+      productId: session.productId,
+      amount: session.amount,
+      orderClaim: session.orderClaim
+    }
+  );
+
+  return assertConfirmedPayment(payload, {
+    paymentId,
+    orderId: session.orderId,
+    productId: session.productId,
+    amount: session.amount
+  });
 }

@@ -29,12 +29,15 @@ PORTONE_API_SECRET=...
 PORTONE_STORE_ID=store-...
 PORTONE_API_BASE_URL=https://api.portone.io
 PORTONE_PAYMENT_LEDGER_COLLECTION=portonePaymentConfirmations
+PORTONE_PAYMENT_ORDER_COLLECTION=portonePaymentOrders
 PAYMENT_ORDER_CLAIM_TTL_MS=7200000
 REPORT_ACCESS_SECRET=...
 USER_ACCESS_SECRET=...
 ```
 
-Firestore must be enabled and the Cloud Run runtime service account needs read/write access to the payment ledger collection.
+Firestore must be enabled and the Cloud Run runtime service account needs read/write access to both the payment ledger and payment order collections.
+
+For verified cancellation and refund persistence, entitlement revocation, reconciliation, and audit requirements, follow [Payment cancellation and refund operations](./payment-cancellation-refund-operations.md). The service intentionally does not guess or call a PortOne refund API.
 
 ## Authenticated Order and Confirmation Flow
 

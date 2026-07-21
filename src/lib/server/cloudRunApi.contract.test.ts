@@ -52,6 +52,31 @@ const productionReportGenerator = vi.fn(async () => ({
   provider: 'fixture-report-generator'
 }));
 
+const productionPaymentOrders = new Map<string, Record<string, unknown>>();
+const productionPaymentOrderRepository: NonNullable<
+  CreateAppOptions['paymentOrderRepository']
+> = {
+  async createPaymentOrder(record) {
+    const existing = productionPaymentOrders.get(record.orderId);
+
+    if (existing) {
+      return { kind: 'existing', order: existing };
+    }
+
+    const stored = { ...record };
+    productionPaymentOrders.set(record.orderId, stored);
+    return { kind: 'created', order: stored };
+  },
+  async getPaymentOrder(orderId) {
+    return productionPaymentOrders.get(orderId) || null;
+  },
+  async transitionPaymentOrder(order, input) {
+    const updated = { ...order, ...input };
+    productionPaymentOrders.set(String(order.orderId), updated);
+    return updated;
+  }
+};
+
 let productionServer: Server;
 let productionBaseUrl: string;
 
@@ -98,7 +123,8 @@ beforeAll(async () => {
   const running = await startApp({
     config: productionConfig,
     fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
-    reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator']
+    reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator'],
+    paymentOrderRepository: productionPaymentOrderRepository
   });
   productionServer = running.server;
   productionBaseUrl = running.baseUrl;
@@ -443,6 +469,7 @@ describe('Cloud Run API HTTP contracts', () => {
       productId: 'general-signature',
       amount: 79_000,
       currency: 'KRW',
+      orderStatus: 'created',
       orderClaim: expect.any(String),
       orderClaimExpiresAt: expect.any(String)
     });
