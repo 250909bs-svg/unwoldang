@@ -14,7 +14,7 @@ export const loveReunionProduct = {
   },
   discovery: {
     title: '홍연아씨 재회 가능성',
-    summary: '다시 이어질 가능성과 연락 시기',
+    summary: '재접촉 조건과 회복 방향',
     category: 'love',
     featured: true,
     recommendationRank: 4
@@ -26,7 +26,7 @@ export const loveReunionProduct = {
   },
   home: {
     title: '홍연아씨 재회운',
-    subtitle: '다시 이어질 가능성과 연락 시기',
+    subtitle: '재접촉 조건과 회복 방향',
     image: '/home-love-reunion-card.png',
     category: 'reunion'
   },

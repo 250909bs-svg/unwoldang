@@ -1,0 +1,146 @@
+.love-reunion-premium-page {
+  --reunion-report-accent: #a94f5d;
+  --reunion-report-accent-soft: #f7e6e1;
+  --reunion-report-ink: #2e2023;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(181, 76, 91, 0.2), transparent 27%),
+    radial-gradient(circle at 4% 36%, rgba(116, 54, 84, 0.15), transparent 26%),
+    linear-gradient(180deg, #12090e 0%, #2a1119 32%, #0d090b 100%);
+}
+
+body:has(.love-reunion-premium-page) .bottom-tabbar,
+body:has(.love-reunion-premium-page) .site-footer {
+  display: none;
+}
+
+.love-reunion-premium-page .premium-report-topbar {
+  color: #fff6f3;
+  background: rgba(18, 9, 14, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.love-reunion-premium-page .premium-report-brand,
+.love-reunion-premium-page .premium-icon-action,
+.love-reunion-premium-page .app-profile-button {
+  color: #fff7f3;
+}
+
+.love-reunion-premium-page .premium-icon-action,
+.love-reunion-premium-page .app-profile-button {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.love-reunion-report-shell {
+  padding-top: clamp(26px, 5vw, 54px);
+  padding-bottom: 80px;
+}
+
+.love-reunion-report-paper {
+  color: var(--reunion-report-ink);
+  border: 1px solid rgba(255, 238, 231, 0.48);
+  background:
+    linear-gradient(rgba(255, 252, 248, 0.96), rgba(255, 249, 244, 0.97)),
+    repeating-linear-gradient(0deg, transparent 0 34px, rgba(110, 63, 69, 0.025) 34px 35px);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.38);
+}
+
+.love-reunion-report-paper .premium-section-heading h2,
+.love-reunion-report-paper .premium-toc-header strong,
+.love-reunion-report-paper .premium-card h3 {
+  font-family: "Noto Serif KR", serif;
+}
+
+.love-reunion-report-paper .premium-section-heading h2 {
+  color: #4d2630;
+}
+
+.love-reunion-report-paper .premium-callout {
+  border-color: rgba(169, 79, 93, 0.2);
+  background: linear-gradient(145deg, #fff5f1, #f9e9e6);
+}
+
+.love-reunion-report-paper .premium-key-card,
+.love-reunion-report-paper .premium-card,
+.love-reunion-report-paper .premium-accordion,
+.love-reunion-report-paper .premium-toc-header,
+.love-reunion-report-paper .premium-toc {
+  border-color: rgba(104, 61, 67, 0.13);
+}
+
+.love-reunion-report-paper .premium-key-card.tone-good {
+  background: #f1f6ef;
+}
+
+.love-reunion-report-paper .premium-key-card.tone-warn {
+  background: #fff0ec;
+}
+
+.love-reunion-report-paper .premium-divider {
+  background: linear-gradient(90deg, transparent, rgba(169, 79, 93, 0.24), transparent);
+}
+
+.love-reunion-report-paper #current-relationship,
+.love-reunion-report-paper #repeated-pattern,
+.love-reunion-report-paper #emotional-tempo,
+.love-reunion-report-paper #connection-signals,
+.love-reunion-report-paper #contact-boundaries,
+.love-reunion-report-paper #timing-guide,
+.love-reunion-report-paper #recontact-checklist,
+.love-reunion-report-paper #reunion-maintenance,
+.love-reunion-report-paper #recovery-direction,
+.love-reunion-report-paper #personal-questions,
+.love-reunion-report-paper #thirty-day-plan {
+  scroll-margin-top: 86px;
+}
+
+.love-reunion-report-paper #current-relationship .premium-section-number,
+.love-reunion-report-paper #repeated-pattern .premium-section-number,
+.love-reunion-report-paper #emotional-tempo .premium-section-number,
+.love-reunion-report-paper #connection-signals .premium-section-number,
+.love-reunion-report-paper #contact-boundaries .premium-section-number,
+.love-reunion-report-paper #timing-guide .premium-section-number,
+.love-reunion-report-paper #recontact-checklist .premium-section-number,
+.love-reunion-report-paper #reunion-maintenance .premium-section-number,
+.love-reunion-report-paper #recovery-direction .premium-section-number,
+.love-reunion-report-paper #personal-questions .premium-section-number,
+.love-reunion-report-paper #thirty-day-plan .premium-section-number {
+  color: var(--reunion-report-accent);
+}
+
+.love-reunion-report-paper .premium-question-card {
+  border-left: 4px solid var(--reunion-report-accent);
+  background: #fff8f5;
+}
+
+.love-reunion-report-paper .premium-answer-card {
+  background: #f8efec;
+}
+
+.love-reunion-report-paper .premium-html-download-button,
+.love-reunion-report-paper .premium-report-primary-action {
+  color: #fff;
+  background: linear-gradient(135deg, #a94f5d, #7c3547);
+}
+
+@media (max-width: 720px) {
+  .love-reunion-report-shell {
+    padding: 12px 8px 60px;
+  }
+
+  .love-reunion-report-paper {
+    border-radius: 24px;
+  }
+}
+
+@media print {
+  .love-reunion-premium-page {
+    background: #fff;
+  }
+
+  .love-reunion-report-paper {
+    border: 0;
+    box-shadow: none;
+  }
+}

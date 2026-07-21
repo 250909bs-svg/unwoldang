@@ -1,0 +1,583 @@
+.love-reunion-detail-page {
+  min-height: 100dvh;
+  color: #f8edf0;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(143, 38, 67, 0.3), transparent 34rem),
+    radial-gradient(circle at 88% 24%, rgba(195, 128, 103, 0.16), transparent 30rem),
+    #10090c;
+}
+
+.love-reunion-detail-page * {
+  box-sizing: border-box;
+}
+
+.love-reunion-detail-page a:focus-visible,
+.love-reunion-detail-page button:focus-visible {
+  outline: 3px solid #f3c7ad;
+  outline-offset: 4px;
+}
+
+.love-reunion-detail-shell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 0 18px 72px;
+}
+
+.love-reunion-detail-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  border-bottom: 1px solid rgba(249, 226, 230, 0.12);
+}
+
+.love-reunion-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff7f8;
+  font-size: 0.9rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.love-reunion-detail-nav-label {
+  color: #bd969f;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.love-reunion-detail-hero {
+  display: grid;
+  gap: 26px;
+  padding: 28px 0 56px;
+}
+
+.love-reunion-detail-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.love-reunion-detail-eyebrow,
+.love-reunion-detail-hero-meta span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.love-reunion-detail-eyebrow {
+  align-self: flex-start;
+  gap: 8px;
+  padding: 8px 11px;
+  color: #f5c6b4;
+  border: 1px solid rgba(245, 198, 180, 0.3);
+  border-radius: 999px;
+  background: rgba(105, 32, 52, 0.28);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+}
+
+.love-reunion-detail-hero h1 {
+  max-width: 720px;
+  margin: 20px 0 14px;
+  color: #fff8f8;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(2.35rem, 12vw, 5.2rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 1.06;
+  text-wrap: balance;
+}
+
+.love-reunion-detail-lead {
+  max-width: 650px;
+  margin: 0;
+  color: #d9c4c9;
+  font-size: clamp(1rem, 3.7vw, 1.18rem);
+  line-height: 1.78;
+  word-break: keep-all;
+}
+
+.love-reunion-detail-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 24px;
+  color: #c9adb4;
+  font-size: 0.78rem;
+}
+
+.love-reunion-detail-hero-meta span {
+  gap: 7px;
+}
+
+.love-reunion-detail-purchase {
+  display: grid;
+  gap: 15px;
+  margin-top: 30px;
+  padding: 18px;
+  border: 1px solid rgba(246, 218, 223, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.2);
+}
+
+.love-reunion-detail-purchase > div,
+.love-reunion-detail-final-action {
+  display: flex;
+  flex-direction: column;
+}
+
+.love-reunion-detail-purchase span,
+.love-reunion-detail-final-action > span {
+  color: #ad8f97;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+
+.love-reunion-detail-purchase strong,
+.love-reunion-detail-final-action > strong {
+  margin-top: 3px;
+  color: #fff8f6;
+  font-size: 1.38rem;
+}
+
+.love-reunion-detail-primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 21px;
+  color: #2d0e17;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f7d2bd, #d99183);
+  box-shadow: 0 12px 32px rgba(205, 117, 101, 0.24);
+  font-size: 0.95rem;
+  font-weight: 850;
+  text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.love-reunion-detail-primary-link:hover {
+  box-shadow: 0 16px 40px rgba(205, 117, 101, 0.32);
+  transform: translateY(-2px);
+}
+
+.love-reunion-detail-poster {
+  position: relative;
+  min-height: 460px;
+  overflow: hidden;
+  border: 1px solid rgba(250, 222, 227, 0.15);
+  border-radius: 28px;
+  background: #241015;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42);
+}
+
+.love-reunion-detail-poster img {
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.love-reunion-detail-poster-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11, 5, 7, 0.03) 38%, rgba(11, 5, 7, 0.9) 100%);
+}
+
+.love-reunion-detail-poster-caption {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+}
+
+.love-reunion-detail-poster-caption span {
+  color: #e7b89e;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.18em;
+}
+
+.love-reunion-detail-poster-caption strong {
+  display: block;
+  margin-top: 8px;
+  color: #fff8f6;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(1.55rem, 6vw, 2.25rem);
+  line-height: 1.35;
+}
+
+.love-reunion-detail-intro,
+.love-reunion-detail-section,
+.love-reunion-detail-evidence,
+.love-reunion-detail-safety,
+.love-reunion-detail-final {
+  margin-top: 24px;
+  border: 1px solid rgba(247, 221, 226, 0.12);
+  border-radius: 26px;
+}
+
+.love-reunion-detail-intro {
+  padding: 34px 22px;
+  background:
+    linear-gradient(135deg, rgba(122, 35, 59, 0.23), rgba(255, 255, 255, 0.025)),
+    #160d10;
+}
+
+.love-reunion-detail-section-kicker {
+  display: block;
+  color: #d9a48d;
+  font-size: 0.67rem;
+  font-weight: 850;
+  letter-spacing: 0.18em;
+}
+
+.love-reunion-detail-intro h2,
+.love-reunion-detail-section-head h2,
+.love-reunion-detail-evidence h2,
+.love-reunion-detail-safety h2,
+.love-reunion-detail-final h2 {
+  margin: 9px 0 0;
+  color: #fff7f7;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(1.65rem, 6vw, 2.65rem);
+  letter-spacing: -0.045em;
+  line-height: 1.28;
+  text-wrap: balance;
+}
+
+.love-reunion-detail-intro > p,
+.love-reunion-detail-section-head > p,
+.love-reunion-detail-evidence-copy > p,
+.love-reunion-detail-safety p,
+.love-reunion-detail-final > div > p {
+  color: #cbb5bb;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.love-reunion-detail-intro blockquote {
+  margin: 26px 0 0;
+  padding: 18px 0 2px 18px;
+  color: #f1d4ca;
+  border-left: 2px solid #d5977f;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.68;
+}
+
+.love-reunion-detail-section {
+  padding: 34px 18px 18px;
+  background: rgba(25, 14, 18, 0.88);
+}
+
+.love-reunion-detail-section-head {
+  display: grid;
+  gap: 10px;
+  padding: 0 4px 22px;
+}
+
+.love-reunion-detail-section-head > p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.love-reunion-detail-report-grid {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.love-reunion-detail-report-card {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 12px;
+  padding: 18px 16px;
+  border: 1px solid rgba(242, 214, 220, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.love-reunion-detail-report-card > span {
+  color: #d99f88;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.love-reunion-detail-report-card h3,
+.love-reunion-detail-input-card h3,
+.love-reunion-detail-evidence-card h3 {
+  margin: 0;
+  color: #fff4f5;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.love-reunion-detail-report-card p,
+.love-reunion-detail-input-card p,
+.love-reunion-detail-evidence-card p {
+  margin: 7px 0 0;
+  color: #bda5ac;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.love-reunion-detail-input-section {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(157, 54, 80, 0.15), transparent 24rem),
+    rgba(25, 14, 18, 0.9);
+}
+
+.love-reunion-detail-input-grid {
+  display: grid;
+  gap: 11px;
+}
+
+.love-reunion-detail-input-card {
+  min-height: 194px;
+  padding: 20px;
+  border: 1px solid rgba(244, 215, 221, 0.11);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.love-reunion-detail-input-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 20px;
+  color: #f2c0aa;
+  border: 1px solid rgba(241, 190, 168, 0.22);
+  border-radius: 13px;
+  background: rgba(123, 40, 61, 0.27);
+  place-items: center;
+}
+
+.love-reunion-detail-input-card > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #d79c85;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.love-reunion-detail-evidence {
+  display: grid;
+  gap: 26px;
+  padding: 34px 22px;
+  background: #eadcd7;
+}
+
+.love-reunion-detail-evidence h2 {
+  color: #35141d;
+}
+
+.love-reunion-detail-evidence-copy > p {
+  margin-bottom: 0;
+  color: #73565e;
+}
+
+.love-reunion-detail-evidence-list {
+  display: grid;
+  gap: 10px;
+}
+
+.love-reunion-detail-evidence-card {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 12px;
+  padding: 17px;
+  border: 1px solid rgba(79, 31, 44, 0.13);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.love-reunion-detail-evidence-card > span {
+  color: #a74f5f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.73rem;
+  font-weight: 850;
+}
+
+.love-reunion-detail-evidence-card h3 {
+  color: #3f1923;
+}
+
+.love-reunion-detail-evidence-card p {
+  color: #76575f;
+}
+
+.love-reunion-detail-safety {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  padding: 26px 22px;
+  color: #f4bda8;
+  background: rgba(92, 25, 43, 0.25);
+}
+
+.love-reunion-detail-safety span {
+  color: #dca087;
+  font-size: 0.65rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+}
+
+.love-reunion-detail-safety h2 {
+  font-size: clamp(1.3rem, 5vw, 1.9rem);
+}
+
+.love-reunion-detail-safety p {
+  margin-bottom: 0;
+}
+
+.love-reunion-detail-final {
+  display: grid;
+  gap: 28px;
+  padding: 36px 22px;
+  background:
+    linear-gradient(135deg, rgba(102, 29, 49, 0.34), rgba(14, 8, 10, 0.4)),
+    #1a0d11;
+}
+
+.love-reunion-detail-final > div > p {
+  margin-bottom: 0;
+}
+
+.love-reunion-detail-final-action {
+  gap: 5px;
+  padding: 20px;
+  border: 1px solid rgba(249, 222, 227, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.love-reunion-detail-final-action .love-reunion-detail-primary-link {
+  margin-top: 16px;
+}
+
+.love-reunion-detail-final-action small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: #bda5ac;
+  font-size: 0.72rem;
+}
+
+@media (min-width: 560px) {
+  .love-reunion-detail-shell {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .love-reunion-detail-purchase {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .love-reunion-detail-primary-link {
+    min-width: 210px;
+  }
+
+  .love-reunion-detail-report-grid,
+  .love-reunion-detail-input-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 840px) {
+  .love-reunion-detail-shell {
+    padding-bottom: 110px;
+  }
+
+  .love-reunion-detail-nav {
+    min-height: 76px;
+  }
+
+  .love-reunion-detail-hero {
+    grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.78fr);
+    align-items: stretch;
+    gap: 48px;
+    min-height: 710px;
+    padding: 50px 0 72px;
+  }
+
+  .love-reunion-detail-poster,
+  .love-reunion-detail-poster img {
+    min-height: 650px;
+  }
+
+  .love-reunion-detail-intro,
+  .love-reunion-detail-section,
+  .love-reunion-detail-evidence,
+  .love-reunion-detail-safety,
+  .love-reunion-detail-final {
+    margin-top: 34px;
+    border-radius: 32px;
+  }
+
+  .love-reunion-detail-intro,
+  .love-reunion-detail-section,
+  .love-reunion-detail-evidence,
+  .love-reunion-detail-final {
+    padding: 52px;
+  }
+
+  .love-reunion-detail-section-head {
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.65fr);
+    align-items: end;
+    gap: 30px;
+    padding: 0 0 32px;
+  }
+
+  .love-reunion-detail-report-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .love-reunion-detail-report-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .love-reunion-detail-input-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .love-reunion-detail-evidence {
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 54px;
+  }
+
+  .love-reunion-detail-safety {
+    gap: 24px;
+    padding: 34px 40px;
+  }
+
+  .love-reunion-detail-final {
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.65fr);
+    align-items: center;
+    gap: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .love-reunion-detail-primary-link {
+    transition: none;
+  }
+}
