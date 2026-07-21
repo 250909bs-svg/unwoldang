@@ -601,7 +601,7 @@ export default function LoveReadingPreview() {
                 <span className="mz-love-vault-portrait__seal"><LockKeyhole size={36} /></span>
               </div>
               <span>MYEONGRI CLUES · LOCKED</span>
-              <h2>다음 인연의 대표 단서</h2>
+              <h2>관계에서 알아볼 대표 단서</h2>
               <dl>
                 <div><dt>대표 키감 단서</dt><dd>{specificity.height.label}</dd></div>
                 <div><dt>얼굴 인상 상징</dt><dd>{specificity.face.primary}</dd></div>
