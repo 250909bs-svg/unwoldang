@@ -17,29 +17,29 @@ body.home-all-black .app-container.past-life-app-container {
   box-shadow: none;
 }
 
-.home-cardnews-card.artwork-title-card .home-cardnews-rank,
-.home-cardnews-card.artwork-title-card .home-cardnews-copy,
-.home-showcase-cover.artwork-title-cover .home-showcase-cover-copy,
-.home-filter-product-card.artwork-title-card .home-filter-product-copy,
-.home-filter-product-card.artwork-title-card .home-filter-product-play {
+.home-cardnews-card[href="/detail/past-life-goblin"].artwork-title-card .home-cardnews-rank,
+.home-cardnews-card[href="/detail/past-life-goblin"].artwork-title-card .home-cardnews-copy,
+.home-showcase-card[href="/detail/past-life-goblin"] .home-showcase-cover.artwork-title-cover .home-showcase-cover-copy,
+.home-filter-product-card[href="/detail/past-life-goblin"].artwork-title-card .home-filter-product-copy,
+.home-filter-product-card[href="/detail/past-life-goblin"].artwork-title-card .home-filter-product-play {
   display: none;
 }
 
-.home-cardnews-card.artwork-title-card .home-cardnews-overlay,
-.home-showcase-cover.artwork-title-cover .home-showcase-cover-overlay,
-.home-filter-product-card.artwork-title-card .home-filter-product-shade {
+.home-cardnews-card[href="/detail/past-life-goblin"].artwork-title-card .home-cardnews-overlay,
+.home-showcase-card[href="/detail/past-life-goblin"] .home-showcase-cover.artwork-title-cover .home-showcase-cover-overlay,
+.home-filter-product-card[href="/detail/past-life-goblin"].artwork-title-card .home-filter-product-shade {
   background: linear-gradient(180deg, rgba(2, 4, 8, 0.02) 0%, rgba(2, 4, 8, 0.05) 72%, rgba(2, 4, 8, 0.28) 100%);
 }
 
-.home-cardnews-card.artwork-title-card .home-cardnews-image,
-.home-showcase-cover.artwork-title-cover .home-showcase-cover-image,
-.home-filter-product-card.artwork-title-card .home-filter-product-image {
+.home-cardnews-card[href="/detail/past-life-goblin"].artwork-title-card .home-cardnews-image,
+.home-showcase-card[href="/detail/past-life-goblin"] .home-showcase-cover.artwork-title-cover .home-showcase-cover-image,
+.home-filter-product-card[href="/detail/past-life-goblin"].artwork-title-card .home-filter-product-image {
   object-position: 50% 50%;
   filter: saturate(1.01) contrast(1.01);
 }
 
-.home-cardnews-card.artwork-title-card:hover .home-cardnews-image,
-.home-filter-product-card.artwork-title-card:hover .home-filter-product-image {
+.home-cardnews-card[href="/detail/past-life-goblin"].artwork-title-card:hover .home-cardnews-image,
+.home-filter-product-card[href="/detail/past-life-goblin"].artwork-title-card:hover .home-filter-product-image {
   transform: none;
 }
 
@@ -3028,6 +3028,18 @@ body.home-all-black .app-container.past-life-app-container {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dokkaebi-entry-page,
+  .dokkaebi-entry-page::before,
+  .dokkaebi-entry-page::after,
+  .dokkaebi-entry-page *,
+  .dokkaebi-entry-page *::before,
+  .dokkaebi-entry-page *::after,
+  .dokkaebi-immersion-page,
+  .dokkaebi-immersion-page::before,
+  .dokkaebi-immersion-page::after,
+  .dokkaebi-immersion-page *,
+  .dokkaebi-immersion-page *::before,
+  .dokkaebi-immersion-page *::after,
   .dokkaebi-landing *,
   .dokkaebi-landing *::before,
   .dokkaebi-landing *::after,
@@ -3489,7 +3501,14 @@ body.home-all-black .app-container.past-life-app-container {
   pointer-events: none;
 }
 
+.dokkaebi-immersion-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .dokkaebi-immersion-back,
+.dokkaebi-immersion-playback,
 .dokkaebi-immersion-sound {
   display: grid;
   width: 44px;
@@ -3513,12 +3532,14 @@ body.home-all-black .app-container.past-life-app-container {
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.72));
 }
 
+.dokkaebi-immersion-playback:disabled,
 .dokkaebi-immersion-sound:disabled {
   cursor: default;
   opacity: 0.42;
 }
 
 .dokkaebi-immersion-back:focus-visible,
+.dokkaebi-immersion-playback:focus-visible,
 .dokkaebi-immersion-sound:focus-visible,
 .dokkaebi-immersion-enter:focus-visible,
 .dokkaebi-immersion-skip:focus-visible {

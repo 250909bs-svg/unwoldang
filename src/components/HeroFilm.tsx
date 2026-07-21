@@ -1,6 +1,11 @@
 import { Hand, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  canAutoplayPastLifeVideo,
+  pausePastLifeVideos,
+  shouldPresentPastLifePoster
+} from '../products/past-life-goblin/mediaPolicy';
 
 type HeroFilmProps = {
   src: string;
@@ -66,24 +71,46 @@ export default function HeroFilm({
     const video = videoRef.current;
 
     if (!video || prefersReducedMotion || hasFailed) {
-      video?.pause();
+      pausePastLifeVideos([video]);
       return;
     }
 
+    let isInView = false;
+    const syncPlayback = () => {
+      if (
+        isInView &&
+        canAutoplayPastLifeVideo({
+          prefersReducedMotion,
+          hasFailed,
+          manuallyPaused: manuallyPausedRef.current,
+          visibilityState: document.visibilityState
+        })
+      ) {
+        void video.play().catch(() => undefined);
+        return;
+      }
+
+      pausePastLifeVideos([video]);
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.45 && !manuallyPausedRef.current) {
-          void video.play().catch(() => undefined);
-          return;
-        }
-
-        video.pause();
+        isInView = entry.isIntersecting && entry.intersectionRatio >= 0.45;
+        syncPlayback();
       },
       { threshold: [0, 0.45, 0.75] }
     );
 
+    const handlePageHide = () => pausePastLifeVideos([video]);
     observer.observe(video);
-    return () => observer.disconnect();
+    document.addEventListener('visibilitychange', syncPlayback);
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', syncPlayback);
+      window.removeEventListener('pagehide', handlePageHide);
+      pausePastLifeVideos([video]);
+    };
   }, [hasFailed, prefersReducedMotion]);
 
   useEffect(() => {
@@ -146,7 +173,7 @@ export default function HeroFilm({
     setCaptionIndex(nextIndex < 0 ? filmCaptions.length - 1 : nextIndex);
   };
 
-  const showPoster = hasFailed || prefersReducedMotion;
+  const showPoster = shouldPresentPastLifePoster(prefersReducedMotion, hasFailed);
   const isEntryVideoVisible = variant !== 'entry' || (isVideoReady && hasPlaybackStarted);
 
   return (
@@ -238,30 +265,28 @@ export default function HeroFilm({
         <p key={captionIndex} aria-live="polite">
           {filmCaptions[captionIndex].text}
         </p>
-        {variant !== 'entry' ? (
-          <div className="dokkaebi-film-controls" aria-label="대표 영상 제어">
-            <button
-              type="button"
-              onClick={togglePlayback}
-              disabled={showPoster}
-              aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}
-              title={isPlaying ? '영상 일시정지' : '영상 재생'}
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
-              <span>{isPlaying ? '일시정지' : '재생'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={toggleMute}
-              disabled={showPoster}
-              aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
-              title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
-            >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              <span>{isMuted ? '소리 켜기' : '소리 끄기'}</span>
-            </button>
-          </div>
-        ) : null}
+        <div className="dokkaebi-film-controls" aria-label="대표 영상 제어">
+          <button
+            type="button"
+            onClick={togglePlayback}
+            disabled={showPoster}
+            aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}
+            title={isPlaying ? '영상 일시정지' : '영상 재생'}
+          >
+            {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
+            <span>{isPlaying ? '일시정지' : '재생'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={toggleMute}
+            disabled={showPoster}
+            aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+            title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            <span>{isMuted ? '소리 켜기' : '소리 끄기'}</span>
+          </button>
+        </div>
         {prefersReducedMotion ? <small>움직임 감소 설정에 따라 포스터로 표시됩니다.</small> : null}
         {hasFailed ? <small>영상을 불러오지 못해 포스터로 표시됩니다.</small> : null}
       </figcaption>
