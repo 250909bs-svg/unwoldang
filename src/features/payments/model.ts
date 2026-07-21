@@ -1,11 +1,12 @@
-import type { IntakeFormData, ServiceId } from '../../api/mockData';
+import type { IntakeFormData } from '../../api/mockData';
 import type { AnalysisRequestPayload } from '../../lib/analysisPayload';
+import type { ProductId } from '../../products/types';
 
 export type PaymentMethodType = 'portone' | 'card' | 'bank';
 
 export interface PendingPayment {
   orderId: string;
-  productId: ServiceId;
+  productId: ProductId;
   paymentMethod: PaymentMethodType;
   amount: number;
   customerKey?: string;
@@ -21,13 +22,13 @@ export interface PendingPayment {
 
 export interface PaymentEntitlementReference {
   orderId: string;
-  productId: ServiceId;
+  productId: ProductId;
   createdAt: string;
 }
 
 export interface PaymentOrderIntent {
   orderId: string;
-  productId: ServiceId;
+  productId: ProductId;
   amount: number;
   currency: 'KRW';
   orderClaim: string;
@@ -36,7 +37,7 @@ export interface PaymentOrderIntent {
 
 export interface PaymentEntitlement {
   orderId: string;
-  productId: ServiceId;
+  productId: ProductId;
   amount: number;
   currency: 'KRW';
   confirmedAt: string;
@@ -45,7 +46,7 @@ export interface PaymentEntitlement {
 
 export interface RenewedPaymentEntitlement {
   orderId: string;
-  productId: ServiceId;
+  productId: ProductId;
   amount: number;
   currency: 'KRW';
   reportAccessToken: string;

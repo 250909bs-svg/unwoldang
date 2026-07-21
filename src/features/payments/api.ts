@@ -1,4 +1,5 @@
-import type { ServiceId } from '../../api/mockData';
+import { canReadHistoricalReport, getProductById } from '../../products/registry';
+import type { ProductId } from '../../products/types';
 import { ApiError } from '../../shared/api/errors';
 import type {
   ConfirmedPortOnePayment,
@@ -65,9 +66,22 @@ async function readAuthenticatedPaymentResponse<T>(response: Response): Promise<
   return parsed as T;
 }
 
+function hasRecoverableProductContract(productId: unknown, amount: unknown): productId is ProductId {
+  if (typeof productId !== 'string') {
+    return false;
+  }
+
+  const product = getProductById(productId);
+  return Boolean(
+    product &&
+      canReadHistoricalReport(product.id) &&
+      product.price === amount
+  );
+}
+
 function assertPaymentOrderIntentShape(
   value: PaymentOrderIntent,
-  expected: { orderId?: string; productId: ServiceId; amount: number }
+  expected: { orderId?: string; productId: ProductId; amount: number }
 ) {
   if (
     !/^UW-[A-Za-z0-9._-]{12,116}$/.test(value.orderId || '') ||
@@ -85,15 +99,15 @@ function assertPaymentOrderIntentShape(
 
 function assertRenewedEntitlementShape(
   value: RenewedPaymentEntitlement,
-  expected: { orderId: string; productId?: ServiceId; amount?: number }
+  expected: { orderId: string; productId?: ProductId; amount?: number }
 ) {
   if (
     value.orderId !== expected.orderId ||
     (expected.productId && value.productId !== expected.productId) ||
     (expected.amount !== undefined && value.amount !== expected.amount) ||
-    typeof value.productId !== 'string' ||
     !Number.isSafeInteger(value.amount) ||
     value.amount <= 0 ||
+    !hasRecoverableProductContract(value.productId, value.amount) ||
     value.currency !== 'KRW' ||
     typeof value.reportAccessToken !== 'string' ||
     value.reportAccessToken.length < 40 ||
@@ -107,7 +121,7 @@ export async function requestPaymentOrderIntent(options: {
   confirmEndpoint: string;
   authToken: string;
   orderId?: string;
-  productId: ServiceId;
+  productId: ProductId;
   amount: number;
 }) {
   const response = await fetchPaymentApi(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'order'), {
@@ -134,7 +148,7 @@ export async function confirmAuthenticatedPortOnePayment(options: {
   paymentId: string;
   txId?: string;
   orderId: string;
-  productId: ServiceId;
+  productId: ProductId;
   amount: number;
   orderClaim: string;
 }) {
@@ -189,9 +203,9 @@ export async function fetchPaymentEntitlements(confirmEndpoint: string, authToke
   const valid = payload.entitlements.every((entry) => (
     entry &&
     /^UW-[A-Za-z0-9._-]{12,116}$/.test(entry.orderId || '') &&
-    typeof entry.productId === 'string' &&
     Number.isSafeInteger(entry.amount) &&
     entry.amount > 0 &&
+    hasRecoverableProductContract(entry.productId, entry.amount) &&
     entry.currency === 'KRW' &&
     entry.status === 'active' &&
     Number.isFinite(Date.parse(entry.confirmedAt || ''))

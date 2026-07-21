@@ -8,6 +8,7 @@ import { getAiReportEndpoint, requestAiReport, type AiReportProvider } from '../
 import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
+import { getProductById } from '../products/registry';
 
 type LoadingLocationState = {
   product?: ServiceId;
@@ -51,13 +52,14 @@ export default function Loading() {
   const locationState = (location.state as LoadingLocationState | null) ?? null;
   const recoveredPayment = useMemo(() => readPendingPayment(), []);
   const product = locationState?.product || recoveredPayment?.productId;
+  const productDefinition = getProductById(product)!;
   const formData = locationState?.formData || recoveredPayment?.formData;
   const paymentMethod = locationState?.paymentMethod || recoveredPayment?.paymentMethod;
   const orderId = locationState?.orderId || recoveredPayment?.orderId;
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
   const initialReportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
-  const service = findServiceById(product);
-  const isPastLifeProduct = service.id === 'past-life-goblin';
+  const service = findServiceById(productDefinition.id);
+  const isPastLifeProduct = productDefinition.flow.intakeVariant === 'past-life';
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);

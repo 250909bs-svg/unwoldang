@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { confirmAuthenticatedPortOnePayment, renewPaymentEntitlement } from './api';
+import {
+  confirmAuthenticatedPortOnePayment,
+  fetchPaymentEntitlements,
+  renewPaymentEntitlement
+} from './api';
 
 const confirmEndpoint = 'https://api.example.com/api/payments/portone/confirm';
 const orderId = 'UW-123456789012-order';
@@ -32,7 +36,7 @@ describe('payment entitlement response integrity', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
       ...validRenewed,
       ...mismatch,
-      paymentId: 'payment-1',
+      paymentId: orderId,
       txId: 'tx-1',
       status: 'PAID'
     })));
@@ -40,7 +44,7 @@ describe('payment entitlement response integrity', () => {
     await expect(confirmAuthenticatedPortOnePayment({
       confirmEndpoint,
       authToken: 'auth-token',
-      paymentId: 'payment-1',
+      paymentId: orderId,
       orderId,
       productId: 'general-signature',
       amount: 79_000,
@@ -51,7 +55,9 @@ describe('payment entitlement response integrity', () => {
   it.each([
     ['orderId mismatch', { orderId: 'UW-999999999999-other' }],
     ['missing token', { reportAccessToken: undefined }],
-    ['invalid expiry', { reportAccessTokenExpiresAt: 'not-a-date' }]
+    ['invalid expiry', { reportAccessTokenExpiresAt: 'not-a-date' }],
+    ['unknown product', { productId: 'unknown-product' }],
+    ['catalog price mismatch', { amount: 1 }]
   ] as const)('rejects a renewed entitlement with %s', async (_label, mismatch) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
       ...validRenewed,
@@ -62,6 +68,28 @@ describe('payment entitlement response integrity', () => {
       confirmEndpoint,
       'auth-token',
       orderId
+    )).rejects.toMatchObject({ code: 'PAYMENT_API_CONTRACT_VIOLATION' });
+  });
+
+  it.each([
+    ['unknown product', { productId: 'unknown-product' }],
+    ['catalog price mismatch', { amount: 1 }]
+  ] as const)('rejects an entitlement list item with %s', async (_label, mismatch) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
+      entitlements: [{
+        orderId,
+        productId: 'general-signature',
+        amount: 79_000,
+        currency: 'KRW',
+        confirmedAt: '2026-07-21T00:00:00.000Z',
+        status: 'active',
+        ...mismatch
+      }]
+    })));
+
+    await expect(fetchPaymentEntitlements(
+      confirmEndpoint,
+      'auth-token'
     )).rejects.toMatchObject({ code: 'PAYMENT_API_CONTRACT_VIOLATION' });
   });
 });

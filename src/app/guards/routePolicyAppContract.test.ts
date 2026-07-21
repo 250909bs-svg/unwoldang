@@ -4,7 +4,7 @@ import { getRouteAccessRequirement } from './routeAccessPolicy';
 
 const appSource = readFileSync(new URL('../../App.tsx', import.meta.url), 'utf8');
 const appRoutePaths = Array.from(
-  appSource.matchAll(/<Route path="([^"]+)"/g),
+  appSource.matchAll(/<Route\s+path="([^"]+)"/g),
   (match) => match[1]
 );
 
@@ -42,5 +42,12 @@ describe('App route and access-policy integration contract', () => {
     expect(getRouteAccessRequirement('/report/general-signature')).toBe(
       'payment-or-report-access'
     );
+  });
+
+  it('keeps the main product lifecycle boundaries composed outside flow pages', () => {
+    expect(appSource).toContain('<ProductIntakeRouteBoundary>');
+    expect(appSource).toContain('<ProductCheckoutRouteBoundary>');
+    expect(appSource).toContain('<ProductLoadingRouteBoundary>');
+    expect(appSource).toContain('<HistoricalReportRouteBoundary>');
   });
 });

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getProductById } from '../../products/registry';
 import {
   confirmAuthenticatedPortOnePayment,
   fetchPaymentEntitlements,
@@ -12,6 +13,8 @@ const productId = 'general-signature' as const;
 const amount = 79_000;
 const reportAccessToken = 'r'.repeat(48);
 const reportAccessTokenExpiresAt = '2026-07-21T01:00:00.000Z';
+const archivedProduct = getProductById('life-flow')!;
+const archivedOrderId = 'UW-123456789012-archived';
 
 const jsonResponse = (payload: unknown, status = 200) => new Response(JSON.stringify(payload), {
   status,
@@ -31,7 +34,7 @@ describe('authenticated PortOne API contracts', () => {
       currency: 'KRW',
       reportAccessToken,
       reportAccessTokenExpiresAt,
-      paymentId: 'payment-1',
+      paymentId: orderId,
       txId: 'tx-1',
       status: 'PAID'
     }));
@@ -40,7 +43,7 @@ describe('authenticated PortOne API contracts', () => {
     const confirmed = await confirmAuthenticatedPortOnePayment({
       confirmEndpoint,
       authToken,
-      paymentId: 'payment-1',
+      paymentId: orderId,
       txId: 'tx-1',
       orderId,
       productId,
@@ -56,7 +59,7 @@ describe('authenticated PortOne API contracts', () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        paymentId: 'payment-1',
+        paymentId: orderId,
         txId: 'tx-1',
         orderId,
         productId,
@@ -74,7 +77,7 @@ describe('authenticated PortOne API contracts', () => {
       currency: 'KRW',
       reportAccessToken,
       reportAccessTokenExpiresAt,
-      paymentId: 'payment-1',
+      paymentId: orderId,
       txId: 'tx-1',
       status: 'FAILED'
     })));
@@ -82,7 +85,7 @@ describe('authenticated PortOne API contracts', () => {
     await expect(confirmAuthenticatedPortOnePayment({
       confirmEndpoint,
       authToken,
-      paymentId: 'payment-1',
+      paymentId: orderId,
       orderId,
       productId,
       amount,
@@ -107,6 +110,55 @@ describe('authenticated PortOne API contracts', () => {
       'https://api.example.com/api/payments/portone/entitlements',
       { headers: { Authorization: `Bearer ${authToken}` } }
     );
+  });
+
+  it('accepts archived entitlement listing, renewal and confirmation recovery', async () => {
+    const archivedEntitlement = {
+      orderId: archivedOrderId,
+      productId: archivedProduct.id,
+      amount: archivedProduct.price,
+      currency: 'KRW',
+      confirmedAt: '2026-07-21T00:00:00.000Z',
+      status: 'active'
+    } as const;
+    const archivedRenewed = {
+      orderId: archivedOrderId,
+      productId: archivedProduct.id,
+      amount: archivedProduct.price,
+      currency: 'KRW',
+      reportAccessToken,
+      reportAccessTokenExpiresAt
+    } as const;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ entitlements: [archivedEntitlement] }))
+      .mockResolvedValueOnce(jsonResponse(archivedRenewed))
+      .mockResolvedValueOnce(jsonResponse({
+        ...archivedRenewed,
+        paymentId: archivedOrderId,
+        txId: 'tx-archived',
+        status: 'PAID'
+      }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchPaymentEntitlements(confirmEndpoint, authToken)).resolves.toEqual([
+      archivedEntitlement
+    ]);
+    await expect(
+      renewPaymentEntitlement(confirmEndpoint, authToken, archivedOrderId)
+    ).resolves.toEqual(archivedRenewed);
+    await expect(confirmAuthenticatedPortOnePayment({
+      confirmEndpoint,
+      authToken,
+      paymentId: archivedOrderId,
+      orderId: archivedOrderId,
+      productId: archivedProduct.id,
+      amount: archivedProduct.price,
+      orderClaim: 'c'.repeat(48)
+    })).resolves.toMatchObject({
+      productId: archivedProduct.id,
+      paymentId: archivedOrderId,
+      status: 'PAID'
+    });
   });
 
   it('rejects an invalid entitlement list item', async () => {
