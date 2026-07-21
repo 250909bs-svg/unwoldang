@@ -1,0 +1,847 @@
+@import './reunion-report.css';
+
+:root {
+  --rn-navy: #07131c;
+  --rn-navy-soft: #0c1f2a;
+  --rn-burgundy: #7d263d;
+  --rn-burgundy-bright: #ad3b58;
+  --rn-ivory: #f4ead8;
+  --rn-ivory-muted: #c7bbab;
+  --rn-teal: #5f8580;
+  --rn-line: rgba(244, 234, 216, 0.15);
+}
+
+.reunion-app-container {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+  color: var(--rn-ivory);
+  background: #061018;
+  overflow: visible;
+}
+.reunion-landing,
+.reunion-preview {
+  width: min(100%, 520px);
+  min-height: 100vh;
+  margin: 0 auto;
+  color: var(--rn-ivory);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(125, 38, 61, 0.16), transparent 28rem),
+    var(--rn-navy);
+  overflow: hidden;
+}
+
+.reunion-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  isolation: isolate;
+}
+
+.reunion-hero__image {
+  position: absolute;
+  inset: 0;
+  z-index: -4;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 34%;
+}
+
+.reunion-hero__shade {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background:
+    linear-gradient(180deg, rgba(3, 9, 14, 0.04) 15%, rgba(3, 9, 14, 0.55) 55%, #07131c 96%),
+    linear-gradient(90deg, rgba(3, 9, 14, 0.34), transparent 52%, rgba(3, 9, 14, 0.2));
+}
+
+.reunion-curve {
+  position: absolute;
+  z-index: -2;
+  width: 120%;
+  height: 200px;
+  border: 1px solid rgba(245, 194, 202, 0.28);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  filter: drop-shadow(0 0 9px rgba(181, 56, 82, 0.35));
+}
+
+.reunion-curve--one {
+  left: -25%;
+  bottom: 28%;
+}
+
+.reunion-curve--two {
+  right: -64%;
+  bottom: 45%;
+  transform: rotate(30deg);
+  opacity: 0.55;
+}
+
+.reunion-hero__content {
+  width: 100%;
+  padding: 110px 24px 42px;
+}
+
+.reunion-kicker,
+.reunion-section__eyebrow {
+  display: inline-block;
+  color: #d6a5af;
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+}
+
+.reunion-hero h1 {
+  margin: 15px 0 14px;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: clamp(2.55rem, 13vw, 4.2rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.07em;
+}
+
+.reunion-hero h1 strong {
+  display: block;
+  color: #e8b5be;
+  font-weight: 800;
+}
+
+.reunion-hero__quote {
+  margin: 24px 0 16px;
+  padding-left: 16px;
+  border-left: 2px solid var(--rn-burgundy-bright);
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.reunion-hero__copy {
+  max-width: 410px;
+  margin: 0 0 24px;
+  color: var(--rn-ivory-muted);
+  font-size: 0.91rem;
+  line-height: 1.75;
+}
+
+.reunion-primary-cta {
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid rgba(235, 171, 183, 0.45);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #fff8eb;
+  background: linear-gradient(135deg, #9b304d, #601c32);
+  box-shadow: 0 18px 40px rgba(58, 12, 28, 0.34), inset 0 1px rgba(255,255,255,0.16);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reunion-primary-cta:focus-visible,
+.reunion-landing button:focus-visible,
+.reunion-preview button:focus-visible {
+  outline: 2px solid #e9cbd0;
+  outline-offset: 3px;
+}
+
+.reunion-hero__content > small,
+.reunion-product-card > small,
+.reunion-locked-preview > small {
+  display: block;
+  margin-top: 12px;
+  color: #938c82;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.reunion-trust-strip {
+  padding: 13px 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  border-block: 1px solid var(--rn-line);
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-trust-strip span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #a9afa9;
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.reunion-section {
+  padding: 76px 23px;
+  border-bottom: 1px solid var(--rn-line);
+}
+
+.reunion-section h2,
+.reunion-final-cta h2,
+.reunion-preview-answers h2,
+.reunion-locked-preview h2 {
+  margin: 12px 0 28px;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: clamp(1.85rem, 8vw, 2.8rem);
+  line-height: 1.25;
+  letter-spacing: -0.055em;
+}
+
+.reunion-dialogue {
+  position: relative;
+  padding: 25px 22px 22px;
+  border: 1px solid rgba(229, 186, 194, 0.24);
+  border-radius: 24px 24px 24px 7px;
+  background: linear-gradient(145deg, rgba(125, 38, 61, 0.18), rgba(255,255,255,0.03));
+}
+
+.reunion-dialogue i {
+  position: absolute;
+  top: -15px;
+  left: 18px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(229, 186, 194, 0.4);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #f0c8cf;
+  background: #1a1720;
+  font: 700 0.72rem 'Noto Serif KR', serif;
+}
+
+.reunion-dialogue p {
+  margin: 8px 0 0;
+  color: #d6cec1;
+  line-height: 1.85;
+}
+
+.reunion-dialogue strong {
+  color: #fff3e3;
+}
+
+.reunion-question-stack {
+  display: grid;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.reunion-question-stack span {
+  padding: 14px 16px;
+  border: 1px solid var(--rn-line);
+  border-radius: 999px;
+  color: #bcb4a8;
+  font-size: 0.78rem;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-chapter-list {
+  display: grid;
+}
+
+.reunion-chapter-list article {
+  padding: 20px 0;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 14px;
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-chapter-list article > span {
+  color: #a95166;
+  font: 700 0.78rem Georgia, serif;
+}
+
+.reunion-chapter-list h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.reunion-chapter-list p {
+  margin: 0;
+  color: #9f9a93;
+  font-size: 0.79rem;
+  line-height: 1.65;
+}
+
+.reunion-evidence-section {
+  background: linear-gradient(180deg, #07131c, #0a1921);
+}
+
+.reunion-evidence-demo {
+  display: grid;
+  gap: 12px;
+}
+
+.reunion-evidence-demo article {
+  padding: 20px;
+  border: 1px solid var(--rn-line);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-evidence-demo article.is-support {
+  border-color: rgba(95, 133, 128, 0.42);
+}
+
+.reunion-evidence-demo article.is-counter {
+  border-color: rgba(125, 38, 61, 0.46);
+}
+
+.reunion-evidence-demo span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #a9bdb8;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.reunion-evidence-demo strong {
+  display: block;
+  margin: 12px 0 7px;
+  font-family: 'Noto Serif KR', serif;
+}
+
+.reunion-evidence-demo p {
+  margin: 0;
+  color: #929b99;
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+
+.reunion-safety-section {
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(95, 133, 128, 0.21), transparent 230px),
+    #08151b;
+}
+
+.reunion-safety-section > svg {
+  color: #85aaa5;
+}
+
+.reunion-safety-section p {
+  color: #afb8b4;
+  line-height: 1.75;
+}
+
+.reunion-safety-section ul {
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  text-align: left;
+}
+
+.reunion-safety-section li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cad4cf;
+  font-size: 0.78rem;
+}
+
+.reunion-product-card {
+  margin: 36px 18px;
+  padding: 34px 22px;
+  border: 1px solid rgba(223, 172, 183, 0.32);
+  border-radius: 28px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0, rgba(153, 45, 73, 0.3), transparent 260px),
+    #0b1720;
+}
+
+.reunion-product-card > span {
+  display: block;
+  margin-top: 12px;
+  color: #c49aa4;
+  font-size: 0.7rem;
+}
+
+.reunion-product-card h2 {
+  margin-bottom: 10px;
+}
+
+.reunion-product-card p {
+  color: #aca59c;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.reunion-product-card > strong {
+  display: block;
+  margin: 22px 0;
+  font: 800 2rem Georgia, serif;
+}
+
+.reunion-faq details {
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-faq summary {
+  padding: 18px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e8ded0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reunion-faq details p {
+  margin: -4px 0 20px;
+  padding-left: 25px;
+  color: #9b9a95;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.reunion-final-cta {
+  padding: 82px 23px 50px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(125, 38, 61, 0.25), transparent 250px),
+    #061018;
+}
+
+.reunion-final-cta > span {
+  color: #bb8794;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.reunion-preview__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 68px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  color: #fff;
+  background: rgba(6, 16, 24, 0.88);
+  border-bottom: 1px solid var(--rn-line);
+  backdrop-filter: blur(18px);
+}
+
+.reunion-preview__header button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  background: transparent;
+}
+
+.reunion-preview__header div {
+  text-align: center;
+}
+
+.reunion-preview__header span,
+.reunion-preview__header strong {
+  display: block;
+}
+
+.reunion-preview__header span {
+  color: #a88e94;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+}
+
+.reunion-preview__header strong {
+  margin-top: 2px;
+  font: 800 0.91rem 'Noto Serif KR', serif;
+}
+
+.reunion-comic {
+  position: relative;
+  min-height: 790px;
+  overflow: hidden;
+}
+
+.reunion-comic > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reunion-comic__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4,10,15,0.12), rgba(4,10,15,0.5) 44%, #07131c 94%);
+}
+
+.reunion-comic__content {
+  position: relative;
+  z-index: 2;
+  min-height: 790px;
+  padding: 410px 22px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.reunion-comic__content.is-static {
+  min-height: auto;
+  padding: 76px 22px;
+  justify-content: flex-start;
+}
+
+.reunion-comic--chart {
+  min-height: auto;
+  background:
+    radial-gradient(circle at 20% 5%, rgba(95,133,128,0.18), transparent 250px),
+    #091923;
+}
+
+.reunion-bubble {
+  max-width: 91%;
+  margin-top: 14px;
+  padding: 17px 18px;
+  align-self: flex-start;
+  border: 1px solid rgba(238, 214, 198, 0.24);
+  border-radius: 22px 22px 22px 6px;
+  color: #25201d;
+  background: rgba(246, 236, 219, 0.96);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+}
+
+.reunion-bubble.is-customer {
+  max-width: 83%;
+  align-self: flex-end;
+  border-radius: 22px 22px 6px 22px;
+  color: #f9ebe4;
+  background: rgba(113, 31, 54, 0.95);
+}
+
+.reunion-bubble.is-fact {
+  color: #d9ece7;
+  background: rgba(28, 58, 62, 0.96);
+}
+
+.reunion-bubble small {
+  color: #9a5364;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.reunion-bubble p {
+  margin: 7px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.reunion-chart-board {
+  margin: 18px 0;
+  padding: 17px;
+  border: 1px solid rgba(220, 191, 177, 0.22);
+  border-radius: 22px;
+  background: rgba(4, 14, 21, 0.86);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.reunion-chart-board header,
+.reunion-chart-board footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reunion-chart-board header {
+  margin-bottom: 14px;
+  color: #9eaaa8;
+  font-size: 0.65rem;
+}
+
+.reunion-chart-board > div {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.reunion-chart-board section {
+  min-height: 90px;
+  padding: 10px 5px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.05);
+}
+
+.reunion-chart-board section small {
+  color: #778682;
+  font-size: 0.57rem;
+}
+
+.reunion-chart-board section strong {
+  font: 800 1.35rem 'Noto Serif KR', serif;
+}
+
+.reunion-chart-board footer {
+  margin-top: 14px;
+  color: #7fa29d;
+  font-size: 0.58rem;
+}
+
+.reunion-chart-board footer span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reunion-safety-verdict {
+  margin: 26px 18px;
+  padding: 25px 20px;
+  border: 1px solid rgba(95,133,128,0.38);
+  border-radius: 24px;
+  background: rgba(24, 55, 58, 0.35);
+}
+
+.reunion-safety-verdict.is-critical,
+.reunion-safety-verdict.is-high {
+  border-color: rgba(177,59,80,0.55);
+  background: rgba(103, 27, 45, 0.32);
+}
+
+.reunion-safety-verdict > span {
+  display: block;
+  margin-top: 9px;
+  color: #a9c5c0;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.reunion-safety-verdict h2 {
+  margin: 8px 0;
+  font: 800 1.4rem 'Noto Serif KR', serif;
+}
+
+.reunion-safety-verdict p,
+.reunion-safety-verdict li {
+  color: #b8b7b1;
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.reunion-safety-verdict ul {
+  padding-left: 18px;
+}
+
+.reunion-preview-answers {
+  padding: 70px 22px;
+}
+
+.reunion-preview-answers article {
+  padding: 22px 0;
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 11px;
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-preview-answers article > span {
+  color: #a34159;
+  font: 800 0.72rem Georgia, serif;
+}
+
+.reunion-preview-answers h3 {
+  margin: 0 0 9px;
+  font-size: 1rem;
+}
+
+.reunion-preview-answers p {
+  margin: 0 0 12px;
+  color: #b7afa4;
+  font-size: 0.8rem;
+  line-height: 1.75;
+}
+
+.reunion-preview-answers article strong {
+  color: #d9b8bf;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.reunion-index-teaser {
+  margin: 0 18px 68px;
+  padding: 17px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  border: 1px solid var(--rn-line);
+  border-radius: 25px;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-index-teaser div {
+  min-width: 0;
+  padding: 14px 5px;
+  border-radius: 16px;
+  text-align: center;
+  background: rgba(95,133,128,0.1);
+}
+
+.reunion-index-teaser .is-risk {
+  background: rgba(125,38,61,0.16);
+}
+
+.reunion-index-teaser span,
+.reunion-index-teaser small {
+  display: block;
+  color: #8b9996;
+  font-size: 0.56rem;
+}
+
+.reunion-index-teaser strong {
+  display: block;
+  margin: 7px 0 2px;
+  font: 800 1.7rem Georgia, serif;
+}
+
+.reunion-locked-preview {
+  margin: 0 18px 40px;
+  padding: 35px 20px 25px;
+  border: 1px solid rgba(184,78,101,0.35);
+  border-radius: 28px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0, rgba(125,38,61,0.26), transparent 260px),
+    #0b1720;
+}
+
+.reunion-locked-preview > span {
+  display: block;
+  margin-top: 10px;
+  color: #c78e9b;
+  font-size: 0.63rem;
+  letter-spacing: 0.14em;
+}
+
+.reunion-locked-preview h2 {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+}
+
+.reunion-locked-grid {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 22px;
+  text-align: left;
+}
+
+.reunion-locked-grid span {
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 11px;
+  color: #aaa7a0;
+  background: rgba(255,255,255,0.035);
+  font-size: 0.7rem;
+}
+
+.reunion-locked-preview button,
+.reunion-preview--error button {
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff3e9;
+  background: linear-gradient(135deg, #a53251, #641d34);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.reunion-locked-preview button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  color: #c8c1ba;
+  background: linear-gradient(135deg, #454148, #252229);
+  box-shadow: none;
+}
+
+.reunion-locked-preview button:disabled {
+  font-size: 0;
+}
+
+.reunion-locked-preview button:disabled svg {
+  display: none;
+}
+
+.reunion-locked-preview button:disabled::after {
+  content: 'SAFETY GATE ? ANALYSIS STOPPED';
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+}
+
+.reunion-preview--error {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.reunion-preview--error section {
+  width: 100%;
+  padding: 30px 22px;
+  border: 1px solid var(--rn-line);
+  border-radius: 24px;
+  background: rgba(255,255,255,0.03);
+}
+
+.reunion-preview--error h1 {
+  font-family: 'Noto Serif KR', serif;
+}
+
+.reunion-preview--error p {
+  color: #a9a39b;
+  line-height: 1.7;
+}
+
+@media (min-width: 760px) {
+  .reunion-landing,
+  .reunion-preview {
+    box-shadow: 0 0 80px rgba(0,0,0,0.5);
+  }
+
+  .reunion-hero__content,
+  .reunion-section,
+  .reunion-preview-answers {
+    padding-inline: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reunion-primary-cta,
+  .reunion-landing *,
+  .reunion-preview * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

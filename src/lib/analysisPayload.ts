@@ -7,6 +7,7 @@ import {
 } from '../api/mockData';
 import { normalizeLoveFocus } from './loveFocus';
 import { normalizeLoveReaction } from './mz-love-fact/microChoice';
+import type { ReunionContext } from './reunion/types';
 import { getRelationshipDurationLabel, getRelationshipStatusLabel } from './relationshipIntake';
 
 export interface PastLifeAnalysisContext {
@@ -45,10 +46,14 @@ export interface AnalysisRequestPayload {
     summary: string;
   };
   pastLifeContext: PastLifeAnalysisContext | null;
+  reunion: ReunionContext | null;
   questions: string[];
 }
 
-export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Partial<IntakeFormData>): AnalysisRequestPayload {
+export function buildAnalysisRequestPayload(
+  serviceId: ServiceId,
+  formData: Partial<IntakeFormData> & { reunion?: ReunionContext }
+): AnalysisRequestPayload {
   const service = findServiceById(serviceId);
   const statusLabel = getRelationshipStatusLabel(formData.relationshipStatus);
   const durationLabel = getRelationshipDurationLabel(formData.relationshipDuration);
@@ -113,6 +118,7 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
             readingTone: formData.readingTone?.trim() || ''
           }
         : null,
+    reunion: serviceId === 'love-reunion' ? formData.reunion ?? null : null,
     questions: [formData.q1, formData.q2]
       .filter((question): question is string => Boolean(question?.trim()))
       .map((question) => question.trim())

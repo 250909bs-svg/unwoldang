@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateReportAccess, isLoopbackHostname, isValidPaymentOrderId } from './reportAccessGate';
+import {
+  evaluateReportAccess,
+  isLocalReportPreviewAllowed,
+  isLoopbackHostname,
+  isValidPaymentOrderId
+} from './reportAccessGate';
 
 const ORDER_ID = 'UW-1710000000000-0123456789abcdef0123456789abcdef';
 
@@ -29,7 +34,7 @@ describe('report access gate', () => {
     expect(isLoopbackHostname(hostname)).toBe(true);
   });
 
-  it.each(['unwoldang.com', 'www.unwoldang.com', 'unwoldang.vercel.app', '192.168.0.10']) (
+  it.each(['unwoldang.com', 'www.unwoldang.com', 'unwoldang.vercel.app', '192.168.0.10', 'localhost.unwoldang.com', '127.0.0.1.nip.io', '0.0.0.0']) (
     'does not treat %s as loopback',
     (hostname) => {
       expect(isLoopbackHostname(hostname)).toBe(false);
@@ -37,6 +42,9 @@ describe('report access gate', () => {
   );
 
   it('allows a hardcoded preview only on a loopback development server', () => {
+    expect(isLocalReportPreviewAllowed('127.0.0.1', true)).toBe(true);
+    expect(isLocalReportPreviewAllowed('localhost', false)).toBe(false);
+    expect(isLocalReportPreviewAllowed('www.unwoldang.com', true)).toBe(false);
     expect(evaluate({ hostname: '127.0.0.1', isDevelopment: true })).toMatchObject({
       mode: 'local-preview',
       canRender: true,

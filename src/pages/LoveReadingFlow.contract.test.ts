@@ -5,6 +5,8 @@ const intakeSource = readFileSync(new URL('./LoveReadingIntake.tsx', import.meta
 const introSource = readFileSync(new URL('../components/LoveReadingIntro.tsx', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
 const previewSource = readFileSync(new URL('./LoveReadingPreview.tsx', import.meta.url), 'utf8');
+const checkoutSource = readFileSync(new URL('./Checkout.tsx', import.meta.url), 'utf8');
+const reunionPreviewSource = readFileSync(new URL('./ReunionPreview.tsx', import.meta.url), 'utf8');
 
 describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
   it('썸네일 상세에서 인트로 영상과 전용 입력 화면을 거친다', () => {
@@ -52,6 +54,19 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
     expect(intakeSource).not.toContain("navigate('/login'");
     expect(previewSource.indexOf("navigate('/login'")).toBeGreaterThan(previewSource.indexOf('const continueToCheckout'));
   });
+  it('로컬 개발 서버에서만 입력한 사주로 결제 없는 본편 확인을 먼저 허용한다', () => {
+    expect(previewSource).toContain('isLocalReportPreviewAllowed');
+    expect(previewSource).toContain('import.meta.env.DEV');
+    expect(previewSource).toContain("navigate('/report/love-reading'");
+    expect(previewSource).toContain("paymentMethod: 'local-preview'");
+    expect(previewSource.indexOf('if (canOpenLocalFullReport)')).toBeLessThan(previewSource.indexOf('if (!isAuthenticated)'));
+    expect(previewSource).toContain("navigate('/checkout'");
+    expect(checkoutSource).toContain('isLocalReportPreviewAllowed');
+    expect(checkoutSource).toContain('if (canOpenLocalProductReport)');
+    expect(checkoutSource).toContain('navigate(product.routes.report');
+    expect(checkoutSource).toContain("paymentMethod: 'local-preview'");
+    expect(checkoutSource).toContain('if (!canOpenLocalProductReport && !isAuthenticated)');
+  });
   it('무료 미리보기는 웹툰 말풍선과 전용 봉인 이미지로 진행하고 유료 상세값을 렌더링하지 않는다', () => {
     expect(previewSource).toContain('function SpeechBalloon');
     expect(previewSource).toContain('function WebtoonScene');
@@ -66,5 +81,15 @@ describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
     expect(previewSource).not.toContain("premiumAnswerById.get('timing')");
     expect(previewSource).not.toContain('getPartnerPortraits');
     expect(previewSource).not.toMatch(/future-partner-(?:male|female)-/u);
+  });
+
+  it('재회운은 후행 슬래시에서도 몰입형 화면을 유지하고 미리보기 답변은 하나만 공개한다', () => {
+    expect(appSource).toContain("const normalizedPathname = location.pathname.replace(/\\/+$/, '') || '/';");
+    expect(appSource).toContain('].includes(normalizedPathname)');
+    expect(reunionPreviewSource).toContain('const previewAnswers = report.answerFirst.slice(0, 1);');
+    expect(reunionPreviewSource).toContain('const hiddenAnswerCount = Math.max(0, report.answerFirst.length - previewAnswers.length);');
+    expect(reunionPreviewSource).toContain('{previewAnswers.map((answer, index) => (');
+    expect(reunionPreviewSource).not.toContain('{report.answerFirst.map((answer, index) => (');
+    expect(reunionPreviewSource).toContain('결제 후 전체 답변 공개');
   });
 });

@@ -11,6 +11,7 @@ import { buildPartnerSpecificityProfile } from '../lib/mz-love-fact/partnerSpeci
 import { getPremiumLoveAnswers } from '../lib/mz-love-fact/premiumLove';
 import type { MzLoveChapterId, SceneArtwork } from '../lib/mz-love-fact/types';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
+import { isLocalReportPreviewAllowed } from '../lib/reportAccessGate';
 import '../styles/mz-love-intake.css';
 
 type PreviewLocationState = {
@@ -251,6 +252,9 @@ export default function LoveReadingPreview() {
   }
 
   const { report, viewModel } = result;
+  const canOpenLocalFullReport =
+    typeof window !== 'undefined' &&
+    isLocalReportPreviewAllowed(window.location.hostname, import.meta.env.DEV);
   const focus = isLoveFocus(formData.loveFocus) ? formData.loveFocus : 'my-attraction';
   const focusChapter = viewModel.chapters.find((chapter) => chapter.id === FOCUS_CHAPTERS[focus]);
   const openingScene = getMzLoveScene('hero-fan-closed');
@@ -276,6 +280,16 @@ export default function LoveReadingPreview() {
     : '입력한 분 단위 출생시각 반영';
 
   const continueToCheckout = () => {
+    if (canOpenLocalFullReport) {
+      navigate('/report/love-reading', {
+        state: {
+          formData,
+          paymentMethod: 'local-preview'
+        }
+      });
+      return;
+    }
+
     if (!isAuthenticated) {
       window.sessionStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(formData));
       navigate('/login', {
@@ -480,7 +494,7 @@ export default function LoveReadingPreview() {
               </dl>
               <button type="button" onClick={continueToCheckout}>
                 <LockKeyhole size={17} aria-hidden="true" />
-                잠금 풀고 인연 얼굴 보기
+                {canOpenLocalFullReport ? '결제 없이 본편 전체 보기' : '잠금 풀고 인연 얼굴 보기'}
               </button>
             </section>
 
@@ -584,8 +598,8 @@ export default function LoveReadingPreview() {
             <button type="button" className="mz-love-story-unlock" onClick={continueToCheckout}>
               <LockKeyhole size={19} aria-hidden="true" />
               <span>
-                <small>미래 인연 얼굴부터 13개 본편까지</small>
-                <strong>이 원국으로 팩폭 연애운 잠금 풀기</strong>
+                <small>{canOpenLocalFullReport ? 'LOCAL DEVELOPMENT PREVIEW' : '미래 인연 얼굴부터 13개 본편까지'}</small>
+                <strong>{canOpenLocalFullReport ? '결제 없이 전체 리포트 확인하기' : '이 원국으로 팩폭 연애운 잠금 풀기'}</strong>
               </span>
               <ArrowRight size={21} aria-hidden="true" />
             </button>
