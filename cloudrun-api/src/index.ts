@@ -1,6 +1,7 @@
 ﻿import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { generateGeminiSajuReport, ReportRequestError } from '../../src/lib/server/geminiReportService.ts';
+import productManifest from '../../src/products/manifest.json';
 
 const port = Number(process.env.PORT || 8080);
 const PORTONE_API_BASE_URL = (process.env.PORTONE_API_BASE_URL || 'https://api.portone.io').replace(/\/$/, '');
@@ -20,6 +21,11 @@ const PORTONE_PRODUCT_PRICES_KRW = Object.freeze({
   'career-reading': 59_000,
   'money-reading': 59_000
 } satisfies Record<string, number>);
+const PORTONE_ACTIVE_PRODUCT_IDS = new Set(
+  Object.entries(productManifest)
+    .filter(([, status]) => status === 'active')
+    .map(([productId]) => productId)
+);
 const KAKAO_TOKEN_ENDPOINT = 'https://kauth.kakao.com/oauth/token';
 const KAKAO_USER_ENDPOINT = 'https://kapi.kakao.com/v2/user/me';
 const REPORT_ACCESS_TOKEN_TTL_MS = Number(process.env.REPORT_ACCESS_TOKEN_TTL_MS || 30 * 60 * 1000);
@@ -550,9 +556,16 @@ function getCatalogAmount(productId: string) {
   return amount;
 }
 
+function assertProductAvailableForNewOrder(productId: string) {
+  if (!PORTONE_ACTIVE_PRODUCT_IDS.has(productId)) {
+    throw new PaymentRequestError(409, '현재 신규 판매 중인 상품이 아닙니다.');
+  }
+}
+
 function createPaymentOrderIntent(user: AuthenticatedUser, body: Record<string, unknown>) {
   const productId = getRequiredString(body, 'productId');
   const amount = getCatalogAmount(productId);
+  assertProductAvailableForNewOrder(productId);
   const requestedAmount = body.amount === undefined ? amount : getRequiredAmount(body);
   const orderId =
     getOptionalString(body, 'orderId') || `UW-${Date.now()}-${randomBytes(16).toString('base64url')}`;

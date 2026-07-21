@@ -132,6 +132,13 @@
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
         { "key": "Cache-Control", "value": "no-store" }
       ]
+    },
+    {
+      "source": "/detail/:id(life-flow|concern-reading|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ],
   "redirects": [
@@ -172,11 +179,23 @@
       "destination": "/seo/detail-love-reading.html"
     },
     {
+      "source": "/detail/love-reunion",
+      "destination": "/seo/detail-love-reunion.html"
+    },
+    {
+      "source": "/detail/match-couple",
+      "destination": "/seo/detail-match-couple.html"
+    },
+    {
       "source": "/detail/past-life-goblin/immersion",
       "destination": "/index.html"
     },
     {
       "source": "/detail/past-life-goblin/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/detail/:id(life-flow|concern-reading|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
       "destination": "/index.html"
     },
     {
