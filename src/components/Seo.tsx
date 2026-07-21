@@ -1,30 +1,11 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import seoRouteData from '../content/seoRoutes.json';
+import { seoRouteData, type RouteSeo } from '../content/seoRouteRegistry';
 import { canIndexProduct, getProductByRoute } from '../products/registry';
 
 const SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://www.unwoldang.com').replace(/\/$/, '');
 
-type RouteSeo = {
-  title: string;
-  description: string;
-  keywords: string;
-  image: string;
-  imageAlt?: string;
-  heading: string;
-  intro: string;
-  highlights: string[];
-  serviceId?: string;
-  productName?: string;
-  price?: number;
-  priceCurrency?: string;
-  sections?: Array<{ heading: string; body: string }>;
-  faqs?: Array<{ question: string; answer: string }>;
-  indexable: boolean;
-  lastmod: string;
-};
-
-const routeSeo = seoRouteData as Record<string, RouteSeo>;
+const routeSeo = seoRouteData;
 const defaultSeo = routeSeo['/'];
 
 const noIndexPrefixes = ['/form/', '/preview/', '/report/', '/auth/', '/payment/'];

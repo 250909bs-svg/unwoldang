@@ -4,7 +4,7 @@ import notFoundHandler from '../../api/not-found';
 import retiredDetailHandler from '../../api/retired-detail';
 import vercelConfig from '../../vercel.json';
 import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
-import seoRouteData from './seoRoutes.json';
+import { seoRouteData } from './seoRouteRegistry';
 import { activeProducts, getProductByRoute, productRegistry } from '../products/registry';
 
 const activeDetailPaths = ['/detail/general-saju', '/detail/love-reading', '/detail/love-reunion', '/detail/match-couple', '/detail/past-life-goblin'] as const;
