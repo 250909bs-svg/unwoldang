@@ -1,31 +1,38 @@
 import type { ProductModuleDefinition } from '../types';
+import {
+  GENERAL_SIGNATURE_DETAIL_PATH,
+  GENERAL_SIGNATURE_DISPLAY_NAME,
+  GENERAL_SIGNATURE_FORM_PATH,
+  GENERAL_SIGNATURE_ID,
+  GENERAL_SIGNATURE_REPORT_PATH
+} from './product';
 
 export const generalSignatureProduct = {
-  id: 'general-signature',
-  displayName: '운월선생 정통 종합사주',
+  id: GENERAL_SIGNATURE_ID,
+  displayName: GENERAL_SIGNATURE_DISPLAY_NAME,
   price: 79_000,
   currency: 'KRW',
   routes: {
-    detail: '/detail/general-saju',
-    intake: '/form/general-signature',
+    detail: GENERAL_SIGNATURE_DETAIL_PATH,
+    intake: GENERAL_SIGNATURE_FORM_PATH,
     checkout: '/checkout',
     loading: '/loading',
-    report: '/report/general-signature'
+    report: GENERAL_SIGNATURE_REPORT_PATH
   },
   discovery: {
-    title: '운월선생 정통 종합사주',
+    title: GENERAL_SIGNATURE_DISPLAY_NAME,
     summary: '타고난 기질부터 인생 전체 흐름까지',
     category: 'general',
     featured: true,
     recommendationRank: 1
   },
   search: {
-    title: '운월선생 정통 종합사주',
+    title: GENERAL_SIGNATURE_DISPLAY_NAME,
     image: '/intake-night-blue.png',
     keywords: ['종합사주', '사주', '대운', '세운', '인생', '원국', '오행', '십성']
   },
   home: {
-    title: '운월선생 정통 종합사주',
+    title: GENERAL_SIGNATURE_DISPLAY_NAME,
     subtitle: '타고난 기질부터 인생 전체 흐름까지',
     image: '/home-general-saju-card.webp',
     category: 'general'
@@ -36,3 +43,9 @@ export const generalSignatureProduct = {
     requiresPartnerBirth: false
   }
 } as const satisfies ProductModuleDefinition;
+
+export * from './intake';
+export * from './product';
+export * from './presentation';
+export * from './seo';
+export * from './share';

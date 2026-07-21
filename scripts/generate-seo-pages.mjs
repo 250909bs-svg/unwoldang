@@ -7,11 +7,23 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = path.join(rootDir, 'dist');
 const routesFile = path.join(rootDir, 'src', 'content', 'seoRoutes.json');
 const productManifestFile = path.join(rootDir, 'src', 'products', 'manifest.json');
+const generalSignatureSeoFile = path.join(
+  rootDir,
+  'src',
+  'products',
+  'general-signature',
+  'seo.json'
+);
 const templateFile = path.join(distDir, 'index.html');
 const publicSitemapFile = path.join(rootDir, 'public', 'sitemap.xml');
 const distSitemapFile = path.join(distDir, 'sitemap.xml');
 
-const routes = JSON.parse(await readFile(routesFile, 'utf8'));
+const baseRoutes = JSON.parse(await readFile(routesFile, 'utf8'));
+const generalSignatureSeo = JSON.parse(await readFile(generalSignatureSeoFile, 'utf8'));
+const routes = {
+  ...baseRoutes,
+  [generalSignatureSeo.path]: generalSignatureSeo.metadata
+};
 const productStatuses = JSON.parse(await readFile(productManifestFile, 'utf8'));
 const template = await readFile(templateFile, 'utf8');
 const detailRouteAliases = Object.freeze({

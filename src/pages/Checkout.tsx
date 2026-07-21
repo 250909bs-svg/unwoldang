@@ -18,6 +18,8 @@ import {
   savePendingPayment
 } from '../lib/auth';
 import { requestPortOnePayment } from '../lib/portonePayments';
+import GeneralSignatureCheckoutSummary from '../products/general-signature/components/GeneralSignatureCheckoutSummary';
+import { GENERAL_SIGNATURE_PRODUCT } from '../products/general-signature';
 import {
   getPaymentMode,
   getPortOneConfirmEndpoint,
@@ -46,6 +48,7 @@ export default function Checkout() {
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
   const draftOwnerId = user?.id;
   const service = findServiceById(product.id);
+  const isGeneralSignatureProduct = product.flow.detailVariant === 'general-signature';
   const isPastLifeProduct = product.flow.intakeVariant === 'past-life';
   const isLoveReadingProduct = product.flow.intakeVariant === 'love-reading';
   const [agreeService, setAgreeService] = useState(false);
@@ -250,7 +253,9 @@ export default function Checkout() {
   return (
     <main
       className={
-        isPastLifeProduct
+        isGeneralSignatureProduct
+          ? 'mobile-page-shell checkout-luxe-page general-signature-checkout-page'
+          : isPastLifeProduct
           ? 'mobile-page-shell checkout-luxe-page past-life-checkout-page'
           : isLoveReadingProduct
             ? 'mobile-page-shell checkout-luxe-page love-reading-checkout-page'
@@ -267,14 +272,18 @@ export default function Checkout() {
                 ? '흑장부에 이름을 새기기 전'
                 : isLoveReadingProduct
                   ? '붉은 실의 결말을 열기 전'
-                  : '잠들어 있던 내 운의 흐름'}
+                  : isGeneralSignatureProduct
+                    ? GENERAL_SIGNATURE_PRODUCT.checkout.eyebrow
+                    : '잠들어 있던 내 운의 흐름'}
             </span>
             <strong>
               {formData?.name || '고객'}님의 {isPastLifeProduct
                 ? '전생장부'
                 : isLoveReadingProduct
                   ? '연애 패턴 리포트'
-                  : '사주 리포트'}
+                  : isGeneralSignatureProduct
+                    ? GENERAL_SIGNATURE_PRODUCT.checkout.title
+                    : '사주 리포트'}
             </strong>
           </div>
           <div className="checkout-luxe-preview-row">
@@ -328,13 +337,15 @@ export default function Checkout() {
           </div>
 
           <div className="checkout-luxe-benefit-pill">
-            <span>{isPastLifeProduct ? '개인 장부 구성' : isLoveReadingProduct ? '개인 리포트 구성' : '혜택 적용'}</span>
+            <span>{isPastLifeProduct ? '개인 장부 구성' : isLoveReadingProduct ? '개인 리포트 구성' : isGeneralSignatureProduct ? '종합 리포트 구성' : '혜택 적용'}</span>
             <strong>
               {isPastLifeProduct
                 ? '한 번 결제로 다섯 권 전체를 받아요'
                 : isLoveReadingProduct
                   ? '결제 후 13개 연애 챕터 전체를 바로 열어요'
-                  : '결제 후 결과를 바로 확인할 수 있어요'}
+                  : isGeneralSignatureProduct
+                    ? GENERAL_SIGNATURE_PRODUCT.checkout.benefit
+                    : '결제 후 결과를 바로 확인할 수 있어요'}
             </strong>
           </div>
 
@@ -382,6 +393,8 @@ export default function Checkout() {
               <strong>{formattedAmount}원</strong>
             </div>
           </div>
+
+          {isGeneralSignatureProduct ? <GeneralSignatureCheckoutSummary formData={formData || {}} /> : null}
 
           <div className="checkout-luxe-payments">
             <div className="checkout-luxe-pay-row">

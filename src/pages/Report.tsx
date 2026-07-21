@@ -14,6 +14,11 @@ import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
+import GeneralSignatureReportGuide from '../products/general-signature/components/GeneralSignatureReportGuide';
+import {
+  createGeneralSignatureShareData,
+  GENERAL_SIGNATURE_PRODUCT
+} from '../products/general-signature';
 import { canStartProduct, getProductById } from '../products/registry';
 import '../styles/past-life.css';
 
@@ -5373,15 +5378,6 @@ type ReportPageCopy = {
 };
 
 const REPORT_PAGE_COPY: Partial<Record<SajuReportData['serviceId'], ReportPageCopy>> = {
-  'general-signature': {
-    coverTitle: '종합사주 리포트',
-    summaryCaption: '사주 전체 구조와 지금 가장 중요한 선택 기준을 먼저 정리했습니다.',
-    qaTitle: '질문 맞춤 해답',
-    qaCaption: '입력한 질문 2개를 원국, 대운, 세운과 연결해 읽었습니다.',
-    glanceTitle: '사주 원국 핵심 지표',
-    glanceCaption: '원국, 오행, 십성의 계산값을 먼저 확인합니다.',
-    tocTitle: '종합사주 전체 흐름 보기'
-  },
   'life-flow': {
     coverTitle: '신년운세 리포트',
     summaryCaption: '올해와 내년 사이 열리는 상승기, 정비기, 선택 타이밍을 먼저 정리했습니다.',
@@ -5466,6 +5462,10 @@ const REPORT_PAGE_COPY: Partial<Record<SajuReportData['serviceId'], ReportPageCo
 };
 
 function getReportPageCopy(report: SajuReportData): ReportPageCopy {
+  if (report.serviceId === GENERAL_SIGNATURE_PRODUCT.id) {
+    return GENERAL_SIGNATURE_PRODUCT.report.pageCopy;
+  }
+
   return (
     REPORT_PAGE_COPY[report.serviceId] || {
       coverTitle: report.title,
@@ -6317,6 +6317,7 @@ export default function Report() {
     (location.state as ReportLocationState) || {};
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
+  const isGeneralSignatureShowcase = product.flow.detailVariant === 'general-signature';
   const reportAccess = evaluateReportAccess({
     hostname: typeof window === 'undefined' ? '' : window.location.hostname,
     isDevelopment: import.meta.env.DEV,
@@ -6664,6 +6665,7 @@ export default function Report() {
       ]
     : [
         ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
+        ...(isGeneralSignatureShowcase ? [{ id: 'general-guide', label: '계산과 해설 지도', number: '00' }] : []),
         { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
         { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
         { id: 'glance', label: '핵심 지표 요약', number: '02' },
@@ -6685,13 +6687,15 @@ export default function Report() {
   };
 
   const handleShareReport = async () => {
-    const shareData = isLoveReadingShowcase
-      ? createLoveReadingProductShareData(window.location.origin)
-      : {
-          title: `${report.customerName} ${report.title}`,
-          text: '운월당 사주 리포트',
-          url: window.location.href
-        };
+    const shareData = isGeneralSignatureShowcase
+      ? createGeneralSignatureShareData(window.location.origin)
+      : isLoveReadingShowcase
+        ? createLoveReadingProductShareData(window.location.origin)
+        : {
+            title: `${report.customerName} ${report.title}`,
+            text: '운월당 사주 리포트',
+            url: window.location.href
+          };
 
     if (navigator.share) {
       await navigator.share(shareData);
@@ -7046,7 +7050,9 @@ body {
         ? 'premium-report-page yearly-premium-page'
         : isPastLifeShowcase
           ? 'premium-report-page past-life-report-page'
-          : 'premium-report-page'
+          : isGeneralSignatureShowcase
+            ? 'premium-report-page general-signature-report-page'
+            : 'premium-report-page'
     }>
       <header className="premium-report-topbar">
         <div className="premium-report-topbar-inner">
@@ -7055,7 +7061,12 @@ body {
           </Link>
 
           <div className="premium-report-top-actions">
-            <button type="button" className="premium-icon-action" aria-label="리포트 공유" onClick={handleShareReport}>
+            <button
+              type="button"
+              className="premium-icon-action"
+              aria-label={isGeneralSignatureShowcase ? '종합사주 상품 공유' : '리포트 공유'}
+              onClick={handleShareReport}
+            >
               <Share2 size={16} />
             </button>
             <button type="button" className="premium-icon-action" aria-label="PDF로 저장" onClick={handlePrintReport}>
@@ -7288,6 +7299,17 @@ body {
           {isPastLifeShowcase && report.pastLifeProfile ? (
             <>
               <PastLifeStoryReport report={report} profile={report.pastLifeProfile} />
+              <div className="premium-divider" />
+            </>
+          ) : null}
+
+          {isGeneralSignatureShowcase ? (
+            <>
+              <GeneralSignatureReportGuide
+                report={report}
+                accessMode={reportAccess.mode}
+                provider={reportProvider || undefined}
+              />
               <div className="premium-divider" />
             </>
           ) : null}
