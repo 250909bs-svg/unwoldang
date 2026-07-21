@@ -1,18 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import {
-  confirmAuthenticatedPortOnePayment,
-  readPendingPayment,
-  savePendingPayment,
-  type PendingPayment
-} from '../lib/auth';
+  PaymentApiError,
+  canRetryPaymentConfirmation,
+  confirmPaymentSession,
+  isCancellationMessage,
+  parsePortOneCallback,
+  readPaymentSession,
+  updatePaymentSession,
+  type PortOneCallbackResult
+} from '../features/payments';
+import type { PaymentSession, PaymentUiPhase } from '../features/payments/contracts';
 import { getPortOneConfirmEndpoint, shouldUseDemoPayment } from '../lib/runtimeConfig';
 
-type CallbackView = 'loading' | 'fail' | 'error';
-
-function moveToResult(navigate: ReturnType<typeof useNavigate>, payment: PendingPayment) {
+function moveToResult(navigate: ReturnType<typeof useNavigate>, payment: PaymentSession) {
   navigate('/loading', {
     replace: true,
     state: {
@@ -26,149 +29,198 @@ function moveToResult(navigate: ReturnType<typeof useNavigate>, payment: Pending
   });
 }
 
-function getFirstParam(params: URLSearchParams, keys: string[]) {
-  for (const key of keys) {
-    const value = params.get(key);
-
-    if (value) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
 export default function PaymentCallback() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const confirmationStartedRef = useRef(false);
-  const [view, setView] = useState<CallbackView>('loading');
-  const [message, setMessage] = useState('PortOne KG이니시스 결제 결과를 확인하고 있습니다.');
-
-  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const confirmationInFlightRef = useRef(false);
+  const navigationTimerRef = useRef<number | null>(null);
+  const [phase, setPhase] = useState<PaymentUiPhase>('confirming');
+  const [message, setMessage] = useState('PortOne 결제 결과를 서버에서 확인하고 있습니다.');
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   useEffect(() => {
-    const pendingPayment = readPendingPayment();
-    const paymentFlag = params.get('payment');
-    const isMock = params.get('mock') === '1';
-    const allowMockPayment = shouldUseDemoPayment();
-    const paymentId = getFirstParam(params, ['paymentId', 'payment_id', 'orderId']);
-    const txId = getFirstParam(params, ['txId', 'tx_id', 'transactionId']);
-    const errorCode = params.get('code') || params.get('errorCode');
-    const errorMessage = params.get('message') || params.get('errorMessage');
+    const scheduleResult = (payment: PaymentSession) => {
+      if (navigationTimerRef.current) {
+        window.clearTimeout(navigationTimerRef.current);
+      }
+      navigationTimerRef.current = window.setTimeout(() => moveToResult(navigate, payment), 600);
+    };
+    const pendingPayment = readPaymentSession(user?.id);
+    const isMock = new URLSearchParams(location.search).get('mock') === '1';
 
-    if (!pendingPayment) {
-      setView('error');
-      setMessage('진행 중인 주문 정보가 없습니다. 다시 주문 화면에서 결제를 시도해 주세요.');
+    if (!user) {
+      setPhase('retryable');
+      setMessage('결제 확인을 계속하려면 로그인 상태를 복구한 뒤 다시 시도해 주세요.');
       return;
     }
 
-    if (paymentFlag === 'portone-fail' || errorCode) {
-      setView('fail');
-      setMessage(errorMessage || '결제가 취소되었거나 실패했습니다. 다시 결제해 주세요.');
+    if (!pendingPayment) {
+      setPhase('failed');
+      setMessage(
+        '이 로그인 계정에 결합된 진행 중 주문이 없습니다. 재결제하지 말고 결제 내역을 먼저 확인해 주세요.'
+      );
+      return;
+    }
+
+    if (pendingPayment.status === 'paid' && pendingPayment.reportAccessToken) {
+      setPhase('success');
+      setMessage('이미 확인된 결제입니다. 같은 리포트 권한으로 이동합니다.');
+      scheduleResult(pendingPayment);
       return;
     }
 
     if (isMock) {
-      if (!allowMockPayment) {
-        setView('error');
-        setMessage('실결제 모드에서는 데모 결제 결과를 사용할 수 없습니다. 실제 결제로 다시 진행해 주세요.');
+      if (!shouldUseDemoPayment() || !pendingPayment.isDemo) {
+        setPhase('failed');
+        setMessage('실결제 모드에서는 개발 전용 데모 결제 결과를 사용할 수 없습니다.');
         return;
       }
 
-      savePendingPayment({
-        ...pendingPayment,
-        paymentMethod: 'portone',
-        paymentKey: pendingPayment.orderId
-      });
-      moveToResult(navigate, { ...pendingPayment, paymentMethod: 'portone' });
+      setPhase('success');
+      setMessage('개발 전용 데모 흐름을 확인했습니다. 실제 결제나 entitlement는 생성되지 않았습니다.');
+      scheduleResult(pendingPayment);
       return;
     }
 
-    if (!paymentId) {
-      setView('error');
-      setMessage('PortOne 결제 ID가 전달되지 않았습니다. 다시 결제를 시도해 주세요.');
-      return;
+    let callbackResult: PortOneCallbackResult = parsePortOneCallback(location.search);
+
+    if (
+      callbackResult.kind === 'failed' &&
+      pendingPayment.paymentId &&
+      /결제 ID가 전달되지 않아/.test(callbackResult.message)
+    ) {
+      callbackResult = {
+        kind: 'submitted',
+        paymentId: pendingPayment.paymentId,
+        txId: pendingPayment.txId
+      };
     }
 
-    if (paymentId !== pendingPayment.orderId) {
-      setView('error');
-      setMessage('주문번호가 일치하지 않아 결제를 중단했습니다. 고객센터 확인이 필요합니다.');
+    if (callbackResult.kind !== 'submitted') {
+      callbackResult = {
+        kind: 'submitted',
+        paymentId: pendingPayment.paymentId || pendingPayment.orderId,
+        txId: pendingPayment.txId
+      };
+    }
+
+    if (callbackResult.paymentId !== pendingPayment.orderId) {
+      setPhase('failed');
+      setMessage('주문번호가 일치하지 않아 결제를 중단했습니다. 재결제하지 말고 고객센터에 확인해 주세요.');
       return;
     }
 
     const confirmEndpoint = getPortOneConfirmEndpoint();
 
-    if (!confirmEndpoint) {
-      setView('error');
-      setMessage('PortOne 결제 검증 API가 연결되지 않았습니다. 서버 설정을 먼저 확인해 주세요.');
+    if (!confirmEndpoint || !user.authToken || !pendingPayment.orderClaim) {
+      setPhase('retryable');
+      setMessage('결제창을 다시 열지 마세요. 로그인과 서버 설정을 복구한 뒤 같은 결제를 다시 확인해 주세요.');
       return;
     }
 
-    const authToken = user?.authToken;
-    const orderClaim = pendingPayment.orderClaim;
+    const confirmingPayment = updatePaymentSession(pendingPayment, 'pending', {
+      paymentId: callbackResult.paymentId,
+      txId: callbackResult.txId || pendingPayment.txId
+    });
 
-    if (!authToken || !orderClaim) {
-      setView('error');
-      setMessage('결제 사용자 인증 정보가 만료되었습니다. 카카오 로그인 후 결제 내역에서 다시 이어 주세요.');
+    if (confirmationInFlightRef.current) {
       return;
     }
 
-    if (confirmationStartedRef.current) {
-      return;
-    }
-    confirmationStartedRef.current = true;
+    confirmationInFlightRef.current = true;
+    setPhase('confirming');
+    setMessage('PortOne 승인 내역과 서버 주문 금액을 대조하고 있습니다.');
 
-    const confirmPayment = async () => {
+    const confirm = async () => {
       try {
-        const confirmed = await confirmAuthenticatedPortOnePayment({
+        const confirmed = await confirmPaymentSession({
           confirmEndpoint,
-          authToken,
-          paymentId,
-          txId: txId || undefined,
-          orderId: pendingPayment.orderId,
-          amount: pendingPayment.amount,
-          productId: pendingPayment.productId,
-          orderClaim
+          authToken: user.authToken as string,
+          session: confirmingPayment
         });
-
-        const confirmedPayment = {
-          ...pendingPayment,
-          paymentMethod: 'portone',
+        const paidPayment = updatePaymentSession(confirmingPayment, 'paid', {
+          paymentId: confirmed.paymentId,
           paymentKey: confirmed.paymentId,
           txId: confirmed.txId,
-          reportAccessToken: confirmed.reportAccessToken
-        } satisfies PendingPayment;
-        savePendingPayment(confirmedPayment);
-        moveToResult(navigate, confirmedPayment);
+          orderClaim: undefined,
+          entitlementId: confirmed.entitlement.id,
+          entitlementStatus: confirmed.entitlement.status,
+          reportAccessToken: confirmed.reportAccessToken,
+          reportAccessTokenExpiresAt: confirmed.reportAccessTokenExpiresAt
+        });
+
+        setPhase('success');
+        setMessage('결제 확인이 완료되었습니다. 같은 entitlement로 리포트를 엽니다.');
+        scheduleResult(paidPayment);
       } catch (caughtError) {
-        setView('error');
-        setMessage(caughtError instanceof Error ? caughtError.message : '결제 검증 처리 중 문제가 발생했습니다.');
+        const detail =
+          caughtError instanceof Error ? caughtError.message : '결제 승인 상태를 확인하지 못했습니다.';
+        const isRetryable =
+          caughtError instanceof PaymentApiError &&
+          caughtError.retryable &&
+          canRetryPaymentConfirmation(confirmingPayment);
+        const retryCopy =
+          caughtError instanceof PaymentApiError && !caughtError.retryable
+            ? ' 주문 정보가 일치하지 않으면 고객센터 확인이 필요합니다.'
+            : '';
+
+        if (isRetryable) {
+          setPhase('retryable');
+        } else {
+          const terminalStatus = isCancellationMessage(detail) ? 'cancelled' : 'failed';
+          updatePaymentSession(confirmingPayment, terminalStatus);
+          setPhase(terminalStatus);
+        }
+        setMessage(`결제창을 다시 열지 마세요. ${detail}${retryCopy}`);
+      } finally {
+        confirmationInFlightRef.current = false;
       }
     };
 
-    void confirmPayment();
-  }, [navigate, params, user?.authToken]);
+    void confirm();
+
+    return () => {
+      if (navigationTimerRef.current) {
+        window.clearTimeout(navigationTimerRef.current);
+        navigationTimerRef.current = null;
+      }
+    };
+  }, [location.search, navigate, retryAttempt, user?.authToken, user?.id]);
+
+  const isWorking = phase === 'confirming' || phase === 'success';
 
   return (
-    <main className="mobile-page-shell">
-      <div className="mobile-page-card">
-        <MobileTopBar title="결제 결과 확인" backTo="/checkout" backLabel="결제" />
-        <section className="mobile-page-content centered">
-          <div className="mobile-loading-card">
-            <span className="mobile-chip">PORTONE KG이니시스</span>
-            <h1>{message}</h1>
-            {view === 'loading' ? (
-              <div className="progress-track">
-                <span style={{ width: '82%' }} />
+    <main className='mobile-page-shell'>
+      <div className='mobile-page-card'>
+        <MobileTopBar title='결제 결과 확인' backTo='/checkout' backLabel='결제' />
+        <section className='mobile-page-content centered'>
+          <div className='mobile-loading-card'>
+            <span className='mobile-chip'>PORTONE KG이니시스</span>
+            <h1 role='status' aria-live='polite'>
+              {message}
+            </h1>
+            {isWorking ? (
+              <div className='progress-track'>
+                <span style={{ width: phase === 'success' ? '100%' : '82%' }} />
               </div>
             ) : (
-              <div className="mobile-action-stack">
-                <Link to="/checkout" className="app-muted-button">
-                  주문 화면으로 돌아가기
-                </Link>
-                <Link to="/menu" className="app-black-button">
+              <div className='mobile-action-stack'>
+                {phase === 'retryable' ? (
+                  <button
+                    type='button'
+                    className='app-black-button'
+                    disabled={confirmationInFlightRef.current}
+                    onClick={() => setRetryAttempt((attempt) => attempt + 1)}
+                  >
+                    같은 결제 확인 다시 시도
+                  </button>
+                ) : (
+                  <Link to='/checkout' className='app-black-button'>
+                    {phase === 'cancelled' ? '주문 화면으로 돌아가기' : '결제 상태 다시 확인하기'}
+                  </Link>
+                )}
+                <Link to='/menu' className='app-muted-button'>
                   카테고리 다시 보기
                 </Link>
               </div>
