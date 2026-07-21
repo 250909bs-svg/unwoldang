@@ -8,6 +8,8 @@ import { getAiReportEndpoint, requestAiReport, type AiReportProvider } from '../
 import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
+import GeneralSignatureLoadingLayers from '../products/general-signature/components/GeneralSignatureLoadingLayers';
+import { GENERAL_SIGNATURE_PRODUCT } from '../products/general-signature';
 import { getProductById } from '../products/registry';
 
 type LoadingLocationState = {
@@ -59,7 +61,14 @@ export default function Loading() {
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
   const initialReportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
   const service = findServiceById(productDefinition.id);
+  const isGeneralSignatureProduct = productDefinition.flow.detailVariant === 'general-signature';
   const isPastLifeProduct = productDefinition.flow.intakeVariant === 'past-life';
+  const previewFormData = formData || (
+    isGeneralSignatureProduct
+      ? undefined
+      : LOADING_PREVIEW_FORM_DATA
+  );
+  const isMissingGeneralSignatureInput = isGeneralSignatureProduct && !formData;
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
@@ -88,12 +97,16 @@ export default function Loading() {
       return null;
     }
 
+    if (!previewFormData) {
+      return null;
+    }
+
     try {
-      return buildSajuReport(product || service.id, formData || LOADING_PREVIEW_FORM_DATA);
+      return buildSajuReport(product || service.id, previewFormData);
     } catch {
       return null;
     }
-  }, [formData, product, reportData, service.id]);
+  }, [previewFormData, product, reportData, service.id]);
   const elementTotal = Math.max(previewReport?.fiveElements.reduce((sum, item) => sum + item.value, 0) || 0, 1);
 
   const messages = useMemo(
@@ -105,6 +118,10 @@ export default function Loading() {
             '현생에 남은 반복 장면을 읽고 있습니다.',
             '마지막 봉인을 풀고 있습니다.'
           ]
+        : isGeneralSignatureProduct
+          ? canRequestAiReport
+            ? GENERAL_SIGNATURE_PRODUCT.loading.aiMessages
+            : GENERAL_SIGNATURE_PRODUCT.loading.deterministicMessages
         : canRequestAiReport
         ? [
             `${service.advisor} 스타일로 프리미엄 리포트를 구성하고 있습니다.`,
@@ -118,7 +135,7 @@ export default function Loading() {
             '질문 2개와 사주 입력값을 묶어서 결과 구조를 정리하고 있습니다.',
             '분석이 거의 완료되었습니다. 결과 화면으로 이동합니다.'
           ],
-    [canRequestAiReport, isPastLifeProduct, service.advisor]
+    [canRequestAiReport, isGeneralSignatureProduct, isPastLifeProduct, service.advisor]
   );
 
   useEffect(() => {
@@ -132,6 +149,13 @@ export default function Loading() {
         return;
       }
 
+      if (isMissingGeneralSignatureInput) {
+        setAnalysisFailed(true);
+        setAnalysisNotice('종합사주 입력 정보를 확인할 수 없습니다. 입력 화면에서 계산 기준을 다시 확인해 주세요.');
+        setAnalysisFinished(true);
+        return;
+      }
+
       if (isMissingLiveReportAccess) {
         setAnalysisNotice('결제 검증 정보가 확인되지 않아 리포트를 열 수 없습니다. 결제 화면에서 다시 진행해 주세요.');
         setAnalysisFinished(true);
@@ -139,7 +163,7 @@ export default function Loading() {
       }
 
       if (!canRequestAiReport) {
-        setReportData(buildSajuReport(product || service.id, formData || LOADING_PREVIEW_FORM_DATA));
+        setReportData(buildSajuReport(product || service.id, previewFormData || {}));
         setAnalysisFinished(true);
         return;
       }
@@ -209,7 +233,7 @@ export default function Loading() {
     }
 
     void generationRunRef.current.promise;
-  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, service.id, user?.authToken]);
+  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, isMissingGeneralSignatureInput, isMissingLiveReportAccess, locationState?.reportData, orderId, previewFormData, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, service.id, user?.authToken]);
 
   useEffect(() => {
     if (analysisFinished) {
@@ -295,14 +319,26 @@ export default function Loading() {
   }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, reportProvider, service.id, tabOrigin]);
 
   return (
-    <main className={isPastLifeProduct ? 'mobile-page-shell past-life-loading-page' : 'mobile-page-shell'}>
+    <main className={
+      isGeneralSignatureProduct
+        ? 'mobile-page-shell general-signature-loading-page'
+        : isPastLifeProduct
+          ? 'mobile-page-shell past-life-loading-page'
+          : 'mobile-page-shell'
+    }>
       <div className="mobile-page-card">
         <MobileTopBar title="리포트 생성 중" backTo="/" backLabel="홈" />
 
         <section className="mobile-page-content centered">
           <div className="mobile-loading-card saju-loading-card">
             <div className="saju-loading-head">
-              <span className="mobile-chip">{isPastLifeProduct ? '도깨비 전생장부 봉인 해제' : '운월당 사주 원국 분석'}</span>
+              <span className="mobile-chip">
+                {isPastLifeProduct
+                  ? '도깨비 전생장부 봉인 해제'
+                  : isGeneralSignatureProduct
+                    ? '계산 사실 → 해설과 행동'
+                    : '운월당 사주 원국 분석'}
+              </span>
               <h1>{messages[messageIndex]}</h1>
             </div>
 
@@ -347,8 +383,15 @@ export default function Loading() {
               </div>
             ) : null}
 
+            {isGeneralSignatureProduct ? <GeneralSignatureLoadingLayers /> : null}
+
             <div className="saju-loading-phases" aria-label="분석 진행 단계">
-              {(isPastLifeProduct ? ['이름 탐색', '인연 정렬', '현생 해석', '봉인 해제'] : LOADING_PHASES).map((phase, index) => (
+              {(isPastLifeProduct
+                ? ['이름 탐색', '인연 정렬', '현생 해석', '봉인 해제']
+                : isGeneralSignatureProduct
+                  ? GENERAL_SIGNATURE_PRODUCT.loading.phases.map((phase) => phase.label)
+                  : LOADING_PHASES
+              ).map((phase, index) => (
                 <span key={phase} className={progress >= (index + 1) * 24 ? 'active' : undefined}>
                   {phase}
                 </span>
@@ -358,8 +401,22 @@ export default function Loading() {
             {analysisNotice ? <p className="mobile-loading-notice">{analysisNotice}</p> : null}
             {analysisFailed ? (
               <div className="mobile-loading-actions">
-                <button type="button" className="app-black-button" onClick={() => window.location.reload()}>
-                  AI 분석 다시 시도
+                <button
+                  type="button"
+                  className="app-black-button"
+                  onClick={() => {
+                    if (isMissingGeneralSignatureInput) {
+                      navigate(productDefinition.routes.intake, {
+                        replace: true,
+                        state: { tabOrigin }
+                      });
+                      return;
+                    }
+
+                    window.location.reload();
+                  }}
+                >
+                  {isMissingGeneralSignatureInput ? '입력 화면으로 돌아가기' : 'AI 분석 다시 시도'}
                 </button>
               </div>
             ) : null}

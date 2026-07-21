@@ -18,6 +18,14 @@ import {
 import { validateBirthInput } from '../lib/birthInputValidation';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
+import GeneralSignaturePolicyNotice from '../products/general-signature/components/GeneralSignaturePolicyNotice';
+import {
+  applyGeneralSignatureCalendarSelection,
+  formatGeneralSignatureBirthDate,
+  GENERAL_SIGNATURE_PRODUCT,
+  isGeneralSignatureRelationshipReady,
+  normalizeGeneralSignatureBirthFields
+} from '../products/general-signature';
 import { getProductById } from '../products/registry';
 import '../styles/mz-love-fact.css';
 import '../styles/past-life.css';
@@ -317,6 +325,7 @@ export default function Form() {
   const { id } = useParams<{ id: string }>();
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
+  const isGeneralSignatureFlow = product.flow.detailVariant === 'general-signature';
   const isPastLifeFlow = product.flow.intakeVariant === 'past-life';
   const isCompatibilityFlow = product.flow.intakeVariant === 'compatibility';
   const navigate = useNavigate();
@@ -357,19 +366,24 @@ export default function Form() {
     const storedLoveReaction = service.id === 'love-reading'
       ? window.sessionStorage.getItem(MZ_LOVE_CHOICE_STORAGE_KEY)
       : null;
-    const hydrated = hydrateFormData({
+    const hydrationSource = {
       ...source,
       loveReaction:
         normalizeLoveReaction(locationState?.loveReaction) ??
         normalizeLoveReaction(source?.loveReaction) ??
         normalizeLoveReaction(storedLoveReaction) ??
         undefined
-    });
+    };
+    const hydrated = hydrateFormData(
+      isGeneralSignatureFlow
+        ? normalizeGeneralSignatureBirthFields(hydrationSource)
+        : hydrationSource
+    );
 
     setFormData(hydrated);
     setBirthDigits(parseDateDigits(hydrated.birthDate));
     setPartnerBirthDigits(parseDateDigits(hydrated.partner?.birthDate));
-  }, [draftKey, locationState?.formData, locationState?.loveReaction, service.id]);
+  }, [draftKey, isGeneralSignatureFlow, locationState?.formData, locationState?.loveReaction, service.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -394,7 +408,25 @@ export default function Form() {
   const updateBirthDate = (value: string) => {
     const nextDigits = sanitizeDigits(value, 8);
     setBirthDigits(nextDigits);
-    updateField('birthDate', formatBirthDate(nextDigits));
+    updateField(
+      'birthDate',
+      isGeneralSignatureFlow
+        ? formatGeneralSignatureBirthDate(nextDigits, formData.calendar)
+        : formatBirthDate(nextDigits)
+    );
+  };
+
+  const selectBirthCalendar = (calendar: IntakeFormData['calendar']) => {
+    if (isGeneralSignatureFlow) {
+      setFormData((prev) => applyGeneralSignatureCalendarSelection(prev, birthDigits, calendar));
+      return;
+    }
+
+    updateField('calendar', calendar);
+
+    if (calendar === 'solar') {
+      updateField('isLeapMonth', false);
+    }
   };
 
   const updateBirthTime = (nextValue: string) => {
@@ -536,6 +568,14 @@ export default function Form() {
 
   const toggleLeapMonth = () => {
     setFormData((prev) => {
+      if (isGeneralSignatureFlow) {
+        const next = applyGeneralSignatureCalendarSelection(prev, birthDigits, 'lunar');
+        return {
+          ...next,
+          isLeapMonth: prev.calendar === 'lunar' ? !prev.isLeapMonth : true
+        };
+      }
+
       if (prev.calendar !== 'lunar') {
         return { ...prev, calendar: 'lunar', isLeapMonth: true };
       }
@@ -571,6 +611,8 @@ export default function Form() {
     ? Boolean(formData.pastLifeTopic?.trim())
     : isCompatibilityFlow
       ? partnerBirthValidation.valid
+      : isGeneralSignatureFlow
+        ? isGeneralSignatureRelationshipReady(formData)
       : isLoveReadingFlow
         ? Boolean(formData.relationshipStatus) &&
           (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration))
@@ -589,7 +631,14 @@ export default function Form() {
     ? pastLifeQuestionSuggestions
     : isLoveReadingFlow
       ? loveReadingQuestionSuggestions
-      : questionSuggestions;
+      : isGeneralSignatureFlow
+        ? GENERAL_SIGNATURE_PRODUCT.intake.questionSuggestions
+        : questionSuggestions;
+  const generalBirthError = isGeneralSignatureFlow && birthDigits.length === 8
+    ? selfBirthValidation.errors.find((error) =>
+        ['birthDate', 'isLeapMonth', 'birthTime', 'birthTimePrecision', 'dayBoundaryPolicy'].includes(error.field)
+      )
+    : undefined;
   const pastLifeGuideCopy =
     step === 4 && formData.readingTone && pastLifeToneReplies[formData.readingTone]
       ? { eyebrow: pastLifeGuideStepCopy[step].eyebrow, line: pastLifeToneReplies[formData.readingTone] }
@@ -739,7 +788,9 @@ export default function Form() {
     <main
       className={`intake-story-page intake-step-${step} ${isYearlyFlow ? 'yearly-flow-page' : ''} ${
         isCinematicFlow ? 'signature-video-flow-page' : ''
-      } ${isLoveReadingFlow ? 'love-reading-video-flow-page' : ''} ${isPastLifeFlow ? 'past-life-goblin-flow-page' : ''}`}
+      } ${isLoveReadingFlow ? 'love-reading-video-flow-page' : ''} ${isPastLifeFlow ? 'past-life-goblin-flow-page' : ''} ${
+        isGeneralSignatureFlow ? 'general-signature-flow-page' : ''
+      }`}
     >
       <div className="intake-story-backdrop" />
       <div className="intake-story-shade" />
@@ -850,17 +901,14 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.calendar === 'solar' ? 'intake-story-pill active' : 'intake-story-pill'}
-                    onClick={() => {
-                      updateField('calendar', 'solar');
-                      updateField('isLeapMonth', false);
-                    }}
+                    onClick={() => selectBirthCalendar('solar')}
                   >
                     양력
                   </button>
                   <button
                     type="button"
                     className={formData.calendar === 'lunar' ? 'intake-story-pill active' : 'intake-story-pill'}
-                    onClick={() => updateField('calendar', 'lunar')}
+                    onClick={() => selectBirthCalendar('lunar')}
                   >
                     음력
                   </button>
@@ -977,6 +1025,11 @@ export default function Form() {
                   </button>
                 </div>
               </div>
+
+              {isGeneralSignatureFlow ? <GeneralSignaturePolicyNotice formData={formData} /> : null}
+              {generalBirthError ? (
+                <p className="general-signature-input-error" role="alert">{generalBirthError.message}</p>
+              ) : null}
             </div>
           ) : null}
 
@@ -1177,8 +1230,16 @@ export default function Form() {
             ) : (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
-                <strong>현재 관계 상태를 알려주세요</strong>
-                <p>솔로, 썸, 연애, 애매한 관계, 이별·재회, 기혼 중 지금과 가장 가까운 상태를 골라주세요.</p>
+                <strong>
+                  {isGeneralSignatureFlow
+                    ? GENERAL_SIGNATURE_PRODUCT.intake.relationshipCopy.title
+                    : '현재 관계 상태를 알려주세요'}
+                </strong>
+                <p>
+                  {isGeneralSignatureFlow
+                    ? GENERAL_SIGNATURE_PRODUCT.intake.relationshipCopy.body
+                    : '솔로, 썸, 연애, 애매한 관계, 이별·재회, 기혼 중 지금과 가장 가까운 상태를 골라주세요.'}
+                </p>
               </div>
 
               <article className="intake-story-question-card">
@@ -1209,7 +1270,8 @@ export default function Form() {
                 <div className="intake-story-question-head">
                   <strong>
                     기간은 얼마나 되나요?
-                    {isLoveReadingFlow && !isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
+                    {(isLoveReadingFlow || isGeneralSignatureFlow) &&
+                    !isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
                   </strong>
                   <span className="intake-story-order-badge">PERIOD</span>
                 </div>
@@ -1230,7 +1292,9 @@ export default function Form() {
                   ))}
                 </div>
                 <p className="intake-story-caption">
-                  연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.
+                  {isGeneralSignatureFlow
+                    ? GENERAL_SIGNATURE_PRODUCT.intake.relationshipCopy.durationCaption
+                    : '연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.'}
                 </p>
               </article>
             </div>
@@ -1276,11 +1340,17 @@ export default function Form() {
             ) : (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
-                <strong>첫 번째 질문을 적어주세요</strong>
+                <strong>
+                  {isGeneralSignatureFlow
+                    ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q1.title
+                    : '첫 번째 질문을 적어주세요'}
+                </strong>
                 <p>
                   {isLoveReadingFlow
                     ? '지금 가장 마음을 흔드는 관계나 반복 패턴을 적으면 첫 번째 맞춤 연애 분석으로 이어집니다.'
-                    : '가장 시급하거나 가장 궁금한 고민을 먼저 적으면 결과 리포트에서 첫 번째 맞춤 답변 카드로 분석됩니다.'}
+                    : isGeneralSignatureFlow
+                      ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q1.body
+                      : '가장 시급하거나 가장 궁금한 고민을 먼저 적으면 결과 리포트에서 첫 번째 맞춤 답변 카드로 분석됩니다.'}
                 </p>
               </div>
 
@@ -1294,13 +1364,17 @@ export default function Form() {
                   onChange={(event) => updateField('q1', event.target.value.slice(0, 180))}
                   placeholder={isLoveReadingFlow
                     ? '예: 지금 반복되는 애매한 관계를 계속 이어가도 될까요?'
-                    : '예: 지금 제 인생에서 가장 먼저 정리해야 할 흐름은 무엇인가요?'}
+                    : isGeneralSignatureFlow
+                      ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q1.placeholder
+                      : '예: 지금 제 인생에서 가장 먼저 정리해야 할 흐름은 무엇인가요?'}
                 />
                 <div className="intake-story-question-meta">
                   <span>
                     {isLoveReadingFlow
                       ? '상대의 속마음을 추측하기보다 실제 상황과 궁금한 선택을 적어주세요.'
-                      : '구체적인 질문일수록 결과 문장이 더 선명해집니다.'}
+                      : isGeneralSignatureFlow
+                        ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q1.helper
+                        : '구체적인 질문일수록 결과 문장이 더 선명해집니다.'}
                   </span>
                   <span>{formData.q1.length}/180</span>
                 </div>
@@ -1368,11 +1442,17 @@ export default function Form() {
             ) : (
             <div className="intake-story-form-stack">
               <div className="intake-story-question-copy">
-                <strong>두 번째 질문도 적어주세요</strong>
+                <strong>
+                  {isGeneralSignatureFlow
+                    ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q2.title
+                    : '두 번째 질문도 적어주세요'}
+                </strong>
                 <p>
                   {isLoveReadingFlow
                     ? '결제 후 두 질문을 각각 분석하고, 계산된 명리 근거와 현실에서 확인할 행동을 함께 제공합니다.'
-                    : '결제 후 결과 페이지에서는 질문 2개가 각각 따로 분석되며, 결정론 명리 근거와 AI 해설이 함께 제공됩니다.'}
+                    : isGeneralSignatureFlow
+                      ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q2.body
+                      : '결제 후 결과 페이지에서는 질문 2개가 각각 따로 분석되며, 결정론 명리 근거와 AI 해설이 함께 제공됩니다.'}
                 </p>
               </div>
 
@@ -1386,13 +1466,17 @@ export default function Form() {
                   onChange={(event) => updateField('q2', event.target.value.slice(0, 180))}
                   placeholder={isLoveReadingFlow
                     ? '예: 앞으로 12개월 중 새 인연을 만나기 좋은 흐름은 언제인가요?'
-                    : '예: 앞으로 3개월 안에 움직이면 좋은 시기는 언제인가요?'}
+                    : isGeneralSignatureFlow
+                      ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q2.placeholder
+                      : '예: 앞으로 3개월 안에 움직이면 좋은 시기는 언제인가요?'}
                 />
                 <div className="intake-story-question-meta">
                   <span>
                     {isLoveReadingFlow
                       ? '첫 질문과 다른 방향—시기·상대 기준·연락 행동—이면 리포트 폭이 더 넓어집니다.'
-                      : '질문 1과 다른 방향의 질문이면 리포트 폭이 더 넓어집니다.'}
+                      : isGeneralSignatureFlow
+                        ? GENERAL_SIGNATURE_PRODUCT.intake.questions.q2.helper
+                        : '질문 1과 다른 방향의 질문이면 리포트 폭이 더 넓어집니다.'}
                   </span>
                   <span>{formData.q2.length}/180</span>
                 </div>
@@ -1428,7 +1512,9 @@ export default function Form() {
                   ? '49,000원 · 내 전생장부 열기'
                   : isYearlyFlow
                     ? '결제하고 신년운세 보기'
-                    : '결제 정보 확인'
+                    : isGeneralSignatureFlow
+                      ? '결제 전 구성 확인'
+                      : '결제 정보 확인'
                 : '다음으로'}
             </button>
           </footer>
