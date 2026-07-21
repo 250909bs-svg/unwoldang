@@ -39,7 +39,7 @@ type RouterDependencies = {
     generate(reportAccess: ReportAccessClaims | null, reportBody: Record<string, unknown>): Promise<unknown>;
   };
   payments: {
-    createOrder(user: AuthenticatedUser, body: Record<string, unknown>): unknown;
+    createOrder(user: AuthenticatedUser, body: Record<string, unknown>): Promise<unknown>;
     confirm(user: AuthenticatedUser, body: Record<string, unknown>): Promise<unknown>;
     listEntitlements(user: AuthenticatedUser): Promise<unknown[]>;
     renew(user: AuthenticatedUser, body: Record<string, unknown>): Promise<unknown>;
@@ -109,7 +109,7 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
       try {
         const user = dependencies.auth.verifyUserAccess(req);
         const body = (await readJsonBody(req)) as Record<string, unknown>;
-        sendJson(res, 200, dependencies.payments.createOrder(user, body));
+        sendJson(res, 200, await dependencies.payments.createOrder(user, body));
       } catch (error) {
         const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
         sendJson(res, status, { message: errorMessage(error, '결제 주문 인증 정보 발급 중 오류가 발생했습니다.') });

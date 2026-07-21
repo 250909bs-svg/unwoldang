@@ -14,7 +14,8 @@ import { TokenService } from './domains/auth/tokenService.ts';
 import { HealthService } from './domains/health/healthService.ts';
 import {
   PaymentService,
-  type PaymentLedgerRepository as PaymentLedgerServiceRepository
+  type PaymentLedgerRepository as PaymentLedgerServiceRepository,
+  type PaymentOrderRepository as PaymentOrderServiceRepository
 } from './domains/payments/paymentService.ts';
 import { PortOneClient } from './domains/payments/portoneClient.ts';
 import { ReportService } from './domains/reports/reportService.ts';
@@ -24,12 +25,17 @@ import { createCorsMiddleware } from './middleware/cors.ts';
 import { createReportRateLimit } from './middleware/rateLimit.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
+import {
+  PaymentOrderRepository,
+  type PaymentOrder
+} from './repositories/paymentOrderRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
 
 export type CreateAppOptions = {
   config?: AppConfig;
   fetchImplementation?: typeof fetch;
   reportGenerator?: typeof generateGeminiSajuReport;
+  paymentOrderRepository?: PaymentOrderServiceRepository;
 };
 
 export function createApp(options: CreateAppOptions = {}): RequestListener {
@@ -46,6 +52,10 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     firestoreRepository,
     config.portOne.ledgerCollection
   );
+  const persistedPaymentOrderRepository = new PaymentOrderRepository(
+    firestoreRepository,
+    config.portOne.orderCollection
+  );
   const reportArchiveRepository = new ReportArchiveRepository(
     firestoreRepository,
     config.firestore.archiveCollection
@@ -60,8 +70,24 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     },
     listPaymentLedgersByUserId(userId, limit) {
       return paymentLedgerRepository.listByUser(userId, limit);
+    },
+    revokePaymentEntitlement(entitlementId, input) {
+      return paymentLedgerRepository.revokeEntitlement(entitlementId, input);
     }
   };
+
+  const paymentOrderAdapter: PaymentOrderServiceRepository =
+    options.paymentOrderRepository || {
+      createPaymentOrder(record) {
+        return persistedPaymentOrderRepository.create(record);
+      },
+      getPaymentOrder(orderId) {
+        return persistedPaymentOrderRepository.get(orderId);
+      },
+      transitionPaymentOrder(order, input) {
+        return persistedPaymentOrderRepository.transition(order as PaymentOrder, input);
+      }
+    };
 
   const archiveRepositoryAdapter: ArchiveRepository = {
     async upsert(userId, entry, entryJson) {
@@ -83,6 +109,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     },
     portOneClient,
     ledgerRepository: paymentLedgerAdapter,
+    orderRepository: paymentOrderAdapter,
     tokenService
   });
   const reportService = new ReportService(

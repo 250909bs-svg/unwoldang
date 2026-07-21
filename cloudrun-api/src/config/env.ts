@@ -48,7 +48,8 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       apiBaseUrl: (trimmed(env, 'PORTONE_API_BASE_URL') || 'https://api.portone.io').replace(/\/$/, ''),
       apiSecret: trimmed(env, 'PORTONE_API_SECRET'),
       storeId: trimmed(env, 'PORTONE_STORE_ID'),
-      ledgerCollection: trimmed(env, 'PORTONE_PAYMENT_LEDGER_COLLECTION') || 'portonePaymentConfirmations'
+      ledgerCollection: trimmed(env, 'PORTONE_PAYMENT_LEDGER_COLLECTION') || 'portonePaymentConfirmations',
+      orderCollection: trimmed(env, 'PORTONE_PAYMENT_ORDER_COLLECTION') || 'portonePaymentOrders'
     },
     kakao: {
       restApiKey: trimmed(env, 'KAKAO_REST_API_KEY'),
