@@ -341,23 +341,24 @@ describe('Cloud Run API HTTP contracts', () => {
     }
   });
 
-  it('keeps the exact twelve-product server catalog and active status contract', () => {
+  it('keeps the exact twelve-product server catalog and sale status contract', () => {
     expect(SERVER_PRODUCT_CATALOG).toEqual({
       'general-signature': { amount: 79_000, currency: 'KRW', status: 'active' },
-      'life-flow': { amount: 59_000, currency: 'KRW', status: 'active' },
-      'concern-reading': { amount: 2_900, currency: 'KRW', status: 'active' },
+      'life-flow': { amount: 59_000, currency: 'KRW', status: 'archived' },
+      'concern-reading': { amount: 2_900, currency: 'KRW', status: 'archived' },
       'past-life-goblin': { amount: 49_000, currency: 'KRW', status: 'active' },
       'love-reading': { amount: 49_000, currency: 'KRW', status: 'active' },
       'love-reunion': { amount: 55_000, currency: 'KRW', status: 'active' },
       'match-couple': { amount: 69_000, currency: 'KRW', status: 'active' },
-      'match-destiny': { amount: 63_000, currency: 'KRW', status: 'active' },
-      'marriage-blueprint': { amount: 72_000, currency: 'KRW', status: 'active' },
-      'marriage-timing': { amount: 58_000, currency: 'KRW', status: 'active' },
-      'career-reading': { amount: 59_000, currency: 'KRW', status: 'active' },
-      'money-reading': { amount: 59_000, currency: 'KRW', status: 'active' }
+      'match-destiny': { amount: 63_000, currency: 'KRW', status: 'archived' },
+      'marriage-blueprint': { amount: 72_000, currency: 'KRW', status: 'archived' },
+      'marriage-timing': { amount: 58_000, currency: 'KRW', status: 'archived' },
+      'career-reading': { amount: 59_000, currency: 'KRW', status: 'archived' },
+      'money-reading': { amount: 59_000, currency: 'KRW', status: 'archived' }
     });
     expect(Object.keys(SERVER_PRODUCT_CATALOG)).toHaveLength(12);
     expect(PRODUCT_STATUS.ACTIVE).toBe('active');
+    expect(PRODUCT_STATUS.ARCHIVED).toBe('archived');
 
     for (const productId of [
       'general-signature',
@@ -367,6 +368,40 @@ describe('Cloud Run API HTTP contracts', () => {
       'match-couple'
     ] as const) {
       expect(SERVER_PRODUCT_CATALOG).toHaveProperty(productId);
+    }
+  });
+
+  it('returns 409 for archived products and 400 for unknown products on new orders', async () => {
+    const tokens = new TokenService(productionConfig);
+    const userToken = tokens.createUserAccessToken({
+      id: 'fixture-product-policy-user',
+      nickname: 'Fixture Product Policy User'
+    });
+    const cases = [
+      {
+        productId: 'life-flow',
+        status: 409,
+        message: '현재 신규 판매 중인 상품이 아닙니다.'
+      },
+      {
+        productId: 'unknown-product',
+        status: 400,
+        message: '서버 상품표에서 확인할 수 없는 productId입니다.'
+      }
+    ] as const;
+
+    for (const contract of cases) {
+      const response = await fetch(`${productionBaseUrl}/api/payments/portone/order`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId: contract.productId })
+      });
+
+      expect(response.status).toBe(contract.status);
+      expect(await readJson(response)).toEqual({ message: contract.message });
     }
   });
 

@@ -2,6 +2,8 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { AuthenticatedUser, PaymentOrderClaims } from '../../contracts/auth.ts';
 import { PaymentRequestError, ReportRequestError } from '../../contracts/errors.ts';
 import {
+  assertProductAvailableForNewOrder,
+  getCatalogAmount,
   PRODUCT_STATUS,
   SERVER_PRODUCT_CATALOG,
   type ProductId
@@ -107,21 +109,6 @@ function assertPaymentOrderId(orderId: string) {
   }
 }
 
-function getCatalogAmount(productId: string) {
-  const product = SERVER_PRODUCT_CATALOG[productId as ProductId];
-
-  if (
-    !product ||
-    product.status !== PRODUCT_STATUS.ACTIVE ||
-    !Number.isSafeInteger(product.amount) ||
-    product.amount <= 0
-  ) {
-    throw new PaymentRequestError(400, '서버 상품표에서 확인할 수 없는 productId입니다.');
-  }
-
-  return product.amount;
-}
-
 function readNestedString(source: unknown, paths: string[][]) {
   for (const path of paths) {
     const value = path.reduce<unknown>(
@@ -197,6 +184,7 @@ export class PaymentService {
   createOrderIntent(user: AuthenticatedUser, body: Record<string, unknown>) {
     const productId = getRequiredString(body, 'productId');
     const amount = getCatalogAmount(productId);
+    assertProductAvailableForNewOrder(productId);
     const requestedAmount = body.amount === undefined ? amount : getRequiredAmount(body);
     const orderId =
       getOptionalString(body, 'orderId') ||
@@ -510,7 +498,8 @@ export class PaymentService {
           readLedgerString(record, 'entitlementStatus') === PRODUCT_STATUS.ACTIVE &&
           Boolean(productId) &&
           Number.isSafeInteger(amount) &&
-          product?.status === PRODUCT_STATUS.ACTIVE &&
+          (product?.status === PRODUCT_STATUS.ACTIVE ||
+            product?.status === PRODUCT_STATUS.ARCHIVED) &&
           product.amount === amount
         );
       })

@@ -18,6 +18,10 @@ const FIXED_NOW = Date.parse('2026-07-21T00:00:00.000Z');
 const ORDER_ID = 'UW-20260721-payment-contract-0001';
 const PRODUCT_ID = 'general-signature';
 const PRODUCT_PRICE = 79_000;
+const ARCHIVED_ORDER_ID = 'UW-20260721-archived-contract-0001';
+const ARCHIVED_PRODUCT_ID = 'life-flow';
+const ARCHIVED_PRODUCT_PRICE = 59_000;
+const ARCHIVED_TRANSACTION_ID = 'tx-archived-contract-fixture-0001';
 const STORE_ID = 'store-contract-fixture';
 const TRANSACTION_ID = 'tx-contract-fixture-0001';
 const USER = { userId: 'kakao-contract-user-001' };
@@ -128,6 +132,46 @@ function confirmationBody(orderClaim: string) {
   };
 }
 
+function createLegacyArchivedOrderClaim(harness: ReturnType<typeof createHarness>) {
+  return harness.tokenService.createPaymentOrderClaim({
+    userId: USER.userId,
+    orderId: ARCHIVED_ORDER_ID,
+    productId: ARCHIVED_PRODUCT_ID,
+    amount: ARCHIVED_PRODUCT_PRICE
+  });
+}
+
+function setArchivedPaidPayment(
+  harness: ReturnType<typeof createHarness>,
+  orderClaim: string
+) {
+  harness.portOneClient.payment = {
+    id: ARCHIVED_ORDER_ID,
+    status: 'PAID',
+    storeId: STORE_ID,
+    currency: 'KRW',
+    amount: { total: ARCHIVED_PRODUCT_PRICE },
+    transactionId: ARCHIVED_TRANSACTION_ID,
+    customData: {
+      productId: ARCHIVED_PRODUCT_ID,
+      orderClaim
+    },
+    method: { type: 'CARD' },
+    paidAt: '2026-07-20T00:00:01.000Z'
+  };
+}
+
+function archivedConfirmationBody(orderClaim: string) {
+  return {
+    paymentId: ARCHIVED_ORDER_ID,
+    orderId: ARCHIVED_ORDER_ID,
+    productId: ARCHIVED_PRODUCT_ID,
+    amount: ARCHIVED_PRODUCT_PRICE,
+    txId: ARCHIVED_TRANSACTION_ID,
+    orderClaim
+  };
+}
+
 async function confirmOnce(harness: ReturnType<typeof createHarness>) {
   const order = createOrder(harness);
   setPaidPayment(harness, order.orderClaim);
@@ -213,6 +257,46 @@ describe('Cloud Run payment contracts', () => {
     });
   });
 
+  it('confirms a legacy signed order claim for an archived catalog product', async () => {
+    const harness = createHarness();
+    const legacyOrderClaim = createLegacyArchivedOrderClaim(harness);
+    setArchivedPaidPayment(harness, legacyOrderClaim);
+
+    const confirmed = await harness.paymentService.confirmPayment(
+      USER,
+      archivedConfirmationBody(legacyOrderClaim)
+    );
+    const reportClaims = harness.tokenService.verifyReportAccessToken(
+      confirmed.reportAccessToken
+    );
+    const entitlementId = createHash('sha256')
+      .update(`portone:${ARCHIVED_ORDER_ID}`)
+      .digest('hex');
+
+    expect(harness.portOneClient.requestedPaymentIds).toEqual([ARCHIVED_ORDER_ID]);
+    expect(confirmed).toMatchObject({
+      paymentId: ARCHIVED_ORDER_ID,
+      txId: ARCHIVED_TRANSACTION_ID,
+      orderId: ARCHIVED_ORDER_ID,
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      currency: 'KRW',
+      status: 'PAID'
+    });
+    expect(reportClaims).toMatchObject({
+      orderId: ARCHIVED_ORDER_ID,
+      paymentId: ARCHIVED_ORDER_ID,
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      entitlementId
+    });
+    expect(harness.ledgerRepository.records.get(entitlementId)).toMatchObject({
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      entitlementStatus: 'active'
+    });
+  });
+
   it.each([
     ['status', (payment: Record<string, unknown>) => { payment.status = 'READY'; }],
     ['currency', (payment: Record<string, unknown>) => { payment.currency = 'USD'; }],
@@ -289,7 +373,47 @@ describe('Cloud Run payment contracts', () => {
     });
   });
 
-  it('filters entitlements by owner binding, active status, and catalog price, then sorts newest first', async () => {
+  it('renews an active entitlement backed by an archived catalog product', async () => {
+    const harness = createHarness();
+    const entitlementId = createHash('sha256')
+      .update(`portone:${ARCHIVED_ORDER_ID}`)
+      .digest('hex');
+
+    harness.ledgerRepository.records.set(entitlementId, {
+      paymentId: ARCHIVED_ORDER_ID,
+      orderId: ARCHIVED_ORDER_ID,
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      currency: 'KRW',
+      userId: USER.userId,
+      userBinding: harness.tokenService.createUserBinding(USER.userId),
+      entitlementId,
+      entitlementStatus: 'active'
+    });
+
+    const renewed = await harness.paymentService.renewEntitlement(USER, {
+      orderId: ARCHIVED_ORDER_ID
+    });
+    const reportClaims = harness.tokenService.verifyReportAccessToken(
+      renewed.reportAccessToken
+    );
+
+    expect(renewed).toMatchObject({
+      orderId: ARCHIVED_ORDER_ID,
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      currency: 'KRW'
+    });
+    expect(reportClaims).toMatchObject({
+      orderId: ARCHIVED_ORDER_ID,
+      paymentId: ARCHIVED_ORDER_ID,
+      productId: ARCHIVED_PRODUCT_ID,
+      amount: ARCHIVED_PRODUCT_PRICE,
+      entitlementId
+    });
+  });
+
+  it('lists active entitlements for active and archived catalog products while excluding unknown products', async () => {
     const harness = createHarness();
     const binding = harness.tokenService.createUserBinding(USER.userId);
     const base = {
@@ -313,6 +437,13 @@ describe('Cloud Run payment contracts', () => {
         productId: 'love-reading',
         amount: 49_000,
         confirmedAt: '2026-07-21T10:00:00.000Z'
+      },
+      {
+        ...base,
+        orderId: 'UW-list-archived-newest-0008',
+        productId: ARCHIVED_PRODUCT_ID,
+        amount: ARCHIVED_PRODUCT_PRICE,
+        confirmedAt: '2026-07-22T10:00:00.000Z'
       },
       {
         ...base,
@@ -361,6 +492,14 @@ describe('Cloud Run payment contracts', () => {
       limit: 100
     });
     expect(entitlements).toEqual([
+      {
+        orderId: 'UW-list-archived-newest-0008',
+        productId: ARCHIVED_PRODUCT_ID,
+        amount: ARCHIVED_PRODUCT_PRICE,
+        currency: 'KRW',
+        confirmedAt: '2026-07-22T10:00:00.000Z',
+        status: 'active'
+      },
       {
         orderId: 'UW-list-valid-newer-0002',
         productId: 'love-reading',
