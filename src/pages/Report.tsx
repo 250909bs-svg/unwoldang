@@ -15,7 +15,13 @@ import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 import { canStartProduct, getProductById } from '../products/registry';
+import {
+  buildLoveReunionReport,
+  createLoveReunionShareData
+} from '../products/love-reunion/reportModel';
+import type { LoveReunionFormData } from '../products/love-reunion/contract';
 import '../styles/past-life.css';
+import '../products/love-reunion/report.css';
 
 const LoveReadingStoryReport = lazy(() => import('../components/LoveReadingStoryReport'));
 
@@ -6337,11 +6343,15 @@ export default function Report() {
     reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
   const report = useMemo(() => {
-    // Paid/server reports are canonical artifacts that already passed the
-    // immutable-fact guard. Rewriting them again in the browser can reintroduce
-    // preview-only sample prose, so client expansion is strictly preview-only.
+    const applyProductOwnedModel = (candidate: SajuReportData) =>
+      candidate.serviceId === 'love-reunion'
+        ? buildLoveReunionReport(candidate, reportInput as Partial<LoveReunionFormData>)
+        : candidate;
+    // Paid/server reports remain the immutable engine source. Product-owned
+    // presentation may reorganize preserved facts and user input without
+    // replacing pillars, calculated evidence, or payment authority.
     if (reportData) {
-      return reportData;
+      return applyProductOwnedModel(reportData);
     }
 
     const preserveAiQuestions = Boolean(reportData);
@@ -6354,7 +6364,7 @@ export default function Report() {
       );
 
       if (finalized.serviceId !== 'past-life-goblin') {
-        return finalized;
+        return applyProductOwnedModel(finalized);
       }
 
       return { ...finalized, pastLifeProfile: buildPastLifeProfile(finalized, reportInput) };
@@ -6383,6 +6393,7 @@ export default function Report() {
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
   const isLoveReadingShowcase = report.serviceId === 'love-reading';
+  const isLoveReunionShowcase = report.serviceId === 'love-reunion';
   const loveRelationshipStatus = mapIntakeRelationshipStatus(reportInput.relationshipStatus);
   const loveBirthTimeKnown = reportInput.isUnknownTime === true
       ? false
@@ -6665,15 +6676,15 @@ export default function Report() {
     : [
         ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
         { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
-        { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
+        ...(!isLoveReunionShowcase ? [{ id: 'qa', label: '질문 맞춤 답변', number: 'Q' }] : []),
         { id: 'glance', label: '핵심 지표 요약', number: '02' },
         ...report.sections.map((section, index) => ({
           id: section.id,
           label: section.title,
           number: String(index + 3).padStart(2, '0')
         })),
-        { id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') },
-        { id: 'legal', label: '안전 안내', number: String(report.sections.length + 4).padStart(2, '0') }
+        ...(!isLoveReunionShowcase ? [{ id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') }] : []),
+        { id: 'legal', label: '안전 안내', number: String(report.sections.length + (isLoveReunionShowcase ? 3 : 4)).padStart(2, '0') }
       ];
 
   const scrollToSection = (targetId: string) => {
@@ -6687,6 +6698,8 @@ export default function Report() {
   const handleShareReport = async () => {
     const shareData = isLoveReadingShowcase
       ? createLoveReadingProductShareData(window.location.origin)
+      : isLoveReunionShowcase
+        ? createLoveReunionShareData(window.location.origin)
       : {
           title: `${report.customerName} ${report.title}`,
           text: '운월당 사주 리포트',
@@ -7046,7 +7059,9 @@ body {
         ? 'premium-report-page yearly-premium-page'
         : isPastLifeShowcase
           ? 'premium-report-page past-life-report-page'
-          : 'premium-report-page'
+          : isLoveReunionShowcase
+            ? 'premium-report-page love-reunion-premium-page'
+            : 'premium-report-page'
     }>
       <header className="premium-report-topbar">
         <div className="premium-report-topbar-inner">
@@ -7073,14 +7088,18 @@ body {
           ? 'premium-report-shell yearly-report-shell'
           : isPastLifeShowcase
             ? 'premium-report-shell past-life-report-shell'
-            : 'premium-report-shell'
+            : isLoveReunionShowcase
+              ? 'premium-report-shell love-reunion-report-shell'
+              : 'premium-report-shell'
       }>
         <article className={
           isYearlyShowcase
             ? 'premium-report-paper yearly-report-paper'
             : isPastLifeShowcase
               ? 'premium-report-paper past-life-report-paper'
-              : 'premium-report-paper'
+              : isLoveReunionShowcase
+                ? 'premium-report-paper love-reunion-report-paper'
+                : 'premium-report-paper'
         }>
           {reportProvider === 'deterministic-fallback' ? (
             <section className="premium-report-section" aria-label="리포트 생성 상태">
@@ -7332,6 +7351,8 @@ body {
 
           <div className="premium-divider" />
 
+          {!isLoveReunionShowcase ? (
+            <>
           <section className="premium-report-section" id="qa">
             <div className="premium-section-heading">
               <div>
@@ -7369,6 +7390,8 @@ body {
           </section>
 
           <div className="premium-divider" />
+            </>
+          ) : null}
 
           <section className="premium-report-section" id="glance">
             <div className="premium-section-heading">
@@ -7401,6 +7424,8 @@ body {
                 </div>
               ))}
 
+          {!isLoveReunionShowcase ? (
+            <>
           <div className="premium-divider" />
 
           <section className="premium-report-section" id="plan">
@@ -7472,6 +7497,8 @@ body {
               </div>
             ) : null}
           </section>
+            </>
+          ) : null}
 
           {isPastLifeShowcase ? (
             <>

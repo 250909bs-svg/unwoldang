@@ -13,6 +13,7 @@ import ProductUnavailable from './ProductUnavailable';
 
 type ProductBoundaryProps = {
   children: ReactNode;
+  productId?: string;
 };
 
 export type RecoveredEntitlementState = {
@@ -53,20 +54,21 @@ export function canResumeArchivedIntake(
   );
 }
 
-export function ProductIntakeRouteBoundary({ children }: ProductBoundaryProps) {
+export function ProductIntakeRouteBoundary({ children, productId: explicitProductId }: ProductBoundaryProps) {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const locationState = (location.state as ProductFlowLocationState | null) ?? null;
+  const productId = explicitProductId || id;
 
-  if (canStartProduct(id)) {
+  if (canStartProduct(productId)) {
     return children;
   }
 
-  if (canResumeArchivedIntake(id, locationState?.recoveredEntitlement)) {
+  if (canResumeArchivedIntake(productId, locationState?.recoveredEntitlement)) {
     return children;
   }
 
-  return <UnknownOrUnavailable productId={id} />;
+  return <UnknownOrUnavailable productId={productId} />;
 }
 
 export function ProductCheckoutRouteBoundary({ children }: ProductBoundaryProps) {

@@ -34,6 +34,8 @@ const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
 const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
+const LoveReunionDetail = lazy(() => import('./products/love-reunion/LoveReunionDetail'));
+const LoveReunionIntake = lazy(() => import('./products/love-reunion/LoveReunionIntake'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const callbackHashLocation = buildHashCallbackLocation();
@@ -108,7 +110,23 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
               </ProductRouteBoundary>
             }
           />
+          <Route
+            path="/detail/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <LoveReunionDetail />
+              </ProductRouteBoundary>
+            }
+          />
           <Route path="/detail/:id" element={<GenericProductDetail />} />
+          <Route
+            path="/form/love-reunion"
+            element={
+              <ProductIntakeRouteBoundary productId="love-reunion">
+                <LoveReunionIntake />
+              </ProductIntakeRouteBoundary>
+            }
+          />
           <Route
             path="/form/love-reading"
             element={
