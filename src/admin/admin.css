@@ -5038,3 +5038,55 @@
     grid-column: 2;
   }
 }
+
+
+.admin-product-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-left: 0.45rem;
+  padding: 0.16rem 0.42rem;
+  border: 1px solid rgba(100, 116, 139, 0.28);
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.09);
+  color: #475569;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.admin-product-status.active {
+  border-color: rgba(5, 150, 105, 0.28);
+  background: rgba(5, 150, 105, 0.1);
+  color: #047857;
+}
+
+.admin-product-status.draft {
+  border-color: rgba(217, 119, 6, 0.3);
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.admin-product-status.archived {
+  border-color: rgba(100, 116, 139, 0.3);
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+}
+
+.admin-product-status.unknown {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
+.admin-api-error {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: rgba(254, 226, 226, 0.86);
+  color: #991b1b;
+}
+
+.admin-hero-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}

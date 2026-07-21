@@ -133,18 +133,18 @@ export function Overview({
       {activeView === 'overview' ? (
         <section className="admin-metric-grid">
           <MetricCard
-            title="오늘 결제"
+            title={hasEstimatedAnalytics ? '오늘 결제' : '오늘 완료 리포트'}
             value={`${todayPaidCount}건`}
-            delta={`${formatCurrency(todayRevenue)} · 전일 ${formatCurrency(previousDayRevenue)}`}
+            delta={hasEstimatedAnalytics ? `${formatCurrency(todayRevenue)} · 전일 ${formatCurrency(previousDayRevenue)}` : `카탈로그 합계 ${formatCurrency(todayRevenue)} · 전일 ${formatCurrency(previousDayRevenue)}`}
             trend={todayPaidChange}
             trendLabel="전일 동시간"
             icon={CreditCard}
             tone="good"
           />
           <MetricCard
-            title={`${periodLabels[period]} 매출`}
+            title={hasEstimatedAnalytics ? `${periodLabels[period]} 매출` : `${periodLabels[period]} 카탈로그 합계`}
             value={formatCurrency(totalRevenue)}
-            delta={`객단가 ${formatCurrency(avgOrderValue)} · ${formatChangeRate(aovChange)}`}
+            delta={`${hasEstimatedAnalytics ? '객단가' : '건당 카탈로그 가격'} ${formatCurrency(avgOrderValue)} · ${formatChangeRate(aovChange)}`}
             trend={revenueChange}
             trendLabel={trendLabel}
             icon={WalletCards}
@@ -152,29 +152,29 @@ export function Overview({
           />
           <MetricCard
             title="결제 성공률"
-            value={formatPercent(successRate)}
-            delta={`${paidOrders.length}/${orders.length}건 성공`}
-            trend={successRateChange}
+            value={hasEstimatedAnalytics ? formatPercent(successRate) : '미수집'}
+            delta={hasEstimatedAnalytics ? `${paidOrders.length}/${orders.length}건 성공` : '실제 주문 성공·실패 원장 필요'}
+            trend={hasEstimatedAnalytics ? successRateChange : undefined}
             trendLabel={trendLabel}
             icon={TrendingUp}
           />
           <MetricCard
             title="리포트 열람"
-            value={`${avgReadRate}%`}
-            delta={`90% 이상 ${formatPercent(reportRead90)}`}
-            trend={readRateChange}
+            value={hasEstimatedAnalytics ? `${avgReadRate}%` : '미수집'}
+            delta={hasEstimatedAnalytics ? `90% 이상 ${formatPercent(reportRead90)}` : '열람 이벤트 연결 필요'}
+            trend={hasEstimatedAnalytics ? readRateChange : undefined}
             trendLabel={trendLabel}
             icon={Eye}
           />
           <MetricCard
             title="이탈 집중 구간"
-            value={formatPercent(largestDrop.drop)}
-            delta={comparison === 'none' ? largestDrop.label : `${largestDrop.label} · ${trendLabel} ${formatPercent(previousLargestDrop.drop)}`}
+            value={hasEstimatedAnalytics ? formatPercent(largestDrop.drop) : '미수집'}
+            delta={hasEstimatedAnalytics ? comparison === 'none' ? largestDrop.label : `${largestDrop.label} · ${trendLabel} ${formatPercent(previousLargestDrop.drop)}` : largestDrop.label}
             icon={MousePointerClick}
             tone="warn"
           />
           <MetricCard
-            title="추정 순매출"
+            title={hasEstimatedAnalytics ? '추정 순매출' : '카탈로그 기반 순매출 추정'}
             value={formatCurrency(netRevenue)}
             delta={`API ${formatCurrency(apiCost)} · 수수료 ${formatCurrency(paymentFee)}`}
             trend={netRevenueChange}
@@ -204,10 +204,10 @@ export function Overview({
           <section className="admin-overview-analytics">
             <RevenueTrendChart
               data={timeSeries}
-              title={`${granularityLabels[granularity]} 매출 흐름`}
+              title={hasEstimatedAnalytics ? `${granularityLabels[granularity]} 매출 흐름` : `${granularityLabels[granularity]} 카탈로그 합계 흐름`}
               rangeLabel={selectedRangeLabel}
             />
-            <DonutChart title="유입 채널별 결제" rows={channelRows} centerLabel="결제" />
+            <DonutChart title={hasEstimatedAnalytics ? '유입 채널별 결제' : '출처 미수집 완료 리포트'} rows={channelRows} centerLabel={hasEstimatedAnalytics ? '결제' : '기록'} />
             <LiveActivityFeed
               orders={allOrders}
               onSelectOrder={(orderId) => {
@@ -219,7 +219,7 @@ export function Overview({
 
           <section className="admin-command-grid">
             <CustomerJourneyMap funnel={funnel} largestDrop={largestDrop} />
-            <HealthRadar items={healthItems} />
+            <HealthRadar items={healthItems} isEstimated={hasEstimatedAnalytics} />
           </section>
 
           <section className="admin-growth-grid">

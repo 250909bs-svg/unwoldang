@@ -1,6 +1,7 @@
 import { AlertTriangle, Eye, Sparkles, UserRound } from 'lucide-react';
-import { serviceCatalog, serviceCategories, type ServiceCategoryId } from '../../api/mockData';
-import { buildSampleSignupProfiles, sampleChannels, sampleDevices } from '../fixtures/sampleOrders';
+import { serviceCategories, type ServiceCategoryId } from '../../api/mockData';
+import { productIds, productRegistry } from '../../products';
+import { buildSampleSignupProfiles } from '../fixtures/sampleOrders';
 import type {
   AdminDateRange,
   AdminGranularity,
@@ -12,26 +13,48 @@ import type {
   CustomerRow,
   DeviceType,
   FunnelStep,
-  RetentionCohortRow
+  RetentionCohortRow,
+  SourceChannel
 } from '../types/admin';
 import { countToday, endOfDay, formatDayLabel, getDateKey, startOfDay } from '../utils/dateRanges';
 import { getConversion } from '../utils/formatters';
 import { maskEmail, maskName } from '../utils/masking';
 
+const TRACKED_SOURCE_CHANNELS: SourceChannel[] = ['카카오', '네이버검색', '인스타그램', '직접방문', '재방문'];
+const TRACKED_DEVICES: DeviceType[] = ['mobile', 'desktop'];
+
+function hasFixtureAnalytics(orders: AdminOrder[]) {
+  return orders.length > 0 && orders.every((order) => order.source === 'sample');
+}
+
 export function buildFunnel(orders: AdminOrder[]): FunnelStep[] {
+  const emptySteps = [
+    { key: 'home_view', label: '홈 방문', count: 0, benchmark: 0 },
+    { key: 'product_detail_view', label: '상품 상세', count: 0, benchmark: 0 },
+    { key: 'form_start', label: '입력 시작', count: 0, benchmark: 0 },
+    { key: 'form_complete', label: '입력 완료', count: 0, benchmark: 0 },
+    { key: 'checkout_view', label: '결제창 진입', count: 0, benchmark: 0 }
+  ];
+
   if (!orders.length) {
     return [
-      { key: 'home_view', label: '홈 방문', count: 0, benchmark: 0 },
-      { key: 'product_detail_view', label: '상품 상세', count: 0, benchmark: 0 },
-      { key: 'form_start', label: '입력 시작', count: 0, benchmark: 0 },
-      { key: 'form_complete', label: '입력 완료', count: 0, benchmark: 0 },
-      { key: 'checkout_view', label: '결제창 진입', count: 0, benchmark: 0 },
+      ...emptySteps,
       { key: 'payment_success', label: '결제 성공', count: 0, benchmark: 0 },
       { key: 'report_view', label: '리포트 열람', count: 0, benchmark: 0 }
     ];
   }
+
   const paidCount = orders.filter((order) => order.status === 'paid').length;
   const reportViews = orders.filter((order) => order.reportStatus === 'done').length;
+
+  if (!hasFixtureAnalytics(orders)) {
+    return [
+      ...emptySteps,
+      { key: 'payment_success', label: '결제 성공', count: paidCount, benchmark: 0 },
+      { key: 'report_view', label: '리포트 생성 완료', count: reportViews, benchmark: getConversion(reportViews, paidCount) }
+    ];
+  }
+
   const checkout = Math.max(orders.length + 18, Math.ceil(paidCount * 2.1));
   const formComplete = Math.max(checkout + 31, Math.ceil(checkout * 1.42));
   const formStart = Math.max(formComplete + 44, Math.ceil(formComplete * 1.52));
@@ -69,7 +92,8 @@ export function buildCustomerRows(orders: AdminOrder[]): CustomerRow[] {
         spent,
         lastProduct: sorted[0].productName,
         lastSeen: sorted[0].createdAt,
-        readRate: Math.round(customerOrders.reduce((sum, order) => sum + order.readRate, 0) / customerOrders.length)
+        readRate: Math.round(customerOrders.reduce((sum, order) => sum + order.readRate, 0) / customerOrders.length),
+        analyticsAvailable: customerOrders.some((order) => order.source === 'sample')
       };
     })
     .sort((left, right) => right.spent - left.spent);
@@ -83,35 +107,43 @@ export function buildCustomerProfiles(customers: CustomerRow[], orders: AdminOrd
     const paidOrders = customerOrders.filter((order) => order.status === 'paid');
     const firstOrder = customerOrders[customerOrders.length - 1] || customerOrders[0];
     const latestOrder = customerOrders[0];
-    const riskScore = Math.max(0, Math.min(100, 100 - customer.readRate + (customer.orders === 1 ? 12 : 0)));
+    const hasMeasuredFixture = latestOrder?.source === 'sample';
+    const riskScore = hasMeasuredFixture
+      ? Math.max(0, Math.min(100, 100 - customer.readRate + (customer.orders === 1 ? 12 : 0)))
+      : 0;
     const segment =
-      customer.orders >= 2 || customer.spent >= 79000
+      customer.orders >= 2 || (hasMeasuredFixture && customer.spent >= 79000)
         ? 'VIP'
-        : customer.readRate >= 88
+        : hasMeasuredFixture && customer.readRate >= 88
           ? '재구매 후보'
-          : customer.readRate < 70
+          : hasMeasuredFixture && customer.readRate < 70
             ? '이탈 위험'
             : '신규';
 
     return {
       ...customer,
       id: `customer-${customer.name}`,
-      provider: latestOrder?.paymentMethod === 'kakaoPay' ? 'kakao' : 'demo',
-      signedAt: new Date(new Date(firstOrder?.createdAt || customer.lastSeen).getTime() - (index + 1) * 1000 * 60 * 45).toISOString(),
+      provider: hasMeasuredFixture
+        ? latestOrder?.paymentMethod === 'kakaoPay' ? 'kakao' : 'demo'
+        : 'unknown',
+      signedAt: hasMeasuredFixture
+        ? new Date(new Date(firstOrder?.createdAt || customer.lastSeen).getTime() - (index + 1) * 1000 * 60 * 45).toISOString()
+        : firstOrder?.createdAt || customer.lastSeen,
       paidOrders: paidOrders.length,
       status: paidOrders.length ? 'paid' : 'registered',
-      sourceChannel: latestOrder?.sourceChannel || sampleChannels[index % sampleChannels.length],
-      device: latestOrder?.device || sampleDevices[index % sampleDevices.length],
+      sourceChannel: latestOrder?.sourceChannel || '미수집',
+      device: latestOrder?.device || 'unknown',
       segment,
       riskScore,
-      nextAction:
-        segment === 'VIP'
-          ? '고가 종합사주, 궁합, 결혼운을 묶은 프리미엄 추천'
+      nextAction: hasMeasuredFixture
+        ? segment === 'VIP'
+          ? '판매 중 상품 중 기존 구매와 겹치지 않는 후속 상품 안내'
           : segment === '재구매 후보'
             ? '읽은 리포트와 이어지는 다음 상품 배너 노출'
             : segment === '이탈 위험'
               ? '생성 지연, 오타 신고, 첫 화면 이탈 여부 확인'
               : '첫 결제 후 리포트 보관함과 추천 상품 안내'
+        : '고객 행동 분석 데이터 미수집'
     } satisfies CustomerProfile;
   });
 
@@ -159,13 +191,17 @@ export function buildIssueRows(orders: AdminOrder[]) {
 }
 
 export function buildCategoryRows(orders: AdminOrder[]): CategoryRow[] {
+  const fixtureAnalytics = hasFixtureAnalytics(orders);
+
   return serviceCategories
     .filter((category): category is typeof category & { id: Exclude<ServiceCategoryId, 'all'> } => category.id !== 'all')
     .map((category) => {
       const categoryOrders = orders.filter((order) => order.category === category.id);
       const paidOrders = categoryOrders.filter((order) => order.status === 'paid');
       const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
-      const views = categoryOrders.length ? Math.max(categoryOrders.length * 28 + 48, paidOrders.length * 31) : 0;
+      const views = fixtureAnalytics && categoryOrders.length
+        ? Math.max(categoryOrders.length * 28 + 48, paidOrders.length * 31)
+        : 0;
 
       return {
         id: category.id,
@@ -173,8 +209,8 @@ export function buildCategoryRows(orders: AdminOrder[]): CategoryRow[] {
         orders: paidOrders.length,
         revenue,
         views,
-        conversion: getConversion(paidOrders.length, views),
-        avgReadRate: paidOrders.length
+        conversion: fixtureAnalytics ? getConversion(paidOrders.length, views) : 0,
+        avgReadRate: fixtureAnalytics && paidOrders.length
           ? Math.round(paidOrders.reduce((sum, order) => sum + order.readRate, 0) / paidOrders.length)
           : 0
       };
@@ -268,7 +304,9 @@ export function buildTimeSeries(orders: AdminOrder[], range: AdminDateRange, gra
     });
     const paidOrders = bucketOrders.filter((order) => order.status === 'paid');
     const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
-    const visitors = bucketOrders.length ? Math.max(paidOrders.length, bucketOrders.length * 34 + Math.round(revenue / 9000)) : 0;
+    const visitors = hasFixtureAnalytics(orders) && bucketOrders.length
+      ? Math.max(paidOrders.length, bucketOrders.length * 34 + Math.round(revenue / 9000))
+      : 0;
 
     return {
       key: bucket.key,
@@ -301,7 +339,10 @@ export function buildHourlyRows(orders: AdminOrder[]) {
 }
 
 export function buildChannelRows(orders: AdminOrder[]) {
-  return sampleChannels.map((channel) => {
+  const fixtureAnalytics = hasFixtureAnalytics(orders);
+  const channels: SourceChannel[] = fixtureAnalytics ? TRACKED_SOURCE_CHANNELS : ['미수집'];
+
+  return channels.map((channel) => {
     const channelOrders = orders.filter((order) => order.sourceChannel === channel);
     const paidOrders = channelOrders.filter((order) => order.status === 'paid');
     const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
@@ -310,17 +351,37 @@ export function buildChannelRows(orders: AdminOrder[]) {
       label: channel,
       value: paidOrders.length,
       revenue,
-      conversion: getConversion(paidOrders.length, Math.max(channelOrders.length * 12, paidOrders.length + 1))
+      conversion: fixtureAnalytics
+        ? getConversion(paidOrders.length, Math.max(channelOrders.length * 12, paidOrders.length + 1))
+        : 0
     };
   });
 }
 
 export function buildChannelPerformanceRows(orders: AdminOrder[]): ChannelPerformanceRow[] {
-  return sampleChannels
+  const fixtureAnalytics = hasFixtureAnalytics(orders);
+  const channels: SourceChannel[] = fixtureAnalytics ? TRACKED_SOURCE_CHANNELS : ['미수집'];
+
+  return channels
     .map((channel) => {
       const channelOrders = orders.filter((order) => order.sourceChannel === channel);
       const paidOrders = channelOrders.filter((order) => order.status === 'paid');
       const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+
+      if (!fixtureAnalytics) {
+        return {
+          label: channel,
+          sessions: 0,
+          orders: paidOrders.length,
+          revenue,
+          conversion: 0,
+          estimatedSpend: 0,
+          estimatedCac: 0,
+          estimatedRoas: 0,
+          action: '유입·세션 데이터 미수집'
+        };
+      }
+
       const sessions = channelOrders.length
         ? Math.max(channelOrders.length * 12, paidOrders.length * 18 + (channel === '직접방문' ? 9 : 16))
         : 0;
@@ -368,8 +429,9 @@ export function getWeekStart(date: Date) {
 
 export function buildRetentionCohorts(profiles: CustomerProfile[]): RetentionCohortRow[] {
   const grouped = new Map<string, CustomerProfile[]>();
+  const measuredProfiles = profiles.filter((profile) => profile.analyticsAvailable);
 
-  profiles.forEach((profile) => {
+  measuredProfiles.forEach((profile) => {
     const weekStart = getWeekStart(new Date(profile.signedAt));
     const key = getDateKey(weekStart);
     grouped.set(key, [...(grouped.get(key) || []), profile]);
@@ -401,13 +463,16 @@ export function buildRetentionCohorts(profiles: CustomerProfile[]): RetentionCoh
 }
 
 export function buildDeviceRows(orders: AdminOrder[]) {
-  return (['mobile', 'desktop'] as DeviceType[]).map((device) => {
+  const fixtureAnalytics = hasFixtureAnalytics(orders);
+  const devices: DeviceType[] = fixtureAnalytics ? TRACKED_DEVICES : ['unknown'];
+
+  return devices.map((device) => {
     const deviceOrders = orders.filter((order) => order.device === device);
     const paidOrders = deviceOrders.filter((order) => order.status === 'paid');
     const revenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
 
     return {
-      label: device === 'mobile' ? '모바일' : '데스크톱',
+      label: device === 'mobile' ? '모바일' : device === 'desktop' ? '데스크톱' : '미수집',
       value: paidOrders.length,
       revenue
     };
@@ -417,47 +482,83 @@ export function buildDeviceRows(orders: AdminOrder[]) {
 export function buildProductRows(orders: AdminOrder[]) {
   const paidOrders = orders.filter((order) => order.status === 'paid');
   const totalRevenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+  const fixtureAnalytics = hasFixtureAnalytics(orders);
+  const knownRows = productIds.map((id) => {
+    const product = productRegistry[id];
+    const productOrders = paidOrders.filter((order) => order.productId === id);
+    const revenue = productOrders.reduce((sum, order) => sum + order.amount, 0);
+    const avgReadRate = fixtureAnalytics && productOrders.length
+      ? Math.round(productOrders.reduce((sum, order) => sum + order.readRate, 0) / productOrders.length)
+      : 0;
+    const estimatedViews = fixtureAnalytics && productOrders.length
+      ? Math.max(productOrders.length * 24 + 24, productOrders.length + 1)
+      : 0;
 
-  return serviceCatalog
-    .map((service) => {
-      const serviceOrders = paidOrders.filter((order) => order.productId === service.id);
-      const revenue = serviceOrders.reduce((sum, order) => sum + order.amount, 0);
-      const avgReadRate = serviceOrders.length
-        ? Math.round(serviceOrders.reduce((sum, order) => sum + order.readRate, 0) / serviceOrders.length)
-        : 0;
-      const estimatedViews = serviceOrders.length ? Math.max(serviceOrders.length * 24 + 24, serviceOrders.length + 1) : 0;
+    return {
+      id,
+      label: product.displayName,
+      category: product.discovery.category,
+      status: product.status,
+      analyticsAvailable: fixtureAnalytics,
+      orders: productOrders.length,
+      revenue,
+      share: getConversion(revenue, totalRevenue || 1),
+      conversion: fixtureAnalytics ? getConversion(productOrders.length, estimatedViews) : 0,
+      avgReadRate
+    };
+  });
+  const unknownGroups = new Map<string, AdminOrder[]>();
 
-      return {
-        id: service.id,
-        label: service.label,
-        category: service.category,
-        orders: serviceOrders.length,
-        revenue,
-        share: getConversion(revenue, totalRevenue || 1),
-        conversion: getConversion(serviceOrders.length, estimatedViews),
-        avgReadRate
-      };
-    })
-    .sort((left, right) => right.revenue - left.revenue);
+  paidOrders
+    .filter((order) => order.productStatus === 'unknown')
+    .forEach((order) => {
+      const key = order.productId || 'unknown-product';
+      unknownGroups.set(key, [...(unknownGroups.get(key) || []), order]);
+    });
+
+  const unknownRows = [...unknownGroups.entries()].map(([id, productOrders]) => {
+    const revenue = productOrders.reduce((sum, order) => sum + order.amount, 0);
+    return {
+      id,
+      label: productOrders[0]?.productName || '알 수 없는 상품',
+      category: 'unknown' as const,
+      status: 'unknown' as const,
+      analyticsAvailable: false,
+      orders: productOrders.length,
+      revenue,
+      share: getConversion(revenue, totalRevenue || 1),
+      conversion: 0,
+      avgReadRate: 0
+    };
+  });
+
+  return [...knownRows, ...unknownRows]
+    .sort((left, right) => right.revenue - left.revenue || left.label.localeCompare(right.label, 'ko'));
 }
 
 export function buildCustomerSegments(customers: CustomerRow[]) {
-  const vip = customers.filter((customer) => customer.orders >= 2 || customer.spent >= 79000).length;
-  const highIntent = customers.filter((customer) => customer.readRate >= 88).length;
+  const measuredCustomers = customers.filter((customer) => customer.analyticsAvailable);
+  const hasMeasuredCustomers = measuredCustomers.length > 0;
+  const vip = customers.filter((customer) => customer.orders >= 2 || (customer.analyticsAvailable && customer.spent >= 79000)).length;
+  const highIntent = measuredCustomers.filter((customer) => customer.readRate >= 88).length;
   const newCustomers = customers.filter((customer) => customer.orders === 1).length;
-  const risk = customers.filter((customer) => customer.readRate < 70).length;
+  const risk = measuredCustomers.filter((customer) => customer.readRate < 70).length;
 
   return [
-    { label: 'VIP/고액 고객', value: vip, note: '종합사주·궁합 업셀 대상', icon: Sparkles },
-    { label: '고관여 고객', value: highIntent, note: '90% 가까이 읽은 재구매 후보', icon: Eye },
-    { label: '신규 고객', value: newCustomers, note: '첫 결제 후 온보딩 필요', icon: UserRound },
-    { label: '이탈 위험', value: risk, note: '열람 낮음·생성 지연 체크', icon: AlertTriangle }
+    { label: hasMeasuredCustomers ? 'VIP/고액 고객' : '반복 리포트 고객', value: vip, note: hasMeasuredCustomers ? '개발 fixture 결제 기록 기준' : '완료 리포트 2건 이상', icon: Sparkles },
+    { label: '고관여 고객', value: highIntent, note: '열람 분석 데이터 기준', icon: Eye },
+    { label: hasMeasuredCustomers ? '신규 고객' : '1회 리포트 고객', value: newCustomers, note: hasMeasuredCustomers ? '첫 결제 기록 고객' : '완료 리포트 1건 기록', icon: UserRound },
+    { label: '이탈 위험', value: risk, note: '열람 분석 데이터 기준', icon: AlertTriangle }
   ];
 }
 
 export function getLargestDrop(funnel: FunnelStep[]) {
   if (!funnel.length || funnel.every((step) => step.count === 0)) {
     return { label: '데이터 없음', drop: 0 };
+  }
+
+  if (funnel[0]?.count === 0) {
+    return { label: '유입 데이터 미수집', drop: 0 };
   }
   return funnel.slice(1).reduce(
     (worst, step, index) => {

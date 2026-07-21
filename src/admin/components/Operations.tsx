@@ -18,14 +18,16 @@ export function CustomerJourneyMap({
   funnel: FunnelStep[];
   largestDrop: ReturnType<typeof getLargestDrop>;
 }) {
+  const hasTrafficData = Boolean(funnel[0]?.count);
+
   return (
     <article className="admin-command-panel admin-journey-map">
       <div className="admin-command-head">
         <div>
-          <span>실시간 고객 여정</span>
+          <span>{hasTrafficData ? '실시간 고객 여정' : '고객 여정 이벤트 미수집'}</span>
           <h2>고객 흐름 지도</h2>
         </div>
-        <strong>핵심 병목 {formatPercent(largestDrop.drop)}</strong>
+        <strong>{hasTrafficData ? `핵심 병목 ${formatPercent(largestDrop.drop)}` : '유입 데이터 미수집'}</strong>
       </div>
       <div className="admin-journey-line" aria-label="고객 여정 단계">
         {funnel.map((step, index) => {
@@ -36,11 +38,11 @@ export function CustomerJourneyMap({
             <div key={step.key} className={isCritical ? 'critical' : ''}>
               <span>{String(index + 1).padStart(2, '0')}</span>
               <strong>{step.label}</strong>
-              <b>{step.count.toLocaleString('ko-KR')}</b>
+              <b>{hasTrafficData || index >= 5 ? step.count.toLocaleString('ko-KR') : '—'}</b>
               <i>
                 <em style={{ width: `${width}%` }} />
               </i>
-              <small>{index === 0 ? '방문 시작' : `${formatPercent(step.benchmark)} 전환`}</small>
+              <small>{hasTrafficData ? index === 0 ? '방문 시작' : `${formatPercent(step.benchmark)} 전환` : index >= 5 ? '리포트 보관 기록' : '이벤트 미수집'}</small>
             </div>
           );
         })}
@@ -49,7 +51,7 @@ export function CustomerJourneyMap({
         <AlertTriangle size={17} />
         <p>
           <strong>{largestDrop.label}</strong>
-          <span>이 구간의 문구, 로딩, 가격 안내, 버튼 위치를 먼저 손보면 매출 개선 가능성이 가장 큽니다.</span>
+          <span>{hasTrafficData ? '이 구간의 문구, 로딩, 가격 안내, 버튼 위치를 먼저 손보면 매출 개선 가능성이 가장 큽니다.' : 'analytics_events가 연결되기 전에는 방문·입력·결제창 이탈을 판단하지 않습니다.'}</span>
         </p>
       </div>
     </article>
@@ -96,6 +98,7 @@ export function LiveActivityFeed({
   const recentOrders = [...orders]
     .sort((left, right) => +new Date(right.createdAt) - +new Date(left.createdAt))
     .slice(0, 6);
+  const isFixtureData = orders.some((order) => order.analyticsEstimated);
   const statusLabels: Record<AdminOrder['status'], string> = {
     paid: '결제 완료',
     pending: '결제 대기',
@@ -107,10 +110,10 @@ export function LiveActivityFeed({
     <article className="admin-command-panel admin-live-feed">
       <div className="admin-command-head">
         <div>
-          <span>실시간 활동</span>
-          <h2>최근 결제·리포트</h2>
+          <span>{isFixtureData ? '실시간 활동' : '최근 보관 기록'}</span>
+          <h2>{isFixtureData ? '최근 결제·리포트' : '최근 완료 리포트'}</h2>
         </div>
-        <strong className="admin-live-status"><i /> LIVE</strong>
+        <strong className="admin-live-status"><i /> {isFixtureData ? 'LIVE' : '보관 기록'}</strong>
       </div>
       <div className="admin-live-list">
         {recentOrders.length ? recentOrders.map((order) => (
@@ -120,7 +123,7 @@ export function LiveActivityFeed({
               <strong>{maskName(order.customerName)} · {order.productName}</strong>
               <small>{order.orderId}</small>
             </span>
-            <b>{statusLabels[order.status]}</b>
+            <b>{order.source === 'real' ? '리포트 보관' : statusLabels[order.status]}</b>
             <time>{formatDateTime(order.createdAt)}</time>
             <ArrowUpRight size={15} aria-hidden="true" />
           </button>
@@ -151,7 +154,7 @@ export function ExecutiveCommandCenter({
   periodLabel: string;
   isEstimated: boolean;
 }) {
-  const status = healthScore >= 85 ? '안정 성장' : healthScore >= 70 ? '개선 여지' : '집중 점검';
+  const status = !isEstimated ? '분석 미수집' : healthScore >= 85 ? '안정 성장' : healthScore >= 70 ? '개선 여지' : '집중 점검';
 
   return (
     <article className="admin-executive-board">
@@ -161,7 +164,7 @@ export function ExecutiveCommandCenter({
           <h2>오늘의 운영 결론</h2>
         </div>
         <div className="admin-estimate-badge">
-          <Gauge size={14} /> {isEstimated ? '기록 기반 추정 지표 포함' : '실측 이벤트 기반'}
+          <Gauge size={14} /> {isEstimated ? '개발 fixture 추정 지표' : '분석 이벤트 미수집'}
         </div>
       </div>
 
@@ -169,12 +172,12 @@ export function ExecutiveCommandCenter({
         <div className="admin-score-block">
           <div
             className="admin-score-ring"
-            style={{ background: `conic-gradient(#23a094 ${clamp(healthScore) * 3.6}deg, rgba(255,255,255,.12) 0deg)` }}
-            aria-label={`운영 건강도 ${healthScore}점`}
+            style={{ background: `conic-gradient(#23a094 ${(isEstimated ? clamp(healthScore) : 0) * 3.6}deg, rgba(255,255,255,.12) 0deg)` }}
+            aria-label={isEstimated ? `운영 건강도 ${healthScore}점` : '운영 건강도 분석 미수집'}
           >
             <div>
-              <strong>{healthScore}</strong>
-              <span>/ 100</span>
+              <strong>{isEstimated ? healthScore : '—'}</strong>
+              <span>{isEstimated ? '/ 100' : '미수집'}</span>
             </div>
           </div>
           <p>
@@ -185,24 +188,24 @@ export function ExecutiveCommandCenter({
 
         <div className="admin-executive-kpis">
           <div>
-            <span>30일 매출 전망 <em>추정</em></span>
-            <strong>{formatCurrency(forecastRevenue)}</strong>
-            <small>현재 선택 기간의 일평균을 월 단위로 환산</small>
+            <span>{isEstimated ? '30일 매출 전망' : '30일 실제 매출 전망'} <em>추정</em></span>
+            <strong>{isEstimated ? formatCurrency(forecastRevenue) : '미수집'}</strong>
+            <small>{isEstimated ? '현재 선택 기간의 일평균을 월 단위로 환산' : '실제 결제금액과 주문 원장 연결 필요'}</small>
           </div>
           <div>
             <span>회수 가능 매출 <em>추정</em></span>
-            <strong>{formatCurrency(opportunityRevenue)}</strong>
-            <small>핵심 병목 전환율 5%p 개선 시</small>
+            <strong>{isEstimated ? formatCurrency(opportunityRevenue) : '미수집'}</strong>
+            <small>{isEstimated ? '핵심 병목 전환율 5%p 개선 시' : '유입·전환 이벤트 연결 필요'}</small>
           </div>
           <div>
-            <span>재구매 고객 비중</span>
+            <span>{isEstimated ? '재구매 고객 비중' : '반복 리포트 고객 비중'}</span>
             <strong>{formatPercent(repeatRate)}</strong>
-            <small>결제 고객 중 두 번 이상 구매한 비율</small>
+            <small>{isEstimated ? '결제 고객 중 두 번 이상 구매한 비율' : '완료 리포트 기록이 두 번 이상인 고객 비율'}</small>
           </div>
           <div>
             <span>최고 효율 채널 <em>추정</em></span>
-            <strong>{bestChannel?.label || '데이터 없음'}</strong>
-            <small>{bestChannel?.estimatedRoas ? `ROAS ${Math.round(bestChannel.estimatedRoas)}%` : '자연 유입 채널'}</small>
+            <strong>{isEstimated ? bestChannel?.label || '데이터 없음' : '미수집'}</strong>
+            <small>{isEstimated ? bestChannel?.estimatedRoas ? `ROAS ${Math.round(bestChannel.estimatedRoas)}%` : '자연 유입 채널' : '유입·광고비 이벤트 연결 필요'}</small>
           </div>
         </div>
       </div>
@@ -211,8 +214,8 @@ export function ExecutiveCommandCenter({
         <Target size={18} />
         <p>
           <span>가장 먼저 손볼 곳</span>
-          <strong>{largestDrop.label}</strong>
-          <small>기능을 더 늘리기보다 이 구간의 이탈 원인부터 제거해야 같은 유입으로 더 많은 매출을 만들 수 있습니다.</small>
+          <strong>{isEstimated ? largestDrop.label : '유입 분석 이벤트 연결'}</strong>
+          <small>{isEstimated ? '기능을 더 늘리기보다 이 구간의 이탈 원인부터 제거해야 같은 유입으로 더 많은 매출을 만들 수 있습니다.' : '실측 이벤트가 없으므로 병목을 추정하지 않습니다.'}</small>
         </p>
       </div>
     </article>
@@ -221,6 +224,7 @@ export function ExecutiveCommandCenter({
 
 export function DecisionAlertCenter({ alerts }: { alerts: ExecutiveAlert[] }) {
   const urgentCount = alerts.filter((alert) => alert.severity === 'critical' || alert.severity === 'warning').length;
+  const isAnalysisMissing = alerts.length > 0 && alerts.every((alert) => alert.severity === 'watch');
 
   return (
     <article className="admin-command-panel admin-alert-center">
@@ -229,7 +233,7 @@ export function DecisionAlertCenter({ alerts }: { alerts: ExecutiveAlert[] }) {
           <span>관제 알림과 SLA</span>
           <h2>운영 리스크 센터</h2>
         </div>
-        <strong className={urgentCount ? 'warn' : 'good'}>{urgentCount ? `${urgentCount}건 조치` : '정상'}</strong>
+        <strong className={urgentCount ? 'warn' : isAnalysisMissing ? '' : 'good'}>{urgentCount ? `${urgentCount}건 조치` : isAnalysisMissing ? '분석 미수집' : '정상'}</strong>
       </div>
       <div className="admin-alert-list">
         {alerts.map((alert) => (
@@ -249,14 +253,16 @@ export function DecisionAlertCenter({ alerts }: { alerts: ExecutiveAlert[] }) {
 }
 
 export function ChannelEfficiencyTable({ rows }: { rows: ChannelPerformanceRow[] }) {
+  const hasAcquisitionData = rows.some((row) => row.sessions > 0);
+
   return (
     <article className="admin-command-panel admin-channel-efficiency">
       <div className="admin-command-head">
         <div>
           <span>획득 효율</span>
-          <h2>채널별 매출·CAC·ROAS</h2>
+          <h2>{hasAcquisitionData ? '채널별 매출·CAC·ROAS' : '유입·비용 데이터 미수집'}</h2>
         </div>
-        <strong>비용 추정</strong>
+        <strong>{hasAcquisitionData ? '비용 추정' : '미수집'}</strong>
       </div>
       <div className="admin-channel-table-wrap">
         <div className="admin-channel-table">
@@ -273,20 +279,20 @@ export function ChannelEfficiencyTable({ rows }: { rows: ChannelPerformanceRow[]
           {rows.map((row) => (
             <div key={row.label}>
               <strong>{row.label}</strong>
-              <span>{row.sessions.toLocaleString('ko-KR')}</span>
+              <span>{hasAcquisitionData ? row.sessions.toLocaleString('ko-KR') : '미수집'}</span>
               <span>{row.orders}건</span>
-              <span>{formatPercent(row.conversion)}</span>
-              <b>{formatCurrency(row.revenue)}</b>
-              <span>{row.estimatedSpend ? formatCurrency(row.estimatedCac) : '자연유입'}</span>
+              <span>{hasAcquisitionData ? formatPercent(row.conversion) : '미수집'}</span>
+              <b>{formatCurrency(row.revenue)}{hasAcquisitionData ? '' : ' · 카탈로그'}</b>
+              <span>{hasAcquisitionData ? row.estimatedSpend ? formatCurrency(row.estimatedCac) : '자연유입' : '미수집'}</span>
               <em className={row.estimatedRoas >= 350 ? 'good' : row.estimatedSpend ? 'warn' : ''}>
-                {row.estimatedSpend ? `${Math.round(row.estimatedRoas)}%` : '-'}
+                {hasAcquisitionData ? row.estimatedSpend ? `${Math.round(row.estimatedRoas)}%` : '-' : '미수집'}
               </em>
               <p>{row.action}</p>
             </div>
           ))}
         </div>
       </div>
-      <p className="admin-estimate-note">광고비가 아직 연결되지 않아 CAC와 ROAS는 매출·세션 기반 추정값입니다. 광고 플랫폼 비용 API 연결 시 실측값으로 자동 교체할 수 있습니다.</p>
+      <p className="admin-estimate-note">{hasAcquisitionData ? '광고비가 아직 연결되지 않아 CAC와 ROAS는 매출·세션 기반 추정값입니다. 광고 플랫폼 비용 API 연결 시 실측값으로 자동 교체할 수 있습니다.' : '유입·세션·광고비 데이터가 없어 CAC와 ROAS를 계산하지 않습니다. 금액은 상품 registry의 카탈로그 가격 합계입니다.'}</p>
     </article>
   );
 }
@@ -301,7 +307,7 @@ export function RetentionCohortMatrix({ rows }: { rows: RetentionCohortRow[] }) 
           <span>고객 유지 신호</span>
           <h2>가입 코호트</h2>
         </div>
-        <strong>행동 기반 추정</strong>
+        <strong>{rows.length ? '개발 fixture 기반' : '분석 이벤트 미수집'}</strong>
       </div>
       <div className="admin-cohort-grid">
         <span>가입 주차</span>

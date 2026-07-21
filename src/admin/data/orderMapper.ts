@@ -1,33 +1,33 @@
-import { findServiceById } from '../../api/mockData';
 import type { ReportArchiveEntry } from '../../lib/reportArchive';
-import { sampleAges, sampleChannels, sampleDevices } from '../fixtures/sampleOrders';
+import { getProductById } from '../../products';
 import type { AdminOrder } from '../types/admin';
-import { parsePrice } from '../utils/formatters';
 
-export function toAdminOrder(report: ReportArchiveEntry, index: number): AdminOrder {
-  const service = findServiceById(report.productId);
+export function toAdminOrder(report: ReportArchiveEntry): AdminOrder {
+  const productId = String(report.productId || '').trim();
+  const product = getProductById(productId);
 
   return {
     id: report.id,
     orderId: report.orderId || report.id,
-    productId: report.productId,
-    productName: report.title || service.label,
-    category: service.category,
+    productId,
+    productName: product?.displayName || report.title?.trim() || `알 수 없는 상품 (${productId || 'ID 없음'})`,
+    productStatus: product?.status || 'unknown',
+    category: product?.discovery.category || 'unknown',
     customerName: report.customerName,
     customerEmail: undefined,
-    amount: parsePrice(service.price),
+    amount: product?.price || 0,
     status: 'paid',
     reportStatus: 'done',
     paymentMethod: report.paymentMethod || 'portone',
     createdAt: report.createdAt,
-    readRate: Math.min(98, 74 + index * 5),
+    readRate: 0,
     issueCount: 0,
     source: 'real',
-    sourceChannel: sampleChannels[index % sampleChannels.length],
-    device: sampleDevices[index % sampleDevices.length],
-    ageRange: sampleAges[index % sampleAges.length],
-    reportLatencySec: 22 + index * 4,
-    analyticsEstimated: true,
+    sourceChannel: '미수집',
+    device: 'unknown',
+    ageRange: '미수집',
+    reportLatencySec: 0,
+    analyticsEstimated: false,
     archive: report
   };
 }

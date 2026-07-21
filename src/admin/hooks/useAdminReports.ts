@@ -1,77 +1,161 @@
-import { useCallback, useEffect, useState } from 'react';
-import { readStoredAuthUser } from '../../lib/auth';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { readStoredAuthUser } from '../../features/auth';
 import {
-  mergeReportArchiveEntries,
   readReportArchiveEntries,
   type ReportArchiveEntry
 } from '../../lib/reportArchive';
-import { fetchAdminReports } from '../api/adminClient';
+import {
+  AdminApiError,
+  fetchAdminReports,
+  isAdminSessionError
+} from '../api/adminClient';
+import { normalizeAdminReportEntries, selectVisibleAdminReports } from '../data/adminReports';
 
 type UseAdminReportsOptions = {
   adminAccessToken: string;
   isUnlocked: boolean;
+  bootstrapReports?: ReportArchiveEntry[];
+  onSessionExpired: () => void;
 };
+
+const SAFE_REPORTS_ERROR = '관리자 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
 
 export function useAdminReports({
   adminAccessToken,
-  isUnlocked
+  isUnlocked,
+  bootstrapReports,
+  onSessionExpired
 }: UseAdminReportsOptions) {
   const ownerId = readStoredAuthUser()?.id;
   const [lastUpdatedAt, setLastUpdatedAt] = useState(() => Date.now());
+  const [reportsError, setReportsError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [reports, setReports] = useState<ReportArchiveEntry[]>(() =>
-    readReportArchiveEntries(readStoredAuthUser()?.id)
+    adminAccessToken ? [] : readReportArchiveEntries(readStoredAuthUser()?.id)
   );
+  const requestGeneration = useRef(0);
+  const currentToken = useRef(adminAccessToken);
+  const verifiedToken = useRef('');
+  currentToken.current = adminAccessToken;
+
   const readLocalReports = useCallback(
     () => readReportArchiveEntries(ownerId),
     [ownerId]
   );
 
+  const isCurrentRequest = useCallback((generation: number, token: string) => (
+    requestGeneration.current === generation && currentToken.current === token
+  ), []);
+
+  const handleLoadError = useCallback((error: unknown, generation: number, token: string) => {
+    if (!isCurrentRequest(generation, token)) {
+      return;
+    }
+
+    setReportsError(error instanceof AdminApiError ? error.message : SAFE_REPORTS_ERROR);
+    if (isAdminSessionError(error)) {
+      onSessionExpired();
+    }
+  }, [isCurrentRequest, onSessionExpired]);
+
   useEffect(() => {
-    let isCancelled = false;
+    const generation = ++requestGeneration.current;
+    const token = adminAccessToken;
 
-    const loadRemoteReports = async () => {
-      if (!isUnlocked || !adminAccessToken) {
-        return;
-      }
+    if (!isUnlocked) {
+      setIsRefreshing(false);
+      return;
+    }
 
-      try {
-        const remoteReports = await fetchAdminReports(adminAccessToken);
+    if (!token) {
+      verifiedToken.current = '';
+      setReports(readLocalReports());
+      setReportsError('');
+      setLastUpdatedAt(Date.now());
+      return;
+    }
 
-        if (isCancelled) {
+    if (bootstrapReports) {
+      verifiedToken.current = token;
+      setReports(normalizeAdminReportEntries(bootstrapReports));
+      setReportsError('');
+      setLastUpdatedAt(Date.now());
+      return;
+    }
+
+    if (verifiedToken.current !== token) {
+      setReports([]);
+    }
+
+    setIsRefreshing(true);
+    void fetchAdminReports(token)
+      .then((remoteReports) => {
+        if (!isCurrentRequest(generation, token)) {
           return;
         }
 
-        setReports(mergeReportArchiveEntries(remoteReports, readLocalReports()));
-      } catch {
-        // Preserve the current local archive when the server admin API is unavailable.
-      }
-    };
-
-    void loadRemoteReports();
+        verifiedToken.current = token;
+        setReports(normalizeAdminReportEntries(remoteReports));
+        setReportsError('');
+        setLastUpdatedAt(Date.now());
+      })
+      .catch((error) => {
+        handleLoadError(error, generation, token);
+      })
+      .finally(() => {
+        if (isCurrentRequest(generation, token)) {
+          setIsRefreshing(false);
+        }
+      });
 
     return () => {
-      isCancelled = true;
+      if (requestGeneration.current === generation) {
+        requestGeneration.current += 1;
+      }
     };
-  }, [adminAccessToken, isUnlocked, readLocalReports]);
+  }, [adminAccessToken, bootstrapReports, handleLoadError, isCurrentRequest, isUnlocked, readLocalReports]);
 
   const refresh = useCallback(() => {
-    setReports(readLocalReports());
-    setLastUpdatedAt(Date.now());
-
-    if (adminAccessToken) {
-      void fetchAdminReports(adminAccessToken)
-        .then((remoteReports) => {
-          setReports(mergeReportArchiveEntries(remoteReports, readLocalReports()));
-          setLastUpdatedAt(Date.now());
-        })
-        .catch(() => {
-          setReports(readLocalReports());
-        });
+    if (!isUnlocked) {
+      return;
     }
-  }, [adminAccessToken, readLocalReports]);
+
+    const token = adminAccessToken;
+    const generation = ++requestGeneration.current;
+    setReportsError('');
+
+    if (!token) {
+      setReports(readLocalReports());
+      setLastUpdatedAt(Date.now());
+      return;
+    }
+
+    setIsRefreshing(true);
+    void fetchAdminReports(token)
+      .then((remoteReports) => {
+        if (!isCurrentRequest(generation, token)) {
+          return;
+        }
+
+        verifiedToken.current = token;
+        setReports(normalizeAdminReportEntries(remoteReports));
+        setReportsError('');
+        setLastUpdatedAt(Date.now());
+      })
+      .catch((error) => {
+        handleLoadError(error, generation, token);
+      })
+      .finally(() => {
+        if (isCurrentRequest(generation, token)) {
+          setIsRefreshing(false);
+        }
+      });
+  }, [adminAccessToken, handleLoadError, isCurrentRequest, isUnlocked, readLocalReports]);
 
   return {
-    reports,
+    reports: selectVisibleAdminReports(reports, adminAccessToken, verifiedToken.current),
+    reportsError,
+    isRefreshing,
     lastUpdatedAt,
     refresh
   };

@@ -1,6 +1,7 @@
 import { PieChart } from 'lucide-react';
 import { buildHourlyRows, buildProductRows, buildTimeSeries } from '../data/adminAnalytics';
 import { clamp, formatCurrency, formatPercent, getConversion } from '../utils/formatters';
+import { getAdminProductStatusLabel } from '../utils/productStatus';
 
 const chartColors = ['#111827', '#8a7258', '#2f6f68', '#b54708', '#7c3aed', '#475467'];
 
@@ -60,9 +61,11 @@ export function RevenueTrendChart({
 }
 
 export function HourlyBarChart({
-  data
+  data,
+  isPaymentData = true
 }: {
   data: ReturnType<typeof buildHourlyRows>;
+  isPaymentData?: boolean;
 }) {
   const maxOrders = Math.max(1, ...data.map((row) => row.orders));
 
@@ -71,11 +74,11 @@ export function HourlyBarChart({
       <div className="admin-chart-head">
         <div>
           <span>시간대 분석</span>
-          <h3>시간대별 결제</h3>
+          <h3>{isPaymentData ? '시간대별 결제' : '보관 시각별 완료 리포트'}</h3>
         </div>
         <strong>{data.reduce((sum, row) => sum + row.orders, 0)}건</strong>
       </div>
-      <div className="admin-hour-bars" aria-label="시간대별 결제 막대그래프">
+      <div className="admin-hour-bars" aria-label={isPaymentData ? '시간대별 결제 막대그래프' : '보관 시각별 완료 리포트 막대그래프'}>
         {data.map((row) => (
           <div key={row.hour} title={`${row.label} ${row.orders}건`}>
             <span>
@@ -98,12 +101,13 @@ export function DonutChart({
   rows: Array<{ label: string; value: number; revenue?: number }>;
   centerLabel: string;
 }) {
-  const total = rows.reduce((sum, row) => sum + row.value, 0) || 1;
+  const total = rows.reduce((sum, row) => sum + row.value, 0);
+  const ratioTotal = total || 1;
   let cursor = 0;
   const gradient = rows
     .map((row, index) => {
       const start = cursor;
-      const end = cursor + (row.value / total) * 360;
+      const end = cursor + (row.value / ratioTotal) * 360;
       cursor = end;
       return `${chartColors[index % chartColors.length]} ${start}deg ${end}deg`;
     })
@@ -140,9 +144,11 @@ export function DonutChart({
 }
 
 export function HealthRadar({
-  items
+  items,
+  isEstimated
 }: {
   items: Array<{ label: string; value: number; display: string; note: string }>;
+  isEstimated: boolean;
 }) {
   const size = 240;
   const center = size / 2;
@@ -153,14 +159,14 @@ export function HealthRadar({
       ...item,
       x: center + Math.cos(angle) * radius,
       y: center + Math.sin(angle) * radius,
-      pointX: center + Math.cos(angle) * radius * (clamp(item.value) / 100),
-      pointY: center + Math.sin(angle) * radius * (clamp(item.value) / 100),
+      pointX: center + Math.cos(angle) * radius * ((isEstimated ? clamp(item.value) : 0) / 100),
+      pointY: center + Math.sin(angle) * radius * ((isEstimated ? clamp(item.value) : 0) / 100),
       labelX: center + Math.cos(angle) * (radius + 24),
       labelY: center + Math.sin(angle) * (radius + 24)
     };
   });
   const polygon = axis.map((item) => `${item.pointX},${item.pointY}`).join(' ');
-  const average = Math.round(items.reduce((sum, item) => sum + clamp(item.value), 0) / items.length);
+  const average = isEstimated ? Math.round(items.reduce((sum, item) => sum + clamp(item.value), 0) / items.length) : 0;
 
   return (
     <article className="admin-command-panel admin-health-radar">
@@ -169,10 +175,10 @@ export function HealthRadar({
           <span>운영 건강도</span>
           <h2>운영 건강도</h2>
         </div>
-        <strong>{average}점</strong>
+        <strong>{isEstimated ? `${average}점` : '미수집'}</strong>
       </div>
       <div className="admin-radar-wrap">
-        <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="운영 건강도 레이더 차트">
+        <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label={isEstimated ? '운영 건강도 레이더 차트' : '운영 건강도 분석 미수집'}>
           {[0.35, 0.7, 1].map((scale) => (
             <polygon
               key={scale}
@@ -218,8 +224,8 @@ export function ProductHeatmap({
   const cells = [
     { key: 'share', label: '매출비중', get: (row: (typeof rows)[number]) => row.share, display: (value: number) => formatPercent(value) },
     { key: 'orders', label: '주문', get: (row: (typeof rows)[number]) => getConversion(row.orders, maxOrders), display: (_value: number, row: (typeof rows)[number]) => `${row.orders}건` },
-    { key: 'conversion', label: '전환', get: (row: (typeof rows)[number]) => row.conversion, display: (value: number) => formatPercent(value) },
-    { key: 'read', label: '열람', get: (row: (typeof rows)[number]) => row.avgReadRate, display: (value: number) => `${Math.round(value)}%` }
+    { key: 'conversion', label: '전환', get: (row: (typeof rows)[number]) => row.conversion, display: (value: number, row: (typeof rows)[number]) => row.analyticsAvailable ? formatPercent(value) : '미수집' },
+    { key: 'read', label: '열람', get: (row: (typeof rows)[number]) => row.avgReadRate, display: (value: number, row: (typeof rows)[number]) => row.analyticsAvailable ? `${Math.round(value)}%` : '미수집' }
   ];
 
   return (
@@ -238,7 +244,12 @@ export function ProductHeatmap({
         ))}
         {visibleRows.map((row) => (
           <div className="admin-heatmap-row" key={row.id}>
-            <strong>{row.label}</strong>
+            <strong>
+              {row.label}
+              <small className={`admin-product-status ${row.status}`}>
+                {getAdminProductStatusLabel(row.status)}
+              </small>
+            </strong>
             {cells.map((cell) => {
               const value = clamp(cell.get(row));
               const dark = value > 52;
@@ -261,7 +272,7 @@ export function ProductHeatmap({
 }
 
 export function ProductPortfolioMatrix({ rows }: { rows: ReturnType<typeof buildProductRows> }) {
-  const visibleRows = rows.filter((row) => row.orders > 0).slice(0, 8);
+  const visibleRows = rows.filter((row) => row.orders > 0 && row.analyticsAvailable).slice(0, 8);
   const width = 560;
   const height = 268;
   const left = 46;
@@ -310,7 +321,11 @@ export function ProductPortfolioMatrix({ rows }: { rows: ReturnType<typeof build
           {points.map((point) => (
             <div key={point.id}>
               <span>{point.index}</span>
-              <p><strong>{point.label}</strong><small>전환 {formatPercent(point.conversion)} · 열람 {point.avgReadRate}%</small></p>
+              <p>
+                <strong>{point.label}</strong>
+                <small className={`admin-product-status ${point.status}`}>{getAdminProductStatusLabel(point.status)}</small>
+                <small>전환 {formatPercent(point.conversion)} · 열람 {point.avgReadRate}%</small>
+              </p>
               <b>{formatCurrency(point.revenue)}</b>
             </div>
           ))}

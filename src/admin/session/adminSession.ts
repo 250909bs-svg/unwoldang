@@ -6,6 +6,7 @@ export const ENABLE_CLIENT_ADMIN = import.meta.env.VITE_ENABLE_CLIENT_ADMIN === 
 export type AdminSessionState = {
   adminAccessToken: string;
   isUnlocked: boolean;
+  requiresServerVerification: boolean;
 };
 
 function getAdminSessionStorage() {
@@ -16,6 +17,33 @@ function arrayBufferToHex(buffer: ArrayBuffer) {
   return [...new Uint8Array(buffer)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
+}
+
+function decodeTokenPayload(adminAccessToken: string) {
+  try {
+    const [encodedPayload] = adminAccessToken.split('.', 1);
+    if (!encodedPayload || typeof globalThis.atob !== 'function') {
+      return undefined;
+    }
+
+    const normalized = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const binary = globalThis.atob(padded);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getAdminAccessTokenExpiresAt(adminAccessToken: string) {
+  const expiry = decodeTokenPayload(adminAccessToken)?.exp;
+  return typeof expiry === 'number' && Number.isFinite(expiry) ? expiry : undefined;
+}
+
+export function isAdminAccessTokenExpired(adminAccessToken: string, now = Date.now()) {
+  const expiresAt = getAdminAccessTokenExpiresAt(adminAccessToken);
+  return expiresAt !== undefined && expiresAt <= now;
 }
 
 export function isLocalAdminHost() {
@@ -32,20 +60,33 @@ export async function hashAdminCredential(adminId: string, password: string) {
   return arrayBufferToHex(digest);
 }
 
+export function clearAdminSession() {
+  const storage = getAdminSessionStorage();
+  storage?.removeItem(ADMIN_SESSION_KEY);
+  storage?.removeItem(ADMIN_ACCESS_TOKEN_KEY);
+}
+
 export function readAdminAccessToken() {
-  return getAdminSessionStorage()?.getItem(ADMIN_ACCESS_TOKEN_KEY) || '';
+  const adminAccessToken = getAdminSessionStorage()?.getItem(ADMIN_ACCESS_TOKEN_KEY) || '';
+
+  if (adminAccessToken && isAdminAccessTokenExpired(adminAccessToken)) {
+    clearAdminSession();
+    return '';
+  }
+
+  return adminAccessToken;
 }
 
 export function readAdminSessionState(): AdminSessionState {
   const storage = getAdminSessionStorage();
-  const adminAccessToken = storage?.getItem(ADMIN_ACCESS_TOKEN_KEY) || '';
+  const adminAccessToken = readAdminAccessToken();
   const hasLocalSession = storage?.getItem(ADMIN_SESSION_KEY) === 'ok';
+  const localSessionUnlocked = !adminAccessToken && (isLocalAdminHost() || ENABLE_CLIENT_ADMIN) && hasLocalSession;
 
   return {
     adminAccessToken,
-    isUnlocked:
-      Boolean(adminAccessToken) ||
-      ((isLocalAdminHost() || ENABLE_CLIENT_ADMIN) && hasLocalSession)
+    isUnlocked: localSessionUnlocked,
+    requiresServerVerification: Boolean(adminAccessToken)
   };
 }
 
@@ -57,10 +98,4 @@ export function writeAdminAccessSession(adminAccessToken: string) {
 
 export function writeLocalAdminSession() {
   getAdminSessionStorage()?.setItem(ADMIN_SESSION_KEY, 'ok');
-}
-
-export function clearAdminSession() {
-  const storage = getAdminSessionStorage();
-  storage?.removeItem(ADMIN_SESSION_KEY);
-  storage?.removeItem(ADMIN_ACCESS_TOKEN_KEY);
 }

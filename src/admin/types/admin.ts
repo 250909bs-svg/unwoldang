@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
-import type { ServiceCategoryId, ServiceId } from '../../api/mockData';
+import type { ServiceCategoryId } from '../../api/mockData';
 import type { ReportArchiveEntry } from '../../lib/reportArchive';
+import type { ProductStatus } from '../../products';
 
 export type AdminView = 'overview' | 'funnel' | 'orders' | 'customers' | 'reports' | 'issues' | 'costs';
 
@@ -26,18 +27,21 @@ export type AdminDateRange = {
 
 export type IconComponent = LucideIcon;
 
-export type SourceChannel = '카카오' | '네이버검색' | '인스타그램' | '직접방문' | '재방문';
+export type SourceChannel = '카카오' | '네이버검색' | '인스타그램' | '직접방문' | '재방문' | '미수집';
 
-export type DeviceType = 'mobile' | 'desktop';
+export type DeviceType = 'mobile' | 'desktop' | 'unknown';
+
+export type AdminProductStatus = ProductStatus | 'unknown';
 
 export type CustomerFilter = 'all' | 'registered' | 'paid' | 'vip' | 'risk';
 
 export type AdminOrder = {
   id: string;
   orderId: string;
-  productId: ServiceId;
+  productId: string;
   productName: string;
-  category: Exclude<ServiceCategoryId, 'all'>;
+  productStatus: AdminProductStatus;
+  category: Exclude<ServiceCategoryId, 'all'> | 'unknown';
   customerName: string;
   customerEmail?: string;
   amount: number;
@@ -82,11 +86,12 @@ export type CustomerRow = {
   lastProduct: string;
   lastSeen: string;
   readRate: number;
+  analyticsAvailable: boolean;
 };
 
 export type CustomerProfile = CustomerRow & {
   id: string;
-  provider: 'kakao' | 'demo';
+  provider: 'kakao' | 'demo' | 'unknown';
   signedAt: string;
   paidOrders: number;
   status: 'registered' | 'paid';
