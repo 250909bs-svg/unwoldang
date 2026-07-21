@@ -2,8 +2,10 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { AuthenticatedUser, PaymentOrderClaims } from '../../contracts/auth.ts';
 import { PaymentRequestError, ReportRequestError } from '../../contracts/errors.ts';
 import {
+  assertProductAvailableForExistingAccess,
   assertProductAvailableForNewOrder,
   getCatalogAmount,
+  isProductAvailableForExistingAccess,
   PRODUCT_STATUS,
   SERVER_PRODUCT_CATALOG,
   type ProductId
@@ -223,6 +225,7 @@ export class PaymentService {
     const productId = getRequiredString(body, 'productId');
     const suppliedOrderClaim = getOptionalString(body, 'orderClaim');
     const catalogAmount = getCatalogAmount(productId);
+    assertProductAvailableForExistingAccess(productId);
 
     assertPaymentOrderId(orderId);
 
@@ -439,6 +442,10 @@ export class PaymentService {
     const userBinding = readLedgerString(ledger, 'userBinding');
     const amount = readLedgerInteger(ledger, 'amount');
 
+    if (productId) {
+      assertProductAvailableForExistingAccess(productId);
+    }
+
     if (
       paymentId !== orderId ||
       storedOrderId !== orderId ||
@@ -498,9 +505,8 @@ export class PaymentService {
           readLedgerString(record, 'entitlementStatus') === PRODUCT_STATUS.ACTIVE &&
           Boolean(productId) &&
           Number.isSafeInteger(amount) &&
-          (product?.status === PRODUCT_STATUS.ACTIVE ||
-            product?.status === PRODUCT_STATUS.ARCHIVED) &&
-          product.amount === amount
+          isProductAvailableForExistingAccess(product?.status) &&
+          product?.amount === amount
         );
       })
       .map((record) => ({
