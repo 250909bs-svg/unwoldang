@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import seoRouteData from '../content/seoRoutes.json';
+import { canIndexProduct, getProductByRoute } from '../products/registry';
 
 const SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://www.unwoldang.com').replace(/\/$/, '');
 
@@ -25,12 +26,6 @@ type RouteSeo = {
 
 const routeSeo = seoRouteData as Record<string, RouteSeo>;
 const defaultSeo = routeSeo['/'];
-
-const detailAliases: Record<string, string> = {
-  'general-signature': '/detail/general-saju',
-  'past-life-goblin': '/detail/past-life-goblin',
-  'love-reading': '/detail/love-reading'
-};
 
 const noIndexPrefixes = ['/form/', '/preview/', '/report/', '/auth/', '/payment/'];
 const noIndexPaths = new Set(['/checkout', '/loading', '/login', '/my', '/admin', '/search']);
@@ -102,11 +97,48 @@ function resolveSeoPath(path: string) {
     return path;
   }
 
-  const matchedAlias = Object.entries(detailAliases).find(([serviceId]) =>
-    path === `/form/${serviceId}` || path === `/report/${serviceId}`
-  );
+  const product = getProductByRoute(path);
 
-  return matchedAlias?.[1] || '/';
+  if (!product) {
+    return undefined;
+  }
+
+  const isProductAlias =
+    path === product.routes.intake ||
+    path === product.routes.report ||
+    path === product.routes.preview;
+
+  return isProductAlias ? product.routes.detail : undefined;
+}
+
+export function resolveSeoPolicy(pathname: string) {
+  const path = normalizePath(pathname);
+  const seoPath = resolveSeoPath(path);
+  const seo = seoPath ? routeSeo[seoPath] ?? defaultSeo : defaultSeo;
+  const seoProduct = seoPath ? getProductByRoute(seoPath) : undefined;
+  const isKnownPage = Boolean(seoPath);
+  const productAllowsIndex = !seoProduct || canIndexProduct(seoProduct.id);
+  const shouldNoIndex =
+    !isKnownPage ||
+    !seo.indexable ||
+    !productAllowsIndex ||
+    noIndexPaths.has(path) ||
+    noIndexPrefixes.some((prefix) => path.startsWith(prefix));
+  const canonicalPath = seoPath ?? '/';
+  const robots = shouldNoIndex
+    ? 'noindex,nofollow'
+    : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+
+  return {
+    path,
+    seoPath,
+    seo,
+    seoProduct,
+    productAllowsIndex,
+    shouldNoIndex,
+    canonicalPath,
+    robots
+  };
 }
 
 function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, imageUrl: string) {
@@ -169,7 +201,10 @@ function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, 
       '@id': `${SITE_URL}/#service-list`,
       name: '운월당 대표 사주 리포트',
       itemListElement: Object.entries(routeSeo)
-        .filter(([route, item]) => route.startsWith('/detail/') && item.indexable)
+        .filter(([route, item]) => {
+          const product = getProductByRoute(route);
+          return route.startsWith('/detail/') && item.indexable && Boolean(product && canIndexProduct(product.id));
+        })
         .map(([route, item], index) => ({
           '@type': 'ListItem',
           position: index + 1,
@@ -198,7 +233,9 @@ function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, 
     });
   }
 
-  if (path.startsWith('/detail/') && seo.price && seo.priceCurrency) {
+  const product = getProductByRoute(path);
+
+  if (product && canIndexProduct(product.id) && path.startsWith('/detail/') && seo.price && seo.priceCurrency) {
     graph.push({
       '@type': 'Product',
       '@id': `${canonicalUrl}#product`,
@@ -244,21 +281,10 @@ export default function Seo() {
   const location = useLocation();
 
   useEffect(() => {
-    const path = normalizePath(location.pathname);
-    const seoPath = resolveSeoPath(path);
-    const seo = routeSeo[seoPath] ?? defaultSeo;
-    const isKnownPage = Boolean(routeSeo[path]) || seoPath !== '/';
-    const shouldNoIndex =
-      !isKnownPage ||
-      !seo.indexable ||
-      noIndexPaths.has(path) ||
-      noIndexPrefixes.some((prefix) => path.startsWith(prefix));
-    const canonicalPath = shouldNoIndex && seoPath === '/' ? '/' : seoPath;
+    const { path, seoPath, seo, seoProduct, productAllowsIndex, canonicalPath, robots } =
+      resolveSeoPolicy(location.pathname);
     const canonicalUrl = `${SITE_URL}${canonicalPath === '/' ? '/' : canonicalPath}`;
     const imageUrl = `${SITE_URL}${seo.image}`;
-    const robots = shouldNoIndex
-      ? 'noindex,nofollow'
-      : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 
     document.documentElement.lang = 'ko';
     document.title = seo.title;
@@ -270,7 +296,7 @@ export default function Seo() {
     setLanguageAlternate(canonicalUrl);
 
     setMeta('og:locale', 'ko_KR', 'property');
-    setMeta('og:type', path.startsWith('/detail/') ? 'product' : 'website', 'property');
+    setMeta('og:type', seoProduct && productAllowsIndex ? 'product' : 'website', 'property');
     setMeta('og:site_name', '운월당', 'property');
     setMeta('og:title', seo.title, 'property');
     setMeta('og:description', seo.description, 'property');
@@ -283,7 +309,7 @@ export default function Seo() {
     setMeta('twitter:image', imageUrl);
     setMeta('twitter:image:alt', seo.imageAlt || `${seo.heading} 대표 이미지`);
 
-    setStructuredData(buildStructuredData(seoPath, seo, canonicalUrl, imageUrl));
+    setStructuredData(buildStructuredData(seoPath ?? path, seo, canonicalUrl, imageUrl));
   }, [location.pathname]);
 
   return null;

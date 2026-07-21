@@ -6,12 +6,42 @@ const SITE_URL = 'https://www.unwoldang.com';
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(rootDir, 'dist');
 const routesFile = path.join(rootDir, 'src', 'content', 'seoRoutes.json');
+const productManifestFile = path.join(rootDir, 'src', 'products', 'manifest.json');
 const templateFile = path.join(distDir, 'index.html');
 const publicSitemapFile = path.join(rootDir, 'public', 'sitemap.xml');
 const distSitemapFile = path.join(distDir, 'sitemap.xml');
 
 const routes = JSON.parse(await readFile(routesFile, 'utf8'));
+const productStatuses = JSON.parse(await readFile(productManifestFile, 'utf8'));
 const template = await readFile(templateFile, 'utf8');
+const detailRouteAliases = Object.freeze({
+  'general-saju': 'general-signature'
+});
+
+function getProductIdForRoute(route, seo) {
+  if (!route.startsWith('/detail/')) {
+    return undefined;
+  }
+
+  const slug = route.slice('/detail/'.length);
+  return seo.serviceId || detailRouteAliases[slug] || slug;
+}
+
+function isIndexableRoute(route, seo) {
+  if (!seo.indexable) {
+    return false;
+  }
+
+  if (!route.startsWith('/detail/')) {
+    return true;
+  }
+
+  return productStatuses[getProductIdForRoute(route, seo)] === 'active';
+}
+
+function getIndexableRouteEntries() {
+  return Object.entries(routes).filter(([route, seo]) => isIndexableRoute(route, seo));
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -128,8 +158,8 @@ function buildStructuredData(route, seo) {
       '@type': 'ItemList',
       '@id': `${SITE_URL}/#service-list`,
       name: '운월당 대표 사주 리포트',
-      itemListElement: Object.entries(routes)
-        .filter(([pathName, item]) => pathName.startsWith('/detail/') && item.indexable)
+      itemListElement: getIndexableRouteEntries()
+        .filter(([pathName]) => pathName.startsWith('/detail/'))
         .map(([pathName, item], index) => ({
           '@type': 'ListItem',
           position: index + 1,
@@ -184,8 +214,8 @@ function buildStructuredData(route, seo) {
 }
 
 function buildFallback(route, seo) {
-  const serviceLinks = Object.entries(routes)
-    .filter(([pathName, item]) => pathName.startsWith('/detail/') && item.indexable)
+  const serviceLinks = getIndexableRouteEntries()
+    .filter(([pathName]) => pathName.startsWith('/detail/'))
     .map(([pathName, item]) => `<a href="${pathName}">${escapeHtml(item.heading)}</a>`)
     .join('');
   const highlights = seo.highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
@@ -264,8 +294,7 @@ function buildPage(route, seo) {
 }
 
 function buildSitemap() {
-  const urls = Object.entries(routes)
-    .filter(([, seo]) => seo.indexable)
+  const urls = getIndexableRouteEntries()
     .map(([route, seo]) => `  <url>\n    <loc>${SITE_URL}${route === '/' ? '/' : route}</loc>\n    <lastmod>${seo.lastmod}</lastmod>\n  </url>`)
     .join('\n');
 
@@ -323,11 +352,7 @@ await mkdir(path.join(distDir, 'seo'), { recursive: true });
 const seenTitles = new Set();
 const seenDescriptions = new Set();
 
-for (const [route, seo] of Object.entries(routes)) {
-  if (!seo.indexable) {
-    continue;
-  }
-
+for (const [route, seo] of getIndexableRouteEntries()) {
   const html = buildPage(route, seo);
   const outputFile = route === '/' ? templateFile : path.join(distDir, 'seo', `${routeFileName(route)}.html`);
 
@@ -346,4 +371,4 @@ const sitemap = buildSitemap();
 await writeFile(publicSitemapFile, sitemap, 'utf8');
 await writeFile(distSitemapFile, sitemap, 'utf8');
 
-console.log(`Generated ${Object.values(routes).filter((route) => route.indexable).length} SEO pages and sitemap.xml`);
+console.log(`Generated ${getIndexableRouteEntries().length} SEO pages and sitemap.xml`);

@@ -13,7 +13,6 @@ import {
   confirmAuthenticatedPortOnePayment,
   createCustomerKey,
   createOrderId,
-  getPriceValue,
   readPendingPayment,
   requestPaymentOrderIntent,
   savePendingPayment
@@ -25,6 +24,7 @@ import {
   hasPortOneRuntimeConfig,
   shouldUseDemoPayment
 } from '../lib/runtimeConfig';
+import { getProductById } from '../products/registry';
 
 type CheckoutState = {
   product?: string;
@@ -39,14 +39,15 @@ export default function Checkout() {
   const { user, isAuthenticated } = useAuth();
   const restoredPayment = readPendingPayment();
   const locationState = (location.state as CheckoutState | null) ?? null;
-  const product = locationState?.product || restoredPayment?.productId;
+  const requestedProductId = locationState?.product || restoredPayment?.productId;
+  const product = getProductById(requestedProductId)!;
   const ownsLocationDraft = !locationState?.draftOwnerId || locationState.draftOwnerId === user?.id;
   const formData = (ownsLocationDraft ? locationState?.formData : undefined) || restoredPayment?.formData;
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
   const draftOwnerId = user?.id;
-  const service = findServiceById(product);
-  const isPastLifeProduct = service.id === 'past-life-goblin';
-  const isLoveReadingProduct = service.id === 'love-reading';
+  const service = findServiceById(product.id);
+  const isPastLifeProduct = product.flow.intakeVariant === 'past-life';
+  const isLoveReadingProduct = product.flow.intakeVariant === 'love-reading';
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
@@ -60,18 +61,12 @@ export default function Checkout() {
     }
   }, [isAuthenticated, navigate]);
 
-  useEffect(() => {
-    if (!product && isAuthenticated) {
-      navigate('/menu', { replace: true });
-    }
-  }, [isAuthenticated, navigate, product]);
-
   const orderId = useMemo(() => createOrderId(), []);
-  const amount = getPriceValue(service?.price || '0');
+  const amount = product.price;
   const customerKey = createCustomerKey(user?.id);
   const analysisPayload = useMemo(
-    () => buildAnalysisRequestPayload(service?.id || 'general-signature', formData || {}),
-    [formData, service?.id]
+    () => buildAnalysisRequestPayload(product.id, formData || {}),
+    [formData, product.id]
   );
   const portOneStoreId = import.meta.env.VITE_PORTONE_STORE_ID?.trim();
   const portOneChannelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY?.trim();
@@ -81,7 +76,7 @@ export default function Checkout() {
   const paymentMode = getPaymentMode();
   const isDemoPayment = shouldUseDemoPayment();
   const canUsePortOneRuntime = Boolean(paymentMode === 'live' && hasPortOneRuntimeConfig());
-  const requiresPartnerBirth = service?.id === 'match-couple' || service?.id === 'match-destiny';
+  const requiresPartnerBirth = product.flow.requiresPartnerBirth;
   const birthInputValidation = useMemo(
     () => validateIntakeBirthInputs(formData || {}, { requirePartner: requiresPartnerBirth }),
     [formData, requiresPartnerBirth]
@@ -231,7 +226,7 @@ export default function Checkout() {
         reportAccessToken: confirmed.reportAccessToken
       });
 
-      navigate('/loading', {
+      navigate(product.routes.loading, {
         replace: true,
         state: {
           product: service.id,
@@ -248,7 +243,7 @@ export default function Checkout() {
     }
   };
 
-  if (!isAuthenticated || !service) {
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -263,7 +258,7 @@ export default function Checkout() {
       }
     >
       <div className="mobile-page-card checkout-luxe-card">
-        <MobileTopBar title="운월당" backTo={`/form/${service.id}`} backLabel="이전" backState={{ formData, tabOrigin, draftOwnerId }} />
+        <MobileTopBar title="운월당" backTo={product.routes.intake} backLabel="이전" backState={{ formData, tabOrigin, draftOwnerId }} />
 
         <section className="checkout-luxe-stage" aria-label="결제 상품 미리보기">
           <div className="checkout-luxe-copy">
@@ -327,7 +322,7 @@ export default function Checkout() {
               <h1>{service.label} 결제 안내</h1>
               <p>{birthSummary} · {calendarSummary}</p>
             </div>
-            <Link to={`/form/${service.id}`} state={{ formData, tabOrigin, draftOwnerId }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
+            <Link to={product.routes.intake} state={{ formData, tabOrigin, draftOwnerId }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
               <X size={18} />
             </Link>
           </div>

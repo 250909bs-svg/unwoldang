@@ -21,4 +21,9 @@ describe('MZ 도깨비 전생사주 상품', () => {
     expect(generalService.label).toBe('운월선생 정통 종합사주');
     expect(generalService.theme).toBe('general');
   });
+
+  it('알 수 없는 상품을 종합사주로 대체하지 않는다', () => {
+    expect(findServiceById('unknown-product')).toBeUndefined();
+    expect(findServiceById()).toBeUndefined();
+  });
 });

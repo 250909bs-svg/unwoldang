@@ -4,6 +4,13 @@ import { buildHashCallbackLocation } from './lib/auth';
 import BottomTabBar from './components/BottomTabBar';
 import Footer from './components/Footer';
 import Seo from './components/Seo';
+import ProductRouteBoundary from './products/components/ProductRouteBoundary';
+import {
+  HistoricalReportRouteBoundary,
+  ProductCheckoutRouteBoundary,
+  ProductIntakeRouteBoundary,
+  ProductLoadingRouteBoundary
+} from './products/components/ProductFlowRouteBoundaries';
 
 const Home = lazy(() => import('./pages/Home'));
 const Test = lazy(() => import('./pages/Test'));
@@ -26,6 +33,7 @@ const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
 const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
 const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
+const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const callbackHashLocation = buildHashCallbackLocation();
@@ -60,17 +68,95 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
           <Route path="/login" element={<Login />} />
           <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
           <Route path="/payment/portone/callback" element={<PaymentCallback />} />
-          <Route path="/detail/past-life-goblin" element={<PastLifeEntry />} />
-          <Route path="/detail/past-life-goblin/immersion" element={<PastLifeImmersion />} />
-          <Route path="/detail/past-life-goblin/about" element={<PastLifeLanding />} />
-          <Route path="/detail/general-saju" element={<GeneralSajuLanding />} />
-          <Route path="/detail/love-reading" element={<LoveReadingEntry />} />
-          <Route path="/form/love-reading" element={<LoveReadingIntake />} />
-          <Route path="/preview/love-reading" element={<LoveReadingPreview />} />
-          <Route path="/form/:id" element={<Form />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/loading" element={<Loading />} />
-          <Route path="/report/:id" element={<Report />} />
+          <Route
+            path="/detail/past-life-goblin"
+            element={
+              <ProductRouteBoundary productId="past-life-goblin">
+                <PastLifeEntry />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/detail/past-life-goblin/immersion"
+            element={
+              <ProductRouteBoundary productId="past-life-goblin">
+                <PastLifeImmersion />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/detail/past-life-goblin/about"
+            element={
+              <ProductRouteBoundary productId="past-life-goblin">
+                <PastLifeLanding />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/detail/general-saju"
+            element={
+              <ProductRouteBoundary productId="general-signature">
+                <GeneralSajuLanding />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/detail/love-reading"
+            element={
+              <ProductRouteBoundary productId="love-reading">
+                <LoveReadingEntry />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route path="/detail/:id" element={<GenericProductDetail />} />
+          <Route
+            path="/form/love-reading"
+            element={
+              <ProductRouteBoundary productId="love-reading">
+                <LoveReadingIntake />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/preview/love-reading"
+            element={
+              <ProductRouteBoundary productId="love-reading">
+                <LoveReadingPreview />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/form/:id"
+            element={
+              <ProductIntakeRouteBoundary>
+                <Form />
+              </ProductIntakeRouteBoundary>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProductCheckoutRouteBoundary>
+                <Checkout />
+              </ProductCheckoutRouteBoundary>
+            }
+          />
+          <Route
+            path="/loading"
+            element={
+              <ProductLoadingRouteBoundary>
+                <Loading />
+              </ProductLoadingRouteBoundary>
+            }
+          />
+          <Route
+            path="/report/:id"
+            element={
+              <HistoricalReportRouteBoundary>
+                <Report />
+              </HistoricalReportRouteBoundary>
+            }
+          />
           <Route path="/terms" element={<LegalPage pageKey="terms" />} />
           <Route path="/privacy" element={<LegalPage pageKey="privacy" />} />
           <Route path="/refund" element={<LegalPage pageKey="refund" />} />

@@ -1,22 +1,9 @@
 import { getReportCallName } from '../lib/customerName';
 import { getRelationshipStatusLabel } from '../lib/relationshipIntake';
+import { productIds, type ProductId } from '../products/types';
 
-export const serviceIds = [
-  'general-signature',
-  'life-flow',
-  'concern-reading',
-  'past-life-goblin',
-  'love-reading',
-  'love-reunion',
-  'match-couple',
-  'match-destiny',
-  'marriage-blueprint',
-  'marriage-timing',
-  'career-reading',
-  'money-reading'
-] as const;
-
-export type ServiceId = (typeof serviceIds)[number];
+export const serviceIds = productIds;
+export type ServiceId = ProductId;
 
 export type ServiceCategoryId = 'all' | 'general' | 'love' | 'compatibility' | 'marriage' | 'career' | 'wealth';
 
@@ -618,8 +605,11 @@ const buildSectionContent = (
   ].join('\n\n');
 };
 
-export const findServiceById = (id?: string): ServiceDefinition =>
-  serviceCatalog.find((service) => service.id === id) ?? serviceCatalog[0];
+export function findServiceById(id: ServiceId): ServiceDefinition;
+export function findServiceById(id?: string): ServiceDefinition | undefined;
+export function findServiceById(id?: string): ServiceDefinition | undefined {
+  return serviceCatalog.find((service) => service.id === id);
+}
 
 export const findCategoryById = (id?: string): CategoryDefinition =>
   serviceCategories.find((category) => category.id === id) ?? serviceCategories[0];
