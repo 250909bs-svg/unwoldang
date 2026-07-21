@@ -21,8 +21,11 @@ import {
   type ReportArchiveEntry
 } from '../lib/reportArchive';
 import { getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
+import { canDiscoverProduct, getProductById } from '../products/registry';
+import type { ProductId } from '../products/types';
 
 type ReplayPromo = {
+  productId: ProductId;
   title: string;
   subtitle: string;
   image: string;
@@ -30,50 +33,57 @@ type ReplayPromo = {
   tone: string;
 };
 
-const replayPromos: ReplayPromo[] = [
+const replayPromoCandidates: ReplayPromo[] = [
   {
     title: '정통사주',
     subtitle: '나의 운명 전체 흐름은?',
+    productId: 'general-signature',
     image: '/intake-night-blue.png',
-    to: '/detail/general-saju',
+    to: getProductById('general-signature').routes.detail,
     tone: '#1f4f98'
   },
   {
     title: '팩폭 연애운',
     subtitle: '반복되는 내 연애 패턴은?',
+    productId: 'love-reading',
     image: '/home-love-reading-card.png',
-    to: '/detail/love-reading',
+    to: getProductById('love-reading').routes.detail,
     tone: '#a80e30'
   },
   {
     title: '재회비책',
     subtitle: '다시 이어질 가능성은?',
+    productId: 'love-reunion',
     image: '/intake-lantern-night.png',
-    to: '/form/love-reunion',
+    to: getProductById('love-reunion').routes.detail,
     tone: '#6d4de8'
   },
   {
     title: '올해의 운세',
     subtitle: '2026년 기회와 조심할 시기',
+    productId: 'life-flow',
     image: '/intake-sunlight-girl.png',
-    to: '/form/life-flow',
+    to: getProductById('life-flow').routes.detail,
     tone: '#6da9c8'
   },
   {
     title: '사주궁합',
     subtitle: '우리 둘의 속도와 생활 궁합',
+    productId: 'match-couple',
     image: '/intake-beauty-red.png',
-    to: '/form/match-couple',
+    to: getProductById('match-couple').routes.detail,
     tone: '#d62f3f'
   },
   {
     title: '결혼운',
     subtitle: '결혼 시기와 현실 기준',
+    productId: 'marriage-blueprint',
     image: '/intake-blossom-girl.png',
-    to: '/form/marriage-blueprint',
+    to: getProductById('marriage-blueprint').routes.detail,
     tone: '#bc6a53'
   }
 ];
+const replayPromos = replayPromoCandidates.filter((promo) => canDiscoverProduct(promo.productId));
 
 function formatArchiveDate(value: string) {
   const date = new Date(value);
@@ -172,7 +182,7 @@ function ReportReplayCard({ report }: { report: ReportArchiveEntry }) {
 function PromoBanner({ promo }: { promo: ReplayPromo }) {
   return (
     <Link to={promo.to} className="my-promo-banner" style={{ '--promo-tone': promo.tone } as CSSProperties}>
-      {promo.to === '/detail/love-reading' ? (
+      {promo.productId === 'love-reading' ? (
         <LoveReadingCardPicture alt="" sizes="72px" />
       ) : (
         <img src={promo.image} alt="" loading="lazy" decoding="async" />

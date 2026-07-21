@@ -18,6 +18,7 @@ import {
 import { validateBirthInput } from '../lib/birthInputValidation';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
+import { getProductById } from '../products/registry';
 import '../styles/mz-love-fact.css';
 import '../styles/past-life.css';
 
@@ -314,9 +315,10 @@ function getPartnerExactBirthTimeValue(partner: PartnerBirthData) {
 
 export default function Form() {
   const { id } = useParams<{ id: string }>();
-  const service = findServiceById(id);
-  const isPastLifeFlow = service.id === 'past-life-goblin';
-  const isCompatibilityFlow = service.id === 'match-couple' || service.id === 'match-destiny';
+  const product = getProductById(id)!;
+  const service = findServiceById(product.id);
+  const isPastLifeFlow = product.flow.intakeVariant === 'past-life';
+  const isCompatibilityFlow = product.flow.intakeVariant === 'compatibility';
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -564,7 +566,7 @@ export default function Form() {
   );
   const birthDateReady = Boolean(formData.birthDate);
   const step1Ready = selfBirthValidation.valid;
-  const isLoveReadingFlow = service.id === 'love-reading';
+  const isLoveReadingFlow = product.flow.intakeVariant === 'love-reading';
   const step2Ready = isPastLifeFlow
     ? Boolean(formData.pastLifeTopic?.trim())
     : isCompatibilityFlow

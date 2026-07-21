@@ -14,6 +14,7 @@ import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
+import { canStartProduct, getProductById } from '../products/registry';
 import '../styles/past-life.css';
 
 const LoveReadingStoryReport = lazy(() => import('../components/LoveReadingStoryReport'));
@@ -6314,7 +6315,8 @@ export default function Report() {
   const navigate = useNavigate();
   const { formData, paymentMethod, orderId, reportAccessToken, reportData, reportProvider } =
     (location.state as ReportLocationState) || {};
-  const service = findServiceById(id);
+  const product = getProductById(id)!;
+  const service = findServiceById(product.id);
   const reportAccess = evaluateReportAccess({
     hostname: typeof window === 'undefined' ? '' : window.location.hostname,
     isDevelopment: import.meta.env.DEV,
@@ -6548,10 +6550,10 @@ export default function Report() {
   }, [shouldBlockPreview]);
 
   useEffect(() => {
-    if (shouldBlockPreview) {
-      navigate(`/form/${service.id}`, { replace: true });
+    if (shouldBlockPreview && canStartProduct(product.id)) {
+      navigate(product.routes.intake, { replace: true });
     }
-  }, [navigate, service.id, shouldBlockPreview]);
+  }, [navigate, product.id, product.routes.intake, shouldBlockPreview]);
 
   useEffect(() => {
     // The server that issues reports and accepts remote archives remains the

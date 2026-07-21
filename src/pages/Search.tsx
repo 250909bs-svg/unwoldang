@@ -3,90 +3,33 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
+import { activeProducts, canDiscoverProduct } from '../products/registry';
+import type { ProductId } from '../products/types';
 
 type SearchProduct = {
-  id: string;
+  id: ProductId;
   title: string;
   image: string;
   to: string;
-  keywords: string[];
+  keywords: readonly string[];
 };
 
-const searchProducts: SearchProduct[] = [
-  {
-    id: 'concern-reading',
-    title: '운월당 고민풀이',
-    image: '/intake-sunlight-girl.png',
-    to: '/form/concern-reading',
-    keywords: ['고민', '고민풀이', '질문', '상담', '선택', '이사', '퇴사', '연애질문', '진로']
-  },
-  {
-    id: 'general-signature',
-    title: '운월선생 정통 종합사주',
-    image: '/intake-night-blue.png',
-    to: '/detail/general-saju',
-    keywords: ['종합사주', '사주', '대운', '세운', '인생', '원국', '오행', '십성']
-  },
-  {
-    id: 'past-life-goblin',
-    title: 'MZ 도깨비 전생사주',
-    image: '/media/dokkaebi-poster.webp',
-    to: '/detail/past-life-goblin',
-    keywords: ['전생', '전생사주', '도깨비', 'MZ', '업보', '인연', '반복패턴', '현생미션']
-  },
-  {
-    id: 'love-reading',
-    title: 'MZ무당 팩폭 연애운',
-    image: '/home-love-reading-card.png',
-    to: '/detail/love-reading',
-    keywords: ['연애', '썸', '인연', '소개팅', '연락', '고백', '애정', '팩폭', 'MZ무당', '연애사주']
-  },
-  {
-    id: 'love-reunion',
-    title: '홍연아씨 재회 가능성',
-    image: '/intake-beauty-red.png',
-    to: '/form/love-reunion',
-    keywords: ['재회', '전남친', '전여친', '이별', '연락', '미련', '다시']
-  },
-  {
-    id: 'match-couple',
-    title: '월연도령 사주궁합',
-    image: '/home-match-couple-card.png',
-    to: '/form/match-couple',
-    keywords: ['궁합', '커플', '상대', '결혼궁합', '속궁합', '연인', '배우자']
-  },
-  {
-    id: 'marriage-blueprint',
-    title: '청연부인 결혼운 설계도',
-    image: '/intake-sunlight-girl.png',
-    to: '/form/marriage-blueprint',
-    keywords: ['결혼', '결혼운', '배우자', '혼인', '시기', '가정']
-  },
-  {
-    id: 'money-reading',
-    title: '운월선생 금전운 설계도',
-    image: '/intake-lantern-night.png',
-    to: '/form/money-reading',
-    keywords: ['재물', '돈', '금전', '사업', '투자', '수익', '매출']
-  },
-  {
-    id: 'career-reading',
-    title: '운월선생 직업운 설계도',
-    image: '/intake-night-blue.png',
-    to: '/form/career-reading',
-    keywords: ['직업', '진로', '이직', '퇴사', '창업', '커리어', '일']
-  },
-  {
-    id: 'life-flow',
-    title: '운월선생 신년운세',
-    image: '/intake-lantern-night.png',
-    to: '/form/life-flow',
-    keywords: ['신년운세', '올해', '2026', '월별운세', '운세', '시기']
-  }
-];
-
+const searchProducts: SearchProduct[] = activeProducts.map((product) => ({
+  id: product.id,
+  ...product.search,
+  to: product.routes.detail
+}));
 const livePopularIds = ['past-life-goblin', 'concern-reading', 'love-reading', 'general-signature', 'match-couple'] as const;
-const recommendedKeywords = ['전생', '재물', '연애', '궁합', '고민'] as const;
+const recommendedKeywords = [
+  { label: '전생', productId: 'past-life-goblin' },
+  { label: '재물', productId: 'money-reading' },
+  { label: '연애', productId: 'love-reading' },
+  { label: '궁합', productId: 'match-couple' },
+  { label: '고민', productId: 'concern-reading' }
+] as const;
+const discoverableRecommendedKeywords = recommendedKeywords.filter((keyword) =>
+  canDiscoverProduct(keyword.productId)
+);
 
 function normalizeText(value: string) {
   return value.replace(/\s/g, '').toLowerCase();
@@ -96,6 +39,7 @@ export default function Search() {
   const [query, setQuery] = useState('');
   const normalizedQuery = normalizeText(query);
   const livePopular = livePopularIds
+    .filter((id) => canDiscoverProduct(id))
     .map((id) => searchProducts.find((product) => product.id === id))
     .filter((product): product is SearchProduct => Boolean(product));
   const results = useMemo(() => {
@@ -133,9 +77,14 @@ export default function Search() {
         <section className="search-section">
           <h2>추천 검색어</h2>
           <div className="search-chip-row">
-            {recommendedKeywords.map((keyword) => (
-              <button key={keyword} type="button" className="search-chip" onClick={() => setQuery(keyword)}>
-                {keyword}
+            {discoverableRecommendedKeywords.map((keyword) => (
+              <button
+                key={keyword.label}
+                type="button"
+                className="search-chip"
+                onClick={() => setQuery(keyword.label)}
+              >
+                {keyword.label}
               </button>
             ))}
           </div>

@@ -8,9 +8,15 @@ const previewSource = readFileSync(new URL('./LoveReadingPreview.tsx', import.me
 
 describe('MZ무당 팩폭 연애운 화면 순서 계약', () => {
   it('썸네일 상세에서 인트로 영상과 전용 입력 화면을 거친다', () => {
-    expect(appSource).toContain('<Route path="/detail/love-reading" element={<LoveReadingEntry />} />');
-    expect(appSource).toContain('<Route path="/form/love-reading" element={<LoveReadingIntake />} />');
-    expect(appSource).toContain('<Route path="/preview/love-reading" element={<LoveReadingPreview />} />');
+    expect(appSource).toMatch(
+      /path="\/detail\/love-reading"[\s\S]*?<ProductRouteBoundary productId="love-reading">[\s\S]*?<LoveReadingEntry \/>/u
+    );
+    expect(appSource).toMatch(
+      /path="\/form\/love-reading"[\s\S]*?<ProductRouteBoundary productId="love-reading">[\s\S]*?<LoveReadingIntake \/>/u
+    );
+    expect(appSource).toMatch(
+      /path="\/preview\/love-reading"[\s\S]*?<ProductRouteBoundary productId="love-reading">[\s\S]*?<LoveReadingPreview \/>/u
+    );
     expect(introSource).toContain("const VIDEO_SRC = '/media/mz-love-reading-intro.mp4'");
     expect(introSource).toContain('팩폭 연애운 보기');
     expect(introSource).toContain('to="/form/love-reading"');
