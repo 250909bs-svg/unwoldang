@@ -5,6 +5,7 @@ import {
   formatPastLifeReportTopic,
   type PastLifeVolumeContract
 } from './contract';
+import { sanitizePastLifeReportForRendering } from './reportSafety';
 
 const ENGINE_EVIDENCE_SECTION_IDS = new Set([
   'calculation-audit-v2',
@@ -55,12 +56,21 @@ function buildProductQuestionAnswers(report: SajuReportData) {
   }));
 }
 
+const PAST_LIFE_DETAIL_NUMBER = /^\s*(\d{2})\.\s*/u;
+
+function getLeadingTopicNumber(summary: string) {
+  const match = summary.match(PAST_LIFE_DETAIL_NUMBER);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
 function isCompleteVolumeSection(section: ReportSection, volume: PastLifeVolumeContract) {
   return (
     section.id === volume.sectionId &&
     section.details?.length === volume.topics.length &&
     section.details.every(
-      (detail) => detail.summary.trim().length > 0 && detail.content.trim().length > 0
+      (detail, index) =>
+        getLeadingTopicNumber(detail.summary) === volume.topics[index].number &&
+        detail.content.trim().length > 0
     )
   );
 }
@@ -360,5 +370,5 @@ export function buildPastLifeGoblinReport(report: SajuReportData): SajuReportDat
 }
 
 export function ensurePastLifeGoblinReport(report: SajuReportData): SajuReportData {
-  return buildPastLifeGoblinReport(report);
+  return sanitizePastLifeReportForRendering(buildPastLifeGoblinReport(report));
 }

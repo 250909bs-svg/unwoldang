@@ -111,6 +111,84 @@ describe('past-life goblin report builder', () => {
     expect(ensurePastLifeGoblinReport(archived)).toBe(archived);
   });
 
+  it('sanitizes unsafe complete archived prose before the shared report renders it', () => {
+    const built = buildPastLifeGoblinReport(makePastLifeReport());
+    const unsafeClaim = '당신의 전생은 조선 시대의 궁중 무당이었습니다.';
+    const archived = {
+      ...built,
+      summary: {
+        ...built.summary,
+        analysis: [unsafeClaim]
+      },
+      questionAnswers: built.questionAnswers.map((answer) => ({
+        ...answer,
+        analysis: unsafeClaim,
+        advice: [unsafeClaim]
+      })),
+      actionPlan: {
+        ...built.actionPlan,
+        priorities: [unsafeClaim]
+      }
+    };
+
+    expect(hasCompletePastLifeGoblinReport(archived)).toBe(true);
+
+    const safe = ensurePastLifeGoblinReport(archived);
+
+    expect(safe).not.toBe(archived);
+    expect(JSON.stringify(safe)).not.toContain(unsafeClaim);
+    expect(safe.questionAnswers.map((answer) => answer.question)).toEqual(
+      archived.questionAnswers.map((answer) => answer.question)
+    );
+    expect(archived.summary.analysis).toEqual([unsafeClaim]);
+  });
+
+  it('rejects shuffled or duplicate topic numbers as a complete archived report', () => {
+    const built = buildPastLifeGoblinReport(makePastLifeReport());
+    const firstVolume = PAST_LIFE_REPORT_VOLUMES[0];
+    const firstSection = built.sections.find((section) => section.id === firstVolume.sectionId);
+    const details = firstSection?.details;
+
+    if (!details || details.length < 2) {
+      throw new Error('Expected the first volume fixture to contain at least two details.');
+    }
+
+    const firstDetail = details[0]!;
+    const secondDetail = details[1]!;
+    const replaceDetails = (nextDetails: NonNullable<ReportSection['details']>) => ({
+      ...built,
+      sections: built.sections.map((section) =>
+        section.id === firstVolume.sectionId
+          ? { ...section, details: nextDetails }
+          : section
+      )
+    });
+    const shuffled = replaceDetails([
+      secondDetail,
+      firstDetail,
+      ...details.slice(2)
+    ]);
+    const duplicated = replaceDetails([
+      firstDetail,
+      { ...secondDetail, summary: firstDetail.summary },
+      ...details.slice(2)
+    ]);
+
+    expect(hasCompletePastLifeGoblinReport(shuffled)).toBe(false);
+    expect(hasCompletePastLifeGoblinReport(duplicated)).toBe(false);
+
+    const repaired = ensurePastLifeGoblinReport(shuffled);
+    const repairedFirstVolume = repaired.sections.find(
+      (section) => section.id === firstVolume.sectionId
+    );
+
+    expect(repaired).not.toBe(shuffled);
+    expect(hasCompletePastLifeGoblinReport(repaired)).toBe(true);
+    expect(repairedFirstVolume?.details?.map((detail) => detail.summary)).toEqual(
+      firstVolume.topics.map((topic) => formatPastLifeReportTopic(topic.number))
+    );
+  });
+
   it('is a no-op for every other product contract', () => {
     const generalReport = buildSajuReport('general-signature', makeFormData());
 
