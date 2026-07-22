@@ -118,6 +118,7 @@ type EnvRecord = Record<string, string | undefined>;
 export type GeminiReportGenerationContext = {
   referenceInstant?: Date | string;
   deadlineInstant?: Date | string;
+  signal?: AbortSignal;
 };
 
 type GeminiTokenUsage = {
@@ -191,10 +192,27 @@ function getGeminiRetryDelayMs(env: EnvRecord, failedAttempt: number) {
   return base * (2 ** Math.max(0, failedAttempt - 1));
 }
 
-function waitForRetry(delayMs: number) {
-  return delayMs === 0
-    ? Promise.resolve()
-    : new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+function waitForRetry(delayMs: number, signal?: AbortSignal) {
+  throwIfAborted(signal);
+  if (delayMs === 0) return Promise.resolve();
+
+  return new Promise<void>((resolve, reject) => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const cleanup = () => {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', onAbort);
+    };
+    const onAbort = () => {
+      cleanup();
+      reject(signal ? abortReason(signal) : new Error('Report generation was aborted.'));
+    };
+    timeoutId = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, delayMs);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) onAbort();
+  });
 }
 
 export function isTransientGeminiStatus(status: number) {
@@ -261,6 +279,17 @@ export function estimateGeminiCostMicros(
 
 function isAbortError(error: unknown) {
   return error instanceof Error && error.name === 'AbortError';
+}
+
+function abortReason(signal: AbortSignal) {
+  if (signal.reason !== undefined) return signal.reason;
+  const error = new Error('Report generation was aborted.');
+  error.name = 'AbortError';
+  return error;
+}
+
+function throwIfAborted(signal?: AbortSignal) {
+  if (signal?.aborted) throw abortReason(signal);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -1303,8 +1332,10 @@ export async function requestGeminiDraft(
   baseReport: SajuReportData,
   deterministicBasis: ReturnType<typeof buildDeterministicSajuBasis>,
   body: ReportRequestBody,
-  deadlineAt?: number
+  deadlineAt?: number,
+  signal?: AbortSignal
 ): Promise<GeminiDraftOutcome> {
+  throwIfAborted(signal);
   const env = getEnv();
   const apiKey = env.GEMINI_API_KEY;
   const model = getGeminiModel(env);
@@ -1346,6 +1377,7 @@ export async function requestGeminiDraft(
   );
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    throwIfAborted(signal);
     const remainingMs = deadlineAt === undefined ? Number.POSITIVE_INFINITY : deadlineAt - Date.now();
     if (remainingMs <= 0) return deadlineFallback(attempt - 1);
     const controller = new AbortController();
@@ -1353,6 +1385,9 @@ export async function requestGeminiDraft(
       () => controller.abort(),
       Math.max(1, Math.min(getGeminiRequestTimeoutMs(env), remainingMs))
     );
+    const onAbort = () => controller.abort(signal ? abortReason(signal) : undefined);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) onAbort();
 
     try {
       const response = await fetch(endpoint, {
@@ -1421,6 +1456,7 @@ export async function requestGeminiDraft(
         );
       }
     } catch (error) {
+      if (signal?.aborted) throw abortReason(signal);
       lastError = normalizeGeminiAttemptError(error);
       if (deadlineAt !== undefined && Date.now() >= deadlineAt) {
         return deadlineFallback(attempt);
@@ -1440,9 +1476,10 @@ export async function requestGeminiDraft(
       if (deadlineAt !== undefined && Date.now() + retryDelayMs >= deadlineAt) {
         return deadlineFallback(attempt);
       }
-      await waitForRetry(retryDelayMs);
+      await waitForRetry(retryDelayMs, signal);
     } finally {
       clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', onAbort);
     }
   }
 
@@ -1508,6 +1545,7 @@ export async function generateGeminiSajuReport(
     throw new ReportRequestError(400, 'serviceId는 필수입니다.');
   }
 
+  throwIfAborted(context.signal);
   const inputFormData = toFormData(body);
   assertCommercialReportRequest(serviceId, inputFormData);
   const referenceInstant = normalizeGenerationInstant(context.referenceInstant, 'referenceInstant');
@@ -1515,9 +1553,10 @@ export async function generateGeminiSajuReport(
   const deadlineAt = deadlineInstant?.getTime();
   const { formData, verification } = await normalizeFormDataWithKasi(
     inputFormData,
-    { deadlineAt }
+    { deadlineAt, signal: context.signal }
   );
 
+  throwIfAborted(context.signal);
   if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
     throw new ReportRequestError(
       503,
@@ -1544,7 +1583,13 @@ export async function generateGeminiSajuReport(
       : builtReport;
 
   const adapterVersion = getReportProductAdapter(serviceId).prompt.version;
-  const outcome = await requestGeminiDraft(fallbackReport, deterministicBasis, body, deadlineAt);
+  const outcome = await requestGeminiDraft(
+    fallbackReport,
+    deterministicBasis,
+    body,
+    deadlineAt,
+    context.signal
+  );
 
   if (!outcome.draft) {
     return {

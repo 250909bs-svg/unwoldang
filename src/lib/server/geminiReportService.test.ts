@@ -377,6 +377,41 @@ describe('Gemini provider policy and generation contract', () => {
     });
   });
 
+  it('aborts a hanging provider request with the external lease signal', async () => {
+    vi.stubEnv('GEMINI_API_KEY', 'test-key');
+    const controller = new AbortController();
+    let requestSignal: AbortSignal | undefined;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    const fetchMock = vi.fn((_input: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        requestSignal = init?.signal as AbortSignal;
+        markStarted();
+        requestSignal.addEventListener(
+          'abort',
+          () => reject(requestSignal?.reason),
+          { once: true }
+        );
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const reason = new Error('fixture lease deadline');
+    const pending = generateGeminiSajuReport(validRequestBody, {
+      referenceInstant: '2026-02-03T12:34:56.000Z',
+      deadlineInstant: new Date(Date.now() + 60_000).toISOString(),
+      signal: controller.signal
+    });
+
+    await started;
+    controller.abort(reason);
+
+    await expect(pending).rejects.toBe(reason);
+    expect(requestSignal?.aborted).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('estimates cost only for the explicitly priced model', () => {
     expect(estimateGeminiCostMicros('gemini-2.5-flash', 1000, 100)).toBe(550);
     expect(estimateGeminiCostMicros('custom-model', 1000, 100)).toBeNull();

@@ -69,6 +69,7 @@ export type ReportLedgerRepository = {
 export type ReportGenerationContext = {
   referenceInstant: string;
   deadlineInstant: string;
+  signal: AbortSignal;
 };
 
 type ReportGenerator = (
@@ -416,6 +417,16 @@ export class ReportService {
     });
   }
 
+  private generationTimedOut(cause?: unknown) {
+    return new ReportPlatformError({
+      status: 504,
+      code: 'REPORT_TIMEOUT',
+      message: 'Report generation exceeded its lease budget.',
+      retryable: true,
+      cause
+    });
+  }
+
   private storageUnavailable(cause: unknown) {
     return cause instanceof ReportPlatformError
       ? cause
@@ -594,6 +605,43 @@ export class ReportService {
     }
   }
 
+  private async generateWithinLease(
+    reportBody: NormalizedReportRequest,
+    lease: ReportGenerationLease
+  ) {
+    const deadlineAt =
+      Date.parse(lease.lockExpiresAt) - REPORT_COMPLETION_MARGIN_MS;
+    const remainingMs = deadlineAt - Date.now();
+    if (!Number.isFinite(deadlineAt) || remainingMs <= 0) {
+      throw this.generationTimedOut();
+    }
+
+    const timeoutError = this.generationTimedOut();
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        controller.abort(timeoutError);
+        reject(timeoutError);
+      }, remainingMs);
+    });
+
+    try {
+      const result = await Promise.race([
+        this.generateReport(reportBody, {
+          referenceInstant: lease.referenceInstant,
+          deadlineInstant: new Date(deadlineAt).toISOString(),
+          signal: controller.signal
+        }),
+        deadline
+      ]);
+      if (Date.now() >= deadlineAt) throw this.generationTimedOut();
+      return result;
+    } finally {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    }
+  }
+
   private async generatePaid(claims: ReportAccessClaims, reportBody: NormalizedReportRequest) {
     const operationStartedAt = Date.now();
     let lease: ReportGenerationLease | null = null;
@@ -607,10 +655,7 @@ export class ReportService {
       lease = generation;
       attemptCount = generation.attempt;
       const generatorStartedAt = Date.now();
-      const rawPayload = await this.generateReport(reportBody, {
-        referenceInstant: generation.referenceInstant,
-        deadlineInstant: new Date(Date.parse(generation.lockExpiresAt) - REPORT_COMPLETION_MARGIN_MS).toISOString()
-      });
+      const rawPayload = await this.generateWithinLease(reportBody, generation);
       const payload = normalizeGeneratedReport(rawPayload, {
         model: this.config.gemini.model || null,
         latencyMs: Math.max(0, Date.now() - generatorStartedAt),

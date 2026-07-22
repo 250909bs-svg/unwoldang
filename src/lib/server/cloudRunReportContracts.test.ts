@@ -6,6 +6,7 @@ import { ReportGenerationInProgressError } from '../../../cloudrun-api/src/contr
 import { REPORT_CACHE_SCHEMA_VERSION } from '../../../cloudrun-api/src/domains/reports/reportPayload.ts';
 import {
   ReportService,
+  type ReportGenerationContext,
   type NormalizedReportRequest,
   type ReportLedger,
   type ReportLedgerRepository,
@@ -428,7 +429,8 @@ describe('Cloud Run paid report persistence contracts', () => {
     expect(generator).toHaveBeenCalledTimes(1);
     expect(generator).toHaveBeenCalledWith(REPORT_BODY, {
       referenceInstant: REFERENCE_INSTANT,
-      deadlineInstant: new Date(FIXED_NOW + 115_000).toISOString()
+      deadlineInstant: new Date(FIXED_NOW + 115_000).toISOString(),
+      signal: expect.any(AbortSignal)
     });
     expect(repository.acquireCalls).toHaveLength(1);
     expect(repository.completeCalls).toHaveLength(1);
@@ -594,6 +596,51 @@ describe('Cloud Run paid report persistence contracts', () => {
       retryable: true
     });
     expect(repository.acquireCalls).toHaveLength(0);
+  });
+
+  it('aborts provider work and releases the lease before its completion reserve', async () => {
+    const shortConfig = loadConfig({
+      NODE_ENV: 'test',
+      REPORT_GENERATION_LOCK_TTL_MS: '60000'
+    });
+    const repository = new FakeReportLedgerRepository();
+    let receivedSignal: AbortSignal | undefined;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    const generator = vi.fn(
+      (_body: NormalizedReportRequest, context?: ReportGenerationContext) =>
+        new Promise<never>((_resolve, reject) => {
+          receivedSignal = context?.signal;
+          markStarted();
+          if (!receivedSignal) {
+            reject(new Error('fixture generation signal is missing'));
+            return;
+          }
+          receivedSignal.addEventListener(
+            'abort',
+            () => reject(receivedSignal?.reason),
+            { once: true }
+          );
+        })
+    );
+    const service = new ReportService(shortConfig, repository, generator);
+    const pending = service.generate(CLAIMS, REPORT_BODY);
+    const rejection = expect(pending).rejects.toMatchObject({
+      status: 504,
+      code: 'REPORT_TIMEOUT',
+      retryable: true
+    });
+
+    await started;
+    await vi.advanceTimersByTimeAsync(55_000);
+
+    await rejection;
+    expect(receivedSignal?.aborted).toBe(true);
+    expect(repository.failCalls).toHaveLength(1);
+    expect(repository.currentLedger().reportGenerationStatus).toBe('failed');
+    expect(Date.now()).toBe(FIXED_NOW + 55_000);
   });
 
   it('persists deterministic fallback once and reuses it for identical input', async () => {
