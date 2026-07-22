@@ -15,7 +15,14 @@ import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 import { canStartProduct, getProductById } from '../products/registry';
+import {
+  buildLoveReunionReport,
+  createLoveReunionShareData,
+  LOVE_REUNION_SECTION_IDS
+} from '../products/love-reunion/reportModel';
+import type { LoveReunionFormData } from '../products/love-reunion/contract';
 import '../styles/past-life.css';
+import '../products/love-reunion/report.css';
 
 const LoveReadingStoryReport = lazy(() => import('../components/LoveReadingStoryReport'));
 
@@ -5479,6 +5486,62 @@ function getReportPageCopy(report: SajuReportData): ReportPageCopy {
   );
 }
 
+const LOVE_REUNION_READING_ORDER = [
+  LOVE_REUNION_SECTION_IDS[0],
+  LOVE_REUNION_SECTION_IDS[4],
+  LOVE_REUNION_SECTION_IDS[9],
+  LOVE_REUNION_SECTION_IDS[10],
+  LOVE_REUNION_SECTION_IDS[1],
+  LOVE_REUNION_SECTION_IDS[2],
+  LOVE_REUNION_SECTION_IDS[3],
+  LOVE_REUNION_SECTION_IDS[5],
+  LOVE_REUNION_SECTION_IDS[6],
+  LOVE_REUNION_SECTION_IDS[7],
+  LOVE_REUNION_SECTION_IDS[8]
+] as const;
+
+export function orderLoveReunionSections(sections: ReportSection[]): ReportSection[] {
+  const priority = new Map<string, number>(
+    LOVE_REUNION_READING_ORDER.map((id, index) => [id, index])
+  );
+
+  return sections
+    .map((section, sourceIndex) => ({ section, sourceIndex }))
+    .sort((left, right) => {
+      const leftPriority = priority.get(left.section.id) ?? LOVE_REUNION_READING_ORDER.length;
+      const rightPriority = priority.get(right.section.id) ?? LOVE_REUNION_READING_ORDER.length;
+      return leftPriority - rightPriority || left.sourceIndex - right.sourceIndex;
+    })
+    .map(({ section }) => section);
+}
+
+function SajuEvidenceAppendix({
+  report,
+  pageCopy
+}: {
+  report: SajuReportData;
+  pageCopy: ReportPageCopy;
+}) {
+  return (
+    <section className="premium-report-section" id="glance">
+      <div className="premium-section-heading">
+        <div>
+          <h2>{pageCopy.glanceTitle}</h2>
+          <p className="premium-muted">{pageCopy.glanceCaption}</p>
+        </div>
+      </div>
+
+      <SajuWonGukBoard report={report} />
+      <SajuWonGukReading report={report} />
+
+      <div className="premium-grid2 premium-glance-chart-grid">
+        <ElementDistributionBoard report={report} />
+        <TenGodDistributionBoard report={report} />
+      </div>
+    </section>
+  );
+}
+
 function getSection(report: SajuReportData, id: string) {
   return report.sections.find((section) => section.id === id);
 }
@@ -6337,11 +6400,15 @@ export default function Report() {
     reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
   const report = useMemo(() => {
-    // Paid/server reports are canonical artifacts that already passed the
-    // immutable-fact guard. Rewriting them again in the browser can reintroduce
-    // preview-only sample prose, so client expansion is strictly preview-only.
+    const applyProductOwnedModel = (candidate: SajuReportData) =>
+      candidate.serviceId === 'love-reunion'
+        ? buildLoveReunionReport(candidate, reportInput as Partial<LoveReunionFormData>)
+        : candidate;
+    // Paid/server reports remain the immutable engine source. Product-owned
+    // presentation may reorganize preserved facts and user input without
+    // replacing pillars, calculated evidence, or payment authority.
     if (reportData) {
-      return reportData;
+      return applyProductOwnedModel(reportData);
     }
 
     const preserveAiQuestions = Boolean(reportData);
@@ -6354,7 +6421,7 @@ export default function Report() {
       );
 
       if (finalized.serviceId !== 'past-life-goblin') {
-        return finalized;
+        return applyProductOwnedModel(finalized);
       }
 
       return { ...finalized, pastLifeProfile: buildPastLifeProfile(finalized, reportInput) };
@@ -6383,6 +6450,7 @@ export default function Report() {
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
   const isLoveReadingShowcase = report.serviceId === 'love-reading';
+  const isLoveReunionShowcase = report.serviceId === 'love-reunion';
   const loveRelationshipStatus = mapIntakeRelationshipStatus(reportInput.relationshipStatus);
   const loveBirthTimeKnown = reportInput.isUnknownTime === true
       ? false
@@ -6396,6 +6464,10 @@ export default function Report() {
   const yearlyLead = report.yearLuck[0];
   const yearlyMomentum = report.yearLuck.slice(0, 3);
   const monthlyHotMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
+  const readingSections = useMemo(
+    () => isLoveReunionShowcase ? orderLoveReunionSections(report.sections) : report.sections,
+    [isLoveReunionShowcase, report.sections]
+  );
   const [isTocOpen, setIsTocOpen] = useState(isPastLifeShowcase);
   const [activePastLifeChapter, setActivePastLifeChapter] = useState('seal');
   const [pastLifeShareFormat, setPastLifeShareFormat] = useState<'square' | 'story'>('square');
@@ -6662,18 +6734,29 @@ export default function Report() {
         { id: 'share-cards', label: '공유 카드', number: '저장' },
         { id: 'legal', label: '장부 이용 안내', number: '안내' }
       ]
-    : [
+    : isLoveReunionShowcase
+      ? [
+          { id: 'summary', label: '현재 판단 요약', number: '01' },
+          ...readingSections.map((section, index) => ({
+            id: section.id,
+            label: section.title,
+            number: String(index + 2).padStart(2, '0')
+          })),
+          { id: 'glance', label: '원국·오행·십성 명리 근거', number: '부록' },
+          { id: 'legal', label: '안전 안내', number: '안내' }
+        ]
+      : [
         ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
         { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
-        { id: 'qa', label: '질문 맞춤 답변', number: 'Q' },
+        ...(!isLoveReunionShowcase ? [{ id: 'qa', label: '질문 맞춤 답변', number: 'Q' }] : []),
         { id: 'glance', label: '핵심 지표 요약', number: '02' },
         ...report.sections.map((section, index) => ({
           id: section.id,
           label: section.title,
           number: String(index + 3).padStart(2, '0')
         })),
-        { id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') },
-        { id: 'legal', label: '안전 안내', number: String(report.sections.length + 4).padStart(2, '0') }
+        ...(!isLoveReunionShowcase ? [{ id: 'plan', label: '실행 전략', number: String(report.sections.length + 3).padStart(2, '0') }] : []),
+        { id: 'legal', label: '안전 안내', number: String(report.sections.length + (isLoveReunionShowcase ? 3 : 4)).padStart(2, '0') }
       ];
 
   const scrollToSection = (targetId: string) => {
@@ -6687,6 +6770,8 @@ export default function Report() {
   const handleShareReport = async () => {
     const shareData = isLoveReadingShowcase
       ? createLoveReadingProductShareData(window.location.origin)
+      : isLoveReunionShowcase
+        ? createLoveReunionShareData(window.location.origin)
       : {
           title: `${report.customerName} ${report.title}`,
           text: '운월당 사주 리포트',
@@ -7046,7 +7131,9 @@ body {
         ? 'premium-report-page yearly-premium-page'
         : isPastLifeShowcase
           ? 'premium-report-page past-life-report-page'
-          : 'premium-report-page'
+          : isLoveReunionShowcase
+            ? 'premium-report-page love-reunion-premium-page'
+            : 'premium-report-page'
     }>
       <header className="premium-report-topbar">
         <div className="premium-report-topbar-inner">
@@ -7073,14 +7160,18 @@ body {
           ? 'premium-report-shell yearly-report-shell'
           : isPastLifeShowcase
             ? 'premium-report-shell past-life-report-shell'
-            : 'premium-report-shell'
+            : isLoveReunionShowcase
+              ? 'premium-report-shell love-reunion-report-shell'
+              : 'premium-report-shell'
       }>
         <article className={
           isYearlyShowcase
             ? 'premium-report-paper yearly-report-paper'
             : isPastLifeShowcase
               ? 'premium-report-paper past-life-report-paper'
-              : 'premium-report-paper'
+              : isLoveReunionShowcase
+                ? 'premium-report-paper love-reunion-report-paper'
+                : 'premium-report-paper'
         }>
           {reportProvider === 'deterministic-fallback' ? (
             <section className="premium-report-section" aria-label="리포트 생성 상태">
@@ -7332,6 +7423,8 @@ body {
 
           <div className="premium-divider" />
 
+          {!isLoveReunionShowcase ? (
+            <>
           <section className="premium-report-section" id="qa">
             <div className="premium-section-heading">
               <div>
@@ -7369,38 +7462,38 @@ body {
           </section>
 
           <div className="premium-divider" />
+            </>
+          ) : null}
 
-          <section className="premium-report-section" id="glance">
-            <div className="premium-section-heading">
-              <div>
-                <h2>{pageCopy.glanceTitle}</h2>
-                <p className="premium-muted">{pageCopy.glanceCaption}</p>
-              </div>
-            </div>
-
-            <SajuWonGukBoard report={report} />
-            <SajuWonGukReading report={report} />
-
-            <div className="premium-grid2 premium-glance-chart-grid">
-              <ElementDistributionBoard report={report} />
-              <TenGodDistributionBoard report={report} />
-            </div>
-          </section>
+          {!isLoveReunionShowcase ? <SajuEvidenceAppendix report={report} pageCopy={pageCopy} /> : null}
 
           {(isPastLifeShowcase
             ? report.sections.filter((section) => !PAST_LIFE_STORY_SECTION_IDS.has(section.id))
-            : report.sections
+            : readingSections
           ).map((section, index) => (
                 <div key={section.id}>
-                  <div className="premium-divider" />
+                  {index > 0 || !isLoveReunionShowcase ? <div className="premium-divider" /> : null}
                   <SectionBlock
                     section={section}
-                    number={isPastLifeShowcase ? `근거 ${index + 1}` : String(index + 3).padStart(2, '0')}
+                    number={
+                      isPastLifeShowcase
+                        ? `근거 ${index + 1}`
+                        : String(index + (isLoveReunionShowcase ? 2 : 3)).padStart(2, '0')
+                    }
                     report={report}
                   />
                 </div>
               ))}
 
+          {isLoveReunionShowcase ? (
+            <>
+              <div className="premium-divider" />
+              <SajuEvidenceAppendix report={report} pageCopy={pageCopy} />
+            </>
+          ) : null}
+
+          {!isLoveReunionShowcase ? (
+            <>
           <div className="premium-divider" />
 
           <section className="premium-report-section" id="plan">
@@ -7472,6 +7565,8 @@ body {
               </div>
             ) : null}
           </section>
+            </>
+          ) : null}
 
           {isPastLifeShowcase ? (
             <>

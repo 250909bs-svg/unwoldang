@@ -1,12 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildDeterministicSajuBasis } from '../saju/deterministicBasis';
 import { buildSajuReport } from '../saju/reportBuilder';
+import {
+  LOVE_REUNION_CONTEXT_VERSION,
+  type LoveReunionContext
+} from '../../products/love-reunion/contract';
+import { LOVE_REUNION_SECTION_IDS } from '../../products/love-reunion/reportModel';
+import type { PartnerBirthData } from '../../api/mockData';
 import {
   assertCommercialReportRequest,
   assertGeminiEvidenceReferences,
   sanitizeGeminiDraft,
+  generateGeminiSajuReport,
   stripGeminiEvidenceMetadata,
-  toFormData
+  toFormData,
+  type ReportRequestBody
 } from './geminiReportService';
 
 const formData = {
@@ -20,6 +28,61 @@ const formData = {
   q1: '올해 일의 방향은 무엇인가요?',
   q2: ''
 };
+
+type LoveReunionBodyOptions = {
+  context?: Partial<LoveReunionContext>;
+  partner?: PartnerBirthData | null;
+  questions?: string[];
+};
+
+function makeLoveReunionBody(options: LoveReunionBodyOptions = {}): ReportRequestBody {
+  const reunionContext: LoveReunionContext = {
+    version: LOVE_REUNION_CONTEXT_VERSION,
+    relationshipState: 'separated-no-contact',
+    relationshipLength: '1-to-3-years',
+    breakupElapsed: '1-to-3-months',
+    lastContactTiming: 'under-1-month',
+    lastContactNote: '안부 메시지 뒤 대화가 멈췄습니다.',
+    currentContact: 'none',
+    contactBoundary: 'none',
+    breakupReason: 'communication',
+    breakupReasonDetail: '갈등 뒤 대화를 피했습니다.',
+    reunionReason: '같은 문제가 반복되지 않을 조건을 확인하고 싶습니다.',
+    partnerBirthKnown: Boolean(options.partner),
+    partnerDataPermissionConfirmed: Boolean(options.partner),
+    ...options.context
+  };
+
+  return {
+    serviceId: 'love-reunion',
+    payload: {
+      user: { name: '재회 검증자', gender: 'female' },
+      birth: {
+        calendar: 'solar',
+        isLeapMonth: false,
+        date: '1992-09-09',
+        time: '10:24',
+        isUnknownTime: false,
+        precision: 'exact',
+        dayBoundaryPolicy: 'midnight'
+      },
+      partner: options.partner ?? null,
+      relationship: {
+        status: 'breakup-reunion',
+        duration: 'under3'
+      },
+      reunionContext,
+      questions: options.questions || [
+        '첫 연락 전에 무엇을 확인해야 하나요?',
+        '이 관계를 놓아야 하는 신호는 무엇인가요?'
+      ]
+    }
+  };
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('Gemini commercial response validation', () => {
   it('rejects missing server-side birth facts instead of applying gender/calendar defaults', () => {
@@ -218,5 +281,83 @@ describe('Gemini commercial response validation', () => {
   it('rejects a non-object JSON root', () => {
     const report = buildSajuReport('general-signature', formData);
     expect(() => sanitizeGeminiDraft([], report)).toThrow(/최상위/);
+  });
+
+  it('restores and accepts a complete love-reunion v2 context', () => {
+    const restored = toFormData(makeLoveReunionBody());
+
+    expect(restored.reunionContext).toMatchObject({
+      version: LOVE_REUNION_CONTEXT_VERSION,
+      relationshipState: 'separated-no-contact',
+      contactBoundary: 'none',
+      partnerDataPermissionConfirmed: false
+    });
+    expect(() => assertCommercialReportRequest('love-reunion', restored)).not.toThrow();
+  });
+
+  it('rejects missing, stale, or incomplete love-reunion safety context', () => {
+    const staleBody = makeLoveReunionBody();
+    staleBody.payload!.reunionContext = {
+      ...staleBody.payload!.reunionContext!,
+      version: 1
+    } as unknown as LoveReunionContext;
+    const stale = toFormData(staleBody);
+    const missingBoundary = toFormData(makeLoveReunionBody({
+      context: { contactBoundary: '' }
+    }));
+
+    expect(stale.reunionContext).toBeUndefined();
+    expect(() => assertCommercialReportRequest('love-reunion', stale)).toThrow(/v2/);
+    expect(() => assertCommercialReportRequest('love-reunion', missingBoundary)).toThrow(
+      /연락 거절 또는 안전 경계/
+    );
+  });
+
+  it('rejects injected partner data unless both knowledge and permission are confirmed', () => {
+    const injectedPartner: PartnerBirthData = {
+      name: '상대',
+      gender: 'male',
+      calendar: 'solar',
+      isLeapMonth: false,
+      birthDate: '1991-02-03',
+      birthTime: '14:20',
+      isUnknownTime: false,
+      birthTimePrecision: 'exact',
+      dayBoundaryPolicy: 'midnight'
+    };
+    const restored = toFormData(makeLoveReunionBody({
+      partner: injectedPartner,
+      context: {
+        partnerBirthKnown: false,
+        partnerDataPermissionConfirmed: false
+      }
+    }));
+
+    expect(restored.partner).toMatchObject({ birthDate: '1991-02-03' });
+    expect(() => assertCommercialReportRequest('love-reunion', restored)).toThrow(
+      /필요한 권한 확인/
+    );
+  });
+
+  it('builds the cached fallback from the dedicated report without hiding crisis guidance', async () => {
+    vi.stubEnv('GEMINI_API_KEY', '');
+    vi.stubEnv('KASI_SERVICE_KEY', '');
+    const crisisQuestion = '죽고 싶고 그냥 사라지고 싶어요.';
+    const result = await generateGeminiSajuReport(makeLoveReunionBody({
+      questions: [crisisQuestion, '이 관계를 놓아야 하는 신호는 무엇인가요?']
+    }));
+    const crisisAnswer = result.report.questionAnswers.find(
+      (answer) => answer.question === crisisQuestion
+    );
+    const questionSection = result.report.sections.find(
+      (section) => section.id === 'personal-questions'
+    );
+
+    expect(result.provider).toBe('deterministic-fallback');
+    expect(result.report.sections.map((section) => section.id)).toEqual(
+      LOVE_REUNION_SECTION_IDS
+    );
+    expect(crisisAnswer?.advice.join('\n')).toContain('109');
+    expect(questionSection?.details?.[0]?.content).toContain('109');
   });
 });

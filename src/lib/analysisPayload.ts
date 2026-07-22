@@ -8,6 +8,10 @@ import {
 import { normalizeLoveFocus } from './loveFocus';
 import { normalizeLoveReaction } from './mz-love-fact/microChoice';
 import { getRelationshipDurationLabel, getRelationshipStatusLabel } from './relationshipIntake';
+import {
+  normalizeLoveReunionContext,
+  type LoveReunionContext
+} from '../products/love-reunion/contract';
 
 export interface PastLifeAnalysisContext {
   topic: string;
@@ -17,6 +21,8 @@ export interface PastLifeAnalysisContext {
   chosenSymbol: string;
   readingTone: string;
 }
+
+type AnalysisFormData = Partial<IntakeFormData> & { reunionContext?: unknown };
 
 export interface AnalysisRequestPayload {
   serviceId: ServiceId;
@@ -44,16 +50,23 @@ export interface AnalysisRequestPayload {
     focus: IntakeFormData['loveFocus'] | null;
     summary: string;
   };
+  reunionContext: LoveReunionContext | null;
   pastLifeContext: PastLifeAnalysisContext | null;
   questions: string[];
 }
 
-export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Partial<IntakeFormData>): AnalysisRequestPayload {
+export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: AnalysisFormData): AnalysisRequestPayload {
   const service = findServiceById(serviceId);
   const statusLabel = getRelationshipStatusLabel(formData.relationshipStatus);
   const durationLabel = getRelationshipDurationLabel(formData.relationshipDuration);
   const relationshipSummary = durationLabel ? `${statusLabel} / ${durationLabel}` : statusLabel;
-  const partner = formData.partner
+  const reunionContext = serviceId === 'love-reunion'
+    ? normalizeLoveReunionContext(formData.reunionContext)
+    : null;
+  const canIncludePartner = serviceId !== 'love-reunion' || Boolean(
+    reunionContext?.partnerBirthKnown && reunionContext.partnerDataPermissionConfirmed
+  );
+  const partner = formData.partner && canIncludePartner
     ? {
         ...formData.partner,
         name: formData.partner.name.trim(),
@@ -102,6 +115,7 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
       focus: normalizeLoveFocus(formData.loveFocus),
       summary: relationshipSummary
     },
+    reunionContext,
     pastLifeContext:
       serviceId === 'past-life-goblin'
         ? {
