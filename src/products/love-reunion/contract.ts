@@ -10,7 +10,7 @@ import {
   type BirthInputValidationResult
 } from '../../lib/birthInputValidation';
 
-export const LOVE_REUNION_CONTEXT_VERSION = 1 as const;
+export const LOVE_REUNION_CONTEXT_VERSION = 2 as const;
 
 export const LOVE_REUNION_RELATIONSHIP_STATES = [
   'separated-no-contact',
@@ -55,6 +55,12 @@ export const LOVE_REUNION_CURRENT_CONTACT_OPTIONS = [
   'reconnecting'
 ] as const;
 
+export const LOVE_REUNION_CONTACT_BOUNDARIES = [
+  'none',
+  'explicit-no-contact',
+  'safety-risk'
+] as const;
+
 export const LOVE_REUNION_BREAKUP_REASONS = [
   'communication',
   'trust',
@@ -84,6 +90,7 @@ export type LoveReunionRelationshipLength = '' | (typeof LOVE_REUNION_RELATIONSH
 export type LoveReunionBreakupElapsed = '' | (typeof LOVE_REUNION_BREAKUP_ELAPSED_OPTIONS)[number];
 export type LoveReunionLastContactTiming = '' | (typeof LOVE_REUNION_LAST_CONTACT_TIMINGS)[number];
 export type LoveReunionCurrentContact = '' | (typeof LOVE_REUNION_CURRENT_CONTACT_OPTIONS)[number];
+export type LoveReunionContactBoundary = '' | (typeof LOVE_REUNION_CONTACT_BOUNDARIES)[number];
 export type LoveReunionBreakupReason = '' | (typeof LOVE_REUNION_BREAKUP_REASONS)[number];
 
 export interface LoveReunionContext {
@@ -94,10 +101,12 @@ export interface LoveReunionContext {
   lastContactTiming: LoveReunionLastContactTiming;
   lastContactNote: string;
   currentContact: LoveReunionCurrentContact;
+  contactBoundary: LoveReunionContactBoundary;
   breakupReason: LoveReunionBreakupReason;
   breakupReasonDetail: string;
   reunionReason: string;
   partnerBirthKnown: boolean;
+  partnerDataPermissionConfirmed: boolean;
 }
 
 export type LoveReunionFormData = IntakeFormData & {
@@ -249,10 +258,12 @@ export function createEmptyLoveReunionContext(): LoveReunionContext {
     lastContactTiming: '',
     lastContactNote: '',
     currentContact: '',
+    contactBoundary: '',
     breakupReason: '',
     breakupReasonDetail: '',
     reunionReason: '',
-    partnerBirthKnown: false
+    partnerBirthKnown: false,
+    partnerDataPermissionConfirmed: false
   };
 }
 
@@ -287,13 +298,15 @@ export function normalizeLoveReunionContext(source: unknown): LoveReunionContext
     lastContactTiming: normalizeSelection(value.lastContactTiming, LOVE_REUNION_LAST_CONTACT_TIMINGS),
     lastContactNote: normalizeText(value.lastContactNote, LOVE_REUNION_TEXT_LIMITS.lastContactNote),
     currentContact: normalizeSelection(value.currentContact, LOVE_REUNION_CURRENT_CONTACT_OPTIONS),
+    contactBoundary: normalizeSelection(value.contactBoundary, LOVE_REUNION_CONTACT_BOUNDARIES),
     breakupReason: normalizeSelection(value.breakupReason, LOVE_REUNION_BREAKUP_REASONS),
     breakupReasonDetail: normalizeText(
       value.breakupReasonDetail,
       LOVE_REUNION_TEXT_LIMITS.breakupReasonDetail
     ),
     reunionReason: normalizeText(value.reunionReason, LOVE_REUNION_TEXT_LIMITS.reunionReason),
-    partnerBirthKnown: value.partnerBirthKnown === true
+    partnerBirthKnown: value.partnerBirthKnown === true,
+    partnerDataPermissionConfirmed: value.partnerDataPermissionConfirmed === true
   };
 }
 
@@ -334,6 +347,10 @@ export function validateLoveReunionFormData(source: unknown): LoveReunionValidat
   let partner: BirthInputValidationResult | null = null;
 
   if (data.reunionContext.partnerBirthKnown) {
+    if (!data.reunionContext.partnerDataPermissionConfirmed) {
+      errors.push('상대방 출생정보를 제공하고 분석에 사용하는 데 필요한 권한을 확인해 주세요.');
+    }
+
     if (!data.partner) {
       errors.push('상대방 생년월일시를 안다고 선택한 경우 상대방 출생 정보를 입력해 주세요.');
     } else {
@@ -348,6 +365,7 @@ export function validateLoveReunionFormData(source: unknown): LoveReunionValidat
     [data.reunionContext.breakupElapsed, '이별 후 경과 기간을 선택해 주세요.'],
     [data.reunionContext.lastContactTiming, '마지막 연락 시점을 선택해 주세요.'],
     [data.reunionContext.currentContact, '현재 연락 상태를 선택해 주세요.'],
+    [data.reunionContext.contactBoundary, '연락 거절 또는 안전 경계 여부를 선택해 주세요.'],
     [data.reunionContext.breakupReason, '이별 이유를 선택해 주세요.']
   ];
 
@@ -356,6 +374,13 @@ export function validateLoveReunionFormData(source: unknown): LoveReunionValidat
       errors.push(message);
     }
   });
+
+  if (
+    data.reunionContext.currentContact === 'blocked' &&
+    data.reunionContext.contactBoundary === 'none'
+  ) {
+    errors.push('차단·연락 거절 상태에서는 명시적 비접촉 또는 안전 위험 경계를 선택해 주세요.');
+  }
 
   if (
     data.reunionContext.breakupReason === 'other' &&

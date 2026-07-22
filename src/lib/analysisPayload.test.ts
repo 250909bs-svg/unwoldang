@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { buildAnalysisRequestPayload } from './analysisPayload';
+import {
+  LOVE_REUNION_CONTEXT_VERSION,
+  LOVE_REUNION_TEXT_LIMITS
+} from '../products/love-reunion/contract';
 
 describe('analysis request payload', () => {
   it('keeps the canonical love micro choice and every expanded relationship branch', () => {
@@ -99,5 +103,88 @@ describe('analysis request payload', () => {
       readingTone: '균형 있게'
     });
     expect(payload.questions).toEqual(['전생 질문 1', '전생 질문 2']);
+  });
+
+  it('serializes a bounded love-reunion v2 context and permitted partner data', () => {
+    const payload = buildAnalysisRequestPayload('love-reunion', {
+      partner: {
+        name: '  상대  ',
+        gender: 'male',
+        calendar: 'solar',
+        isLeapMonth: false,
+        birthDate: '1991-02-03',
+        birthTime: '14:20',
+        isUnknownTime: false
+      },
+      reunionContext: {
+        version: 1,
+        relationshipState: 'separated-contacting',
+        relationshipLength: '1-to-3-years',
+        breakupElapsed: '1-to-3-months',
+        lastContactTiming: 'under-1-month',
+        lastContactNote: `  ${'가'.repeat(280)}  `,
+        currentContact: 'occasional',
+        contactBoundary: 'none',
+        breakupReason: 'other',
+        breakupReasonDetail: '나'.repeat(360),
+        reunionReason: '다'.repeat(380),
+        partnerBirthKnown: true,
+        partnerDataPermissionConfirmed: true
+      }
+    });
+
+    expect(payload.reunionContext).toMatchObject({
+      version: LOVE_REUNION_CONTEXT_VERSION,
+      relationshipState: 'separated-contacting',
+      relationshipLength: '1-to-3-years',
+      breakupElapsed: '1-to-3-months',
+      lastContactTiming: 'under-1-month',
+      currentContact: 'occasional',
+      contactBoundary: 'none',
+      breakupReason: 'other',
+      partnerBirthKnown: true,
+      partnerDataPermissionConfirmed: true
+    });
+    expect(payload.reunionContext?.lastContactNote).toHaveLength(
+      LOVE_REUNION_TEXT_LIMITS.lastContactNote
+    );
+    expect(payload.reunionContext?.breakupReasonDetail).toHaveLength(
+      LOVE_REUNION_TEXT_LIMITS.breakupReasonDetail
+    );
+    expect(payload.reunionContext?.reunionReason).toHaveLength(
+      LOVE_REUNION_TEXT_LIMITS.reunionReason
+    );
+    expect(payload.partner).toMatchObject({
+      name: '상대',
+      birthDate: '1991-02-03',
+      birthTime: '14:20'
+    });
+  });
+
+  it('does not transmit partner birth data without explicit use permission', () => {
+    const payload = buildAnalysisRequestPayload('love-reunion', {
+      partner: {
+        name: '상대',
+        gender: 'male',
+        calendar: 'solar',
+        isLeapMonth: false,
+        birthDate: '1991-02-03',
+        birthTime: '',
+        isUnknownTime: true
+      },
+      reunionContext: {
+        contactBoundary: 'none',
+        partnerBirthKnown: true,
+        partnerDataPermissionConfirmed: false
+      }
+    });
+
+    expect(payload.partner).toBeNull();
+    expect(payload.reunionContext).toMatchObject({
+      version: LOVE_REUNION_CONTEXT_VERSION,
+      contactBoundary: 'none',
+      partnerBirthKnown: true,
+      partnerDataPermissionConfirmed: false
+    });
   });
 });

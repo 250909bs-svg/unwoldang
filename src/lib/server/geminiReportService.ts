@@ -7,6 +7,14 @@ import type {
   ServiceId
 } from '../../api/mockData';
 import type { PastLifeAnalysisContext } from '../analysisPayload';
+import { buildLoveReunionReport } from '../../products/love-reunion/reportModel';
+import {
+  LOVE_REUNION_CONTEXT_VERSION,
+  normalizeLoveReunionContext,
+  validateLoveReunionFormData,
+  type LoveReunionContext,
+  type LoveReunionFormData
+} from '../../products/love-reunion/contract';
 import { normalizeLoveFocus } from '../loveFocus';
 import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
 import { validateIntakeBirthInputs } from '../birthInputValidation';
@@ -38,6 +46,7 @@ import {
 
 type RelationshipStatus = IntakeFormData['relationshipStatus'] | null | undefined;
 type RelationshipDuration = IntakeFormData['relationshipDuration'] | null | undefined;
+type ServerReportFormData = Partial<IntakeFormData> & { reunionContext?: LoveReunionContext };
 
 export type ReportRequestBody = {
   serviceId?: ServiceId;
@@ -64,6 +73,7 @@ export type ReportRequestBody = {
       focus?: IntakeFormData['loveFocus'];
     };
     pastLifeContext?: PastLifeAnalysisContext | null;
+    reunionContext?: LoveReunionContext | null;
     questions?: string[];
   };
   reportMode?: string;
@@ -672,8 +682,13 @@ export class ReportRequestError extends Error {
   }
 }
 
-export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
+export function toFormData(body: ReportRequestBody): ServerReportFormData {
   const pastLifeContext = body.payload?.pastLifeContext;
+  const rawReunionContext = body.payload?.reunionContext;
+  const reunionContext = body.serviceId === 'love-reunion' &&
+    rawReunionContext?.version === LOVE_REUNION_CONTEXT_VERSION
+    ? normalizeLoveReunionContext(rawReunionContext)
+    : undefined;
 
   return {
     name: body.payload?.user?.name || '',
@@ -697,6 +712,7 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     hiddenDesire: pastLifeContext?.hiddenDesire || '',
     chosenSymbol: pastLifeContext?.chosenSymbol || '',
     readingTone: pastLifeContext?.readingTone || '',
+    ...(reunionContext ? { reunionContext } : {}),
     q1: body.payload?.questions?.[0] || '',
     q2: body.payload?.questions?.[1] || ''
   };
@@ -727,9 +743,36 @@ function hasInvariantDay(calculation: NonNullable<ReturnType<typeof validateInta
 /** Server-side release gate. Client validation is convenience, never authority. */
 export function assertCommercialReportRequest(
   serviceId: ServiceId,
-  formData: Partial<IntakeFormData>
+  formData: ServerReportFormData
 ) {
   const requirePartner = serviceId === 'match-couple' || serviceId === 'match-destiny';
+  if (serviceId === 'love-reunion') {
+    const context = formData.reunionContext;
+
+    if (!context || context.version !== LOVE_REUNION_CONTEXT_VERSION) {
+      throw new ReportRequestError(
+        422,
+        `재회운 분석 맥락은 v${LOVE_REUNION_CONTEXT_VERSION} 형식이어야 합니다.`
+      );
+    }
+
+    if (!context.contactBoundary) {
+      throw new ReportRequestError(422, '연락 거절 또는 안전 경계 여부를 확인해 주세요.');
+    }
+
+    if (formData.partner && (!context.partnerBirthKnown || !context.partnerDataPermissionConfirmed)) {
+      throw new ReportRequestError(
+        422,
+        '상대방 출생정보를 제공하고 분석에 사용하는 데 필요한 권한 확인이 필요합니다.'
+      );
+    }
+
+    const reunionValidation = validateLoveReunionFormData(formData);
+
+    if (!reunionValidation.valid) {
+      throw new ReportRequestError(422, reunionValidation.errors.join(' '));
+    }
+  }
   const validation = validateIntakeBirthInputs(formData, { requirePartner });
 
   if (!validation.valid) {
@@ -1202,7 +1245,11 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
 
   const inputFormData = toFormData(body);
   assertCommercialReportRequest(serviceId, inputFormData);
-  const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
+  const { formData: normalizedFormData, verification } = await normalizeFormDataWithKasi(inputFormData);
+  const formData: ServerReportFormData = {
+    ...normalizedFormData,
+    ...(inputFormData.reunionContext ? { reunionContext: inputFormData.reunionContext } : {})
+  };
 
   if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
     throw new ReportRequestError(
@@ -1218,7 +1265,10 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
       `상용 리포트 생성이 중단되었습니다. ${deterministicBasis.commercialV2.releaseAudit.blockers.join(' ')}`
     );
   }
-  const builtReport = buildSajuReport(serviceId, formData, deterministicBasis);
+  const genericReport = buildSajuReport(serviceId, formData, deterministicBasis);
+  const builtReport = serviceId === 'love-reunion'
+    ? buildLoveReunionReport(genericReport, formData as Partial<LoveReunionFormData>)
+    : genericReport;
   const fallbackReport =
     serviceId === 'past-life-goblin'
       ? { ...builtReport, pastLifeProfile: buildPastLifeProfile(builtReport, formData) }
