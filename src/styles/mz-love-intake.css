@@ -1736,7 +1736,7 @@ body:has(.mz-love-preview-page) {
 /* MZ love preview: vertical webtoon experience */
 .mz-love-preview-page {
   width: 100%;
-  max-width: 520px;
+  max-width: 448px;
   height: 100svh;
   margin-inline: auto;
   overflow-x: hidden;
@@ -1744,7 +1744,8 @@ body:has(.mz-love-preview-page) {
   background: #090608;
   overscroll-behavior-y: contain;
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
+  scroll-padding-top: calc(70px + env(safe-area-inset-top));
+  scroll-snap-type: none;
   scrollbar-width: none;
 }
 
@@ -1754,20 +1755,24 @@ body:has(.mz-love-preview-page) {
 
 .mz-love-webtoon-story {
   position: relative;
-  background: #090608;
+  background:
+    radial-gradient(circle at 18px 24px, rgba(255, 255, 255, 0.13) 0 1px, transparent 2px),
+    radial-gradient(circle at 78px 72px, rgba(233, 199, 126, 0.11) 0 2px, transparent 4px),
+    radial-gradient(circle at 50% 0%, rgba(121, 15, 44, 0.2), transparent 19rem),
+    #090608;
+  background-size: 96px 112px, 174px 208px, auto, auto;
 }
 
 .mz-love-story-panel {
   position: relative;
-  min-height: max(790px, calc(100svh - 70px));
+  min-height: max(860px, calc(108svh - 70px));
   overflow: hidden;
   isolation: isolate;
-  scroll-margin-top: 70px;
-  scroll-snap-align: start;
 }
 
 .mz-love-story-panel + .mz-love-story-panel {
-  border-top: 8px solid #090608;
+  margin-top: clamp(56px, 14vw, 76px);
+  border-top: 0;
 }
 
 .mz-love-story-panel > picture,
@@ -1790,32 +1795,33 @@ body:has(.mz-love-preview-page) {
 .mz-love-story-shade {
   z-index: -2;
   background:
-    linear-gradient(180deg, rgba(7, 3, 5, 0.12) 0%, rgba(7, 3, 5, 0.03) 24%, rgba(7, 3, 5, 0.35) 54%, rgba(7, 3, 5, 0.96) 100%),
-    radial-gradient(circle at 50% 25%, transparent 0, rgba(5, 2, 4, 0.16) 55%, rgba(5, 2, 4, 0.62) 100%);
+    linear-gradient(180deg, rgba(7, 3, 5, 0.48) 0%, rgba(7, 3, 5, 0.04) 23%, rgba(7, 3, 5, 0.08) 58%, rgba(7, 3, 5, 0.78) 100%),
+    radial-gradient(circle at 50% 35%, transparent 0, rgba(5, 2, 4, 0.1) 58%, rgba(5, 2, 4, 0.48) 100%);
 }
 
 .mz-love-story-panel.is-focus .mz-love-story-shade,
 .mz-love-story-panel.is-meeting .mz-love-story-shade {
   background:
-    linear-gradient(180deg, rgba(7, 3, 5, 0.08), rgba(7, 3, 5, 0.22) 42%, rgba(7, 3, 5, 0.97) 100%),
-    radial-gradient(circle at 50% 25%, transparent, rgba(5, 2, 4, 0.45));
+    linear-gradient(180deg, rgba(7, 3, 5, 0.42), rgba(7, 3, 5, 0.04) 35%, rgba(7, 3, 5, 0.8) 100%),
+    radial-gradient(circle at 50% 32%, transparent, rgba(5, 2, 4, 0.38));
 }
 
 .mz-love-story-episode {
   position: absolute;
   z-index: 4;
-  top: 18px;
-  left: 18px;
-  padding: 7px 10px;
-  border: 1px solid rgba(237, 203, 133, 0.25);
-  border-radius: 999px;
-  background: rgba(12, 7, 10, 0.58);
+  top: 24px;
+  left: 20px;
+  padding: 6px 9px 6px 10px;
+  border: 0;
+  border-left: 3px solid #edcf8e;
+  border-radius: 2px;
+  background: rgba(12, 7, 10, 0.82);
   color: #edcf8e;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
 }
 
 .mz-love-story-content {
@@ -1823,7 +1829,7 @@ body:has(.mz-love-preview-page) {
   z-index: 2;
   display: flex;
   min-height: inherit;
-  padding: 74px 16px 82px;
+  padding: 82px clamp(18px, 5vw, 24px) calc(88px + env(safe-area-inset-bottom));
   flex-direction: column;
   justify-content: flex-end;
 }
@@ -1831,84 +1837,97 @@ body:has(.mz-love-preview-page) {
 .mz-love-dialogue-stack {
   display: grid;
   width: 100%;
-  padding-top: 18px;
-  gap: 22px;
+  padding-top: 0;
+  gap: 34px;
 }
 
 .mz-love-speech {
   position: relative;
-  width: min(79%, 366px);
-  padding: 13px 16px 14px;
+  width: min(82%, 360px);
+  padding: 17px 18px 18px;
   justify-self: start;
-  border: 2px solid rgba(43, 24, 30, 0.94);
-  border-radius: 21px 21px 21px 6px;
-  background: #fffaf1;
+  border: 1px solid rgba(43, 31, 35, 0.96);
+  border-radius: 3px;
+  background: #fffdf8;
   color: #29161c;
-  box-shadow: 5px 6px 0 rgba(7, 3, 5, 0.62);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
   backdrop-filter: none;
-  transform: rotate(-0.35deg);
+  transform: none;
 }
 
 .mz-love-speech::after {
   position: absolute;
-  bottom: -10px;
-  left: 20px;
-  width: 19px;
-  height: 19px;
-  border-right: 2px solid rgba(43, 24, 30, 0.94);
-  border-bottom: 2px solid rgba(43, 24, 30, 0.94);
+  bottom: -8px;
+  left: 22px;
+  width: 15px;
+  height: 15px;
+  border-right: 1px solid rgba(43, 31, 35, 0.96);
+  border-bottom: 1px solid rgba(43, 31, 35, 0.96);
   background: inherit;
   content: "";
-  transform: rotate(45deg) skew(7deg, 7deg);
+  transform: rotate(45deg);
 }
 
 .mz-love-speech.is-right {
   justify-self: end;
-  border-radius: 21px 21px 6px 21px;
-  border-color: rgba(255, 190, 201, 0.82);
-  background: #81152f;
+  border-radius: 3px;
+  border-color: rgba(245, 204, 212, 0.86);
+  background: #76142d;
   color: #fffaf7;
-  box-shadow: -5px 6px 0 rgba(7, 3, 5, 0.62);
-  transform: rotate(0.35deg);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.36);
+  transform: none;
 }
 
 .mz-love-speech.is-right::after {
   right: 18px;
   left: auto;
+  border-color: rgba(245, 204, 212, 0.86);
 }
 
 .mz-love-speech.is-fact {
-  border-color: rgba(238, 203, 130, 0.36);
-  background: rgba(20, 12, 15, 0.93);
+  width: min(88%, 382px);
+  border-color: rgba(238, 203, 130, 0.62);
+  background: rgba(19, 13, 15, 0.96);
   color: #fff8ef;
 }
 
+.mz-love-speech.is-fact::after {
+  display: none;
+}
+
 .mz-love-speech.is-customer {
-  width: min(72%, 326px);
+  width: min(74%, 318px);
 }
 
 .mz-love-speech > small {
-  display: block;
-  position: absolute;
-  top: -19px;
-  left: 10px;
-  margin: 0;
-  color: #fff8ee;
-  font-size: 9px;
+  display: flex;
+  position: static;
+  width: max-content;
+  margin: 0 0 9px;
+  padding: 4px 7px 3px;
+  align-items: center;
+  border-radius: 2px;
+  background: #7b142f;
+  color: #fffaf5;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.08em;
-  text-shadow: 0 2px 7px rgba(0, 0, 0, 0.9);
-}
-
-.mz-love-speech.is-right > small,
-.mz-love-speech.is-fact > small {
-  color: #ffe09e;
+  text-shadow: none;
 }
 
 .mz-love-speech.is-right > small {
-  right: 10px;
-  left: auto;
+  margin-left: auto;
+  background: #f2d7a2;
+  color: #4b1022;
   text-align: right;
+}
+
+.mz-love-speech.is-fact > small {
+  padding: 0 0 6px;
+  border-bottom: 1px solid rgba(238, 203, 130, 0.34);
+  border-radius: 0;
+  background: transparent;
+  color: #f2d58f;
 }
 
 .mz-love-speech h2 {
@@ -1924,9 +1943,9 @@ body:has(.mz-love-preview-page) {
   margin: 0;
   color: inherit;
   font-size: clamp(15px, 4vw, 18px);
-  font-weight: 760;
+  font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 1.44;
+  line-height: 1.5;
 }
 
 .mz-love-speech p + p {
@@ -1947,9 +1966,9 @@ body:has(.mz-love-preview-page) {
   display: block;
   margin-top: 8px;
   color: rgba(67, 44, 50, 0.72);
-  font-size: 10px;
+  font-size: 11px;
   font-style: normal;
-  line-height: 1.55;
+  line-height: 1.58;
 }
 
 .mz-love-speech.is-right em,
@@ -1958,27 +1977,27 @@ body:has(.mz-love-preview-page) {
 }
 
 .mz-love-story-caption {
-  width: min(92%, 420px);
-  padding: 15px 17px;
+  width: min(86%, 372px);
+  padding: 17px 18px;
   justify-self: center;
-  border: 1px solid rgba(238, 203, 130, 0.24);
-  border-radius: 15px;
-  background: rgba(10, 6, 8, 0.82);
-  color: #fff7f1;
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(14px);
+  border: 1px solid rgba(43, 31, 35, 0.95);
+  border-radius: 3px;
+  background: #fffdf8;
+  color: #29171d;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.36);
+  backdrop-filter: none;
 }
 
 .mz-love-story-caption small {
-  color: #e8c77f;
-  font-size: 9px;
+  color: #8b1835;
+  font-size: 10px;
   font-weight: 850;
   letter-spacing: 0.08em;
 }
 
 .mz-love-story-caption p {
   margin: 7px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.58;
 }
 
@@ -1986,9 +2005,9 @@ body:has(.mz-love-preview-page) {
   display: block;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: #ffacb9;
-  font-size: 11px;
+  border-top: 1px solid rgba(87, 43, 55, 0.13);
+  color: #9a1938;
+  font-size: 12px;
   line-height: 1.52;
 }
 
@@ -1996,17 +2015,18 @@ body:has(.mz-love-preview-page) {
   position: absolute;
   z-index: 6;
   right: 50%;
-  bottom: 17px;
+  bottom: calc(17px + env(safe-area-inset-bottom));
   display: inline-flex;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 16px;
   align-items: center;
   gap: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.17);
-  border-radius: 999px;
-  background: rgba(10, 6, 8, 0.7);
+  border: 0;
+  border-bottom: 1px solid rgba(237, 203, 133, 0.58);
+  border-radius: 2px;
+  background: rgba(10, 6, 8, 0.82);
   color: rgba(255, 255, 255, 0.86);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 780;
   transform: translateX(50%);
   backdrop-filter: blur(12px);
@@ -2016,25 +2036,39 @@ body:has(.mz-love-preview-page) {
   transform: rotate(90deg);
 }
 
+#love-story-opening {
+  min-height: max(940px, 116svh);
+}
+
+#love-story-opening .mz-love-story-content {
+  justify-content: center;
+}
+
+#love-story-opening .mz-love-dialogue-stack {
+  min-height: min(680px, 76svh);
+  align-content: space-between;
+}
+
 .mz-love-story-panel.is-chart {
   min-height: max(880px, calc(100svh - 70px));
 }
 
 .mz-love-story-panel.is-chart > picture img {
-  filter: brightness(0.52) saturate(0.75);
+  filter: brightness(0.64) saturate(0.82);
 }
 
 .mz-love-dialogue-stack.is-chart-dialogue {
-  gap: 22px;
+  gap: 26px;
 }
 
 .mz-love-wonguk-board.is-story {
   width: min(100%, 420px);
   margin-inline: auto;
-  border-color: rgba(237, 203, 133, 0.36);
-  background: rgba(20, 10, 14, 0.9);
+  border-color: rgba(237, 203, 133, 0.42);
+  border-radius: 6px;
+  background: rgba(20, 10, 14, 0.94);
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(18px);
+  backdrop-filter: none;
 }
 
 .mz-love-wonguk-board.is-story > header {
@@ -2075,25 +2109,29 @@ body:has(.mz-love-preview-page) {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 12px;
-  background: rgba(11, 7, 9, 0.78);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  background: rgba(11, 7, 9, 0.9);
+  backdrop-filter: none;
 }
 
 .mz-love-comic-facts small {
-  color: rgba(255, 255, 255, 0.43);
-  font-size: 8px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 10px;
 }
 
 .mz-love-comic-facts strong {
+  display: -webkit-box;
   width: 100%;
+  min-height: 2.6em;
   overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: #f4ddac;
   font-size: 10px;
+  line-height: 1.3;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .mz-love-story-panel.is-partner-vault {
@@ -2112,7 +2150,7 @@ body:has(.mz-love-preview-page) {
   padding: 53px 17px 17px;
   overflow: hidden;
   border: 1px solid rgba(239, 202, 126, 0.42);
-  border-radius: 28px 28px 28px 8px;
+  border-radius: 8px;
   background:
     radial-gradient(circle at 50% 0%, rgba(191, 24, 61, 0.34), transparent 12rem),
     linear-gradient(150deg, rgba(41, 13, 23, 0.94), rgba(10, 6, 8, 0.96));
@@ -2194,13 +2232,13 @@ body:has(.mz-love-preview-page) {
   min-width: 0;
   padding: 11px 10px;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.035);
 }
 
 .mz-love-portrait-vault dt {
-  color: rgba(255, 255, 255, 0.44);
-  font-size: 8px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 10px;
 }
 
 .mz-love-portrait-vault dd {
@@ -2224,7 +2262,7 @@ body:has(.mz-love-preview-page) {
   justify-content: center;
   gap: 7px;
   border: 1px solid rgba(255, 192, 203, 0.3);
-  border-radius: 13px;
+  border-radius: 4px;
   background: linear-gradient(135deg, #a8183d, #5e0b25);
   color: #fff;
   font-size: 12px;
@@ -2308,7 +2346,7 @@ body:has(.mz-love-preview-page) {
   align-items: center;
   gap: 9px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 15px;
+  border-radius: 4px;
   background: rgba(13, 8, 10, 0.83);
   color: rgba(255, 255, 255, 0.76);
   font-size: 11px;
@@ -2329,7 +2367,7 @@ body:has(.mz-love-preview-page) {
   align-items: flex-start;
   gap: 8px;
   border: 1px solid rgba(237, 203, 133, 0.2);
-  border-radius: 13px;
+  border-radius: 4px;
   background: rgba(12, 8, 9, 0.82);
   color: rgba(255, 255, 255, 0.58);
   backdrop-filter: blur(12px);
@@ -2342,8 +2380,8 @@ body:has(.mz-love-preview-page) {
 
 .mz-love-specificity-note p {
   margin: 0;
-  font-size: 9px;
-  line-height: 1.55;
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 .mz-love-specificity-note.is-uncertainty {
@@ -2352,7 +2390,7 @@ body:has(.mz-love-preview-page) {
 
 .mz-love-specificity-note.is-uncertainty strong {
   color: #efd899;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .mz-love-specificity-note.is-uncertainty p {
@@ -2369,7 +2407,7 @@ body:has(.mz-love-preview-page) {
   align-items: center;
   gap: 9px;
   border: 1px solid rgba(255, 193, 204, 0.35);
-  border-radius: 18px;
+  border-radius: 6px;
   background: linear-gradient(135deg, #b41740, #6c0b29 58%, #3d071b);
   color: #fff;
   box-shadow: 0 18px 42px rgba(123, 8, 38, 0.42), inset 0 1px rgba(255, 255, 255, 0.14);
@@ -2384,8 +2422,8 @@ body:has(.mz-love-preview-page) {
 }
 
 .mz-love-story-unlock small {
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
 }
 
 .mz-love-story-unlock strong {
@@ -2396,14 +2434,53 @@ body:has(.mz-love-preview-page) {
 }
 
 .mz-love-story-edit {
+  display: inline-flex;
   width: max-content;
+  min-height: 44px;
   margin: 0 auto;
   padding: 7px 8px;
+  align-items: center;
   border: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.22);
   background: transparent;
   color: rgba(255, 255, 255, 0.58);
   font-size: 10px;
+}
+
+.mz-love-preview-header > button {
+  width: 44px;
+  height: 44px;
+}
+
+.mz-love-wonguk-board.is-story > footer button {
+  min-height: 44px;
+}
+
+.mz-love-preview-header > button:focus-visible,
+.mz-love-story-next:focus-visible,
+.mz-love-wonguk-board.is-story > footer button:focus-visible,
+.mz-love-portrait-vault > button:focus-visible,
+.mz-love-story-unlock:focus-visible,
+.mz-love-story-edit:focus-visible {
+  outline: 3px solid #f1d791;
+  outline-offset: 3px;
+}
+
+@media (max-width: 360px) {
+  .mz-love-comic-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mz-love-portrait-vault dl {
+    grid-template-columns: 1fr;
+  }
+
+  .mz-love-portrait-vault dd {
+    overflow: visible;
+    line-height: 1.45;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
 
 @media (min-width: 700px) {
@@ -2451,7 +2528,7 @@ body:has(.mz-love-preview-page) {
   margin: -36px -5px 15px;
   overflow: hidden;
   border: 1px solid rgba(242, 209, 139, 0.22);
-  border-radius: 21px 21px 13px 13px;
+  border-radius: 6px;
   background: #10080c;
   box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.72);
 }
@@ -2525,7 +2602,7 @@ body:has(.mz-love-preview-page) {
   grid-template-columns: 30px minmax(0, 1fr);
   align-items: center;
   border: 1px solid rgba(242, 209, 139, 0.17);
-  border-radius: 16px;
+  border-radius: 5px;
   background:
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 8px, transparent 8px 16px),
     rgba(15, 8, 11, 0.86);
