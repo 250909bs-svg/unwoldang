@@ -392,7 +392,12 @@ describe('Cloud Run API HTTP contracts', () => {
       fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
       reportGenerator: reportGenerator as unknown as CreateAppOptions['reportGenerator']
     });
-    const requestBody = VALID_REPORT_REQUEST;
+    const {
+      schemaVersion: omittedLegacySchemaVersion,
+      ...legacyRequestBody
+    } = VALID_REPORT_REQUEST;
+    void omittedLegacySchemaVersion;
+    const requestBody = { ...legacyRequestBody, reportAccessToken: 'legacy-body-token' };
 
     try {
       const success = await fetch(`${running.baseUrl}/api/report`, {

@@ -5,10 +5,23 @@ export interface NarrativeFactAllowlist {
   ganzhi: ReadonlySet<string>;
   years: ReadonlySet<number>;
   dayMasters: ReadonlySet<string>;
+  elementValues: ReadonlyMap<string, ReadonlySet<number>>;
+  helpfulElements: ReadonlySet<string>;
+  strengthLabels: ReadonlySet<string>;
+  dayunStartAges: ReadonlySet<number>;
+  calendarPolicies: ReadonlySet<string>;
 }
 
 export interface NarrativeFactViolation {
-  code: 'unsupported-ganzhi' | 'unsupported-year' | 'unsupported-day-master';
+  code:
+    | 'unsupported-ganzhi'
+    | 'unsupported-year'
+    | 'unsupported-day-master'
+    | 'unsupported-element-value'
+    | 'unsupported-helpful-element'
+    | 'unsupported-strength-label'
+    | 'unsupported-dayun-start-age'
+    | 'unsupported-calendar-policy';
   token: string;
   path: string;
   message: string;
@@ -31,6 +44,39 @@ const DAY_MASTER_PATTERNS = [
   new RegExp(`일간\\s*(?:은|는|이|가|:)?\\s*([${STEMS}])`, 'g')
 ] as const;
 const EXPLICIT_YEAR = /((?:18|19|20|21)\d{2})\s*년/g;
+const ELEMENTS = '\uBAA9\uD654\uD1A0\uAE08\uC218';
+const ELEMENT_VALUE_PATTERN = new RegExp(
+  `([${ELEMENTS}])\\s*(?:\\uC624\\uD589|\\uAE30\\uC6B4|\\uBD84\\uD3EC)?\\s*` +
+  `(?:\\uC740|\\uB294|\\uC774|\\uAC00)?\\s*[:=]?\\s*(\\d+(?:\\.\\d+)?)\\s*` +
+  `(?:\\uAC1C|\\uC810|%)`,
+  'g'
+);
+const HELPFUL_ELEMENT_PATTERN = new RegExp(
+  `(?:\\uC6A9\\uC2E0|\\uD76C\\uC2E0|\\uB3C4\\uC6C0\\s*(?:\\uC774\\s*\\uB418\\uB294)?` +
+  `\\s*(?:\\uC624\\uD589|\\uAE30\\uC6B4|\\uC694\\uC18C))\\s*` +
+  `(?:\\uC624\\uD589|\\uAE30\\uC6B4|\\uC694\\uC18C)?\\s*` +
+  `(?:\\uC740|\\uB294|\\uC774|\\uAC00|\\uC73C\\uB85C|\\uB85C)?\\s*[:=]?\\s*` +
+  `([${ELEMENTS}])`,
+  'g'
+);
+const STRENGTH_LABELS = ['\uC2E0\uAC15', '\uC2E0\uC57D', '\uC911\uD654'] as const;
+const STRENGTH_PATTERNS = [
+  new RegExp(
+    `(${STRENGTH_LABELS.join('|')})\\s*(?:\\uC0AC\\uC8FC|\\uBA85\\uC2DD|\\uC6D0\\uAD6D|\\uAD6C\\uC870)`,
+    'g'
+  ),
+  new RegExp(
+    `(?:\\uC0AC\\uC8FC|\\uBA85\\uC2DD|\\uC6D0\\uAD6D|\\uAD6C\\uC870)\\s*` +
+    `(?:\\uC740|\\uB294|\\uC774|\\uAC00)?\\s*(${STRENGTH_LABELS.join('|')})`,
+    'g'
+  )
+] as const;
+const DAYUN_START_AGE_PATTERN = new RegExp(
+  `\\uB300\\uC6B4\\s*(?:\\uC2DC\\uC791)?\\s*(?:\\uB098\\uC774|\\uC5F0\\uB839)?\\s*` +
+  `(?:\\uC740|\\uB294|\\uC774|\\uAC00)?\\s*[:=]?\\s*(\\d+(?:\\.\\d+)?)\\s*\\uC138`,
+  'g'
+);
+const CALENDAR_POLICY_PATTERN = /\b(civil-midnight|late-zi-next-day)\b/g;
 
 function normalizeGanzhiToken(token: string) {
   if (token.length !== 2) return token;
@@ -55,6 +101,34 @@ function addYearsFromText(target: Set<number>, value: string | null | undefined)
   }
 }
 
+function normalizedFactNumber(value: number | string) {
+  return Number(Number(value).toFixed(6));
+}
+
+function addElementValue(
+  target: Map<string, Set<number>>,
+  element: string,
+  value: number
+) {
+  if (!ELEMENTS.includes(element) || !Number.isFinite(value)) return;
+  const values = target.get(element) || new Set<number>();
+  values.add(normalizedFactNumber(value));
+  target.set(element, values);
+}
+
+function addStrengthLabel(target: Set<string>, value: string | null | undefined) {
+  if (!value) return;
+  STRENGTH_LABELS.forEach((label) => {
+    if (value.includes(label)) target.add(label);
+  });
+}
+
+function addDayunStartAge(target: Set<number>, value: number | null | undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return;
+  target.add(normalizedFactNumber(value));
+  target.add(Math.round(value));
+}
+
 /** Builds an allowlist only from trusted structured fields, never customer questions/free text. */
 export function buildNarrativeFactAllowlist(
   base: SajuReportData,
@@ -63,6 +137,11 @@ export function buildNarrativeFactAllowlist(
   const ganzhi = new Set<string>();
   const years = new Set<number>();
   const dayMasters = new Set<string>();
+  const elementValues = new Map<string, Set<number>>();
+  const helpfulElements = new Set<string>();
+  const strengthLabels = new Set<string>();
+  const dayunStartAges = new Set<number>();
+  const calendarPolicies = new Set<string>();
 
   Object.values(base.pillars).forEach((value) => addGanzhi(ganzhi, value));
   base.yearLuck.forEach((item) => {
@@ -76,12 +155,16 @@ export function buildNarrativeFactAllowlist(
   addYearsFromText(years, base.currentDayun.range);
   addYearsFromText(years, base.nextDayun.range);
   if (STEMS.includes(base.dayMaster)) dayMasters.add(base.dayMaster);
+  base.fiveElements.forEach(({ label, value }) => addElementValue(elementValues, label, value));
+  base.helpfulElements.forEach((element) => helpfulElements.add(element));
+  addStrengthLabel(strengthLabels, base.strengthLabel);
 
   if (basis) {
     Object.values(basis.pillars).forEach((value) => addGanzhi(ganzhi, value));
     basis.dayun.forEach((item) => {
       addGanzhi(ganzhi, item.ganzhi);
       years.add(item.year);
+      addDayunStartAge(dayunStartAges, item.startAgeExact);
     });
     basis.seun.forEach((item) => {
       addGanzhi(ganzhi, item.ganzhi);
@@ -107,10 +190,32 @@ export function buildNarrativeFactAllowlist(
     if (Number.isInteger(birthYear)) years.add(birthYear);
     years.add(basis.commercialV2.generatedFor.year);
     dayMasters.add(basis.dayMaster.stem);
+    basis.fiveElements.forEach(({ label, value }) => addElementValue(elementValues, label, value));
+    basis.helpfulElements.forEach((element) => helpfulElements.add(element));
+    addStrengthLabel(strengthLabels, basis.strength.label);
+    calendarPolicies.add(basis.input.dayBoundaryPolicy);
+    calendarPolicies.add(basis.commercialV2.calendar.dayBoundaryPolicy);
   }
 
-  return { ganzhi, years, dayMasters };
+  return {
+    ganzhi,
+    years,
+    dayMasters,
+    elementValues,
+    helpfulElements,
+    strengthLabels,
+    dayunStartAges,
+    calendarPolicies
+  };
 }
+
+const IMMUTABLE_STRUCTURAL_PATHS = [
+  /^\$\.questionAnswers\[\d+\]\.question$/,
+  /^\$\.keyTakeaways\[\d+\]\.title$/,
+  /^\$\.sections\[\d+\]\.id$/,
+  /^\$\.sections\[\d+\]\.cards\[\d+\]\.title$/,
+  /^\$\.sections\[\d+\]\.details\[\d+\]\.summary$/
+] as const;
 
 function narrativeStrings(value: unknown) {
   const result: Array<{ path: string; text: string }> = [];
@@ -118,7 +223,9 @@ function narrativeStrings(value: unknown) {
 
   const visit = (item: unknown, path: string) => {
     if (typeof item === 'string') {
-      result.push({ path, text: item });
+      if (!IMMUTABLE_STRUCTURAL_PATHS.some((pattern) => pattern.test(path))) {
+        result.push({ path, text: item });
+      }
       return;
     }
     if (!item || typeof item !== 'object' || seen.has(item)) return;
@@ -190,6 +297,74 @@ export function findNarrativeFactViolations(
             message: `제공되지 않은 ${token} 일간을 계산 사실처럼 서술했습니다.`
           });
         }
+      }
+    }
+
+    ELEMENT_VALUE_PATTERN.lastIndex = 0;
+    for (const match of text.matchAll(ELEMENT_VALUE_PATTERN)) {
+      const element = match[1];
+      const value = normalizedFactNumber(match[2]);
+      if (!allowlist.elementValues.get(element)?.has(value)) {
+        push({
+          code: 'unsupported-element-value',
+          token: `${element}:${value}`,
+          path,
+          message: `Narrative states an unsupported ${element} element value (${value}).`
+        });
+      }
+    }
+
+    HELPFUL_ELEMENT_PATTERN.lastIndex = 0;
+    for (const match of text.matchAll(HELPFUL_ELEMENT_PATTERN)) {
+      const element = match[1];
+      if (!allowlist.helpfulElements.has(element)) {
+        push({
+          code: 'unsupported-helpful-element',
+          token: element,
+          path,
+          message: `Narrative states unsupported helpful element ${element}.`
+        });
+      }
+    }
+
+    for (const pattern of STRENGTH_PATTERNS) {
+      pattern.lastIndex = 0;
+      for (const match of text.matchAll(pattern)) {
+        const label = match[1];
+        if (!allowlist.strengthLabels.has(label)) {
+          push({
+            code: 'unsupported-strength-label',
+            token: label,
+            path,
+            message: `Narrative states unsupported strength label ${label}.`
+          });
+        }
+      }
+    }
+
+    DAYUN_START_AGE_PATTERN.lastIndex = 0;
+    for (const match of text.matchAll(DAYUN_START_AGE_PATTERN)) {
+      const age = normalizedFactNumber(match[1]);
+      if (!allowlist.dayunStartAges.has(age)) {
+        push({
+          code: 'unsupported-dayun-start-age',
+          token: String(age),
+          path,
+          message: `Narrative states unsupported dayun start age ${age}.`
+        });
+      }
+    }
+
+    CALENDAR_POLICY_PATTERN.lastIndex = 0;
+    for (const match of text.matchAll(CALENDAR_POLICY_PATTERN)) {
+      const policy = match[1];
+      if (!allowlist.calendarPolicies.has(policy)) {
+        push({
+          code: 'unsupported-calendar-policy',
+          token: policy,
+          path,
+          message: `Narrative states unsupported calendar policy ${policy}.`
+        });
       }
     }
   }

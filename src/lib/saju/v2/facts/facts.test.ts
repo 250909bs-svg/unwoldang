@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { IntakeFormData } from '../../../../api/mockData';
 import { buildDeterministicSajuBasis } from '../../deterministicBasis';
 import { buildSajuReport } from '../../reportBuilder';
-import { parseSajuFactsV1 } from '.';
+import { digestSajuFactsValue, parseSajuFactsV1 } from '.';
 
 const AS_OF = '2026-07-22T03:00:00.000Z';
 
@@ -33,12 +33,82 @@ function build(overrides: Partial<IntakeFormData> = {}) {
   );
 }
 
+type UnknownRecord = Record<string, unknown>;
+
+function resignMalformedFacts(
+  mutate: (facts: UnknownRecord) => void
+) {
+  const facts = JSON.parse(JSON.stringify(build().facts)) as ReturnType<typeof build>['facts'];
+  mutate(facts as unknown as UnknownRecord);
+  const { digests: originalDigests, ...body } = facts;
+  facts.digests = {
+    algorithm: originalDigests.algorithm,
+    input: digestSajuFactsValue({
+      schemaVersion: facts.schemaVersion,
+      engineVersions: facts.engineVersions,
+      asOf: facts.asOf,
+      input: facts.input
+    }),
+    facts: digestSajuFactsValue(body)
+  };
+  return facts;
+}
+
 describe('saju-facts-v1', () => {
   it('round-trips through JSON and rejects unknown schema versions', () => {
     const facts = build().facts;
     expect(parseSajuFactsV1(JSON.parse(JSON.stringify(facts)))).toEqual(facts);
     expect(() => parseSajuFactsV1({ ...facts, schemaVersion: 'saju-facts-v999' }))
       .toThrow(/지원하지 않는 사주 facts 버전/);
+  });
+
+  it('rejects malformed nested structures even when their digests are recomputed', () => {
+    const mutations: Array<[string, (facts: UnknownRecord) => void]> = [
+      ['input time', (facts) => {
+        const input = facts.input as UnknownRecord;
+        const time = input.time as UnknownRecord;
+        time.precision = 'invented';
+      }],
+      ['natal invariant pillars', (facts) => {
+        const natal = facts.natal as UnknownRecord;
+        const invariantPillars = natal.invariantPillars as UnknownRecord;
+        invariantPillars.year = 'yes';
+      }],
+      ['natal scenario trace', (facts) => {
+        const natal = facts.natal as UnknownRecord;
+        const scenario = (natal.scenarios as UnknownRecord[])[0];
+        const trace = scenario.trace as UnknownRecord;
+        delete trace.dayBoundary;
+      }],
+      ['dayun current', (facts) => {
+        const dayun = facts.dayun as UnknownRecord;
+        const current = dayun.current as UnknownRecord;
+        current.currentIndex = '0';
+      }],
+      ['dayun rows', (facts) => {
+        const dayun = facts.dayun as UnknownRecord;
+        const representative = dayun.representative as UnknownRecord[];
+        representative[0].luckStrength = 'strong';
+      }],
+      ['current flow clock', (facts) => {
+        const currentFlow = facts.currentFlow as UnknownRecord;
+        const referenceClock = currentFlow.referenceClock as UnknownRecord;
+        referenceClock.minute = 60;
+      }],
+      ['release audit', (facts) => {
+        const release = facts.release as UnknownRecord;
+        const audit = release.audit as UnknownRecord;
+        const externalCalendar = audit.externalCalendar as UnknownRecord;
+        externalCalendar.provider = 'OTHER';
+      }]
+    ];
+
+    for (const [label, mutate] of mutations) {
+      expect(
+        () => parseSajuFactsV1(resignMalformedFacts(mutate)),
+        label
+      ).toThrow(/saju-facts-v1 검증 실패/);
+    }
   });
 
   it('is deterministic for the same canonical input and fixed asOf', () => {
@@ -70,6 +140,7 @@ describe('saju-facts-v1', () => {
       isUnknownTime: true,
       birthTimePrecision: 'unknown'
     }).facts;
+    expect(parseSajuFactsV1(JSON.parse(JSON.stringify(facts)))).toEqual(facts);
     expect(facts.natal.status).toBe('degraded');
     expect(facts.natal.scenarios).toHaveLength(13);
     expect(facts.natal.scenarios.every(({ trace }) => Boolean(trace.dayBoundary))).toBe(true);
@@ -86,8 +157,39 @@ describe('saju-facts-v1', () => {
       birthTimePrecision: 'unknown',
       dayBoundaryPolicy: 'late-zi'
     }).facts;
+    expect(parseSajuFactsV1(JSON.parse(JSON.stringify(facts)))).toEqual(facts);
     expect(facts.natal.status).toBe('ambiguous');
     expect(facts.natal.selected).toBeNull();
     expect(facts.dayun.status).toBe('unavailable');
+  });
+
+  it.each([
+    [
+      'legacy time range',
+      {
+        birthTime: '09:30-11:29',
+        birthTimePrecision: 'branch-range'
+      }
+    ],
+    [
+      'lunar leap month',
+      {
+        calendar: 'lunar',
+        birthDate: '2023-02-01',
+        birthTime: '12:00',
+        isLeapMonth: true
+      }
+    ],
+    [
+      'late-zi exact boundary',
+      {
+        birthDate: '2024-06-21',
+        birthTime: '23:30',
+        dayBoundaryPolicy: 'late-zi'
+      }
+    ]
+  ] satisfies Array<[string, Partial<IntakeFormData>]>)('accepts valid %s facts', (_label, overrides) => {
+    const facts = build(overrides).facts;
+    expect(parseSajuFactsV1(JSON.parse(JSON.stringify(facts)))).toEqual(facts);
   });
 });

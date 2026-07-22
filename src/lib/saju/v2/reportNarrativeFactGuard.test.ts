@@ -70,4 +70,67 @@ describe('AI narrative calculation fact guard', () => {
       'unsupported-day-master'
     ]));
   });
+
+  it('rejects invented element, helpful-element, strength, dayun-age, and calendar claims', () => {
+    const { allowlist } = context();
+    const [element, allowedValues] = [...allowlist.elementValues.entries()][0];
+    const wrongValue = Array.from({ length: 201 }, (_, value) => value)
+      .find((value) => !allowedValues.has(value));
+    const wrongHelpful = [...'\uBAA9\uD654\uD1A0\uAE08\uC218']
+      .find((value) => !allowlist.helpfulElements.has(value));
+    const wrongStrength = ['\uC2E0\uAC15', '\uC2E0\uC57D', '\uC911\uD654']
+      .find((value) => !allowlist.strengthLabels.has(value));
+    const wrongAge = Array.from({ length: 151 }, (_, value) => value)
+      .find((value) => !allowlist.dayunStartAges.has(value));
+    const wrongPolicy = ['civil-midnight', 'late-zi-next-day']
+      .find((value) => !allowlist.calendarPolicies.has(value));
+
+    expect(element).toBeTruthy();
+    expect(wrongValue).toBeDefined();
+    expect(wrongHelpful).toBeTruthy();
+    expect(wrongStrength).toBeTruthy();
+    expect(wrongAge).toBeDefined();
+    expect(wrongPolicy).toBeTruthy();
+
+    const violations = findNarrativeFactViolations({
+      analysis: [
+        `${element} \uC624\uD589\uC740 ${wrongValue}\uC810\uC785\uB2C8\uB2E4.`,
+        `\uC6A9\uC2E0\uC740 ${wrongHelpful}\uC785\uB2C8\uB2E4.`,
+        `${wrongStrength} \uBA85\uC2DD\uC785\uB2C8\uB2E4.`,
+        `\uB300\uC6B4 \uC2DC\uC791 \uB098\uC774\uB294 ${wrongAge}\uC138\uC785\uB2C8\uB2E4.`,
+        `${wrongPolicy} \uACBD\uACC4 \uC815\uCC45\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.`
+      ]
+    }, allowlist);
+
+    expect(new Set(violations.map(({ code }) => code))).toEqual(new Set([
+      'unsupported-element-value',
+      'unsupported-helpful-element',
+      'unsupported-strength-label',
+      'unsupported-dayun-start-age',
+      'unsupported-calendar-policy'
+    ]));
+  });
+
+  it('ignores immutable user and structure labels while still checking generated prose', () => {
+    const { allowlist } = context();
+    const immutableText = '2199\uB144 \uB300\uC6B4\uC740 late-zi-next-day\uC778\uAC00\uC694?';
+    const structureOnly = {
+      questionAnswers: [{ question: immutableText }],
+      keyTakeaways: [{ title: immutableText }],
+      sections: [{
+        id: immutableText,
+        cards: [{ title: immutableText }],
+        details: [{ summary: immutableText }]
+      }]
+    };
+
+    expect(findNarrativeFactViolations(structureOnly, allowlist)).toEqual([]);
+    expect(findNarrativeFactViolations({
+      ...structureOnly,
+      questionAnswers: [{ question: immutableText, analysis: immutableText }]
+    }, allowlist).map(({ code }) => code)).toEqual(expect.arrayContaining([
+      'unsupported-year',
+      'unsupported-calendar-policy'
+    ]));
+  });
 });

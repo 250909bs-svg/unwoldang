@@ -9,6 +9,7 @@ import {
 } from '../contracts/errors.ts';
 import {
   parseReportRequestV1,
+  REPORT_REQUEST_SCHEMA_VERSION,
   ReportContractError,
   type ReportRequestV1,
   type ReportErrorCode
@@ -73,9 +74,27 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function normalizeLegacyReportBody(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+
+  const raw = value as Record<string, unknown>;
+  const { reportAccessToken: _transportToken, ...request } = raw;
+  void _transportToken;
+  if (Object.prototype.hasOwnProperty.call(raw, 'schemaVersion')) {
+    return request;
+  }
+
+  // Before saju-report-request-v1, clients sent the opaque report token in the
+  // body. Authentication still reads the raw body; only the contract parser
+  // receives a copy without that transport-only legacy field.
+  return { schemaVersion: REPORT_REQUEST_SCHEMA_VERSION, ...request };
+}
+
 function parseReportBody(value: unknown) {
   try {
-    return parseReportRequestV1(value);
+    return parseReportRequestV1(normalizeLegacyReportBody(value));
   } catch (error) {
     if (error instanceof ReportContractError) {
       throw new ReportPlatformError({
@@ -157,10 +176,11 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     if (req.method === 'POST' && isPath(url.pathname, '/report')) {
       try {
         dependencies.enforceReportRateLimit(req);
-        const body = parseReportBody(await readJsonBody(req));
+        const rawBody = await readJsonBody(req);
+        const body = parseReportBody(rawBody);
         const reportAccess = dependencies.auth.assertReportAccess(
           req,
-          body as unknown as Record<string, unknown>
+          rawBody as Record<string, unknown>
         );
         const { orderId, ...reportBody } = body;
         void orderId;
