@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { loveReunionProduct } from './index';
 
 const appSource = readFileSync(new URL('../../App.tsx', import.meta.url), 'utf8');
 const intakeSource = readFileSync(new URL('./LoveReunionIntake.tsx', import.meta.url), 'utf8');
@@ -20,6 +21,11 @@ function sourceForRoute(path: string) {
 }
 
 describe('love-reunion product flow contract', () => {
+  it('keeps the pre-click home banner at the full poster ratio', () => {
+    expect(loveReunionProduct.home.fullPoster).toBe(true);
+    expect(loveReunionProduct.home.image).toBe('/home-love-reunion-card.png');
+  });
+
   it('uses its owned detail and intake before the generic routes', () => {
     expect(appSource.indexOf('path="/detail/love-reunion"')).toBeLessThan(
       appSource.indexOf('path="/detail/:id"')

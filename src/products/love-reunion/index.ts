@@ -28,7 +28,8 @@ export const loveReunionProduct = {
     title: '홍연아씨 재회운',
     subtitle: '재접촉 조건과 회복 방향',
     image: '/home-love-reunion-card.png',
-    category: 'reunion'
+    category: 'reunion',
+    fullPoster: true
   },
   flow: {
     detailVariant: 'standard',
