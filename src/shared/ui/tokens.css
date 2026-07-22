@@ -1,0 +1,182 @@
+:root {
+  color-scheme: light;
+
+  /* Color primitives */
+  --ui-color-canvas: #f7f3eb;
+  --ui-color-surface: #fffdfa;
+  --ui-color-surface-subtle: #faf5ec;
+  --ui-color-surface-strong: #f1e8da;
+  --ui-color-text: #1d1b18;
+  --ui-color-text-muted: #70685d;
+  --ui-color-border: #ded2c1;
+  --ui-color-border-strong: #b9aa95;
+  --ui-color-primary: #181512;
+  --ui-color-primary-hover: #302a25;
+  --ui-color-on-primary: #fffaf2;
+  --ui-color-focus: #a8741c;
+  --ui-color-info: #245d85;
+  --ui-color-info-surface: #edf6fc;
+  --ui-color-success: #216b46;
+  --ui-color-success-surface: #edf8f1;
+  --ui-color-warning: #855a0b;
+  --ui-color-warning-surface: #fff8e8;
+  --ui-color-danger: #a13232;
+  --ui-color-danger-hover: #812727;
+  --ui-color-danger-surface: #fff1f0;
+  --ui-color-overlay: rgb(20 17 14 / 62%);
+  --ui-color-skeleton: #e8e0d5;
+  --ui-color-skeleton-highlight: #f8f4ed;
+
+  /* Typography */
+  --ui-font-family-body: 'Pretendard Variable', 'SUIT Variable', 'Noto Sans KR',
+    'Apple SD Gothic Neo', sans-serif;
+  --ui-font-family-display: var(--ui-font-family-body);
+  --ui-font-size-xs: 0.75rem;
+  --ui-font-size-sm: 0.875rem;
+  --ui-font-size-md: 1rem;
+  --ui-font-size-lg: 1.125rem;
+  --ui-font-size-xl: clamp(1.25rem, 1.05rem + 0.8vw, 1.5rem);
+  --ui-font-size-2xl: clamp(1.5rem, 1.15rem + 1.4vw, 2rem);
+  --ui-font-weight-regular: 400;
+  --ui-font-weight-medium: 600;
+  --ui-font-weight-bold: 800;
+  --ui-line-height-tight: 1.25;
+  --ui-line-height-body: 1.6;
+
+  /* Spacing */
+  --ui-space-0: 0;
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.25rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
+  --ui-space-10: 2.5rem;
+  --ui-space-12: 3rem;
+  --ui-space-16: 4rem;
+
+  /* Radius */
+  --ui-radius-xs: 0.375rem;
+  --ui-radius-sm: 0.625rem;
+  --ui-radius-md: 0.875rem;
+  --ui-radius-lg: 1.25rem;
+  --ui-radius-xl: 1.75rem;
+  --ui-radius-full: 9999px;
+
+  /* Elevation */
+  --ui-shadow-xs: 0 1px 2px rgb(49 38 22 / 8%);
+  --ui-shadow-sm: 0 8px 20px rgb(49 38 22 / 8%);
+  --ui-shadow-md: 0 18px 46px rgb(49 38 22 / 13%);
+  --ui-shadow-lg: 0 24px 70px rgb(20 16 12 / 20%);
+
+  /* Layering */
+  --ui-z-base: 0;
+  --ui-z-raised: 10;
+  --ui-z-sticky: 100;
+  --ui-z-dropdown: 400;
+  --ui-z-overlay: 800;
+  --ui-z-modal: 900;
+  --ui-z-toast: 1000;
+
+  /* Motion */
+  --ui-motion-duration-instant: 1ms;
+  --ui-motion-duration-fast: 120ms;
+  --ui-motion-duration-normal: 200ms;
+  --ui-motion-duration-slow: 320ms;
+  --ui-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ui-motion-ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ui-motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Controls, viewport, and device insets */
+  --ui-control-height-sm: 2.5rem;
+  --ui-control-height-md: 3rem;
+  --ui-control-height-lg: 3.5rem;
+  --ui-content-max: 70rem;
+  --ui-reading-max: 46rem;
+  --ui-safe-area-top: env(safe-area-inset-top, 0px);
+  --ui-safe-area-right: env(safe-area-inset-right, 0px);
+  --ui-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --ui-safe-area-left: env(safe-area-inset-left, 0px);
+}
+
+/*
+ * Product art direction belongs on the closest theme boundary. Product styles
+ * override these semantic aliases on [data-ui-theme="..."] rather than changing
+ * root primitives, which keeps one product's world from leaking into another.
+ */
+[data-ui-theme] {
+  --ui-theme-canvas: var(--ui-color-canvas);
+  --ui-theme-surface: var(--ui-color-surface);
+  --ui-theme-surface-subtle: var(--ui-color-surface-subtle);
+  --ui-theme-surface-strong: var(--ui-color-surface-strong);
+  --ui-theme-text: var(--ui-color-text);
+  --ui-theme-text-muted: var(--ui-color-text-muted);
+  --ui-theme-border: var(--ui-color-border);
+  --ui-theme-border-strong: var(--ui-color-border-strong);
+  --ui-theme-skeleton: var(--ui-color-skeleton);
+  --ui-theme-skeleton-highlight: var(--ui-color-skeleton-highlight);
+  --ui-theme-primary: var(--ui-color-primary);
+  --ui-theme-primary-hover: var(--ui-color-primary-hover);
+  --ui-theme-on-primary: var(--ui-color-on-primary);
+  --ui-theme-focus: var(--ui-color-focus);
+  --ui-theme-radius: var(--ui-radius-lg);
+  --ui-theme-shadow: var(--ui-shadow-sm);
+
+  color: var(--ui-theme-text);
+  font-family: var(--ui-font-family-body);
+}
+
+[data-ui-theme='general-signature'] {
+  color-scheme: dark;
+  --ui-theme-canvas: #070a10;
+  --ui-theme-surface: #101621;
+  --ui-theme-surface-subtle: #171f2d;
+  --ui-theme-surface-strong: #202a38;
+  --ui-theme-border-strong: rgb(228 207 166 / 42%);
+  --ui-theme-skeleton: #202a38;
+  --ui-theme-skeleton-highlight: #354051;
+  --ui-theme-text: #f6f0e5;
+  --ui-theme-text-muted: #b8b4aa;
+  --ui-theme-border: rgb(228 207 166 / 24%);
+  --ui-theme-primary: #d7ae63;
+  --ui-theme-primary-hover: #f1d59a;
+  --ui-theme-on-primary: #070a10;
+  --ui-theme-focus: #f1d59a;
+}
+
+[data-ui-theme='past-life-goblin'] {
+  color-scheme: dark;
+  --ui-theme-canvas: #05070a;
+  --ui-theme-surface: #0c1821;
+  --ui-theme-surface-subtle: #13242e;
+  --ui-theme-surface-strong: #1a303b;
+  --ui-theme-border-strong: rgb(179 138 76 / 58%);
+  --ui-theme-skeleton: #1a303b;
+  --ui-theme-skeleton-highlight: #294753;
+  --ui-theme-text: #e9e1d2;
+  --ui-theme-text-muted: #b9aa91;
+  --ui-theme-border: rgb(179 138 76 / 36%);
+  --ui-theme-primary: #27dde8;
+  --ui-theme-primary-hover: #66edf3;
+  --ui-theme-on-primary: #05070a;
+  --ui-theme-focus: #27dde8;
+}
+
+[data-ui-theme='love-reading'] {
+  color-scheme: dark;
+  --ui-theme-canvas: #070305;
+  --ui-theme-surface: #11070b;
+  --ui-theme-surface-subtle: #2b0710;
+  --ui-theme-surface-strong: #3a0b16;
+  --ui-theme-border-strong: rgb(240 216 162 / 46%);
+  --ui-theme-skeleton: #3a0b16;
+  --ui-theme-skeleton-highlight: #5a1223;
+  --ui-theme-text: #f8f0e8;
+  --ui-theme-text-muted: #bba7ac;
+  --ui-theme-border: rgb(240 216 162 / 24%);
+  --ui-theme-primary: #d9183d;
+  --ui-theme-primary-hover: #ff3557;
+  --ui-theme-on-primary: #fff7f8;
+  --ui-theme-focus: #f0d8a2;
+}

@@ -2,6 +2,7 @@ import { StrictMode, type ReactNode, useLayoutEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import './shared/ui/styles.css';
 import './index.css';
 
 function AppReadyBoundary({ children }: { children: ReactNode }) {
