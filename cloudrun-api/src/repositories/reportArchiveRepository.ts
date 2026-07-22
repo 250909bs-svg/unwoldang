@@ -1,8 +1,13 @@
 import { createHash } from 'node:crypto';
+import {
+  DataStoreRequestError,
+  ReportRequestError
+} from '../contracts/errors.ts';
 import { FirestoreRepository } from './firestoreRepository.ts';
 
 type FirestoreDocument = {
   fields?: Record<string, { stringValue?: string }>;
+  updateTime?: string;
 };
 
 type FirestoreRunQueryRow = {
@@ -60,12 +65,61 @@ export class ReportArchiveRepository {
     private readonly collection: string
   ) {}
 
+  private documentPath(documentId: string) {
+    return `/${encodeURIComponent(this.collection)}/${documentId}`;
+  }
+
+  private async readExisting(documentId: string) {
+    try {
+      return await this.firestore.request<FirestoreDocument>(
+        this.documentPath(documentId)
+      );
+    } catch (error) {
+      if (
+        error instanceof DataStoreRequestError &&
+        error.providerStatus === 404
+      ) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  private assertCompatibleBinding(
+    existing: FirestoreDocument,
+    userId: string,
+    entry: StoredReportArchiveEntry
+  ) {
+    const existingOrderId = readString(existing, 'orderId');
+    const entryOrderId = entry.orderId || '';
+    if (
+      readString(existing, 'userId') !== userId ||
+      readString(existing, 'archiveId') !== entry.id ||
+      readString(existing, 'productId') !== entry.productId ||
+      (existingOrderId && entryOrderId && existingOrderId !== entryOrderId)
+    ) {
+      throw new ReportRequestError(
+        409,
+        'Archive identity is already bound to a different report.'
+      );
+    }
+  }
+
   async saveForUser(userId: string, entry: StoredReportArchiveEntry) {
     const documentId = getReportArchiveDocumentId(userId, entry.id);
     const entryJson = JSON.stringify(entry);
+    const existing = await this.readExisting(documentId);
+
+    if (existing) {
+      this.assertCompatibleBinding(existing, userId, entry);
+    }
+
+    const precondition = existing?.updateTime
+      ? `currentDocument.updateTime=${encodeURIComponent(existing.updateTime)}`
+      : 'currentDocument.exists=false';
 
     await this.firestore.request(
-      `/${encodeURIComponent(this.collection)}/${documentId}`,
+      `${this.documentPath(documentId)}?${precondition}`,
       {
         method: 'PATCH',
         body: JSON.stringify({

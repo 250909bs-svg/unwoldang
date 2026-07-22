@@ -1,4 +1,5 @@
 import type { AppConfig } from '../../config/env.ts';
+import { API_ERROR_CODE } from '../../contracts/api.ts';
 import { KakaoAuthError, PaymentRequestError } from '../../contracts/errors.ts';
 import type { TokenService } from './tokenService.ts';
 
@@ -6,8 +7,6 @@ type FetchImplementation = typeof fetch;
 
 type KakaoUserPayload = {
   id?: unknown;
-  msg?: unknown;
-  message?: unknown;
   properties?: {
     nickname?: string;
     profile_image?: string;
@@ -71,11 +70,14 @@ export class KakaoService {
     const tokenPayload = (await tokenResponse.json().catch(() => null)) as Record<string, unknown> | null;
 
     if (!tokenResponse.ok || typeof tokenPayload?.access_token !== 'string') {
-      const message =
-        (typeof tokenPayload?.error_description === 'string' && tokenPayload.error_description) ||
-        (typeof tokenPayload?.error === 'string' && tokenPayload.error) ||
-        '카카오 토큰 발급 요청이 실패했습니다.';
-      throw new KakaoAuthError(tokenResponse.status || 502, message);
+      throw new KakaoAuthError(
+        tokenResponse.status || 502,
+        '카카오 로그인 인증 서비스를 현재 사용할 수 없습니다.',
+        {
+          code: API_ERROR_CODE.AUTH_PROVIDER_FAILED,
+          exposeMessage: false
+        }
+      );
     }
 
     const userResponse = await this.fetchImplementation(this.config.kakao.userEndpoint, {
@@ -87,11 +89,14 @@ export class KakaoService {
     const userPayload = (await userResponse.json().catch(() => null)) as KakaoUserPayload | null;
 
     if (!userResponse.ok || !userPayload) {
-      const message =
-        (typeof userPayload?.msg === 'string' && userPayload.msg) ||
-        (typeof userPayload?.message === 'string' && userPayload.message) ||
-        '카카오 사용자 정보 조회가 실패했습니다.';
-      throw new KakaoAuthError(userResponse.status || 502, message);
+      throw new KakaoAuthError(
+        userResponse.status || 502,
+        '카카오 사용자 확인 서비스를 현재 사용할 수 없습니다.',
+        {
+          code: API_ERROR_CODE.AUTH_PROVIDER_FAILED,
+          exposeMessage: false
+        }
+      );
     }
 
     const user = {

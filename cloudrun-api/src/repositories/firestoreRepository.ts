@@ -1,5 +1,5 @@
 import type { AppConfig } from '../config/env.ts';
-import { ReportRequestError } from '../contracts/errors.ts';
+import { DataStoreRequestError, ReportRequestError } from '../contracts/errors.ts';
 
 const GOOGLE_METADATA_TOKEN_ENDPOINT =
   'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
@@ -104,9 +104,14 @@ export class FirestoreRepository {
       | null;
 
     if (!response.ok) {
-      const message =
+      const providerMessage =
         payload?.error?.message || payload?.message || 'Firestore request failed.';
-      throw new ReportRequestError(response.status || 502, message);
+      const providerStatus =
+        response.status === 400 &&
+        /precondition|update.?time|failed_precondition/i.test(providerMessage)
+          ? 412
+          : response.status || 502;
+      throw new DataStoreRequestError(providerStatus, providerMessage);
     }
 
     return payload as T;

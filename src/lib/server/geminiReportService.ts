@@ -1228,8 +1228,8 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
 
   try {
     draft = await requestGeminiDraft(fallbackReport, deterministicBasis);
-  } catch (geminiError) {
-    console.error('Gemini report draft failed:', geminiError);
+  } catch {
+    console.error('GEMINI_REPORT_DRAFT_FAILED');
   }
 
   if (!draft) {
