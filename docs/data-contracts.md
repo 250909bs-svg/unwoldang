@@ -197,7 +197,7 @@
 
 서버 조회는 인증된 `ownerUserId`를 항상 조건으로 사용한다. archive ID 또는 URL을 아는 것만으로 조회할 수 없다. `archived` 상품의 기존 archive는 허용하고, `draft`와 unknown 상품은 제외한다.
 
-동일 archive document를 저장할 때 서버는 먼저 기존 owner/order/product binding을 읽어 충돌을 거부한다. 신규 생성은 `exists=false`, 갱신은 읽은 `updateTime` precondition으로 경쟁 쓰기를 막는다. 개발 환경에서만 명시적인 `REPORT_ARCHIVE_REQUIRE_REPORT_TOKEN=false` 호환 옵션을 쓸 수 있으며 production에서는 이 우회를 구성 오류로 차단한다.
+동일 archive document를 저장할 때 서버는 먼저 기존 owner/order/product binding을 읽어 충돌을 거부한다. 신규 생성은 `exists=false`, 갱신은 읽은 `updateTime` precondition으로 경쟁 쓰기를 막는다. 개발 환경에서만 명시적인 `REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=false` 호환 옵션을 쓸 수 있으며 production에서는 이 우회를 구성 오류로 차단한다.
 
 ### 8. AdminAuditEvent
 

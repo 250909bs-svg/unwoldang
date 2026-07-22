@@ -216,7 +216,7 @@ Audit 문서는 append-only다. audit create 실패를 이유로 민감 request 
 - archive ID, order ID 또는 URL만으로 report를 조회할 수 없다.
 - archive 저장 entry는 고정 allowlist만 허용하고 `token`, `secret`, `credential`, `password`, `authorization`, `cookie`, `orderClaim` 계열 key를 중첩 위치에서도 거부한다.
 - report 저장은 user token과 report token의 userBinding/order/product/entitlement를 대조한다.
-- production에서는 report token 검증을 비활성화할 수 없다. `REPORT_ARCHIVE_REQUIRE_REPORT_TOKEN=false`는 development 호환에서만 허용된다.
+- production에서는 report token 검증을 비활성화할 수 없다. `REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=false`는 development 호환에서만 허용된다.
 - admin API는 별도 admin signing secret과 server verification을 사용한다.
 - 관리자 UI의 local fallback은 localhost 개발 용도다. `VITE_ENABLE_CLIENT_ADMIN`과 공개 client credential hash를 운영 인증으로 사용하지 않는다.
 - Firestore는 Cloud Run service account만 접근한다. 사용자/admin bearer는 Firestore credential이 아니다.
