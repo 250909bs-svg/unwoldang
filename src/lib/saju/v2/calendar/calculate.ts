@@ -142,6 +142,9 @@ function calculateScenario(
 
 /** Calculates a normalized context and preserves every time-uncertainty branch. */
 export function calculateBirthContext(context: BirthContext): BirthCalculationResult {
+  if (context.calendar === 'solar' && context.isLeapMonth) {
+    throw new Error('\uC724\uB2EC\uC740 \uC74C\uB825 \uC0DD\uB144\uC6D4\uC77C\uC5D0\uB9CC \uC0AC\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');
+  }
   const { solarDate, lunarInput } = normalizeInputDateToSolar(context);
   const scenarioInputs = buildBirthTimeScenarios(context.time);
   const scenarios = scenarioInputs.map((scenario) =>

@@ -37,8 +37,43 @@ import {
 import { analyzeTemporalInteractions } from './v2/interactions';
 import { analyzeCompatibility, type RelationshipPurpose } from './v2/compatibility';
 import { buildCommercialReleaseAudit } from './v2/commercialAudit';
+import { buildSajuFactsV1 } from './v2/facts';
 
 export const COMMERCIAL_MYEONGRI_ENGINE_VERSION = 'unwoldang-myeongri-v2.0.0-rc.2' as const;
+
+export interface DeterministicSajuBasisOptions {
+  referenceInstant?: Date | string;
+  asOf?: Date | string;
+}
+
+function normalizeReferenceInstant(options: DeterministicSajuBasisOptions) {
+  const toDate = (value: Date | string) => value instanceof Date
+    ? new Date(value.getTime())
+    : new Date(value);
+  if (options.referenceInstant !== undefined && options.asOf !== undefined) {
+    const reference = toDate(options.referenceInstant);
+    const asOf = toDate(options.asOf);
+    if (
+      !Number.isFinite(reference.getTime()) ||
+      !Number.isFinite(asOf.getTime()) ||
+      reference.getTime() !== asOf.getTime()
+    ) {
+      throw new Error('referenceInstant? asOf? ?? ?? ????? ???.');
+    }
+  }
+  const value = options.referenceInstant ?? options.asOf;
+  const resolved = value === undefined ? new Date() : toDate(value);
+  if (!Number.isFinite(resolved.getTime())) {
+    throw new Error('??? ????? ???? ????.');
+  }
+  return resolved;
+}
+
+function optionalEngineVersion(value: unknown) {
+  if (!value || typeof value !== 'object' || !('engineVersion' in value)) return null;
+  const engineVersion = (value as { engineVersion?: unknown }).engineVersion;
+  return typeof engineVersion === 'string' ? engineVersion : null;
+}
 
 function normalizeBirthDate(value?: string) {
   if (!value) {
@@ -354,9 +389,11 @@ export type DeterministicSajuBasis = ReturnType<typeof buildDeterministicSajuBas
 export function buildDeterministicSajuBasis(
   serviceId: ServiceId,
   formData: Partial<IntakeFormData>,
-  calendarVerification?: KasiCalendarVerification
+  calendarVerification?: KasiCalendarVerification,
+  options: DeterministicSajuBasisOptions = {}
 ) {
   const service = findServiceById(serviceId);
+  const referenceInstant = normalizeReferenceInstant(options);
   const { year, month, day } = normalizeBirthDate(formData.birthDate);
   const { hour, minute } = normalizeBirthTime(formData);
   const gender = formData.gender === 'male' ? 'male' : 'female';
@@ -403,7 +440,6 @@ export function buildDeterministicSajuBasis(
   const gyeokguk = getGyeokguk(bazi);
   const dayun = dayunRows(bazi);
   const referenceTimezone = birthCalculation.context.timezone.id;
-  const referenceInstant = new Date();
   const referenceClock = getZonedClock(referenceInstant, referenceTimezone);
   const referenceClockKst = getZonedClock(referenceInstant, 'Asia/Seoul');
   const currentFlowBazi = calcBazi(
@@ -603,8 +639,47 @@ export function buildDeterministicSajuBasis(
     helpfulElementSource: promoteExpertConsensus ? 'expert-consensus' : 'legacy-fallback',
     evidenceCount: evidenceTotal
   });
+  const facts = buildSajuFactsV1({
+    calculation: birthCalculation,
+    selectedBazi: stableBirth.bazi,
+    selection: stableBirth.selection,
+    invariantPillars: calendarScenarios.invariantPillars,
+    engineVersions: {
+      myeongri: COMMERCIAL_MYEONGRI_ENGINE_VERSION,
+      calendar: birthCalculation.version,
+      interpretation: INTERPRETATION_ENGINE_VERSION,
+      interaction: optionalEngineVersion(temporalAnalysis),
+      compatibility: optionalEngineVersion(compatibilityAnalysis),
+      releaseAudit: commercialReleaseAudit.version
+    },
+    asOf: referenceInstant,
+    dayunRepresentative: birthCalculation.context.time.precision === 'unknown' || !stableBirth.bazi
+      ? null
+      : dayun,
+    dayunScenarios: birthCalculation.scenarios.map(({ scenario, bazi: scenarioBazi }) => ({
+      scenarioId: scenario.id,
+      rows: dayunRows(scenarioBazi)
+    })),
+    dayunCurrent: dayunSelection,
+    seun,
+    currentFlow: {
+      timezone: referenceTimezone,
+      referenceClock,
+      referenceClockKst,
+      seunStartYear: currentSeunStartYear,
+      pillars: {
+        year: currentFlowBazi.y_gz,
+        month: currentFlowBazi.m_gz,
+        day: currentFlowBazi.d_gz,
+        hour: currentFlowBazi.h_gz
+      }
+    },
+    releaseAudit: commercialReleaseAudit,
+    uncertainty
+  });
 
   return {
+    facts,
     service: {
       id: service.id,
       label: service.label,

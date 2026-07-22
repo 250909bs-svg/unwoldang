@@ -70,6 +70,9 @@ export function normalizeIntakeFormToBirthContext(
   options: BirthContextOptions = {}
 ): BirthContext {
   const calendar = formData.calendar === 'lunar' ? 'lunar' : 'solar';
+  if (calendar === 'solar' && formData.isLeapMonth) {
+    throw new Error('\uC724\uB2EC\uC740 \uC74C\uB825 \uC0DD\uB144\uC6D4\uC77C\uC5D0\uB9CC \uC0AC\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');
+  }
   const date = parseCivilDate(formData.birthDate, calendar);
   const location = buildLocation(formData, options);
   const hasExplicitTimezone = options.timezoneId !== undefined || options.utcOffsetMinutes !== undefined;
