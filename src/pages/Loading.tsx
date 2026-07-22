@@ -9,6 +9,7 @@ import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig'
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
 import { getProductById } from '../products/registry';
+import { getSafeErrorLogContext, getSafeErrorMessage } from '../shared/api/errorAdapter';
 
 type LoadingLocationState = {
   product?: ServiceId;
@@ -187,13 +188,12 @@ export default function Loading() {
           setAnalysisNotice('AI 보강이 일시적으로 지연되어 검증된 내부 명리 엔진 리포트로 제공됩니다.');
         }
       } catch (error) {
-        console.error('AI report request failed:', error);
-        setAnalysisFailed(true);
-        setAnalysisNotice(
-          error instanceof Error
-            ? error.message
-            : 'AI 분석 생성에 실패했습니다. 결제 리포트는 기본 문장으로 대체하지 않고 다시 시도해야 합니다.'
+        console.error(
+          'AI report request failed',
+          getSafeErrorLogContext(error, 'REPORT_GENERATION_FAILED')
         );
+        setAnalysisFailed(true);
+        setAnalysisNotice(getSafeErrorMessage(error, 'REPORT_GENERATION_FAILED'));
       } finally {
         setAnalysisFinished(true);
       }

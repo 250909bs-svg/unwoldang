@@ -13,16 +13,18 @@ export function createCorsMiddleware(config: AppConfig) {
       return;
     }
 
+    const localDevelopmentOrigin = isLocalDevelopmentOrigin(origin);
+
     if (
-      (!config.allowedOrigins.length && isLocalDevelopmentOrigin(origin)) ||
-      config.allowedOrigins.includes(origin) ||
-      isLocalDevelopmentOrigin(origin)
+      (!config.production && localDevelopmentOrigin) ||
+      (!localDevelopmentOrigin && config.allowedOrigins.includes(origin))
     ) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     }
 
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Request-ID, Retry-After');
   };
 }

@@ -9,6 +9,7 @@ import {
   type PendingPayment
 } from '../lib/auth';
 import { getPortOneConfirmEndpoint, shouldUseDemoPayment } from '../lib/runtimeConfig';
+import { createApiErrorFromPayload, getSafeErrorMessage } from '../shared/api/errorAdapter';
 
 type CallbackView = 'loading' | 'fail' | 'error';
 
@@ -56,7 +57,6 @@ export default function PaymentCallback() {
     const paymentId = getFirstParam(params, ['paymentId', 'payment_id', 'orderId']);
     const txId = getFirstParam(params, ['txId', 'tx_id', 'transactionId']);
     const errorCode = params.get('code') || params.get('errorCode');
-    const errorMessage = params.get('message') || params.get('errorMessage');
 
     if (!pendingPayment) {
       setView('error');
@@ -66,7 +66,10 @@ export default function PaymentCallback() {
 
     if (paymentFlag === 'portone-fail' || errorCode) {
       setView('fail');
-      setMessage(errorMessage || '결제가 취소되었거나 실패했습니다. 다시 결제해 주세요.');
+      setMessage(createApiErrorFromPayload(
+        { errorCode },
+        { fallbackCode: 'PAYMENT_CONFIRMATION_FAILED' }
+      ).userMessage);
       return;
     }
 
@@ -144,7 +147,7 @@ export default function PaymentCallback() {
         moveToResult(navigate, confirmedPayment);
       } catch (caughtError) {
         setView('error');
-        setMessage(caughtError instanceof Error ? caughtError.message : '결제 검증 처리 중 문제가 발생했습니다.');
+        setMessage(getSafeErrorMessage(caughtError, 'PAYMENT_CONFIRMATION_FAILED'));
       }
     };
 

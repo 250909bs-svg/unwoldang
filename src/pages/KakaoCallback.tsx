@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
+import { fetchCloudRunApi } from '../shared/api/cloudRunFetch';
+import { getSafeApiErrorMessage, getSafeErrorMessage, readApiErrorResponse } from '../shared/api/errorAdapter';
 import { consumePendingAuthState, decodeAuthState, getKakaoRedirectUri, sanitizeAuthReturnTo } from '../lib/auth';
 import { getKakaoTokenExchangeEndpoint } from '../lib/runtimeConfig';
 
@@ -62,7 +64,6 @@ export default function KakaoCallback() {
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const code = params.get('code');
   const error = params.get('error');
-  const errorDescription = params.get('error_description');
   const rawState = params.get('state');
   const decodedState = decodeAuthState(rawState);
   const returnTo = sanitizeAuthReturnTo(decodedState?.returnTo || '/menu');
@@ -71,7 +72,7 @@ export default function KakaoCallback() {
     const run = async () => {
       if (error) {
         setStatus('error');
-        setMessage(errorDescription || '카카오 로그인 중 오류가 발생했습니다.');
+        setMessage(getSafeApiErrorMessage('AUTH_PROVIDER_FAILED'));
         return;
       }
 
@@ -96,7 +97,7 @@ export default function KakaoCallback() {
       }
 
       try {
-        const response = await fetch(exchangeEndpoint, {
+        const response = await fetchCloudRunApi(exchangeEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -108,7 +109,9 @@ export default function KakaoCallback() {
         });
 
         if (!response.ok) {
-          throw new Error('카카오 토큰 교환 요청이 실패했습니다.');
+          throw await readApiErrorResponse(response, {
+            fallbackCode: 'AUTH_PROVIDER_FAILED'
+          });
         }
 
         const payload = (await response.json()) as KakaoExchangeResponse;
@@ -119,12 +122,12 @@ export default function KakaoCallback() {
         navigate(returnTo, { replace: true });
       } catch (caughtError) {
         setStatus('error');
-        setMessage(caughtError instanceof Error ? caughtError.message : '카카오 로그인 처리 중 문제가 발생했습니다.');
+        setMessage(getSafeErrorMessage(caughtError, 'AUTH_PROVIDER_FAILED'));
       }
     };
 
     void run();
-  }, [code, completeLogin, error, errorDescription, navigate, rawState, returnTo]);
+  }, [code, completeLogin, error, navigate, rawState, returnTo]);
 
   return (
     <main className="mobile-page-shell">

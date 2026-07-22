@@ -1,5 +1,7 @@
 import { canReadHistoricalReport, getProductById } from '../../products/registry';
 import type { ProductId } from '../../products/types';
+import { fetchCloudRunApi } from '../../shared/api/cloudRunFetch';
+import { readApiErrorResponse } from '../../shared/api/errorAdapter';
 import { ApiError } from '../../shared/api/errors';
 import type {
   ConfirmedPortOnePayment,
@@ -11,7 +13,6 @@ import type {
 type PaymentApiAction = 'order' | 'confirm' | 'entitlements' | 'entitlement/renew';
 
 const PAYMENT_NETWORK_USER_MESSAGE = '결제 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.';
-const PAYMENT_HTTP_USER_MESSAGE = '결제 권한 처리 중 오류가 발생했습니다.';
 
 const contractError = (userMessage: string) => new ApiError({
   code: 'PAYMENT_API_CONTRACT_VIOLATION',
@@ -20,7 +21,7 @@ const contractError = (userMessage: string) => new ApiError({
 
 async function fetchPaymentApi(input: string, init?: RequestInit) {
   try {
-    return await fetch(input, init);
+    return await fetchCloudRunApi(input, init);
   } catch (cause) {
     throw new ApiError({
       code: 'PAYMENT_API_NETWORK_ERROR',
@@ -44,16 +45,13 @@ export const getPortOnePaymentApiEndpoint = (confirmEndpoint: string, action: Pa
 };
 
 async function readAuthenticatedPaymentResponse<T>(response: Response): Promise<T> {
-  const parsed = (await response.json().catch(() => null)) as ({ message?: string } & Partial<T>) | null;
-
   if (!response.ok) {
-    throw new ApiError({
-      code: 'PAYMENT_API_HTTP_ERROR',
-      userMessage: PAYMENT_HTTP_USER_MESSAGE,
-      status: response.status,
-      cause: parsed?.message ? new Error(parsed.message) : undefined
+    throw await readApiErrorResponse(response, {
+      fallbackCode: 'PAYMENT_API_HTTP_ERROR'
     });
   }
+
+  const parsed = (await response.json().catch(() => null)) as Partial<T> | null;
 
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new ApiError({

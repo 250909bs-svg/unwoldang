@@ -1,4 +1,6 @@
 import type { IntakeFormData, ServiceId } from '../api/mockData';
+import { fetchCloudRunApi } from '../shared/api/cloudRunFetch';
+import { adaptApiError, readApiErrorResponse } from '../shared/api/errorAdapter';
 import { buildAnalysisRequestPayload } from './analysisPayload';
 import { getAiReportEndpoint } from './runtimeConfig';
 import { PREMIUM_SAJU_PROMPT_VERSION, PREMIUM_SAJU_REPORT_MODE } from './saju/premiumReportPrompt';
@@ -61,19 +63,10 @@ function getRetryDelayMs(response: Response, attempt: number) {
   return Math.min(1000 * 2 ** attempt, 4000);
 }
 
-async function readReportError(response: Response) {
-  const payload = (await response.json().catch(() => null)) as { code?: string; message?: string } | null;
-
-  return {
-    code: typeof payload?.code === 'string' ? payload.code : '',
-    message: typeof payload?.message === 'string' ? payload.message : ''
-  };
-}
-
-function classifyReportResponse(response: Response, errorPayload: { code: string; message: string }) {
+function classifyReportResponse(response: Response, errorCode: string) {
   if (
     (response.status === 409 || response.status === 202) &&
-    errorPayload.code === 'REPORT_GENERATION_IN_PROGRESS'
+    errorCode === 'REPORT_GENERATION_IN_PROGRESS'
   ) {
     return 'in-progress' as const;
   }
@@ -139,7 +132,7 @@ export async function requestAiReport(
     );
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetchCloudRunApi(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,21 +147,23 @@ export async function requestAiReport(
         return parseAiReportResult(parsed);
       }
 
-      const errorPayload = await readReportError(response);
-      const responseKind = classifyReportResponse(response, errorPayload);
+      const responseError = await readApiErrorResponse(response, {
+        fallbackCode: 'REPORT_GENERATION_FAILED'
+      });
+      const responseKind = classifyReportResponse(response, responseError.code);
 
       if (responseKind === 'fatal') {
-        throw new Error(errorPayload.message || 'AI 사주 리포트 생성 요청에 실패했습니다.');
+        throw responseError;
       }
 
       if (responseKind === 'transient') {
         if (transientRetries >= MAX_TRANSIENT_RETRIES) {
-          throw new Error(errorPayload.message || '리포트 서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.');
+          throw responseError;
         }
         transientRetries += 1;
       }
 
-      lastError = new Error(errorPayload.message || `AI report is not ready yet (${response.status}).`);
+      lastError = responseError;
       const delayMs = Math.min(getRetryDelayMs(response, attempt), Math.max(0, deadline - Date.now()));
 
       if (delayMs > 0) {
@@ -182,7 +177,7 @@ export async function requestAiReport(
       }
 
       if (transientRetries >= MAX_TRANSIENT_RETRIES) {
-        throw new Error('네트워크 연결이 불안정합니다. 결제 내역은 보존되므로 잠시 후 다시 시도해 주세요.');
+        throw adaptApiError(error, { fallbackCode: 'REPORT_GENERATION_FAILED' });
       }
       transientRetries += 1;
 
@@ -198,9 +193,9 @@ export async function requestAiReport(
     attempt += 1;
   }
 
-  throw new Error(
-    isAbortError(lastError)
-      ? 'AI 분석 응답이 지연되고 있습니다. 결제 내역은 보존되며 다시 시도하면 완료된 리포트를 이어받습니다.'
-      : '리포트 생성이 아직 완료되지 않았습니다. 잠시 후 다시 시도해 주세요.'
-  );
+  throw adaptApiError(lastError, {
+    fallbackCode: isAbortError(lastError)
+      ? 'REPORT_GENERATION_IN_PROGRESS'
+      : 'REPORT_GENERATION_FAILED'
+  });
 }
