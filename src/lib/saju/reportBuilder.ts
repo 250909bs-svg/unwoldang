@@ -2784,7 +2784,7 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
   const kind = getKind(serviceId);
   const meta = KIND_META[kind];
   const basis = providedBasis || buildDeterministicSajuBasis(serviceId, formData);
-  const createdAt = new Date().toISOString();
+  const createdAt = basis.commercialV2.generatedFor.instant;
   const serialNumber = createSerialNumber();
   const customerName = getReportCallName(formData.name);
   const questionPreview = [formData.q1, formData.q2].filter((item): item is string => Boolean(item?.trim())).join(' / ');

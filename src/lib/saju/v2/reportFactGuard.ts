@@ -279,3 +279,12 @@ export function lockCommercialReportFacts(
     qualityAudit: scoreReportQuality(guarded)
   };
 }
+
+export {
+  buildNarrativeFactAllowlist,
+  findNarrativeFactViolations
+} from './reportNarrativeFactGuard';
+export type {
+  NarrativeFactAllowlist,
+  NarrativeFactViolation
+} from './reportNarrativeFactGuard';

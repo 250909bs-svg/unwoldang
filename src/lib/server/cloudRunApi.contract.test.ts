@@ -12,8 +12,69 @@ import {
 } from '../../../cloudrun-api/src/contracts/products.ts';
 import { TokenService } from '../../../cloudrun-api/src/domains/auth/tokenService.ts';
 import { PUBLIC_ROUTES } from '../../../cloudrun-api/src/http/router.ts';
+import {
+  REPORT_GENERATION_META_SCHEMA_VERSION,
+  REPORT_REQUEST_SCHEMA_VERSION,
+  REPORT_RESPONSE_SCHEMA_VERSION,
+  parseReportRequestV1
+} from '../../features/reports/contracts.ts';
 
 const ALLOWED_ORIGIN = 'https://contract.example';
+
+const VALID_REPORT_REQUEST = {
+  schemaVersion: REPORT_REQUEST_SCHEMA_VERSION,
+  serviceId: 'general-signature',
+  payload: {
+    serviceId: 'general-signature',
+    serviceLabel: 'Fixture report',
+    timezone: 'Asia/Seoul',
+    user: { name: 'Fixture User', gender: 'female' },
+    birth: {
+      calendar: 'solar',
+      isLeapMonth: false,
+      date: '1990-01-01',
+      time: '12:00',
+      isUnknownTime: false,
+      precision: 'exact',
+      dayBoundaryPolicy: 'midnight',
+      location: null
+    },
+    partner: null,
+    relationship: {
+      status: null,
+      duration: null,
+      microChoice: null,
+      focus: null,
+      summary: ''
+    },
+    pastLifeContext: null,
+    questions: ['Fixture question']
+  },
+  reportMode: 'fixture-report-mode',
+  promptVersion: 'fixture-prompt-version'
+} as const;
+
+const parsedValidReportRequest = parseReportRequestV1(VALID_REPORT_REQUEST);
+const {
+  orderId: omittedValidOrderId,
+  ...NORMALIZED_VALID_REPORT_REQUEST
+} = parsedValidReportRequest;
+void omittedValidOrderId;
+
+const VALID_GENERATED_REPORT = {
+  provider: 'gemini' as const,
+  reportMode: VALID_REPORT_REQUEST.reportMode,
+  promptVersion: VALID_REPORT_REQUEST.promptVersion,
+  report: {
+    title: 'Fixture generated report',
+    summary: {
+      title: 'Fixture summary',
+      analysis: ['Fixture analysis'],
+      advice: ['Fixture advice']
+    },
+    sections: []
+  }
+};
 
 const EXPECTED_PUBLIC_ROUTES = [
   'GET /health',
@@ -48,9 +109,7 @@ const unexpectedExternalFetch = vi.fn(async () => {
   throw new Error('Contract tests must not make external requests.');
 });
 
-const productionReportGenerator = vi.fn(async () => ({
-  provider: 'fixture-report-generator'
-}));
+const productionReportGenerator = vi.fn(async () => VALID_GENERATED_REPORT);
 
 let productionServer: Server;
 let productionBaseUrl: string;
@@ -259,11 +318,26 @@ describe('Cloud Run API HTTP contracts', () => {
         const response = await fetch(`${productionBaseUrl}${path}`, {
           method: contract.method,
           headers: isPost ? { 'Content-Type': 'application/json' } : undefined,
-          body: isPost ? '{}' : undefined
+          body: isPost
+            ? JSON.stringify(
+                path === '/report' || path === '/api/report'
+                  ? VALID_REPORT_REQUEST
+                  : {}
+              )
+            : undefined
         });
 
         expect(response.status).toBe(contract.status);
-        expect(await readJson(response)).toEqual({ message: contract.message });
+        const responseBody = await readJson(response);
+        if (path === '/report' || path === '/api/report') {
+          expect(responseBody).toEqual({
+            message: contract.message,
+            code: 'REPORT_AUTH_REQUIRED',
+            retryable: false
+          });
+        } else {
+          expect(responseBody).toEqual({ message: contract.message });
+        }
       }
     }
   });
@@ -277,15 +351,36 @@ describe('Cloud Run API HTTP contracts', () => {
 
     expect(response.status).toBe(400);
     expect(await readJson(response)).toEqual({
-      message: 'JSON 본문 형식이 올바르지 않습니다.'
+      message: 'JSON 본문 형식이 올바르지 않습니다.',
+      code: 'REPORT_REQUEST_INVALID',
+      retryable: false
     });
   });
 
+  it('rejects report bodies outside the versioned request schema', async () => {
+    const response = await fetch(productionBaseUrl + '/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...VALID_REPORT_REQUEST,
+        payload: {
+          ...VALID_REPORT_REQUEST.payload,
+          unexpected: true
+        }
+      })
+    });
+
+    expect(response.status).toBe(400);
+    expect(await readJson(response)).toEqual({
+      message: expect.stringContaining('payload.unexpected'),
+      code: 'REPORT_REQUEST_INVALID',
+      retryable: false
+    });
+  });
   it('allows a development unverified report and rate-limits the next request', async () => {
-    const reportGenerator = vi.fn(async (body: Record<string, unknown>) => ({
-      provider: 'fixture-report-generator',
-      received: body
-    }));
+    const reportGenerator = vi.fn(async (_body: Record<string, unknown>) =>
+      VALID_GENERATED_REPORT
+    );
     const developmentConfig = loadConfig({
       NODE_ENV: 'development',
       ALLOW_UNVERIFIED_REPORTS: 'true',
@@ -297,12 +392,12 @@ describe('Cloud Run API HTTP contracts', () => {
       fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
       reportGenerator: reportGenerator as unknown as CreateAppOptions['reportGenerator']
     });
-    const requestBody = {
-      serviceId: 'general-signature',
-      payload: { fixture: true },
-      orderId: 'removed-before-generation',
-      reportAccessToken: 'removed-before-generation'
-    };
+    const {
+      schemaVersion: omittedLegacySchemaVersion,
+      ...legacyRequestBody
+    } = VALID_REPORT_REQUEST;
+    void omittedLegacySchemaVersion;
+    const requestBody = { ...legacyRequestBody, reportAccessToken: 'legacy-body-token' };
 
     try {
       const success = await fetch(`${running.baseUrl}/api/report`, {
@@ -312,18 +407,28 @@ describe('Cloud Run API HTTP contracts', () => {
       });
 
       expect(success.status).toBe(200);
-      expect(await readJson(success)).toEqual({
-        provider: 'fixture-report-generator',
-        received: {
-          serviceId: 'general-signature',
-          payload: { fixture: true }
+      const successBody = await readJson(success);
+      expect(successBody).toMatchObject({
+        schemaVersion: REPORT_RESPONSE_SCHEMA_VERSION,
+        provider: 'gemini',
+        reportMode: VALID_REPORT_REQUEST.reportMode,
+        promptVersion: VALID_REPORT_REQUEST.promptVersion,
+        generationMeta: {
+          schemaVersion: REPORT_GENERATION_META_SCHEMA_VERSION,
+          provider: 'gemini',
+          attemptCount: 1,
+          fallback: false,
+          cacheStatus: 'bypass',
+          inputSchemaVersion: REPORT_REQUEST_SCHEMA_VERSION,
+          responseSchemaVersion: REPORT_RESPONSE_SCHEMA_VERSION
         }
       });
+      expect(successBody.report).toEqual(VALID_GENERATED_REPORT.report);
       expect(reportGenerator).toHaveBeenCalledTimes(1);
-      expect(reportGenerator).toHaveBeenCalledWith({
-        serviceId: 'general-signature',
-        payload: { fixture: true }
-      });
+      expect(reportGenerator).toHaveBeenCalledWith(
+        NORMALIZED_VALID_REPORT_REQUEST,
+        undefined
+      );
 
       const limited = await fetch(`${running.baseUrl}/report`, {
         method: 'POST',
@@ -333,7 +438,9 @@ describe('Cloud Run API HTTP contracts', () => {
 
       expect(limited.status).toBe(429);
       expect(await readJson(limited)).toEqual({
-        message: 'AI report request limit exceeded. Please try again shortly.'
+        message: 'AI report request limit exceeded. Please try again shortly.',
+        code: 'REPORT_RATE_LIMITED',
+        retryable: true
       });
       expect(reportGenerator).toHaveBeenCalledTimes(1);
     } finally {

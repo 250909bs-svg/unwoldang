@@ -5,6 +5,8 @@ import { findServiceById, type IntakeFormData } from '../api/mockData';
 import PastLifeStoryReport from '../components/PastLifeStoryReport';
 import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
+import type { ReportGenerationMetaV1 } from '../features/reports/contracts';
+import { resolveReportDegradedState } from '../features/reports/routeState';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
@@ -26,6 +28,8 @@ type ReportLocationState = {
   reportAccessToken?: string;
   reportData?: SajuReportData;
   reportProvider?: AiReportProvider;
+  reportGenerationMeta?: ReportGenerationMetaV1;
+  reportDegraded?: boolean;
 };
 
 const PAST_LIFE_STORY_SECTION_IDS = new Set([
@@ -6313,8 +6317,21 @@ export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { formData, paymentMethod, orderId, reportAccessToken, reportData, reportProvider } =
-    (location.state as ReportLocationState) || {};
+  const {
+    formData,
+    paymentMethod,
+    orderId,
+    reportAccessToken,
+    reportData,
+    reportProvider,
+    reportGenerationMeta,
+    reportDegraded
+  } = (location.state as ReportLocationState) || {};
+  const isDegradedReport = resolveReportDegradedState({
+    reportDegraded,
+    reportGenerationMeta,
+    reportProvider
+  });
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
   const reportAccess = evaluateReportAccess({
@@ -6976,7 +6993,7 @@ body {
 
         <div className="premium-report-shell mz-love-premium-shell">
           <article className="premium-report-paper mz-love-report-paper">
-            {reportProvider === 'deterministic-fallback' ? (
+            {isDegradedReport ? (
               <section className="premium-report-section" aria-label="리포트 생성 상태">
                 <div className="premium-callout">
                   <strong>검증된 내부 명리 엔진 리포트</strong>
@@ -7082,7 +7099,7 @@ body {
               ? 'premium-report-paper past-life-report-paper'
               : 'premium-report-paper'
         }>
-          {reportProvider === 'deterministic-fallback' ? (
+          {isDegradedReport ? (
             <section className="premium-report-section" aria-label="리포트 생성 상태">
               <div className="premium-callout">
                 <strong>검증된 내부 명리 엔진 리포트</strong>
