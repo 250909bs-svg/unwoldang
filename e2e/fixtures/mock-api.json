@@ -1,0 +1,45 @@
+{
+  "clock": "2030-01-01T00:00:00.000Z",
+  "user": {
+    "id": "e2e-user-001",
+    "email": "fixture.user@example.invalid",
+    "name": "E2E Fixture User"
+  },
+  "tokens": {
+    "access": "e2e-access-token-opaque",
+    "refresh": "e2e-refresh-token-opaque",
+    "report": "e2e-report-token-opaque"
+  },
+  "products": {
+    "general-signature": {
+      "displayName": "운월선생 정통 종합사주",
+      "amount": 79000,
+      "currency": "KRW",
+      "status": "active"
+    },
+    "past-life-goblin": {
+      "displayName": "MZ 도깨비 전생사주",
+      "amount": 49000,
+      "currency": "KRW",
+      "status": "active"
+    },
+    "love-reading": {
+      "displayName": "MZ무당 팩폭 연애운",
+      "amount": 49000,
+      "currency": "KRW",
+      "status": "active"
+    },
+    "love-reunion": {
+      "displayName": "홍연아씨 재회 가능성",
+      "amount": 55000,
+      "currency": "KRW",
+      "status": "active"
+    },
+    "match-couple": {
+      "displayName": "월연도령 사주궁합",
+      "amount": 69000,
+      "currency": "KRW",
+      "status": "active"
+    }
+  }
+}

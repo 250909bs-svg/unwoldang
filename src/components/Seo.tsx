@@ -141,7 +141,7 @@ export function resolveSeoPolicy(pathname: string) {
   };
 }
 
-function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, imageUrl: string) {
+export function buildStructuredData(path: string, seo: RouteSeo, canonicalUrl: string, imageUrl: string) {
   const organizationId = `${SITE_URL}/#organization`;
   const websiteId = `${SITE_URL}/#website`;
   const graph: Record<string, unknown>[] = [
