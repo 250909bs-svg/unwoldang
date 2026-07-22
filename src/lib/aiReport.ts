@@ -1,37 +1,39 @@
 import type { IntakeFormData, ServiceId } from '../api/mockData';
+import { getReportProductAdapter } from '../features/reports/adapters';
+import {
+  REPORT_REQUEST_SCHEMA_VERSION,
+  ReportGenerationError,
+  parseReportRequestV1,
+  type ReportRequestV1
+} from '../features/reports/contracts';
+import {
+  createReportHttpError,
+  normalizeReportClientError,
+  parseReportClientResult,
+  type ReportClientProvider,
+  type ReportClientResult
+} from '../features/reports/clientBoundary';
 import { buildAnalysisRequestPayload } from './analysisPayload';
 import { getAiReportEndpoint } from './runtimeConfig';
 import { PREMIUM_SAJU_PROMPT_VERSION, PREMIUM_SAJU_REPORT_MODE } from './saju/premiumReportPrompt';
-import type { SajuReportData } from './saju/report';
 
 export { getAiReportEndpoint } from './runtimeConfig';
+export { ReportGenerationError };
+export type { ReportErrorCode, ReportGenerationMetaV1 } from '../features/reports/contracts';
 
-export type AiReportProvider = 'gemini' | 'deterministic-fallback';
-
-type AiReportResponse = {
-  report?: SajuReportData;
-  provider?: AiReportProvider;
-};
-
-export type AiReportResult = {
-  report: SajuReportData;
-  provider: AiReportProvider | null;
-  degraded: boolean;
-};
+export type AiReportProvider = ReportClientProvider;
+export type AiReportResult = ReportClientResult;
 
 const DEFAULT_AI_REPORT_TIMEOUT_MS = 30000;
 const DEFAULT_AI_REPORT_TOTAL_DEADLINE_MS = 90000;
 const TRANSIENT_REPORT_STATUSES = new Set([425, 429, 502, 503, 504]);
 const MAX_TRANSIENT_RETRIES = 2;
 
-function isReportShape(value: unknown): value is SajuReportData {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
-  const candidate = value as Partial<SajuReportData>;
-  return Boolean(candidate.title && candidate.summary && Array.isArray(candidate.sections));
-}
+type ReportErrorPayload = {
+  code: string;
+  message: string;
+  retryable?: boolean;
+};
 
 function getAiReportTimeoutMs() {
   const configured = Number(import.meta.env.VITE_REPORT_TIMEOUT_MS);
@@ -62,20 +64,30 @@ function getRetryDelayMs(response: Response, attempt: number) {
 }
 
 async function readReportError(response: Response) {
-  const payload = (await response.json().catch(() => null)) as { code?: string; message?: string } | null;
+  const decoded: unknown = await response.json().catch(() => null);
+  const payload = decoded !== null && typeof decoded === 'object' && !Array.isArray(decoded)
+    ? decoded as Record<string, unknown>
+    : null;
 
   return {
     code: typeof payload?.code === 'string' ? payload.code : '',
-    message: typeof payload?.message === 'string' ? payload.message : ''
+    message: typeof payload?.message === 'string' ? payload.message : '',
+    ...(typeof payload?.retryable === 'boolean'
+      ? { retryable: payload.retryable }
+      : {})
   };
 }
 
-function classifyReportResponse(response: Response, errorPayload: { code: string; message: string }) {
+function classifyReportResponse(response: Response, errorPayload: ReportErrorPayload) {
   if (
     (response.status === 409 || response.status === 202) &&
-    errorPayload.code === 'REPORT_GENERATION_IN_PROGRESS'
+    (errorPayload.code === 'REPORT_GENERATION_IN_PROGRESS' || errorPayload.code === 'REPORT_LEASE_LOST')
   ) {
     return 'in-progress' as const;
+  }
+
+  if (errorPayload.retryable !== undefined) {
+    return errorPayload.retryable ? 'transient' as const : 'fatal' as const;
   }
 
   if (TRANSIENT_REPORT_STATUSES.has(response.status)) {
@@ -83,27 +95,6 @@ function classifyReportResponse(response: Response, errorPayload: { code: string
   }
 
   return 'fatal' as const;
-}
-
-function parseAiReportResult(parsed: AiReportResponse | SajuReportData): AiReportResult {
-  if (!parsed || typeof parsed !== 'object') {
-    throw new Error('AI 리포트 응답 형식이 올바르지 않습니다.');
-  }
-
-  const isEnvelope = 'report' in parsed;
-  const report = isEnvelope ? parsed.report : parsed;
-  const rawProvider = isEnvelope ? parsed.provider : null;
-  const provider = rawProvider === 'gemini' || rawProvider === 'deterministic-fallback' ? rawProvider : null;
-
-  if (!isReportShape(report)) {
-    throw new Error('AI 리포트 응답 형식이 올바르지 않습니다.');
-  }
-
-  return {
-    report,
-    provider,
-    degraded: provider !== 'gemini'
-  };
 }
 
 export async function requestAiReport(
@@ -117,15 +108,24 @@ export async function requestAiReport(
     return null;
   }
 
-  const payload = buildAnalysisRequestPayload(serviceId, formData);
-  const requestBody = JSON.stringify({
-    serviceId,
-    orderId: options.orderId,
-    payload,
-    reportMode: PREMIUM_SAJU_REPORT_MODE,
-    promptVersion: PREMIUM_SAJU_PROMPT_VERSION
-  });
-  const deadline = Date.now() + DEFAULT_AI_REPORT_TOTAL_DEADLINE_MS;
+  let request: ReportRequestV1;
+  try {
+    request = parseReportRequestV1({
+      schemaVersion: REPORT_REQUEST_SCHEMA_VERSION,
+      serviceId,
+      orderId: options.orderId,
+      payload: buildAnalysisRequestPayload(serviceId, formData),
+      reportMode: PREMIUM_SAJU_REPORT_MODE,
+      promptVersion: PREMIUM_SAJU_PROMPT_VERSION
+    });
+    getReportProductAdapter(serviceId).prompt.describe(request);
+  } catch (error) {
+    throw normalizeReportClientError(error);
+  }
+
+  const requestBody = JSON.stringify(request);
+  const startedAt = Date.now();
+  const deadline = startedAt + DEFAULT_AI_REPORT_TOTAL_DEADLINE_MS;
   let attempt = 0;
   let transientRetries = 0;
   let lastError: unknown;
@@ -150,26 +150,45 @@ export async function requestAiReport(
       });
 
       if (response.ok && response.status !== 202) {
-        const parsed = (await response.json()) as AiReportResponse | SajuReportData;
-        return parseAiReportResult(parsed);
+        const parsed = await response.json();
+        return parseReportClientResult(parsed, {
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          attemptCount: attempt + 1
+        });
       }
 
       const errorPayload = await readReportError(response);
       const responseKind = classifyReportResponse(response, errorPayload);
 
       if (responseKind === 'fatal') {
-        throw new Error(errorPayload.message || 'AI 사주 리포트 생성 요청에 실패했습니다.');
+        throw createReportHttpError({
+          status: response.status,
+          serverCode: errorPayload.code,
+          serverRetryable: errorPayload.retryable,
+          message: errorPayload.message || 'AI 사주 리포트 생성 요청에 실패했습니다.'
+        });
       }
 
       if (responseKind === 'transient') {
         if (transientRetries >= MAX_TRANSIENT_RETRIES) {
-          throw new Error(errorPayload.message || '리포트 서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.');
+          throw createReportHttpError({
+            status: response.status,
+            serverCode: errorPayload.code,
+            serverRetryable: errorPayload.retryable,
+            message: errorPayload.message || '리포트 서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.'
+          });
         }
         transientRetries += 1;
       }
 
-      lastError = new Error(errorPayload.message || `AI report is not ready yet (${response.status}).`);
       const delayMs = Math.min(getRetryDelayMs(response, attempt), Math.max(0, deadline - Date.now()));
+      lastError = createReportHttpError({
+        status: response.status,
+        serverCode: errorPayload.code,
+        serverRetryable: errorPayload.retryable,
+        message: errorPayload.message || `AI report is not ready yet (${response.status}).`,
+        retryAfterMs: delayMs
+      });
 
       if (delayMs > 0) {
         await waitForRetry(delayMs);
@@ -178,11 +197,15 @@ export async function requestAiReport(
       lastError = error;
 
       if (!isAbortError(error) && !(error instanceof TypeError)) {
-        throw error;
+        throw normalizeReportClientError(error);
       }
 
       if (transientRetries >= MAX_TRANSIENT_RETRIES) {
-        throw new Error('네트워크 연결이 불안정합니다. 결제 내역은 보존되므로 잠시 후 다시 시도해 주세요.');
+        throw new ReportGenerationError({
+          code: isAbortError(error) ? 'REPORT_TIMEOUT' : 'REPORT_NETWORK_ERROR',
+          message: '네트워크 연결이 불안정합니다. 결제 내역은 보존되므로 잠시 후 다시 시도해 주세요.',
+          retryable: true
+        });
       }
       transientRetries += 1;
 
@@ -198,9 +221,11 @@ export async function requestAiReport(
     attempt += 1;
   }
 
-  throw new Error(
-    isAbortError(lastError)
+  throw new ReportGenerationError({
+    code: 'REPORT_TIMEOUT',
+    message: isAbortError(lastError)
       ? 'AI 분석 응답이 지연되고 있습니다. 결제 내역은 보존되며 다시 시도하면 완료된 리포트를 이어받습니다.'
-      : '리포트 생성이 아직 완료되지 않았습니다. 잠시 후 다시 시도해 주세요.'
-  );
+      : '리포트 생성이 아직 완료되지 않았습니다. 잠시 후 다시 시도해 주세요.',
+    retryable: true
+  });
 }

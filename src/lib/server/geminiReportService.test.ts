@@ -1,13 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildDeterministicSajuBasis } from '../saju/deterministicBasis';
 import { buildSajuReport } from '../saju/reportBuilder';
 import {
   assertCommercialReportRequest,
   assertGeminiEvidenceReferences,
+  estimateGeminiCostMicros,
+  generateGeminiSajuReport,
   sanitizeGeminiDraft,
   stripGeminiEvidenceMetadata,
-  toFormData
+  toFormData,
+  type ReportRequestBody
 } from './geminiReportService';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 const formData = {
   name: '검증자',
@@ -172,15 +181,15 @@ describe('Gemini commercial response validation', () => {
     expect(() => assertGeminiEvidenceReferences(draft, basis, report)).toThrow(/summary\.analysis\.1/);
   });
 
-  it('rejects a novel claim even when it cites a valid, scope-appropriate ID', () => {
+  it('accepts grounded narrative prose at the evidence-reference layer', () => {
     const basis = buildDeterministicSajuBasis('general-signature', formData);
     const report = buildSajuReport('general-signature', formData, basis);
     const ruleId = basis.commercialV2.interpretation?.foundations.monthCommand.ruleId;
     const draft = sanitizeGeminiDraft({
-      heroNote: `${report.heroNote} 내년에 반드시 승진합니다. [근거:${ruleId}]`
+      heroNote: `익숙한 책임을 먼저 목록으로 정리해 보세요. [근거:${ruleId}]`
     }, report);
 
-    expect(() => assertGeminiEvidenceReferences(draft, basis, report)).toThrow(/결정론적 기본 문구와 일치하지/);
+    expect(() => assertGeminiEvidenceReferences(draft, basis, report)).not.toThrow();
   });
 
   it('rejects unknown and field-irrelevant evidence IDs', () => {
@@ -218,5 +227,159 @@ describe('Gemini commercial response validation', () => {
   it('rejects a non-object JSON root', () => {
     const report = buildSajuReport('general-signature', formData);
     expect(() => sanitizeGeminiDraft([], report)).toThrow(/최상위/);
+  });
+});
+const validRequestBody: ReportRequestBody = {
+  serviceId: 'general-signature',
+  payload: {
+    user: { name: 'test-user', gender: 'female' },
+    birth: {
+      calendar: 'solar',
+      isLeapMonth: false,
+      date: '1992-09-09',
+      time: '10:24',
+      isUnknownTime: false,
+      precision: 'exact',
+      dayBoundaryPolicy: 'late-zi'
+    },
+    questions: ['question-one', 'question-two']
+  }
+};
+
+type CapturedPrompt = {
+  baseReport: { heroNote: string };
+  evidenceIdCatalog: { interpretation: string[] };
+  productAdapter: { productId: string; adapterVersion: string };
+  immutableFacts: { schemaVersion: string; asOf: string };
+  deterministicBasis?: unknown;
+};
+
+describe('Gemini provider policy and generation contract', () => {
+  it('uses the registered adapter and facts v1, retries once, and records usage metadata', async () => {
+    vi.stubEnv('GEMINI_API_KEY', 'test-key');
+    vi.stubEnv('GEMINI_MODEL', 'gemini-2.5-flash');
+    vi.stubEnv('GEMINI_RETRY_BASE_DELAY_MS', '0');
+    let attempt = 0;
+    let capturedPrompt: CapturedPrompt | null = null;
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      attempt += 1;
+      if (attempt === 1) {
+        return {
+          ok: false,
+          status: 503,
+          json: async () => ({ error: { message: 'not logged' } })
+        } as Response;
+      }
+
+      const envelope = JSON.parse(String(init?.body)) as {
+        contents: Array<{ parts: Array<{ text: string }> }>;
+      };
+      capturedPrompt = JSON.parse(envelope.contents[0].parts[0].text) as CapturedPrompt;
+      const prompt = capturedPrompt as CapturedPrompt;
+      const evidenceId = prompt.evidenceIdCatalog.interpretation[0];
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [{
+            content: {
+              parts: [{
+                text: JSON.stringify({
+                  heroNote: prompt.baseReport.heroNote + ' [근거:' + evidenceId + ']'
+                })
+              }]
+            }
+          }],
+          usageMetadata: {
+            promptTokenCount: 1000,
+            candidatesTokenCount: 100,
+            totalTokenCount: 1100
+          }
+        })
+      } as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const referenceInstant = '2026-02-03T12:34:56.000Z';
+    const result = await generateGeminiSajuReport(validRequestBody, { referenceInstant });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.schemaVersion).toBe('report-response-v1');
+    expect(result.provider, JSON.stringify(result.generationMeta)).toBe('gemini');
+    expect(result.report.createdAt).toBe(referenceInstant);
+    expect(result.generationMeta).toMatchObject({
+      provider: 'gemini',
+      model: 'gemini-2.5-flash',
+      attemptCount: 2,
+      inputTokens: 1000,
+      outputTokens: 100,
+      totalTokens: 1100,
+      estimatedCostMicros: 550,
+      fallback: false,
+      cacheStatus: 'miss',
+      inputSchemaVersion: 'report-request-v1',
+      responseSchemaVersion: 'report-response-v1'
+    });
+    const prompt = capturedPrompt as CapturedPrompt | null;
+    if (!prompt) throw new Error('provider prompt was not captured');
+    expect(prompt.productAdapter.productId).toBe('general-signature');
+    expect(prompt.immutableFacts).toMatchObject({
+      schemaVersion: 'saju-facts-v1',
+      asOf: referenceInstant
+    });
+    expect(prompt).not.toHaveProperty('deterministicBasis');
+  });
+
+  it('stops after the bounded retry count and returns a privacy-safe fallback contract', async () => {
+    vi.stubEnv('GEMINI_API_KEY', 'test-key');
+    vi.stubEnv('GEMINI_RETRY_BASE_DELAY_MS', '0');
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: { message: 'sensitive-provider-detail' } })
+    } as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await generateGeminiSajuReport(validRequestBody, {
+      referenceInstant: '2026-02-03T12:34:56.000Z'
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(result.provider).toBe('deterministic-fallback');
+    expect(result.generationMeta).toMatchObject({
+      provider: 'deterministic-fallback',
+      attemptCount: 2,
+      fallback: true,
+      fallbackReason: 'provider-unavailable',
+      errorCode: 'REPORT_PROVIDER_UNAVAILABLE'
+    });
+  });
+
+  it('degrades without a provider call when the generation lease budget is exhausted', async () => {
+    vi.stubEnv('GEMINI_API_KEY', 'test-key');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await generateGeminiSajuReport(validRequestBody, {
+      referenceInstant: '2026-02-03T12:34:56.000Z',
+      deadlineInstant: new Date(Date.now() - 1).toISOString()
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result.provider).toBe('deterministic-fallback');
+    expect(result.generationMeta).toMatchObject({
+      attemptCount: 0,
+      fallback: true,
+      fallbackReason: 'generation-deadline-exceeded',
+      errorCode: 'REPORT_TIMEOUT'
+    });
+  });
+
+  it('estimates cost only for the explicitly priced model', () => {
+    expect(estimateGeminiCostMicros('gemini-2.5-flash', 1000, 100)).toBe(550);
+    expect(estimateGeminiCostMicros('custom-model', 1000, 100)).toBeNull();
+    expect(estimateGeminiCostMicros('gemini-2.5-flash', null, 100)).toBeNull();
   });
 });

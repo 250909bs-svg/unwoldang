@@ -7,6 +7,16 @@ import type {
   ServiceId
 } from '../../api/mockData';
 import type { PastLifeAnalysisContext } from '../analysisPayload';
+import { getReportProductAdapter } from '../../features/reports/adapters';
+import {
+  REPORT_GENERATION_META_SCHEMA_VERSION,
+  REPORT_REQUEST_SCHEMA_VERSION,
+  REPORT_RESPONSE_SCHEMA_VERSION,
+  type ReportErrorCode,
+  type ReportGenerationMetaV1,
+  type ReportRequestV1,
+  type ReportResponseV1
+} from '../../features/reports/contracts';
 import { normalizeLoveFocus } from '../loveFocus';
 import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
 import { validateIntakeBirthInputs } from '../birthInputValidation';
@@ -30,6 +40,9 @@ import {
 } from '../saju/report';
 import { buildSajuReport } from '../saju/reportBuilder';
 import {
+  buildNarrativeFactAllowlist,
+  findImmutableReportFactViolations,
+  findNarrativeFactViolations,
   hasMalformedReportEvidenceReference,
   lockCommercialReportFacts,
   parseReportEvidenceReferences,
@@ -90,18 +103,51 @@ export type GeminiDraft = {
 };
 
 const DEFAULT_GEMINI_REQUEST_TIMEOUT_MS = 22000;
+const DEFAULT_GEMINI_MAX_ATTEMPTS = 2;
+const DEFAULT_GEMINI_RETRY_BASE_DELAY_MS = 250;
+const SAFE_GEMINI_MODEL = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 
-export type ReportResponsePayload = {
+export type ReportResponsePayload = Omit<ReportResponseV1, 'provider' | 'reportMode' | 'promptVersion'> & {
   provider: 'gemini' | 'deterministic-fallback';
   reportMode: string;
   promptVersion: string;
-  report: SajuReportData;
-  debug?: {
-    deterministicBasis: ReturnType<typeof buildDeterministicSajuBasis>;
-  };
 };
 
 type EnvRecord = Record<string, string | undefined>;
+
+export type GeminiReportGenerationContext = {
+  referenceInstant?: Date | string;
+  deadlineInstant?: Date | string;
+};
+
+type GeminiTokenUsage = {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  totalTokens: number | null;
+};
+
+type GeminiDraftOutcome = GeminiTokenUsage & {
+  draft: GeminiDraft | null;
+  model: string;
+  latencyMs: number;
+  attemptCount: number;
+  fallbackReason?: string;
+  errorCode?: ReportErrorCode;
+};
+
+class GeminiAttemptError extends Error {
+  readonly code: ReportErrorCode;
+  readonly reason: string;
+  readonly retryable: boolean;
+
+  constructor(code: ReportErrorCode, reason: string, retryable: boolean) {
+    super(reason);
+    this.name = 'GeminiAttemptError';
+    this.code = code;
+    this.reason = reason;
+    this.retryable = retryable;
+  }
+}
 
 function getEnv() {
   const maybeProcess = globalThis as {
@@ -117,10 +163,100 @@ function getGeminiRequestTimeoutMs(env: EnvRecord) {
   const configured = Number(env.GEMINI_REQUEST_TIMEOUT_MS);
 
   if (Number.isFinite(configured) && configured >= 10000) {
-    return configured;
+    return Math.min(configured, 25_000);
   }
 
   return DEFAULT_GEMINI_REQUEST_TIMEOUT_MS;
+}
+
+function getGeminiModel(env: EnvRecord) {
+  const configured = env.GEMINI_MODEL?.trim();
+  return configured && SAFE_GEMINI_MODEL.test(configured)
+    ? configured
+    : 'gemini-2.5-flash';
+}
+
+function getGeminiMaxAttempts(env: EnvRecord) {
+  const configured = Number(env.GEMINI_MAX_ATTEMPTS);
+  return Number.isInteger(configured) && configured >= 1 && configured <= 3
+    ? configured
+    : DEFAULT_GEMINI_MAX_ATTEMPTS;
+}
+
+function getGeminiRetryDelayMs(env: EnvRecord, failedAttempt: number) {
+  const configured = Number(env.GEMINI_RETRY_BASE_DELAY_MS);
+  const base = Number.isFinite(configured) && configured >= 0 && configured <= 5000
+    ? configured
+    : DEFAULT_GEMINI_RETRY_BASE_DELAY_MS;
+  return base * (2 ** Math.max(0, failedAttempt - 1));
+}
+
+function waitForRetry(delayMs: number) {
+  return delayMs === 0
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+}
+
+export function isTransientGeminiStatus(status: number) {
+  return status === 408 || status === 429 || status === 500 || status === 502 ||
+    status === 503 || status === 504;
+}
+
+function providerErrorForStatus(status: number) {
+  if (status === 408) {
+    return new GeminiAttemptError('REPORT_TIMEOUT', 'provider-timeout', true);
+  }
+  if (status === 429) {
+    return new GeminiAttemptError('REPORT_RATE_LIMITED', 'provider-rate-limited', true);
+  }
+  if (status >= 500) {
+    return new GeminiAttemptError(
+      'REPORT_PROVIDER_UNAVAILABLE',
+      'provider-unavailable',
+      isTransientGeminiStatus(status)
+    );
+  }
+  return new GeminiAttemptError('REPORT_PROVIDER_UNAVAILABLE', 'provider-rejected-request', false);
+}
+
+function normalizeGeminiAttemptError(error: unknown) {
+  if (error instanceof GeminiAttemptError) return error;
+  if (isAbortError(error)) {
+    return new GeminiAttemptError('REPORT_TIMEOUT', 'provider-timeout', true);
+  }
+  return new GeminiAttemptError('REPORT_NETWORK_ERROR', 'provider-network-error', true);
+}
+
+function readTokenMetric(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? Math.floor(value)
+    : null;
+}
+
+function readGeminiUsage(value: unknown): GeminiTokenUsage {
+  const usage = asRecord(value);
+  const inputTokens = readTokenMetric(usage?.promptTokenCount);
+  const candidateTokens = readTokenMetric(usage?.candidatesTokenCount);
+  const thoughtTokens = readTokenMetric(usage?.thoughtsTokenCount);
+  return {
+    inputTokens,
+    outputTokens: candidateTokens === null && thoughtTokens === null
+      ? null
+      : (candidateTokens ?? 0) + (thoughtTokens ?? 0),
+    totalTokens: readTokenMetric(usage?.totalTokenCount)
+  };
+}
+
+/** Gemini 2.5 Flash standard paid-tier list price, expressed as estimated micro-USD. */
+export function estimateGeminiCostMicros(
+  model: string,
+  inputTokens: number | null,
+  outputTokens: number | null
+) {
+  if (model !== 'gemini-2.5-flash' || inputTokens === null || outputTokens === null) {
+    return null;
+  }
+  return Math.ceil((inputTokens * 0.3) + (outputTokens * 2.5));
 }
 
 function isAbortError(error: unknown) {
@@ -440,7 +576,7 @@ function validateGeneratedProse(
     });
   });
 
-  if (expected === undefined || stripReportEvidenceReferences(value) !== expected.trim()) {
+  if (expected === undefined) {
     throw new Error(`Gemini 생성 문장이 결정론적 기본 문구와 일치하지 않습니다 (${path}).`);
   }
 }
@@ -906,7 +1042,25 @@ function mergeGeminiDraft(base: SajuReportData, draft?: GeminiDraft | null): Saj
   };
 }
 
-function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: DeterministicSajuBasis) {
+function buildGeminiRequestPayload(
+  baseReport: SajuReportData,
+  deterministicBasis: DeterministicSajuBasis,
+  body: ReportRequestBody
+) {
+  const adapter = getReportProductAdapter(baseReport.serviceId);
+  const adapterRequest: ReportRequestV1 = {
+    schemaVersion: REPORT_REQUEST_SCHEMA_VERSION,
+    serviceId: baseReport.serviceId,
+    payload: body.payload as ReportRequestV1['payload'],
+    reportMode: body.reportMode || PREMIUM_SAJU_REPORT_MODE,
+    promptVersion: body.promptVersion || PREMIUM_SAJU_PROMPT_VERSION
+  };
+  const productAdapter = adapter.prompt.describe(adapterRequest);
+  const adaptedBaseReport: SajuReportData = {
+    ...baseReport,
+    sections: [...adapter.sections.select(baseReport)]
+  };
+
   const partialSchema = {
     type: 'OBJECT',
     properties: {
@@ -1045,25 +1199,32 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
           {
             text: JSON.stringify({
               context: buildPremiumSajuPromptContext({
-                customerInput: deterministicBasis.input,
-                deterministicBasis,
+                customerInput: body.payload,
+                deterministicBasis: deterministicBasis.facts,
                 debug: false
               }),
+              productAdapter,
+              immutableFacts: deterministicBasis.facts,
+              narrativeEvidence: {
+                interpretation: deterministicBasis.commercialV2.interpretation,
+                temporal: deterministicBasis.commercialV2.temporal,
+                compatibility: deterministicBasis.commercialV2.compatibility
+              },
               evidenceIdCatalog: serializeEvidenceCatalog(deterministicBasis),
               requiredOutput:
                 [
                   'Return JSON only.',
-                  'Use deterministicBasis as the single source of truth.',
-                  'Within deterministicBasis, commercialV2 is the highest-priority expert evidence layer. Never replace it with a simpler five-element count or generic yongsin heuristic.',
+                  'Use immutableFacts as the only source for natal pillars, dayun, seun, current flow, calendar policy, and release status.',
+                  'Use narrativeEvidence only to explain immutableFacts. Never modify, replace, or invent a calculation fact.',
                   'Do not rewrite or reinterpret calculation-audit-v2, expert-evidence-v2, temporal-evidence-v2, or compatibility-evidence-v2. Their wording and evidence IDs are immutable.',
-                  'When commercialV2.interpretation.consensus is unresolved or conditional, explicitly preserve the conflict and never call a candidate a confirmed yongsin.',
-                  'When commercialV2 calendar stableSelection is unstable-day, do not make a single day-master, yongsin, temporal, or compatibility conclusion. Ask for a more exact birth time and explain only invariant facts.',
-                  'RELEASE-SAFE OUTPUT RULE: Do not author, rewrite, paraphrase, expand, shorten, or infer any customer-facing prose. For every explanatory field you return, copy the corresponding baseReport string byte-for-byte and only append evidence metadata in the exact format [근거:ID] (multiple IDs: [근거:ID1,ID2]). After the citation is removed, the value must exactly equal baseReport. This applies independently to heroNote, summary title and every summary item, every generated card body or badge, every Q&A title/analysis/advice item, every section paragraph/bullet/callout/card/detail, every dayun field, and every action-plan title/item/day reason. If no matching evidence exists, omit that field.',
+                  'When narrativeEvidence interpretation consensus is unresolved or conditional, preserve the conflict and never call a candidate a confirmed yongsin.',
+                  'When immutableFacts natal selection is unstable-day, do not make a single day-master, yongsin, temporal, or compatibility conclusion. Explain only invariant facts and request a more exact time.',
+                  'GROUNDED OUTPUT RULE: You may rewrite explanatory prose, but every generated field must cite at least one scope-appropriate evidence ID in the exact format [근거:ID] (multiple IDs: [근거:ID1,ID2]). Never add a pillar, stem/branch, dayun, seun, year, score, yongsin, or compatibility conclusion that is absent from immutableFacts or narrativeEvidence. If no matching evidence exists, omit the field.',
                   'Use evidence IDs from the relevant catalog only: currentDayun, nextDayun, fortune/year/month/detail12/detailRel/detailSal/ten sections, and lucky/unlucky-day reasons may cite temporal IDs only. Natal-only sections must cite interpretation IDs. Relationship copy may cite compatibility IDs only when commercialV2.compatibility exists. Never use an unrelated valid ID merely to satisfy citation syntax.',
                   'Do not add citations to structural matching keys copied from baseReport: section id, question, existing card title, detail summary, or day number. Those keys must remain exact so the response can be merged safely.',
                   'Never change pillars, fiveElements, tenGods, dayun names, dayun ranges, seun, wolyun, birth data, serialNumber, or createdAt.',
                   'The golden sample in the system prompt is a validation case only. Do not copy its pillars or dayun into other users.',
-                  'Return only exact deterministic prose echoes plus evidence metadata. Never return a novel factual claim, interpretation, example, recommendation, or stylistic improvement, even if an evidence ID appears related.',
+                  'Narrative examples and recommendations must remain conditional and grounded in the cited evidence; citations never authorize a new calculation fact.',
                   'Avoid repetitive wording in the first summary. Do not keep repeating the same Korean nouns such as 기준, 구조, 문서화, 정교하게, 확장. Rotate concrete real-life expressions such as 정산 원칙, 역할 경계, 가격표, 생활 리듬, 책임 범위, 계약 습관, 일정 통제, 에너지 배분, 관계 장면, 회복 방식.',
                   'Never repeat the same helper sentence across sections. In particular, do not reuse endings like "생활 속에서 반복될 때 힘을 얻습니다" or "실제 선택 기준으로 써야 합니다". Each paragraph needs a different image, reason, and action.',
                   'The report must feel like saju/myeongri analysis, not self-development coaching. Use myeongri terms naturally and explain them: 월령, 조후, 통근, 투간, 합충, 십성, 용신, 희신, 대운, 세운, 월운.',
@@ -1121,10 +1282,9 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Mix short and medium sentence length intentionally so the report feels human, not machine-uniform.',
                   'Each section should contain one capture-worthy one-liner that a user wants to save or share.',
                   'Do not produce generic coaching tone. Speak as a veteran consultant who has observed the pattern for years.',
-                  'FINAL RELEASE-SAFE OVERRIDE: all earlier style and quality instructions describe how the deterministic baseReport was prepared; they do not authorize new prose. Your only permitted operation is exact baseReport prose echo plus valid evidence metadata. Omit anything you cannot echo exactly.'
+                  'FINAL FACT-SAFETY OVERRIDE: immutableFacts and structural keys are read-only. Omit any prose that cannot be supported by scope-appropriate narrativeEvidence.'
                 ].join(' '),
-              baseReport,
-              deterministicBasis
+              baseReport: adaptedBaseReport
             })
           }
         ]
@@ -1139,61 +1299,209 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
   };
 }
 
-async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis: ReturnType<typeof buildDeterministicSajuBasis>) {
+export async function requestGeminiDraft(
+  baseReport: SajuReportData,
+  deterministicBasis: ReturnType<typeof buildDeterministicSajuBasis>,
+  body: ReportRequestBody,
+  deadlineAt?: number
+): Promise<GeminiDraftOutcome> {
   const env = getEnv();
   const apiKey = env.GEMINI_API_KEY;
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
-
-  if (!apiKey) {
-    return null;
-  }
-
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), getGeminiRequestTimeoutMs(env));
-  let response: Response;
-
-  try {
-    response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      },
-      signal: controller.signal,
-      body: JSON.stringify(buildGeminiRequestPayload(baseReport, deterministicBasis))
-    });
-  } catch (error) {
-    if (isAbortError(error)) {
-      throw new Error('Gemini response timed out. Returning deterministic fallback report.');
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  const parsed = (await response.json()) as {
-    error?: { message?: string };
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  const model = getGeminiModel(env);
+  const startedAt = Date.now();
+  const emptyUsage: GeminiTokenUsage = {
+    inputTokens: null,
+    outputTokens: null,
+    totalTokens: null
   };
 
-  if (!response.ok) {
-    throw new Error(parsed?.error?.message || 'Gemini 응답 생성에 실패했습니다.');
+  if (!apiKey) {
+    return {
+      draft: null,
+      model,
+      latencyMs: 0,
+      attemptCount: 0,
+      fallbackReason: 'provider-not-configured',
+      errorCode: 'REPORT_PROVIDER_UNAVAILABLE',
+      ...emptyUsage
+    };
+  }
+  const deadlineFallback = (attemptCount: number): GeminiDraftOutcome => ({
+    draft: null,
+    model,
+    latencyMs: Math.max(0, Date.now() - startedAt),
+    attemptCount,
+    fallbackReason: 'generation-deadline-exceeded',
+    errorCode: 'REPORT_TIMEOUT',
+    ...emptyUsage
+  });
+
+  const endpoint =
+    'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent';
+  const maxAttempts = getGeminiMaxAttempts(env);
+  let lastError = new GeminiAttemptError(
+    'REPORT_PROVIDER_UNAVAILABLE',
+    'provider-unavailable',
+    true
+  );
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const remainingMs = deadlineAt === undefined ? Number.POSITIVE_INFINITY : deadlineAt - Date.now();
+    if (remainingMs <= 0) return deadlineFallback(attempt - 1);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      Math.max(1, Math.min(getGeminiRequestTimeoutMs(env), remainingMs))
+    );
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        signal: controller.signal,
+        body: JSON.stringify(buildGeminiRequestPayload(baseReport, deterministicBasis, body))
+      });
+
+      if (!response.ok) throw providerErrorForStatus(response.status);
+
+      let parsed: Record<string, unknown>;
+      try {
+        const value = await response.json();
+        const record = asRecord(value);
+        if (!record) throw new Error('invalid provider envelope');
+        parsed = record;
+      } catch {
+        throw new GeminiAttemptError('REPORT_RESPONSE_INVALID', 'provider-response-invalid', false);
+      }
+
+      const candidates = Array.isArray(parsed.candidates) ? parsed.candidates : [];
+      const candidate = asRecord(candidates[0]);
+      const content = asRecord(candidate?.content);
+      const parts = Array.isArray(content?.parts) ? content.parts : [];
+      const part = asRecord(parts[0]);
+      const text = typeof part?.text === 'string' ? part.text : null;
+      if (!text) {
+        throw new GeminiAttemptError('REPORT_RESPONSE_INVALID', 'provider-response-empty', false);
+      }
+
+      let draft: GeminiDraft;
+      try {
+        draft = sanitizeGeminiDraft(JSON.parse(text), baseReport);
+      } catch {
+        throw new GeminiAttemptError('REPORT_RESPONSE_INVALID', 'provider-response-invalid', false);
+      }
+
+      try {
+        assertGeminiEvidenceReferences(draft, deterministicBasis, baseReport);
+        const strippedDraft = stripGeminiEvidenceMetadata(draft);
+        const candidateReport = mergeGeminiDraft(baseReport, strippedDraft);
+        const immutableViolations = findImmutableReportFactViolations(baseReport, candidateReport);
+        const narrativeViolations = findNarrativeFactViolations(
+          strippedDraft,
+          buildNarrativeFactAllowlist(baseReport, deterministicBasis)
+        );
+        if (immutableViolations.length > 0 || narrativeViolations.length > 0) {
+          throw new Error('fact guard rejected generated prose');
+        }
+        return {
+          draft: strippedDraft,
+          model,
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          attemptCount: attempt,
+          ...readGeminiUsage(parsed.usageMetadata)
+        };
+      } catch {
+        throw new GeminiAttemptError(
+          'REPORT_FACT_GUARD_REJECTED',
+          'fact-guard-rejected',
+          false
+        );
+      }
+    } catch (error) {
+      lastError = normalizeGeminiAttemptError(error);
+      if (deadlineAt !== undefined && Date.now() >= deadlineAt) {
+        return deadlineFallback(attempt);
+      }
+      if (!lastError.retryable || attempt === maxAttempts) {
+        return {
+          draft: null,
+          model,
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          attemptCount: attempt,
+          fallbackReason: lastError.reason,
+          errorCode: lastError.code,
+          ...emptyUsage
+        };
+      }
+      const retryDelayMs = getGeminiRetryDelayMs(env, attempt);
+      if (deadlineAt !== undefined && Date.now() + retryDelayMs >= deadlineAt) {
+        return deadlineFallback(attempt);
+      }
+      await waitForRetry(retryDelayMs);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
-  const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) {
-    return null;
-  }
-
-  const draft = sanitizeGeminiDraft(JSON.parse(text), baseReport);
-  assertGeminiEvidenceReferences(draft, deterministicBasis, baseReport);
-  return stripGeminiEvidenceMetadata(draft);
+  return {
+    draft: null,
+    model,
+    latencyMs: Math.max(0, Date.now() - startedAt),
+    attemptCount: maxAttempts,
+    fallbackReason: lastError.reason,
+    errorCode: lastError.code,
+    ...emptyUsage
+  };
 }
 
-export async function generateGeminiSajuReport(body: ReportRequestBody): Promise<ReportResponsePayload> {
+function createGenerationMeta(
+  basis: DeterministicSajuBasis,
+  adapterVersion: string,
+  outcome: GeminiDraftOutcome,
+  fallback: boolean
+): ReportGenerationMetaV1 {
+  return {
+    schemaVersion: REPORT_GENERATION_META_SCHEMA_VERSION,
+    provider: fallback ? 'deterministic-fallback' : 'gemini',
+    model: outcome.model,
+    latencyMs: outcome.latencyMs,
+    attemptCount: outcome.attemptCount,
+    inputTokens: outcome.inputTokens,
+    outputTokens: outcome.outputTokens,
+    totalTokens: outcome.totalTokens,
+    estimatedCostMicros: estimateGeminiCostMicros(
+      outcome.model,
+      outcome.inputTokens,
+      outcome.outputTokens
+    ),
+    currency: 'USD',
+    fallback,
+    fallbackReason: fallback ? outcome.fallbackReason : undefined,
+    cacheStatus: 'miss',
+    errorCode: fallback ? outcome.errorCode : undefined,
+    inputSchemaVersion: REPORT_REQUEST_SCHEMA_VERSION,
+    responseSchemaVersion: REPORT_RESPONSE_SCHEMA_VERSION,
+    engineVersion: basis.commercialV2.engineVersion,
+    adapterVersion
+  };
+}
+
+function normalizeGenerationInstant(value: Date | string | undefined, label: string) {
+  if (value === undefined) return undefined;
+  const instant = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+  if (!Number.isFinite(instant.getTime())) {
+    throw new ReportRequestError(400, `${label} must be a valid instant.`);
+  }
+  return instant;
+}
+
+export async function generateGeminiSajuReport(
+  body: ReportRequestBody,
+  context: GeminiReportGenerationContext = {}
+): Promise<ReportResponsePayload> {
   const serviceId = body.serviceId;
 
   if (!serviceId) {
@@ -1202,7 +1510,13 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
 
   const inputFormData = toFormData(body);
   assertCommercialReportRequest(serviceId, inputFormData);
-  const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
+  const referenceInstant = normalizeGenerationInstant(context.referenceInstant, 'referenceInstant');
+  const deadlineInstant = normalizeGenerationInstant(context.deadlineInstant, 'deadlineInstant');
+  const deadlineAt = deadlineInstant?.getTime();
+  const { formData, verification } = await normalizeFormDataWithKasi(
+    inputFormData,
+    { deadlineAt }
+  );
 
   if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
     throw new ReportRequestError(
@@ -1211,7 +1525,12 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
     );
   }
 
-  const deterministicBasis = buildDeterministicSajuBasis(serviceId, formData, verification);
+  const deterministicBasis = buildDeterministicSajuBasis(
+    serviceId,
+    formData,
+    verification,
+    referenceInstant ? { referenceInstant } : undefined
+  );
   if (deterministicBasis.commercialV2.releaseAudit.decision === 'blocked') {
     throw new ReportRequestError(
       422,
@@ -1224,32 +1543,29 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
       ? { ...builtReport, pastLifeProfile: buildPastLifeProfile(builtReport, formData) }
       : builtReport;
 
-  let draft: GeminiDraft | null = null;
+  const adapterVersion = getReportProductAdapter(serviceId).prompt.version;
+  const outcome = await requestGeminiDraft(fallbackReport, deterministicBasis, body, deadlineAt);
 
-  try {
-    draft = await requestGeminiDraft(fallbackReport, deterministicBasis);
-  } catch (geminiError) {
-    console.error('Gemini report draft failed:', geminiError);
-  }
-
-  if (!draft) {
+  if (!outcome.draft) {
     return {
+      schemaVersion: REPORT_RESPONSE_SCHEMA_VERSION,
       provider: 'deterministic-fallback',
       reportMode: PREMIUM_SAJU_REPORT_MODE,
       promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
       report: fallbackReport,
-      debug: undefined
+      generationMeta: createGenerationMeta(deterministicBasis, adapterVersion, outcome, true)
     };
   }
 
-  const mergedReport = mergeGeminiDraft(fallbackReport, draft);
+  const mergedReport = mergeGeminiDraft(fallbackReport, outcome.draft);
   const guardedReport = lockCommercialReportFacts(fallbackReport, mergedReport);
 
   return {
+    schemaVersion: REPORT_RESPONSE_SCHEMA_VERSION,
     provider: 'gemini',
     reportMode: PREMIUM_SAJU_REPORT_MODE,
     promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
     report: guardedReport,
-    debug: undefined
+    generationMeta: createGenerationMeta(deterministicBasis, adapterVersion, outcome, false)
   };
 }

@@ -36,6 +36,10 @@ const LRSR_ENDPOINT = 'https://apis.data.go.kr/B090041/openapi/service/LrsrCldIn
 const SPCDE_ENDPOINT = 'https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService';
 const DEFAULT_KASI_REQUEST_TIMEOUT_MS = 5000;
 
+export type KasiRequestContext = {
+  deadlineAt?: number;
+};
+
 function getEnv() {
   const maybeProcess = globalThis as {
     process?: {
@@ -51,15 +55,20 @@ function getKasiServiceKey() {
   return env.KASI_SERVICE_KEY || env.DATA_GO_KR_SERVICE_KEY || env.PUBLIC_DATA_SERVICE_KEY || '';
 }
 
-function getKasiRequestTimeoutMs() {
+function getKasiRequestTimeoutMs(deadlineAt?: number) {
   const env = getEnv();
   const configured = Number(env.KASI_REQUEST_TIMEOUT_MS);
+  const configuredTimeout = Number.isFinite(configured) && configured >= 3000
+    ? Math.min(configured, DEFAULT_KASI_REQUEST_TIMEOUT_MS)
+    : DEFAULT_KASI_REQUEST_TIMEOUT_MS;
 
-  if (Number.isFinite(configured) && configured >= 3000) {
-    return configured;
+  if (deadlineAt === undefined) return configuredTimeout;
+  const remainingMs = Math.floor(deadlineAt - Date.now());
+  if (remainingMs <= 0) {
+    throw new Error('KASI request skipped because the report generation deadline was reached.');
   }
 
-  return DEFAULT_KASI_REQUEST_TIMEOUT_MS;
+  return Math.max(1, Math.min(configuredTimeout, remainingMs));
 }
 
 function isAbortError(error: unknown) {
@@ -140,10 +149,10 @@ function itemList(value: unknown): KasiApiItem[] {
   return Array.isArray(item) ? item : [item];
 }
 
-async function requestKasiItems(endpoint: string, method: string, serviceKey: string, params: Record<string, string | number>) {
+async function requestKasiItems(endpoint: string, method: string, serviceKey: string, params: Record<string, string | number>, deadlineAt?: number) {
   const url = buildKasiUrl(endpoint, method, serviceKey, params);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), getKasiRequestTimeoutMs());
+  const timeoutId = setTimeout(() => controller.abort(), getKasiRequestTimeoutMs(deadlineAt));
   let response: Response;
 
   try {
@@ -213,12 +222,12 @@ function lunarMetaFromItem(item?: KasiApiItem) {
   };
 }
 
-async function getSolarFromLunar(date: { year: number; month: number; day: number }, isLeapMonth: boolean, serviceKey: string) {
+async function getSolarFromLunar(date: { year: number; month: number; day: number }, isLeapMonth: boolean, serviceKey: string, deadlineAt?: number) {
   const items = await requestKasiItems(LRSR_ENDPOINT, 'getSolCalInfo', serviceKey, {
     lunYear: date.year,
     lunMonth: twoDigit(date.month),
     lunDay: twoDigit(date.day)
-  });
+  }, deadlineAt);
 
   const matched = items.find((item) => isLeapMatch(item, isLeapMonth));
   const solarDate = matched ? ymd(matched.solYear, matched.solMonth, matched.solDay) : '';
@@ -229,21 +238,21 @@ async function getSolarFromLunar(date: { year: number; month: number; day: numbe
   };
 }
 
-async function getLunarFromSolar(date: { year: number; month: number; day: number }, serviceKey: string) {
+async function getLunarFromSolar(date: { year: number; month: number; day: number }, serviceKey: string, deadlineAt?: number) {
   const items = await requestKasiItems(LRSR_ENDPOINT, 'getLunCalInfo', serviceKey, {
     solYear: date.year,
     solMonth: twoDigit(date.month),
     solDay: twoDigit(date.day)
-  });
+  }, deadlineAt);
 
   return lunarMetaFromItem(items[0]);
 }
 
-async function getSolarTermsForMonth(year: number, month: number, serviceKey: string): Promise<KasiSolarTerm[]> {
+async function getSolarTermsForMonth(year: number, month: number, serviceKey: string, deadlineAt?: number): Promise<KasiSolarTerm[]> {
   const items = await requestKasiItems(SPCDE_ENDPOINT, 'get24DivisionsInfo', serviceKey, {
     solYear: year,
     solMonth: twoDigit(month)
-  });
+  }, deadlineAt);
 
   return items
     .map((item) => ({
@@ -266,7 +275,7 @@ function disabledVerification(formData: Partial<IntakeFormData>): KasiCalendarVe
   };
 }
 
-export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData>) {
+export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData>, context: KasiRequestContext = {}) {
   const serviceKey = getKasiServiceKey();
 
   if (!serviceKey) {
@@ -299,7 +308,7 @@ export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData
 
   try {
     if (originalCalendar === 'lunar') {
-      const solar = await getSolarFromLunar(parsedDate, originalIsLeapMonth, serviceKey);
+      const solar = await getSolarFromLunar(parsedDate, originalIsLeapMonth, serviceKey, context.deadlineAt);
 
       if (!solar.solarDate) {
         throw new Error('KASI lunar-to-solar conversion returned no solar date.');
@@ -307,7 +316,12 @@ export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData
 
       const convertedDate = parseBirthDate(solar.solarDate);
       const solarTerms = convertedDate
-        ? await getSolarTermsForMonth(convertedDate.year, convertedDate.month, serviceKey)
+        ? await getSolarTermsForMonth(
+            convertedDate.year,
+            convertedDate.month,
+            serviceKey,
+            context.deadlineAt
+          )
         : [];
 
       return {
@@ -333,8 +347,8 @@ export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData
       };
     }
 
-    const lunar = await getLunarFromSolar(parsedDate, serviceKey);
-    const solarTerms = await getSolarTermsForMonth(parsedDate.year, parsedDate.month, serviceKey);
+    const lunar = await getLunarFromSolar(parsedDate, serviceKey, context.deadlineAt);
+    const solarTerms = await getSolarTermsForMonth(parsedDate.year, parsedDate.month, serviceKey, context.deadlineAt);
 
     return {
       formData,
