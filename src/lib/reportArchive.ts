@@ -1,4 +1,6 @@
 import type { ServiceId, IntakeFormData } from '../api/mockData';
+import { fetchCloudRunApi } from '../shared/api/cloudRunFetch';
+import { adaptApiError, readApiErrorResponse } from '../shared/api/errorAdapter';
 import type { AiReportProvider } from './aiReport';
 import type { PaymentMethodType } from './auth';
 import { getAdminReportsEndpoint, getReportArchiveEndpoint } from './runtimeConfig';
@@ -101,13 +103,22 @@ export const writeReportArchiveEntries = (entries: ReportArchiveEntry[], ownerId
   storage.setItem(getReportArchiveStorageKey(ownerId), JSON.stringify(mergeReportArchiveEntries(entries)));
 };
 
-async function readArchiveResponse(response: Response) {
-  const payload = (await response.json().catch(() => null)) as { entries?: ReportArchiveEntry[]; message?: string } | null;
+async function fetchArchiveApi(input: string, init: RequestInit) {
+  try {
+    return await fetchCloudRunApi(input, init);
+  } catch (error) {
+    throw adaptApiError(error, { fallbackCode: 'ARCHIVE_OPERATION_FAILED' });
+  }
+}
 
+async function readArchiveResponse(response: Response) {
   if (!response.ok) {
-    throw new Error(payload?.message || '리포트 보관함 API 요청에 실패했습니다.');
+    throw await readApiErrorResponse(response, {
+      fallbackCode: 'ARCHIVE_OPERATION_FAILED'
+    });
   }
 
+  const payload = (await response.json().catch(() => null)) as { entries?: ReportArchiveEntry[] } | null;
   return Array.isArray(payload?.entries) ? payload.entries : [];
 }
 
@@ -118,7 +129,7 @@ export async function fetchRemoteReportArchiveEntries(authToken?: string) {
     return [] as ReportArchiveEntry[];
   }
 
-  const response = await fetch(endpoint, {
+  const response = await fetchArchiveApi(endpoint, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${authToken}`
@@ -138,23 +149,23 @@ export async function saveRemoteReportArchiveEntry(
     return false;
   }
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${options.authToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      entry,
-      reportAccessToken: options.reportAccessToken
-    })
-  });
+  try {
+    const response = await fetchArchiveApi(endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${options.authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        entry,
+        reportAccessToken: options.reportAccessToken
+      })
+    });
 
-  if (!response.ok) {
+    return response.ok;
+  } catch {
     return false;
   }
-
-  return true;
 }
 
 export async function fetchAdminReportArchiveEntries(adminAccessToken?: string) {
@@ -164,7 +175,7 @@ export async function fetchAdminReportArchiveEntries(adminAccessToken?: string) 
     return [] as ReportArchiveEntry[];
   }
 
-  const response = await fetch(endpoint, {
+  const response = await fetchArchiveApi(endpoint, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${adminAccessToken}`

@@ -74,12 +74,17 @@ describe('requestAiReport', () => {
       reportAccessToken: 'report-token'
     });
 
+    const requestIds = fetchMock.mock.calls.map(([, init]) =>
+      new Headers((init as RequestInit).headers).get('X-Request-ID')
+    );
+    expect(new Set(requestIds).size).toBe(2);
+
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(result?.provider).toBe('gemini');
     expect(result?.degraded).toBe(false);
   });
 
-  it('does not retry a permanent input conflict', async () => {
+  it('does not retry or expose the raw message for a permanent input conflict', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ message: 'This payment is already bound to different report input.' }), {
         status: 409,
@@ -94,7 +99,10 @@ describe('requestAiReport', () => {
         orderId: 'UW-test-order',
         reportAccessToken: 'report-token'
       })
-    ).rejects.toThrow('different report input');
+    ).rejects.toMatchObject({
+      code: 'REPORT_GENERATION_FAILED',
+      message: '리포트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

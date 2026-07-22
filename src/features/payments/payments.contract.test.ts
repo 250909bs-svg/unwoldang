@@ -102,7 +102,7 @@ describe('payment API error contract', () => {
       message: '결제 권한 처리 중 오류가 발생했습니다.',
       userMessage: '결제 권한 처리 중 오류가 발생했습니다.'
     });
-    expect((error as ApiError).cause).toMatchObject({ message: 'internal provider detail' });
+    expect((error as ApiError).cause).toBeUndefined();
   });
 
   it('uses a contract code for a successful but mismatched response', async () => {

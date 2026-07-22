@@ -54,10 +54,7 @@ describe('authenticated PortOne API contracts', () => {
     expect(confirmed.status).toBe('PAID');
     expect(fetchMock).toHaveBeenCalledWith(confirmEndpoint, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        'Content-Type': 'application/json'
-      },
+      headers: expect.any(Headers),
       body: JSON.stringify({
         paymentId: orderId,
         txId: 'tx-1',
@@ -67,6 +64,11 @@ describe('authenticated PortOne API contracts', () => {
         orderClaim: 'c'.repeat(48)
       })
     });
+    const confirmHeaders = new Headers((fetchMock.mock.calls[0][1] as RequestInit).headers);
+    expect(confirmHeaders.get('Authorization')).toBe(`Bearer ${authToken}`);
+    expect(confirmHeaders.get('Content-Type')).toBe('application/json');
+    expect(confirmHeaders.get('X-Request-ID')).toMatch(/^[0-9a-f-]{36}$/i);
+
   });
 
   it('rejects a confirm response that is not paid', async () => {
@@ -108,8 +110,11 @@ describe('authenticated PortOne API contracts', () => {
     await expect(fetchPaymentEntitlements(confirmEndpoint, authToken)).resolves.toEqual([entitlement]);
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.com/api/payments/portone/entitlements',
-      { headers: { Authorization: `Bearer ${authToken}` } }
+      { headers: expect.any(Headers) }
     );
+    const entitlementHeaders = new Headers((fetchMock.mock.calls[0][1] as RequestInit).headers);
+    expect(entitlementHeaders.get('Authorization')).toBe(`Bearer ${authToken}`);
+    expect(entitlementHeaders.get('X-Request-ID')).toMatch(/^[0-9a-f-]{36}$/i);
   });
 
   it('accepts archived entitlement listing, renewal and confirmation recovery', async () => {
@@ -188,12 +193,12 @@ describe('authenticated PortOne API contracts', () => {
       'https://api.example.com/api/payments/portone/entitlement/renew',
       {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: expect.any(Headers),
         body: JSON.stringify({ orderId })
       }
     );
+    const renewHeaders = new Headers((fetchMock.mock.calls[0][1] as RequestInit).headers);
+    expect(renewHeaders.get('Authorization')).toBe(`Bearer ${authToken}`);
+    expect(renewHeaders.get('X-Request-ID')).toMatch(/^[0-9a-f-]{36}$/i);
   });
 });
