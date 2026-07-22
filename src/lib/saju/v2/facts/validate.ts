@@ -57,6 +57,132 @@ function isIntegerBetween(value: unknown, minimum: number, maximum: number): val
   return isInteger(value) && value >= minimum && value <= maximum;
 }
 
+function isNumberBetween(value: unknown, minimum: number, maximum: number): value is number {
+  return isFiniteNumber(value) && value >= minimum && value <= maximum;
+}
+
+function isSameGz(left: unknown, right: unknown) {
+  return isRecord(left) &&
+    isRecord(right) &&
+    left.tg === right.tg &&
+    left.dz === right.dz;
+}
+
+function isSameStructuredValue(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((item, index) => isSameStructuredValue(item, right[index]));
+  }
+  if (!isRecord(left) || !isRecord(right)) return false;
+
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  return leftKeys.length === rightKeys.length &&
+    leftKeys.every((key) =>
+      Object.prototype.hasOwnProperty.call(right, key) &&
+      isSameStructuredValue(left[key], right[key])
+    );
+}
+
+function scenarioById(scenarios: unknown[], id: string) {
+  return scenarios.find((item) =>
+    isRecord(item) && isRecord(item.scenario) && item.scenario.id === id
+  ) as UnknownRecord | undefined;
+}
+
+interface CanonicalScenarioShape {
+  id: string;
+  branchIndex: number;
+  hour: number;
+  minute: number;
+  sourcePrecision: 'exact-minute' | 'legacy-range' | 'unknown';
+  sourceDayOffset: number;
+}
+
+function branchIndexForHour(hour: number) {
+  return Math.floor((hour + 1) / 2) % 12;
+}
+
+function canonicalScenariosForTime(time: UnknownRecord): CanonicalScenarioShape[] {
+  if (time.precision === 'unknown') {
+    const hours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 23];
+    return hours.map((hour) => {
+      const branchIndex = branchIndexForHour(hour);
+      return {
+        id: `unknown-branch-${branchIndex}-${hour}`,
+        branchIndex,
+        hour,
+        minute: 0,
+        sourcePrecision: 'unknown',
+        sourceDayOffset: 0
+      };
+    });
+  }
+
+  const hour = time.hour as number;
+  const minute = time.minute as number;
+  if (time.precision === 'exact-minute') {
+    return [{
+      id: 'exact-time',
+      branchIndex: branchIndexForHour(hour),
+      hour,
+      minute,
+      sourcePrecision: 'exact-minute',
+      sourceDayOffset: time.representativeDayOffset as number
+    }];
+  }
+
+  const range = time.range as UnknownRecord;
+  const candidates: CanonicalScenarioShape[] = [
+    {
+      id: 'legacy-range-midpoint',
+      branchIndex: branchIndexForHour(hour),
+      hour,
+      minute,
+      sourcePrecision: 'legacy-range',
+      sourceDayOffset: time.representativeDayOffset as number
+    },
+    {
+      id: 'legacy-range-start',
+      branchIndex: branchIndexForHour(range.startHour as number),
+      hour: range.startHour as number,
+      minute: range.startMinute as number,
+      sourcePrecision: 'legacy-range',
+      sourceDayOffset: 0
+    },
+    {
+      id: 'legacy-range-end',
+      branchIndex: branchIndexForHour(range.endHour as number),
+      hour: range.endHour as number,
+      minute: range.endMinute as number,
+      sourcePrecision: 'legacy-range',
+      sourceDayOffset: range.crossesMidnight ? 1 : 0
+    }
+  ];
+  return candidates.filter((scenario, index, scenarios) =>
+    scenarios.findIndex((candidate) =>
+      candidate.hour === scenario.hour &&
+      candidate.minute === scenario.minute &&
+      candidate.sourceDayOffset === scenario.sourceDayOffset
+    ) === index
+  );
+}
+
+function addCivilDays(value: UnknownRecord, days: number) {
+  const result = new Date(0);
+  result.setUTCHours(0, 0, 0, 0);
+  result.setUTCFullYear(value.year as number, (value.month as number) - 1, value.day as number);
+  result.setUTCDate(result.getUTCDate() + days);
+  return {
+    year: result.getUTCFullYear(),
+    month: result.getUTCMonth() + 1,
+    day: result.getUTCDate()
+  };
+}
+
 function isCivilDate(value: unknown): value is UnknownRecord {
   if (!isRecord(value) || !hasExactKeys(value, ['year', 'month', 'day'])) return false;
   if (!isIntegerBetween(value.year, 1, 9999) ||
@@ -157,7 +283,7 @@ function isTraceTimezone(value: unknown) {
     hasExactKeys(value, ['id', 'utcOffsetMinutes', 'source']) &&
     typeof value.id === 'string' &&
     value.id.length > 0 &&
-    isIntegerBetween(value.utcOffsetMinutes, -840, 840) &&
+    isNumberBetween(value.utcOffsetMinutes, -840, 840) &&
     isOneOf(value.source, ['korea-default', 'explicit'] as const);
 }
 
@@ -360,7 +486,10 @@ function validateInput(input: unknown): asserts input is UnknownRecord {
     isOneOf(time.precision, TIME_PRECISIONS) &&
     isInteger(time.representativeDayOffset), 'input.time이 올바르지 않습니다.');
   if (time.precision === 'unknown') {
-    invariant(time.hour === null && time.minute === null && time.range === null,
+    invariant(time.hour === null &&
+      time.minute === null &&
+      time.range === null &&
+      time.representativeDayOffset === 0,
       'unknown time은 시간을 지정할 수 없습니다.');
   } else {
     invariant(isIntegerBetween(time.hour, 0, 23) && isIntegerBetween(time.minute, 0, 59),
@@ -368,13 +497,31 @@ function validateInput(input: unknown): asserts input is UnknownRecord {
     invariant(time.precision === 'legacy-range'
       ? isBirthTimeRange(time.range)
       : time.range === null, 'input.time.range가 precision과 일치하지 않습니다.');
+    if (time.precision === 'exact-minute') {
+      invariant(time.representativeDayOffset === 0,
+        'exact-minute time의 representativeDayOffset은 0이어야 합니다.');
+    } else {
+      const range = time.range as UnknownRecord;
+      const startTotal = (range.startHour as number) * 60 + (range.startMinute as number);
+      const rawEndTotal = (range.endHour as number) * 60 + (range.endMinute as number);
+      const crossesMidnight = rawEndTotal < startTotal;
+      const endTotal = rawEndTotal + (crossesMidnight ? 24 * 60 : 0);
+      const midpoint = Math.round((startTotal + endTotal) / 2);
+      const representativeDayOffset = midpoint >= 24 * 60 ? 1 : 0;
+      const representativeMinutes = midpoint % (24 * 60);
+      invariant(range.crossesMidnight === crossesMidnight &&
+        time.hour === Math.floor(representativeMinutes / 60) &&
+        time.minute === representativeMinutes % 60 &&
+        time.representativeDayOffset === representativeDayOffset,
+      'legacy-range time이 canonical midpoint 계약과 일치하지 않습니다.');
+    }
   }
 
   invariant(isRecord(input.timezone) &&
     hasExactKeys(input.timezone, ['id', 'utcOffsetMinutes']) &&
     typeof input.timezone.id === 'string' &&
     input.timezone.id.length > 0 &&
-    isIntegerBetween(input.timezone.utcOffsetMinutes, -840, 840),
+    isNumberBetween(input.timezone.utcOffsetMinutes, -840, 840),
   'input.timezone이 올바르지 않습니다.');
   invariant(isRecord(input.location) &&
     hasExactKeys(input.location, ['longitude', 'source']) &&
@@ -462,11 +609,120 @@ export function parseSajuFactsV1(value: unknown): SajuFactsV1 {
   ));
   invariant(natalScenarioIds.size === natal.scenarios.length,
     'natal scenario id가 중복됩니다.');
+  const inputTime = input.time as UnknownRecord;
+  const inputTimezone = input.timezone as UnknownRecord;
+  const inputLocation = input.location as UnknownRecord;
+  const inputPolicies = input.policies as UnknownRecord;
+  const inputTrueSolarTime = inputPolicies.trueSolarTime as UnknownRecord;
+  const canonicalScenarios = canonicalScenariosForTime(inputTime);
+  invariant(natal.scenarios.length === canonicalScenarios.length &&
+    natal.scenarios.every((item, index) => {
+      const scenario = (item as UnknownRecord).scenario as UnknownRecord;
+      const expected = canonicalScenarios[index];
+      return scenario.id === expected.id &&
+        scenario.branchIndex === expected.branchIndex &&
+        scenario.hour === expected.hour &&
+        scenario.minute === expected.minute &&
+        scenario.sourcePrecision === expected.sourcePrecision &&
+        scenario.sourceDayOffset === expected.sourceDayOffset;
+    }),
+  'natal scenarios가 canonical time parser 계약과 일치하지 않습니다.');
   invariant(natal.scenarios.every((item) => {
+    const scenario = (item as UnknownRecord).scenario as UnknownRecord;
+    const bazi = (item as UnknownRecord).bazi as UnknownRecord;
     const trace = (item as UnknownRecord).trace as UnknownRecord;
+    const traceTimezone = trace.timezone as UnknownRecord;
+    const solarTimeCorrection = trace.solarTimeCorrection as UnknownRecord;
+    const dayBoundary = trace.dayBoundary as UnknownRecord;
+    const inputCivilDateTime = trace.inputCivilDateTime as UnknownRecord;
+    const baziSolar = bazi.solar as unknown[];
+    const normalizedSolarDate = trace.normalizedSolarDate as UnknownRecord;
+    const scenarioDate = addCivilDays(normalizedSolarDate, scenario.sourceDayOffset as number);
+    const expectedInputCivilDateTime = {
+      ...scenarioDate,
+      hour: scenario.hour,
+      minute: scenario.minute
+    };
     return trace.inputCalendar === input.calendar &&
-      trace.inputTimePrecision === (input.time as UnknownRecord).precision;
+      isSameStructuredValue(trace.inputDate, input.date) &&
+      trace.inputTimePrecision === inputTime.precision &&
+      scenario.sourcePrecision === inputTime.precision &&
+      traceTimezone.id === inputTimezone.id &&
+      traceTimezone.utcOffsetMinutes === inputTimezone.utcOffsetMinutes &&
+      dayBoundary.policy === inputPolicies.dayBoundary &&
+      solarTimeCorrection.requested === inputTrueSolarTime.enabled &&
+      solarTimeCorrection.longitude === inputLocation.longitude &&
+      isSameStructuredValue(solarTimeCorrection.inputCivilDateTime, inputCivilDateTime) &&
+      isSameStructuredValue(inputCivilDateTime, expectedInputCivilDateTime) &&
+      isSameStructuredValue(trace.normalizedSolarDate, {
+        year: baziSolar[0], month: baziSolar[1], day: baziSolar[2]
+      });
   }), 'natal trace가 입력 계약과 일치하지 않습니다.');
+
+  const timePrecision = inputTime.precision;
+  const hasSelectedNatal = natal.selected !== null;
+  const exactStableNatal = hasSelectedNatal &&
+    natal.selection === 'primary' &&
+    timePrecision === 'exact-minute';
+  invariant(
+    natal.status === 'stable'
+      ? exactStableNatal
+      : natal.status === 'ambiguous'
+        ? !hasSelectedNatal && natal.selection === 'unstable-day'
+        : hasSelectedNatal && !exactStableNatal,
+    'natal status가 selected, selection, time precision 조합과 일치하지 않습니다.'
+  );
+  invariant(
+    natal.selection === 'primary'
+      ? hasSelectedNatal && timePrecision === 'exact-minute'
+      : natal.selection === 'range-midpoint'
+        ? hasSelectedNatal && timePrecision === 'legacy-range'
+        : natal.selection === 'stable-without-hour'
+          ? hasSelectedNatal &&
+            isRecord(natal.selected) &&
+            natal.selected.h_gz === null &&
+            (timePrecision === 'legacy-range' || timePrecision === 'unknown')
+          : !hasSelectedNatal &&
+            (timePrecision === 'legacy-range' || timePrecision === 'unknown'),
+    'natal selection과 selected/time precision 조합이 builder 계약과 일치하지 않습니다.'
+  );
+
+  const canonicalScenario = natal.selection === 'primary'
+    ? scenarioById(natal.scenarios, 'exact-time')
+    : natal.selection === 'range-midpoint'
+      ? scenarioById(natal.scenarios, 'legacy-range-midpoint')
+      : natal.selection === 'stable-without-hour'
+        ? scenarioById(
+            natal.scenarios,
+            timePrecision === 'unknown' ? 'unknown-branch-0-0' : 'legacy-range-midpoint'
+          )
+        : undefined;
+  if (natal.selection === 'unstable-day') {
+    invariant(natal.selected === null,
+      'unstable-day selection은 selected bazi가 없어야 합니다.');
+  } else {
+    invariant(canonicalScenario && isRecord(canonicalScenario.bazi),
+      'natal selection의 canonical scenario가 없습니다.');
+    const canonicalBazi = canonicalScenario.bazi as UnknownRecord;
+    const expectedSelected = natal.selection === 'stable-without-hour'
+      ? { ...canonicalBazi, h_gz: null }
+      : canonicalBazi;
+    invariant(isSameStructuredValue(natal.selected, expectedSelected),
+      'natal.selected가 canonical scenario bazi와 일치하지 않습니다.');
+  }
+
+  const firstScenarioBazi = (natal.scenarios[0] as UnknownRecord).bazi as UnknownRecord;
+  for (const pillar of ['year', 'month', 'day'] as const) {
+    const baziKey = pillar === 'year' ? 'y_gz' : pillar === 'month' ? 'm_gz' : 'd_gz';
+    const isInvariant = natal.scenarios.every((item) => {
+      const bazi = (item as UnknownRecord).bazi as UnknownRecord;
+      return isSameGz(bazi[baziKey], firstScenarioBazi[baziKey]);
+    });
+    invariant(
+      (natal.invariantPillars as UnknownRecord)[pillar] === isInvariant,
+      'natal.invariantPillars.' + pillar + '가 scenario bazi와 일치하지 않습니다.'
+    );
+  }
 
   const dayun = value.dayun;
   invariant(isRecord(dayun) && hasExactKeys(dayun, [
@@ -490,17 +746,37 @@ export function parseSajuFactsV1(value: unknown): SajuFactsV1 {
     Array.isArray(item.rows) &&
     item.rows.every(isDayunRow)
   ), 'dayun 시나리오가 올바르지 않습니다.');
+
+  const dayunScenarioIds = new Set(dayun.scenarios.map((item) =>
+    (item as UnknownRecord).scenarioId as string
+  ));
+  invariant(
+    dayunScenarioIds.size === dayun.scenarios.length &&
+      dayunScenarioIds.size === natalScenarioIds.size &&
+      [...natalScenarioIds].every((scenarioId) => dayunScenarioIds.has(scenarioId)),
+    'dayun scenario id가 natal scenario id와 일치하지 않습니다.'
+  );
   invariant(dayun.current === null || isCurrentDayun(dayun.current),
     'dayun.current가 올바르지 않습니다.');
+
+  const expectedDayunStatus = exactStableNatal
+    ? 'stable'
+    : hasSelectedNatal && dayun.scenarios.length > 0
+      ? 'scenario-dependent'
+      : 'unavailable';
+  const expectedRepresentativeKind = hasSelectedNatal && timePrecision !== 'unknown'
+    ? timePrecision === 'exact-minute' ? 'exact' : 'range-midpoint'
+    : 'none';
+  invariant(dayun.status === expectedDayunStatus,
+    'dayun status가 natal/time precision/scenario 조합과 일치하지 않습니다.');
+  invariant(dayun.representativeKind === expectedRepresentativeKind,
+    'dayun representativeKind가 natal/time precision 조합과 일치하지 않습니다.');
   invariant(dayun.representativeKind === 'none'
     ? dayun.representative === null && dayun.current === null
-    : Array.isArray(dayun.representative),
-  'dayun representativeKind가 대표값과 일치하지 않습니다.');
-  invariant(dayun.status !== 'unavailable' ||
-    dayun.representativeKind === 'none' &&
-      dayun.representative === null &&
-      dayun.current === null,
-  'unavailable dayun은 대표값이 없어야 합니다.');
+    : Array.isArray(dayun.representative) &&
+      dayun.representative.length > 0 &&
+      dayun.current !== null,
+  'dayun representativeKind가 representative/current와 일치하지 않습니다.');
   if (isRecord(dayun.current) &&
     dayun.current.phase === 'active' &&
     Array.isArray(dayun.representative)) {
