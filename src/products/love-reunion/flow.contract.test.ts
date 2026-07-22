@@ -53,6 +53,22 @@ describe('love-reunion product flow contract', () => {
     expect(intakeSource).not.toContain('상대방 이름 또는 호칭');
   });
 
+  it('requires accessible safety gates, protected questions, and a final purchase review', () => {
+    expect(intakeSource).toContain('role="progressbar"');
+    expect(intakeSource).toContain('aria-pressed=');
+    expect(intakeSource).toContain('contactBoundaryOptions');
+    expect(intakeSource).toContain("updateContext('partnerDataPermissionConfirmed'");
+    expect(intakeSource).toContain('handleQuestionSuggestion(question)');
+    expect(intakeSource).toContain('pendingSuggestion ?');
+    expect(intakeSource).toContain('FINAL REVIEW');
+    expect(intakeSource).toContain('질문 1 원문');
+    expect(intakeSource).toContain('to="/privacy"');
+    expect(intakeSource).toContain('to="/refund"');
+    expect(detailSource).toContain('RESULT STRUCTURE · 실제 결과 데이터 없음');
+    expect(detailSource).toContain('love-reunion-detail-mobile-cta');
+    expect(detailSource).toContain('height={1586}');
+  });
+
   it('retains the shared checkout, loading, and historical report policy boundaries', () => {
     expect(sourceForRoute('/checkout')).toContain('<ProductCheckoutRouteBoundary>');
     expect(sourceForRoute('/loading')).toContain('<ProductLoadingRouteBoundary>');

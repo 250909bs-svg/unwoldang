@@ -581,3 +581,177 @@
     transition: none;
   }
 }
+.love-reunion-detail-page {
+  padding-bottom: 86px;
+}
+
+.love-reunion-detail-expectation {
+  margin-top: 24px;
+  padding: 34px 18px 18px;
+  border: 1px solid rgba(247, 221, 226, 0.12);
+  border-radius: 26px;
+  background: rgba(25, 14, 18, 0.9);
+}
+
+.love-reunion-detail-expectation-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.love-reunion-detail-expectation-grid article {
+  padding: 18px;
+  border: 1px solid rgba(242, 214, 220, 0.1);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.love-reunion-detail-expectation-grid span,
+.love-reunion-detail-result-preview > span {
+  display: block;
+  color: #d99f88;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+
+.love-reunion-detail-expectation-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #fff5f5;
+  font-size: 1rem;
+}
+
+.love-reunion-detail-expectation-grid p,
+.love-reunion-detail-result-preview p,
+.love-reunion-detail-policy-links {
+  margin: 8px 0 0;
+  color: #bda5ac;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.love-reunion-detail-result-preview {
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid rgba(245, 198, 180, 0.22);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(123, 40, 61, 0.22), rgba(255, 255, 255, 0.025));
+}
+
+.love-reunion-detail-result-preview ul {
+  display: grid;
+  gap: 8px;
+  margin: 15px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.love-reunion-detail-result-preview li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 0.7fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.love-reunion-detail-result-preview li > span {
+  color: #d99f88;
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.love-reunion-detail-result-preview li strong {
+  color: #fff4f5;
+  font-size: 0.84rem;
+}
+
+.love-reunion-detail-result-preview li small {
+  color: #aa9299;
+  font-size: 0.72rem;
+}
+
+.love-reunion-detail-policy-links a {
+  color: #efb6a7;
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
+.love-reunion-detail-mobile-cta {
+  position: fixed;
+  right: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  left: 10px;
+  z-index: 30;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 11px 10px 16px;
+  border: 1px solid rgba(250, 222, 227, 0.2);
+  border-radius: 18px;
+  background: rgba(24, 12, 16, 0.94);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px);
+}
+
+.love-reunion-detail-mobile-cta div {
+  display: grid;
+  gap: 2px;
+}
+
+.love-reunion-detail-mobile-cta span {
+  color: #ad8f97;
+  font-size: 0.62rem;
+}
+
+.love-reunion-detail-mobile-cta strong {
+  color: #fff8f6;
+  font-size: 0.94rem;
+}
+
+.love-reunion-detail-mobile-cta > a {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 17px;
+  border-radius: 999px;
+  color: #2d0e17;
+  background: linear-gradient(135deg, #f7d2bd, #d99183);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+@media (max-width: 839px) {
+  .love-reunion-detail-poster,
+  .love-reunion-detail-poster img {
+    min-height: 0;
+    aspect-ratio: 992 / 1586;
+  }
+}
+
+@media (min-width: 560px) {
+  .love-reunion-detail-expectation-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 840px) {
+  .love-reunion-detail-page {
+    padding-bottom: 0;
+  }
+
+  .love-reunion-detail-expectation {
+    margin-top: 34px;
+    padding: 52px;
+    border-radius: 32px;
+  }
+
+  .love-reunion-detail-mobile-cta {
+    display: none;
+  }
+}

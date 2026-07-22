@@ -17,7 +17,8 @@ import type { ReportSection, SajuReportData } from '../lib/saju/report';
 import { canStartProduct, getProductById } from '../products/registry';
 import {
   buildLoveReunionReport,
-  createLoveReunionShareData
+  createLoveReunionShareData,
+  LOVE_REUNION_SECTION_IDS
 } from '../products/love-reunion/reportModel';
 import type { LoveReunionFormData } from '../products/love-reunion/contract';
 import '../styles/past-life.css';
@@ -5485,6 +5486,62 @@ function getReportPageCopy(report: SajuReportData): ReportPageCopy {
   );
 }
 
+const LOVE_REUNION_READING_ORDER = [
+  LOVE_REUNION_SECTION_IDS[0],
+  LOVE_REUNION_SECTION_IDS[4],
+  LOVE_REUNION_SECTION_IDS[9],
+  LOVE_REUNION_SECTION_IDS[10],
+  LOVE_REUNION_SECTION_IDS[1],
+  LOVE_REUNION_SECTION_IDS[2],
+  LOVE_REUNION_SECTION_IDS[3],
+  LOVE_REUNION_SECTION_IDS[5],
+  LOVE_REUNION_SECTION_IDS[6],
+  LOVE_REUNION_SECTION_IDS[7],
+  LOVE_REUNION_SECTION_IDS[8]
+] as const;
+
+export function orderLoveReunionSections(sections: ReportSection[]): ReportSection[] {
+  const priority = new Map<string, number>(
+    LOVE_REUNION_READING_ORDER.map((id, index) => [id, index])
+  );
+
+  return sections
+    .map((section, sourceIndex) => ({ section, sourceIndex }))
+    .sort((left, right) => {
+      const leftPriority = priority.get(left.section.id) ?? LOVE_REUNION_READING_ORDER.length;
+      const rightPriority = priority.get(right.section.id) ?? LOVE_REUNION_READING_ORDER.length;
+      return leftPriority - rightPriority || left.sourceIndex - right.sourceIndex;
+    })
+    .map(({ section }) => section);
+}
+
+function SajuEvidenceAppendix({
+  report,
+  pageCopy
+}: {
+  report: SajuReportData;
+  pageCopy: ReportPageCopy;
+}) {
+  return (
+    <section className="premium-report-section" id="glance">
+      <div className="premium-section-heading">
+        <div>
+          <h2>{pageCopy.glanceTitle}</h2>
+          <p className="premium-muted">{pageCopy.glanceCaption}</p>
+        </div>
+      </div>
+
+      <SajuWonGukBoard report={report} />
+      <SajuWonGukReading report={report} />
+
+      <div className="premium-grid2 premium-glance-chart-grid">
+        <ElementDistributionBoard report={report} />
+        <TenGodDistributionBoard report={report} />
+      </div>
+    </section>
+  );
+}
+
 function getSection(report: SajuReportData, id: string) {
   return report.sections.find((section) => section.id === id);
 }
@@ -6407,6 +6464,10 @@ export default function Report() {
   const yearlyLead = report.yearLuck[0];
   const yearlyMomentum = report.yearLuck.slice(0, 3);
   const monthlyHotMonths = [...report.monthLuck].sort((left, right) => right.score - left.score).slice(0, 3);
+  const readingSections = useMemo(
+    () => isLoveReunionShowcase ? orderLoveReunionSections(report.sections) : report.sections,
+    [isLoveReunionShowcase, report.sections]
+  );
   const [isTocOpen, setIsTocOpen] = useState(isPastLifeShowcase);
   const [activePastLifeChapter, setActivePastLifeChapter] = useState('seal');
   const [pastLifeShareFormat, setPastLifeShareFormat] = useState<'square' | 'story'>('square');
@@ -6673,7 +6734,18 @@ export default function Report() {
         { id: 'share-cards', label: '공유 카드', number: '저장' },
         { id: 'legal', label: '장부 이용 안내', number: '안내' }
       ]
-    : [
+    : isLoveReunionShowcase
+      ? [
+          { id: 'summary', label: '현재 판단 요약', number: '01' },
+          ...readingSections.map((section, index) => ({
+            id: section.id,
+            label: section.title,
+            number: String(index + 2).padStart(2, '0')
+          })),
+          { id: 'glance', label: '원국·오행·십성 명리 근거', number: '부록' },
+          { id: 'legal', label: '안전 안내', number: '안내' }
+        ]
+      : [
         ...(report.serviceId === 'concern-reading' ? [{ id: 'answer-first', label: '고민 결론 먼저', number: '00' }] : []),
         { id: 'summary', label: '1페이지 핵심 결론', number: '01' },
         ...(!isLoveReunionShowcase ? [{ id: 'qa', label: '질문 맞춤 답변', number: 'Q' }] : []),
@@ -7393,36 +7465,32 @@ body {
             </>
           ) : null}
 
-          <section className="premium-report-section" id="glance">
-            <div className="premium-section-heading">
-              <div>
-                <h2>{pageCopy.glanceTitle}</h2>
-                <p className="premium-muted">{pageCopy.glanceCaption}</p>
-              </div>
-            </div>
-
-            <SajuWonGukBoard report={report} />
-            <SajuWonGukReading report={report} />
-
-            <div className="premium-grid2 premium-glance-chart-grid">
-              <ElementDistributionBoard report={report} />
-              <TenGodDistributionBoard report={report} />
-            </div>
-          </section>
+          {!isLoveReunionShowcase ? <SajuEvidenceAppendix report={report} pageCopy={pageCopy} /> : null}
 
           {(isPastLifeShowcase
             ? report.sections.filter((section) => !PAST_LIFE_STORY_SECTION_IDS.has(section.id))
-            : report.sections
+            : readingSections
           ).map((section, index) => (
                 <div key={section.id}>
-                  <div className="premium-divider" />
+                  {index > 0 || !isLoveReunionShowcase ? <div className="premium-divider" /> : null}
                   <SectionBlock
                     section={section}
-                    number={isPastLifeShowcase ? `근거 ${index + 1}` : String(index + 3).padStart(2, '0')}
+                    number={
+                      isPastLifeShowcase
+                        ? `근거 ${index + 1}`
+                        : String(index + (isLoveReunionShowcase ? 2 : 3)).padStart(2, '0')
+                    }
                     report={report}
                   />
                 </div>
               ))}
+
+          {isLoveReunionShowcase ? (
+            <>
+              <div className="premium-divider" />
+              <SajuEvidenceAppendix report={report} pageCopy={pageCopy} />
+            </>
+          ) : null}
 
           {!isLoveReunionShowcase ? (
             <>

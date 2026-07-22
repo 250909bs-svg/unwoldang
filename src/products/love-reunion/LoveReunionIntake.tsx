@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, ChevronRight, ShieldCheck, UserRound } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { IntakeFormData, PartnerBirthData } from '../../api/mockData';
 import { useAuth } from '../../context/AuthContext';
@@ -19,6 +19,8 @@ import {
 import './intake.css';
 
 type IntakeStep = 1 | 2 | 3 | 4 | 5;
+type ContactSafetyAnswer = '' | 'none' | 'explicit-no-contact' | 'safety-risk';
+type QuestionKey = 'q1' | 'q2';
 
 type LoveReunionIntakeLocationState = {
   formData?: Partial<LoveReunionFormData>;
@@ -73,6 +75,24 @@ const currentContactOptions = [
   { value: 'reconnecting', label: '재접촉 중', description: '다시 만남을 전제로 천천히 확인 중' }
 ] as const;
 
+const contactBoundaryOptions = [
+  {
+    value: 'none',
+    label: '거절·안전 우려 없음',
+    description: '명시적인 연락 거절이나 폭력·위협·스토킹 우려가 없어요.'
+  },
+  {
+    value: 'explicit-no-contact',
+    label: '연락하지 말라는 의사 확인',
+    description: '차단 또는 연락하지 말라는 요청을 분명히 확인했어요.'
+  },
+  {
+    value: 'safety-risk',
+    label: '폭력·위협 등 안전 우려 있음',
+    description: '폭력, 협박, 스토킹 또는 신변 안전 우려가 있었어요.'
+  }
+] as const;
+
 const breakupReasonOptions = [
   { value: 'communication', label: '소통 부족·회피' },
   { value: 'trust', label: '신뢰 문제' },
@@ -89,6 +109,14 @@ const questionSuggestions = [
   '재회보다 회복을 선택해야 하는 신호는 무엇인가요?',
   '다시 만난다면 꼭 합의해야 할 기준은 무엇인가요?'
 ] as const;
+
+const intakeStepMeta: Record<IntakeStep, { name: string; estimate: string; remaining: string }> = {
+  1: { name: '본인 정보', estimate: '약 1분', remaining: '4단계 남음' },
+  2: { name: '관계 상황', estimate: '약 1분', remaining: '3단계 남음' },
+  3: { name: '이별 맥락', estimate: '약 1분', remaining: '2단계 남음' },
+  4: { name: '상대 정보', estimate: '약 30초', remaining: '1단계 남음' },
+  5: { name: '질문과 최종 검토', estimate: '약 1분', remaining: '마지막 단계' }
+};
 
 const emptyPartner: PartnerBirthData = {
   name: '상대방',
@@ -159,6 +187,14 @@ function formatBirthSummary(formData: LoveReunionFormData) {
   return `${formData.birthDate || '생년월일 미입력'} · ${time} · ${calendar}`;
 }
 
+
+function getOptionLabel(
+  options: readonly { value: string; label: string }[],
+  value: string
+) {
+  return options.find((option) => option.value === value)?.label || '미선택';
+}
+
 export default function LoveReunionIntake() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -170,6 +206,15 @@ export default function LoveReunionIntake() {
   );
   const [step, setStep] = useState<IntakeStep>(1);
   const [error, setError] = useState('');
+  const [pendingSuggestion, setPendingSuggestion] = useState<string | null>(null);
+  const [boundaryAcknowledged, setBoundaryAcknowledged] = useState(false);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const questionInputRefs = useRef<Record<QuestionKey, HTMLTextAreaElement | null>>({
+    q1: null,
+    q2: null
+  });
+  const isFirstStepRenderRef = useRef(true);
+  const stepMeta = intakeStepMeta[step];
   const tabOrigin = locationState?.tabOrigin || loveReunionProduct.routes.detail;
   const selfValidation = useMemo(
     () => validateBirthInput(formData, { subjectLabel: '본인' }),
@@ -185,6 +230,26 @@ export default function LoveReunionIntake() {
 
 
   const preparedFormData = useMemo(() => prepareLoveReunionCheckoutFormData(formData), [formData]);
+
+  useEffect(() => {
+    if (isFirstStepRenderRef.current) {
+      isFirstStepRenderRef.current = false;
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const focusFrame = window.requestAnimationFrame(() => {
+      stepHeadingRef.current?.focus({ preventScroll: true });
+      window.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion ? 'auto' : 'smooth'
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+    };
+  }, [step]);
 
   useEffect(() => {
     if (!isAuthenticated || !window.sessionStorage.getItem(LOVE_REUNION_CHECKOUT_INTENT_KEY)) {
@@ -238,7 +303,12 @@ export default function LoveReunionIntake() {
     setFormData((previous) => ({
       ...previous,
       partner: known ? { ...emptyPartner, ...previous.partner } : undefined,
-      reunionContext: { ...previous.reunionContext, partnerBirthKnown: known }
+      reunionContext: {
+        ...previous.reunionContext,
+        partnerBirthKnown: known,
+        partnerDataPermissionConfirmed:
+          known ? previous.reunionContext.partnerDataPermissionConfirmed : false
+      }
     }));
     setError('');
   };
@@ -258,20 +328,31 @@ export default function LoveReunionIntake() {
     if (targetStep === 3) {
       return Boolean(
         context.currentContact &&
+          context.contactBoundary &&
+          (context.contactBoundary === 'none' || boundaryAcknowledged) &&
           context.breakupReason &&
           context.reunionReason.trim() &&
           (context.breakupReason !== 'other' || context.breakupReasonDetail.trim())
       );
     }
-    if (targetStep === 4) return !context.partnerBirthKnown || Boolean(partnerValidation?.valid);
+    if (targetStep === 4) {
+      return !context.partnerBirthKnown || Boolean(partnerValidation?.valid && context.partnerDataPermissionConfirmed);
+    }
     return Boolean(formData.q1.trim() && formData.q2.trim());
   };
 
   const explainStepError = () => {
     if (step === 1) return selfValidation.errors[0]?.message || '본인 출생 정보를 확인해 주세요.';
     if (step === 2) return '관계 상태, 교제 기간, 이별 후 경과, 마지막 연락을 모두 선택해 주세요.';
-    if (step === 3) return '현재 연락 상태와 이별 이유, 재회를 바라는 이유를 확인해 주세요.';
-    if (step === 4) return partnerValidation?.errors[0]?.message || '상대방 출생 정보를 확인해 주세요.';
+    if (step === 3) {
+      if (!formData.reunionContext.contactBoundary) return '연락 거절 또는 안전 우려 여부를 선택해 주세요.';
+      if (formData.reunionContext.contactBoundary !== 'none' && !boundaryAcknowledged) return '접촉보다 경계·안전을 우선한다는 안내를 확인해 주세요.';
+      return '현재 연락 상태와 이별 이유, 재회를 바라는 이유를 확인해 주세요.';
+    }
+    if (step === 4) {
+      if (formData.reunionContext.partnerBirthKnown && !formData.reunionContext.partnerDataPermissionConfirmed) return '상대방 출생정보의 제공·분석 권한을 확인해 주세요.';
+      return partnerValidation?.errors[0]?.message || '상대방 출생 정보를 확인해 주세요.';
+    }
     return '질문 두 가지를 모두 입력해 주세요.';
   };
 
@@ -317,6 +398,44 @@ export default function LoveReunionIntake() {
     });
   };
 
+  const goToStep = (targetStep: IntakeStep) => {
+    setStep(targetStep);
+    setError('');
+  };
+
+  const handleContactBoundaryChange = (value: ContactSafetyAnswer) => {
+    updateContext('contactBoundary', value);
+    setBoundaryAcknowledged(false);
+  };
+
+  const focusQuestion = (key: QuestionKey) => {
+    window.requestAnimationFrame(() => questionInputRefs.current[key]?.focus());
+  };
+
+  const handleQuestionSuggestion = (question: string) => {
+    if (!formData.q1.trim()) {
+      updateField('q1', question);
+      focusQuestion('q1');
+      return;
+    }
+
+    if (!formData.q2.trim()) {
+      updateField('q2', question);
+      focusQuestion('q2');
+      return;
+    }
+
+    setPendingSuggestion(question);
+  };
+
+  const confirmQuestionReplacement = (key: QuestionKey) => {
+    if (!pendingSuggestion) return;
+
+    updateField(key, pendingSuggestion);
+    setPendingSuggestion(null);
+    focusQuestion(key);
+  };
+
   const handleNext = () => {
     if (!isStepReady(step)) {
       setError(explainStepError());
@@ -328,9 +447,7 @@ export default function LoveReunionIntake() {
       return;
     }
 
-    setStep((previous) => (previous + 1) as IntakeStep);
-    setError('');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    goToStep((step + 1) as IntakeStep);
   };
 
   const handleBack = () => {
@@ -339,9 +456,7 @@ export default function LoveReunionIntake() {
       return;
     }
 
-    setStep((previous) => (previous - 1) as IntakeStep);
-    setError('');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    goToStep((step - 1) as IntakeStep);
   };
 
   return (
@@ -356,13 +471,24 @@ export default function LoveReunionIntake() {
         </Link>
       </header>
 
-      <div className="love-reunion-intake__progress" aria-label={`전체 5단계 중 ${step}단계`}>
+      <div
+        className="love-reunion-intake__progress"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={5}
+        aria-valuenow={step}
+        aria-valuetext={`${stepMeta.name}, ${stepMeta.remaining}`}
+      >
         <span style={{ width: `${step * 20}%` }} />
       </div>
 
       <section className="love-reunion-intake__hero">
-        <span>REUNION NOTE · {step}/5</span>
-        <h1>
+        <span>REUNION NOTE · {step}/5 · {stepMeta.name}</span>
+        <div className="love-reunion-intake__step-status" aria-live="polite">
+          <strong>{stepMeta.estimate}</strong>
+          <span>{stepMeta.remaining}</span>
+        </div>
+        <h1 ref={stepHeadingRef} tabIndex={-1}>
           {step === 1 && '나의 사주 기준을 먼저 맞춰요'}
           {step === 2 && '두 사람의 현재 거리를 알려주세요'}
           {step === 3 && '이별의 원인과 바라는 변화를 나눠요'}
@@ -488,10 +614,12 @@ export default function LoveReunionIntake() {
                     key={option.value}
                     type="button"
                     className={formData.reunionContext.relationshipState === option.value ? 'active' : undefined}
+                    aria-pressed={formData.reunionContext.relationshipState === option.value}
+                    aria-describedby={`relationship-state-${option.value}-description`}
                     onClick={() => updateContext('relationshipState', option.value)}
                   >
                     <strong>{option.label}</strong>
-                    <span>{option.description}</span>
+                    <span id={`relationship-state-${option.value}-description`}>{option.description}</span>
                   </button>
                 ))}
               </div>
@@ -553,10 +681,35 @@ export default function LoveReunionIntake() {
                     key={option.value}
                     type="button"
                     className={formData.reunionContext.currentContact === option.value ? 'active' : undefined}
-                    onClick={() => updateContext('currentContact', option.value)}
+                    aria-pressed={formData.reunionContext.currentContact === option.value}
+                    aria-describedby={`current-contact-${option.value}-description`}
+                    onClick={() => {
+                      updateContext('currentContact', option.value);
+                      if (option.value === 'blocked') handleContactBoundaryChange('explicit-no-contact');
+                    }}
                   >
                     <strong>{option.label}</strong>
-                    <span>{option.description}</span>
+                    <span id={`current-contact-${option.value}-description`}>{option.description}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset aria-describedby="contact-boundary-help">
+              <legend>연락 거절·안전 경계</legend>
+              <p id="contact-boundary-help" className="love-reunion-intake__field-help">접촉 가능성을 판단하기 전에 명시적 거절과 폭력·위협 여부를 확인합니다.</p>
+              <div className="love-reunion-intake__choice-grid compact">
+                {contactBoundaryOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={formData.reunionContext.contactBoundary === option.value ? 'active' : undefined}
+                    aria-pressed={formData.reunionContext.contactBoundary === option.value}
+                    aria-describedby={`contact-boundary-${option.value}-description`}
+                    onClick={() => handleContactBoundaryChange(option.value)}
+                  >
+                    <strong>{option.label}</strong>
+                    <span id={`contact-boundary-${option.value}-description`}>{option.description}</span>
                   </button>
                 ))}
               </div>
@@ -594,12 +747,21 @@ export default function LoveReunionIntake() {
               <small>{formData.reunionContext.reunionReason.length}/{LOVE_REUNION_TEXT_LIMITS.reunionReason}</small>
             </label>
 
-            {formData.reunionContext.currentContact === 'blocked' ? (
-              <aside className="love-reunion-intake__safety">
+            {formData.reunionContext.contactBoundary && formData.reunionContext.contactBoundary !== 'none' ? (
+              <aside id="contact-boundary-notice" className="love-reunion-intake__safety" role="note">
                 <ShieldCheck size={20} />
                 <div>
-                  <strong>차단이나 연락 거절은 반드시 존중해야 합니다.</strong>
-                  <p>리포트도 우회 연락을 권하지 않으며, 회복과 경계 지키기를 우선으로 안내합니다.</p>
+                  <strong>{formData.reunionContext.contactBoundary === 'safety-risk' ? '접촉보다 신변 안전이 먼저입니다.' : '연락 거절과 차단은 반드시 존중해야 합니다.'}</strong>
+                  <p>이 경우 리포트는 접촉 방법을 제공하지 않고 회복·안전 계획만 안내합니다. {formData.reunionContext.contactBoundary === 'safety-risk' ? <>지금 위험하다면 <a href="tel:112">112</a>, 부상·응급 상황은 <a href="tel:119">119</a>, 여성긴급전화는 <a href="tel:1366">1366</a>에 도움을 요청하세요.</> : null}</p>
+                  <label className="love-reunion-intake__check love-reunion-intake__safety-confirm">
+                    <input
+                      type="checkbox"
+                      checked={boundaryAcknowledged}
+                      onChange={(event) => setBoundaryAcknowledged(event.target.checked)}
+                    />
+                    <span><Check size={13} /></span>
+                    접촉 시도보다 상대의 경계와 안전을 우선한다는 안내를 확인했습니다.
+                  </label>
                 </div>
               </aside>
             ) : null}
@@ -615,6 +777,7 @@ export default function LoveReunionIntake() {
                   type="button"
                   className={!formData.reunionContext.partnerBirthKnown ? 'active' : undefined}
                   onClick={() => setPartnerBirthKnown(false)}
+                  aria-pressed={!formData.reunionContext.partnerBirthKnown}
                 >
                   몰라도 진행
                 </button>
@@ -622,6 +785,7 @@ export default function LoveReunionIntake() {
                   type="button"
                   className={formData.reunionContext.partnerBirthKnown ? 'active' : undefined}
                   onClick={() => setPartnerBirthKnown(true)}
+                  aria-pressed={formData.reunionContext.partnerBirthKnown}
                 >
                   알고 있어요
                 </button>
@@ -647,6 +811,7 @@ export default function LoveReunionIntake() {
                         type="button"
                         className={formData.partner?.gender === gender ? 'active' : undefined}
                         onClick={() => updatePartner('gender', gender)}
+                        aria-pressed={formData.partner?.gender === gender}
                       >
                         {gender === 'female' ? '여성' : '남성'}
                       </button>
@@ -662,6 +827,7 @@ export default function LoveReunionIntake() {
                         key={calendar}
                         type="button"
                         className={formData.partner?.calendar === calendar ? 'active' : undefined}
+                        aria-pressed={formData.partner?.calendar === calendar}
                         onClick={() => {
                           updatePartner('calendar', calendar);
                           if (calendar === 'solar') updatePartner('isLeapMonth', false);
@@ -718,6 +884,18 @@ export default function LoveReunionIntake() {
                   <span><Check size={13} /></span>
                   상대방 출생 시간을 몰라요
                 </label>
+
+                <label className="love-reunion-intake__check love-reunion-intake__permission-check">
+                  <input
+                    type="checkbox"
+                    checked={formData.reunionContext.partnerDataPermissionConfirmed}
+                    aria-describedby="partner-data-permission-help"
+                    onChange={(event) => updateContext('partnerDataPermissionConfirmed', event.target.checked)}
+                  />
+                  <span><Check size={13} /></span>
+                  상대방 정보를 제공하고 분석에 사용하는 데 필요한 권한을 확인했습니다.
+                </label>
+                <p id="partner-data-permission-help" className="love-reunion-intake__field-help">동의나 정당한 권한 없이 취득한 개인정보는 입력하지 마세요.</p>
               </>
             )}
           </div>
@@ -730,6 +908,9 @@ export default function LoveReunionIntake() {
                 <span>질문 {index + 1}</span>
                 <textarea
                   value={formData[key]}
+                  ref={(element) => {
+                    questionInputRefs.current[key] = element;
+                  }}
                   onChange={(event) => updateField(key, event.target.value.slice(0, LOVE_REUNION_TEXT_LIMITS.question))}
                   placeholder={index === 0 ? '예: 지금 연락을 시도해도 되는 현실 조건은 무엇인가요?' : '예: 다시 만난다면 꼭 바꿔야 할 제 패턴은 무엇인가요?'}
                 />
@@ -738,23 +919,81 @@ export default function LoveReunionIntake() {
             ))}
 
             <div className="love-reunion-intake__suggestions" aria-label="질문 예시">
-              {questionSuggestions.map((question, index) => (
+              {questionSuggestions.map((question) => (
                 <button
                   key={question}
                   type="button"
-                  onClick={() => updateField(formData.q1.trim() && !formData.q2.trim() ? 'q2' : index % 2 === 0 ? 'q1' : 'q2', question)}
+                  onClick={() => handleQuestionSuggestion(question)}
                 >
                   {question}
                 </button>
               ))}
             </div>
 
-            <article className="love-reunion-intake__review">
-              <span>입력 요약</span>
-              <strong>{formatBirthSummary(formData)}</strong>
-              <p>상대 출생정보: {formData.reunionContext.partnerBirthKnown ? '입력함' : '모름 · 진행 가능'}</p>
-              <p>질문 두 개와 관계 맥락은 결제 후 재회운 리포트에 함께 보관됩니다.</p>
+            {pendingSuggestion ? (
+              <div className="love-reunion-intake__suggestion-confirm" role="status" aria-live="polite">
+                <span>두 질문이 모두 작성되어 있어 자동으로 바꾸지 않았어요.</span>
+                <strong>{pendingSuggestion}</strong>
+                <div>
+                  <button type="button" onClick={() => confirmQuestionReplacement('q1')}>질문 1 교체</button>
+                  <button type="button" onClick={() => confirmQuestionReplacement('q2')}>질문 2 교체</button>
+                  <button type="button" onClick={() => setPendingSuggestion(null)}>취소</button>
+                </div>
+              </div>
+            ) : null}
+
+            <article className="love-reunion-intake__review" aria-labelledby="love-reunion-review-title">
+              <header>
+                <div>
+                  <span>FINAL REVIEW</span>
+                  <h2 id="love-reunion-review-title">결제 전 입력 내용을 확인해 주세요</h2>
+                </div>
+                <strong>{formatBirthSummary(formData)}</strong>
+              </header>
+              <dl>
+                <div>
+                  <dt>관계 상태 · 교제 기간</dt>
+                  <dd>{getOptionLabel(relationshipStateOptions, formData.reunionContext.relationshipState)} · {getOptionLabel(relationshipLengthOptions, formData.reunionContext.relationshipLength)}</dd>
+                  <button type="button" onClick={() => goToStep(2)}>수정</button>
+                </div>
+                <div>
+                  <dt>이별 후 경과</dt>
+                  <dd>{getOptionLabel(breakupElapsedOptions, formData.reunionContext.breakupElapsed)}</dd>
+                  <button type="button" onClick={() => goToStep(2)}>수정</button>
+                </div>
+                <div>
+                  <dt>현재 연락 · 경계</dt>
+                  <dd>{getOptionLabel(currentContactOptions, formData.reunionContext.currentContact)} · {getOptionLabel(contactBoundaryOptions, formData.reunionContext.contactBoundary)}</dd>
+                  <button type="button" onClick={() => goToStep(3)}>수정</button>
+                </div>
+                <div>
+                  <dt>이별 이유</dt>
+                  <dd>{getOptionLabel(breakupReasonOptions, formData.reunionContext.breakupReason)}{formData.reunionContext.breakupReasonDetail ? ` · ${formData.reunionContext.breakupReasonDetail}` : ''}</dd>
+                  <button type="button" onClick={() => goToStep(3)}>수정</button>
+                </div>
+                <div>
+                  <dt>상대 출생정보</dt>
+                  <dd>{formData.reunionContext.partnerBirthKnown ? '입력함 · 제공 권한 확인' : '입력하지 않음 · 진행 가능'}</dd>
+                  <button type="button" onClick={() => goToStep(4)}>수정</button>
+                </div>
+                <div>
+                  <dt>질문 1 원문</dt>
+                  <dd>{formData.q1 || '미입력'}</dd>
+                  <button type="button" onClick={() => focusQuestion('q1')}>바로 수정</button>
+                </div>
+                <div>
+                  <dt>질문 2 원문</dt>
+                  <dd>{formData.q2 || '미입력'}</dd>
+                  <button type="button" onClick={() => focusQuestion('q2')}>바로 수정</button>
+                </div>
+              </dl>
             </article>
+
+            <p className="love-reunion-intake__policy-links">
+              입력 정보와 리포트는 다시보기·문의 대응을 위해 최대 1년 보관되며, 삭제를 요청할 수 있습니다.
+              <Link to="/privacy"> 개인정보처리방침</Link>과
+              <Link to="/refund"> 환불정책</Link>을 결제 전에 확인해 주세요.
+            </p>
 
             <aside className="love-reunion-intake__safety calm">
               <ShieldCheck size={20} />

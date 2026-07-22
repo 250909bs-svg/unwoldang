@@ -164,7 +164,7 @@ export default function LoveReunionDetail() {
               src={loveReunionProduct.home.image}
               alt="홍연아씨 재회운"
               width={992}
-              height={992}
+              height={1586}
             />
             <div className="love-reunion-detail-poster-shade" aria-hidden="true" />
             <div className="love-reunion-detail-poster-caption">
@@ -253,6 +253,48 @@ export default function LoveReunionDetail() {
           </div>
         </section>
 
+        <section className="love-reunion-detail-expectation" aria-labelledby="love-reunion-detail-expectation-title">
+          <header className="love-reunion-detail-section-head">
+            <div>
+              <span className="love-reunion-detail-section-kicker">BEFORE PURCHASE</span>
+              <h2 id="love-reunion-detail-expectation-title">결제 전에 결과 범위를 확인하세요</h2>
+            </div>
+            <p>재회 성공을 보장하는 답이 아니라, 입력한 사실과 사주 흐름을 구분해 판단 조건과 행동 계획을 제공하는 리포트입니다.</p>
+          </header>
+
+          <div className="love-reunion-detail-expectation-grid">
+            <article>
+              <span>입력</span>
+              <strong>5단계 · 결제 전 검토</strong>
+              <p>상대방 출생정보는 선택이며, 결제 전 전체 입력을 다시 확인하고 수정할 수 있습니다.</p>
+            </article>
+            <article>
+              <span>생성</span>
+              <strong>분석 완료 후 자동 이동</strong>
+              <p>네트워크와 분석 상태에 따라 달라질 수 있으며, 응답이 지연되면 화면에서 다시 시도하도록 안내합니다.</p>
+            </article>
+            <article>
+              <span>보관·삭제</span>
+              <strong>최대 1년 보관</strong>
+              <p>마이페이지 다시보기를 지원하며, 법령상 보관 의무를 제외하고 삭제를 요청할 수 있습니다.</p>
+            </article>
+          </div>
+
+          <div className="love-reunion-detail-result-preview" aria-label="결과 구성 미리보기">
+            <span>RESULT STRUCTURE · 실제 결과 데이터 없음</span>
+            <ul>
+              <li><span>01</span><strong>현재 판단</strong><small>근거 구분과 연락 경계</small></li>
+              <li><span>02</span><strong>질문별 답변</strong><small>입력한 질문 원문 기준</small></li>
+              <li><span>03</span><strong>30일 계획</strong><small>연락 또는 회복 행동 순서</small></li>
+            </ul>
+            <p>위 화면은 결과의 구성만 보여줍니다. 개인별 해석 문장과 판단은 입력 및 결제 후 생성됩니다.</p>
+          </div>
+
+          <p className="love-reunion-detail-policy-links">
+            자세한 기준은 <Link to="/privacy">개인정보처리방침</Link>과 <Link to="/refund">환불정책</Link>에서 확인할 수 있습니다.
+          </p>
+        </section>
+
         <aside className="love-reunion-detail-safety" aria-labelledby="love-reunion-detail-safety-title">
           <ShieldCheck size={28} aria-hidden="true" />
           <div>
@@ -288,6 +330,15 @@ export default function LoveReunionDetail() {
             </small>
           </div>
         </section>
+      </div>
+      <div className="love-reunion-detail-mobile-cta" aria-label="재회운 구매 시작">
+        <div>
+          <span>개인 맞춤 리포트</span>
+          <strong>{formattedPrice}</strong>
+        </div>
+        <Link to={loveReunionProduct.routes.intake} state={startState}>
+          입력하기 <ArrowRight size={17} aria-hidden="true" />
+        </Link>
       </div>
     </main>
   );
