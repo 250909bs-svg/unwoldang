@@ -37,6 +37,19 @@ const POSITIVE_INTEGER_ENV_NAMES = Object.freeze([
   'ADMIN_RATE_LIMIT_WINDOW_MS',
   'ADMIN_RATE_LIMIT_MAX'
 ] as const);
+const MIN_SIGNING_SECRET_LENGTH = 32;
+const KNOWN_SIGNING_SECRET_PLACEHOLDERS = new Set([
+  'replace_with_a_long_random_secret_value',
+  'replace_with_a_different_long_random_secret_value',
+  'replace_with_a_third_long_random_secret_value',
+  'changeme',
+  'change-me',
+  'change_me'
+]);
+const SIGNING_SECRET_PLACEHOLDER_PREFIX =
+  /^(?:replace[_-]?with|your|example|fixture|change[_-]?me)(?:[_-]|$)/i;
+const PRODUCTION_CONFIGURATION_PLACEHOLDER_PREFIX =
+  /^(?:your|store[_-]?your|fixture|example)(?:[_-]|$)/i;
 
 function trimmed(env: RuntimeEnv, name: string) {
   return env[name]?.trim() || '';
@@ -179,6 +192,136 @@ function requireProductionValue(issues: string[], name: string, configured: bool
   }
 }
 
+function isKnownSigningSecretPlaceholder(secret: string) {
+  const normalized = secret.toLowerCase();
+  return (
+    KNOWN_SIGNING_SECRET_PLACEHOLDERS.has(normalized) ||
+    SIGNING_SECRET_PLACEHOLDER_PREFIX.test(normalized)
+  );
+}
+
+function validateProductionSigningSecrets(issues: string[], config: AppConfig) {
+  const signingSecrets = [
+    ['REPORT_ACCESS_SECRET', config.auth.reportAccessSecret],
+    ['USER_ACCESS_SECRET', config.auth.userAccessSecret],
+    ['ADMIN_ACCESS_SECRET', config.auth.adminAccessSecret]
+  ] as const;
+
+  for (const [name, secret] of signingSecrets) {
+    if (
+      secret &&
+      (Array.from(secret).length < MIN_SIGNING_SECRET_LENGTH ||
+        isKnownSigningSecretPlaceholder(secret))
+    ) {
+      issues.push(
+        `${name} must contain at least 32 characters and cannot use a known placeholder.`
+      );
+    }
+  }
+
+  const configuredSecrets = signingSecrets
+    .map(([, secret]) => secret)
+    .filter(Boolean);
+
+  if (
+    configuredSecrets.length === signingSecrets.length &&
+    new Set(configuredSecrets).size !== signingSecrets.length
+  ) {
+    issues.push(
+      'REPORT_ACCESS_SECRET, USER_ACCESS_SECRET, and ADMIN_ACCESS_SECRET must be distinct.'
+    );
+  }
+
+  if (
+    config.auth.adminCredentialHash &&
+    !/^[a-f0-9]{64}$/.test(config.auth.adminCredentialHash)
+  ) {
+    issues.push(
+      'ADMIN_CREDENTIAL_HASH must be a lowercase 64-character hexadecimal SHA-256 digest.'
+    );
+  }
+}
+
+function isLocalProductionHostname(hostname: string) {
+  const normalized = hostname
+    .replace(/^\[|\]$/g, '')
+    .toLowerCase();
+
+  return (
+    normalized === 'localhost' ||
+    normalized.endsWith('.localhost') ||
+    normalized === '::1' ||
+    normalized === '0:0:0:0:0:0:0:1' ||
+    /^127(?:\.\d{1,3}){3}$/.test(normalized)
+  );
+}
+
+function isExactProductionOrigin(origin: string) {
+  if (!origin || origin === 'null' || origin.includes('*')) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(origin);
+
+    return (
+      parsed.protocol === 'https:' &&
+      parsed.origin === origin &&
+      !parsed.username &&
+      !parsed.password &&
+      parsed.pathname === '/' &&
+      !parsed.search &&
+      !parsed.hash &&
+      !isLocalProductionHostname(parsed.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function validateProductionOrigins(issues: string[], origins: readonly string[]) {
+  if (origins.some((origin) => !isExactProductionOrigin(origin))) {
+    issues.push(
+      'ALLOWED_ORIGINS contains an invalid production origin.'
+    );
+  }
+}
+
+function validateProductionProviderConfiguration(issues: string[], config: AppConfig) {
+  const requiredConfiguration = [
+    ['KAKAO_REST_API_KEY', config.kakao.restApiKey],
+    ['PORTONE_API_SECRET', config.portOne.apiSecret],
+    ['PORTONE_STORE_ID', config.portOne.storeId],
+    ['FIRESTORE_PROJECT_ID', config.firestore.projectId]
+  ] as const;
+
+  for (const [name, value] of requiredConfiguration) {
+    if (value && PRODUCTION_CONFIGURATION_PLACEHOLDER_PREFIX.test(value.trim())) {
+      issues.push(`${name} cannot use a known placeholder in production.`);
+    }
+  }
+}
+
+function validateProductionOptionalEnvironmentPlaceholders(
+  issues: string[],
+  env: RuntimeEnv
+) {
+  const optionalEnvironmentNames = [
+    'GEMINI_API_KEY',
+    'KASI_SERVICE_KEY',
+    'DATA_GO_KR_SERVICE_KEY',
+    'PUBLIC_DATA_SERVICE_KEY',
+    'KAKAO_CLIENT_SECRET'
+  ] as const;
+
+  for (const name of optionalEnvironmentNames) {
+    const value = trimmed(env, name);
+    if (value && PRODUCTION_CONFIGURATION_PLACEHOLDER_PREFIX.test(value)) {
+      issues.push(`${name} cannot use a known placeholder in production.`);
+    }
+  }
+}
+
 export function validateConfig(config: AppConfig, env?: RuntimeEnv): AppConfig {
   const issues: string[] = [];
 
@@ -214,6 +357,12 @@ export function validateConfig(config: AppConfig, env?: RuntimeEnv): AppConfig {
       'FIRESTORE_PROJECT_ID or a Google Cloud project environment variable',
       Boolean(config.firestore.projectId)
     );
+    validateProductionOrigins(issues, config.allowedOrigins);
+    validateProductionSigningSecrets(issues, config);
+    validateProductionProviderConfiguration(issues, config);
+    if (env) {
+      validateProductionOptionalEnvironmentPlaceholders(issues, env);
+    }
 
     if (!config.report.requireTokenForArchive) {
       issues.push('REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=false is forbidden in production.');

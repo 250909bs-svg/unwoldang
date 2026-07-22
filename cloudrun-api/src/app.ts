@@ -3,7 +3,7 @@ import {
   generateGeminiSajuReport,
   type ReportRequestBody
 } from '../../src/lib/server/geminiReportService.ts';
-import { loadConfig, type AppConfig } from './config/env.ts';
+import { loadValidatedConfig, type AppConfig } from './config/env.ts';
 import { AdminService } from './domains/admin/adminService.ts';
 import {
   ArchiveService,
@@ -21,7 +21,9 @@ import { ReportService } from './domains/reports/reportService.ts';
 import { createRouter } from './http/router.ts';
 import { createAuthMiddleware } from './middleware/auth.ts';
 import { createCorsMiddleware } from './middleware/cors.ts';
-import { createReportRateLimit } from './middleware/rateLimit.ts';
+import { createRateLimiters } from './middleware/rateLimit.ts';
+import { defaultLogger, type StructuredLogger } from './observability/logger.ts';
+import { runWithRequestContext } from './observability/requestContext.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
@@ -30,12 +32,14 @@ export type CreateAppOptions = {
   config?: AppConfig;
   fetchImplementation?: typeof fetch;
   reportGenerator?: typeof generateGeminiSajuReport;
+  logger?: StructuredLogger;
 };
 
 export function createApp(options: CreateAppOptions = {}): RequestListener {
-  const config = options.config || loadConfig();
+  const config = options.config || loadValidatedConfig();
   const fetchImplementation = options.fetchImplementation || globalThis.fetch;
   const reportGenerator = options.reportGenerator || generateGeminiSajuReport;
+  const logger = options.logger || defaultLogger;
 
   const tokenService = new TokenService(config);
   const auth = createAuthMiddleware(config, tokenService);
@@ -98,11 +102,11 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
   const adminService = new AdminService(config, tokenService);
   const healthService = new HealthService(config);
   const applyCors = createCorsMiddleware(config);
-  const enforceReportRateLimit = createReportRateLimit(config);
+  const rateLimits = createRateLimiters(config);
 
-  return createRouter({
+  const router = createRouter({
     applyCors,
-    enforceReportRateLimit,
+    rateLimits,
     auth,
     health: healthService,
     reports: reportService,
@@ -116,4 +120,6 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     archives: archiveService,
     admin: adminService
   });
+
+  return (req, res) => runWithRequestContext(req, res, () => router(req, res), logger);
 }

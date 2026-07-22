@@ -1,3 +1,4 @@
+import { logOperationalEvent } from '../../observability/requestContext.ts';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { AppConfig } from '../../config/env.ts';
 import type { ReportAccessClaims } from '../../contracts/auth.ts';
@@ -272,7 +273,8 @@ export class ReportService {
           return cached;
         }
       } catch (readError) {
-        console.error('Report cache verification after completion write failed:', readError);
+        void readError;
+        logOperationalEvent('report_cache_verification_failed', 'REPORT_CACHE_VERIFICATION_FAILED');
       }
 
       throw writeError;
@@ -293,7 +295,8 @@ export class ReportService {
         failure
       });
     } catch (recoveryError) {
-      console.error('Failed to release report generation lock:', recoveryError);
+      void recoveryError;
+      logOperationalEvent('report_lock_release_failed', 'REPORT_LOCK_RELEASE_FAILED');
     }
   }
 

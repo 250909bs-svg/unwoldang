@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
+import { isIP } from 'node:net';
 import type { AppConfig, RateLimitPolicy } from '../config/env.ts';
 import { ReportRequestError } from '../contracts/errors.ts';
 
@@ -16,6 +18,7 @@ export type RateLimiters = Readonly<Record<RateLimitScope, RateLimiter>>;
 type RateLimitBucket = { count: number; resetAt: number };
 
 const DEFAULT_MAX_BUCKETS = 10_000;
+const UNATTRIBUTED_CLIENT = 'unattributed-client';
 
 const RATE_LIMIT_MESSAGES: Readonly<Record<RateLimitScope, string>> = Object.freeze({
   auth: 'Too many authentication requests. Please try again shortly.',
@@ -36,9 +39,46 @@ export class RateLimitExceededError extends ReportRequestError {
   }
 }
 
-function getClientIp(req: IncomingMessage) {
-  const forwardedFor = String(req.headers['x-forwarded-for'] || '').split(',')[0]?.trim();
-  return forwardedFor || req.socket?.remoteAddress || 'unknown';
+function getLoadBalancerClientAddress(req: IncomingMessage) {
+  const forwardedFor = req.headers['x-forwarded-for'];
+
+  if (typeof forwardedFor !== 'string') {
+    return undefined;
+  }
+
+  const addresses = forwardedFor.split(',').map((value) => value.trim());
+
+  if (addresses.length < 2) {
+    return undefined;
+  }
+
+  const clientAddress = addresses.at(-2);
+  const loadBalancerAddress = addresses.at(-1);
+
+  if (
+    !clientAddress ||
+    !loadBalancerAddress ||
+    isIP(clientAddress) === 0 ||
+    isIP(loadBalancerAddress) === 0
+  ) {
+    return undefined;
+  }
+
+  return clientAddress;
+}
+
+function getKernelPeerAddress(req: IncomingMessage) {
+  const remoteAddress = req.socket?.remoteAddress?.trim();
+  return remoteAddress && isIP(remoteAddress) !== 0 ? remoteAddress : undefined;
+}
+
+function getClientKey(scope: RateLimitScope, req: IncomingMessage) {
+  const clientIdentity =
+    getLoadBalancerClientAddress(req) || getKernelPeerAddress(req) || UNATTRIBUTED_CLIENT;
+
+  return createHash('sha256')
+    .update(`unwoldang-rate-limit:v1:${scope}:${clientIdentity}`)
+    .digest('hex');
 }
 
 function retryAfterSeconds(resetAt: number, now: number) {
@@ -74,7 +114,7 @@ function createScopedRateLimiter(
       throw new Error('Rate limiter clock returned an invalid timestamp.');
     }
 
-    const key = getClientIp(req);
+    const key = getClientKey(scope, req);
     const bucket = buckets.get(key);
 
     if (bucket && bucket.resetAt > now) {

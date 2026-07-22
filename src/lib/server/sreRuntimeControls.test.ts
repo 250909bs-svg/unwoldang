@@ -13,26 +13,39 @@ import {
   RateLimitExceededError
 } from '../../../cloudrun-api/src/middleware/rateLimit.ts';
 
-function requestFrom(ipAddress: string): IncomingMessage {
+const TEST_LOAD_BALANCER_ADDRESS = '35.191.0.1';
+const TEST_REPORT_SIGNING_SECRET = `test-report-${'r'.repeat(32)}`;
+const TEST_USER_SIGNING_SECRET = `test-user-${'u'.repeat(32)}`;
+const TEST_ADMIN_SIGNING_SECRET = `test-admin-${'a'.repeat(32)}`;
+const TEST_ADMIN_CREDENTIAL_HASH = '0'.repeat(64);
+
+function networkRequest(
+  forwardedFor: string | string[] | undefined,
+  remoteAddress?: string
+): IncomingMessage {
   return {
-    headers: { 'x-forwarded-for': ipAddress },
-    socket: {}
+    headers: forwardedFor === undefined ? {} : { 'x-forwarded-for': forwardedFor },
+    socket: remoteAddress ? { remoteAddress } : {}
   } as unknown as IncomingMessage;
+}
+
+function requestFrom(ipAddress: string): IncomingMessage {
+  return networkRequest(`${ipAddress}, ${TEST_LOAD_BALANCER_ADDRESS}`, '10.0.0.1');
 }
 
 function productionEnvironment(overrides: RuntimeEnv = {}): RuntimeEnv {
   return {
     NODE_ENV: 'production',
     ALLOWED_ORIGINS: 'https://contract.example',
-    REPORT_ACCESS_SECRET: 'fixture-report-secret',
-    USER_ACCESS_SECRET: 'fixture-user-secret',
-    ADMIN_ACCESS_SECRET: 'fixture-admin-secret',
-    ADMIN_CREDENTIAL_HASH: 'fixture-admin-credential-hash',
-    KAKAO_REST_API_KEY: 'fixture-kakao-key',
-    PORTONE_API_SECRET: 'fixture-portone-secret',
-    PORTONE_STORE_ID: 'fixture-portone-store',
+    REPORT_ACCESS_SECRET: TEST_REPORT_SIGNING_SECRET,
+    USER_ACCESS_SECRET: TEST_USER_SIGNING_SECRET,
+    ADMIN_ACCESS_SECRET: TEST_ADMIN_SIGNING_SECRET,
+    ADMIN_CREDENTIAL_HASH: TEST_ADMIN_CREDENTIAL_HASH,
+    KAKAO_REST_API_KEY: ['synthetic', 'kakao', 'value'].join('-'),
+    PORTONE_API_SECRET: ['synthetic', 'portone', 'value'].join('-'),
+    PORTONE_STORE_ID: ['synthetic', 'store', 'value'].join('-'),
     ENABLE_FIRESTORE_ARCHIVE: 'true',
-    FIRESTORE_PROJECT_ID: 'fixture-project',
+    FIRESTORE_PROJECT_ID: ['synthetic', 'project', 'value'].join('-'),
     REQUIRE_REPORT_TOKEN_FOR_ARCHIVE: 'true',
     ...overrides
   };
@@ -92,6 +105,70 @@ describe('Cloud Run startup configuration', () => {
     expect(config.gemini.configured).toBe(false);
   });
 
+  it('rejects ready-looking production provider and storage placeholders without exposing values', () => {
+    const rawPlaceholderValues = {
+      KAKAO_REST_API_KEY: 'your_kakao_rest_api_key',
+      PORTONE_API_SECRET: 'your_portone_v2_api_secret',
+      PORTONE_STORE_ID: 'store-your-portone-store-id',
+      FIRESTORE_PROJECT_ID: 'your-gcp-project-id'
+    };
+
+    try {
+      loadValidatedConfig(productionEnvironment(rawPlaceholderValues));
+      throw new Error('Expected production validation to fail.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigValidationError);
+      const validationError = error as ConfigValidationError;
+      expect(validationError.issues).toEqual(
+        expect.arrayContaining([
+          'KAKAO_REST_API_KEY cannot use a known placeholder in production.',
+          'PORTONE_API_SECRET cannot use a known placeholder in production.',
+          'PORTONE_STORE_ID cannot use a known placeholder in production.',
+          'FIRESTORE_PROJECT_ID cannot use a known placeholder in production.'
+        ])
+      );
+
+      const diagnostic = `${validationError.message} ${validationError.issues.join(' ')}`;
+      for (const placeholderValue of Object.values(rawPlaceholderValues)) {
+        expect(diagnostic).not.toContain(placeholderValue);
+      }
+    }
+  });
+
+  it.each([
+    ['GEMINI_API_KEY', 'your_gemini_api_key'],
+    ['KASI_SERVICE_KEY', 'your_data_go_kr_service_key'],
+    ['DATA_GO_KR_SERVICE_KEY', 'example-data-go-kr-key'],
+    ['PUBLIC_DATA_SERVICE_KEY', 'fixture_public_data_key'],
+    ['KAKAO_CLIENT_SECRET', 'your_kakao_client_secret_if_enabled']
+  ])(
+    'rejects configured optional production placeholder %s without exposing its value',
+    (name, placeholder) => {
+      try {
+        loadValidatedConfig(productionEnvironment({ [name]: placeholder }));
+        throw new Error('Expected production validation to fail.');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConfigValidationError);
+        const validationError = error as ConfigValidationError;
+        expect(validationError.issues).toContain(
+          `${name} cannot use a known placeholder in production.`
+        );
+        expect(
+          `${validationError.message} ${validationError.issues.join(' ')}`
+        ).not.toContain(placeholder);
+      }
+    }
+  );
+
+  it.each(['fixture-provider-value', 'example_provider_value'])(
+    'rejects the production placeholder family %s',
+    (placeholder) => {
+      expect(() =>
+        loadValidatedConfig(productionEnvironment({ KAKAO_REST_API_KEY: placeholder }))
+      ).toThrow(ConfigValidationError);
+    }
+  );
+
   it('fails production startup for missing required values and forbidden local bypasses', () => {
     try {
       loadValidatedConfig(
@@ -113,6 +190,68 @@ describe('Cloud Run startup configuration', () => {
           'REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=false is forbidden in production.'
         ])
       );
+    }
+  });
+
+  it('rejects weak, placeholder, repeated signing secrets and malformed admin hashes', () => {
+    const rawSensitiveValues = [
+      'replace_with_a_long_random_secret_value',
+      'too-short',
+      'A'.repeat(64)
+    ];
+
+    try {
+      loadValidatedConfig(
+        productionEnvironment({
+          REPORT_ACCESS_SECRET: rawSensitiveValues[0],
+          USER_ACCESS_SECRET: rawSensitiveValues[1],
+          ADMIN_ACCESS_SECRET: rawSensitiveValues[1],
+          ADMIN_CREDENTIAL_HASH: rawSensitiveValues[2]
+        })
+      );
+      throw new Error('Expected production validation to fail.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigValidationError);
+      const validationError = error as ConfigValidationError;
+      expect(validationError.issues).toEqual(
+        expect.arrayContaining([
+          'REPORT_ACCESS_SECRET must contain at least 32 characters and cannot use a known placeholder.',
+          'USER_ACCESS_SECRET must contain at least 32 characters and cannot use a known placeholder.',
+          'ADMIN_ACCESS_SECRET must contain at least 32 characters and cannot use a known placeholder.',
+          'REPORT_ACCESS_SECRET, USER_ACCESS_SECRET, and ADMIN_ACCESS_SECRET must be distinct.',
+          'ADMIN_CREDENTIAL_HASH must be a lowercase 64-character hexadecimal SHA-256 digest.'
+        ])
+      );
+
+      const diagnostic = `${validationError.message} ${validationError.issues.join(' ')}`;
+      for (const sensitiveValue of rawSensitiveValues) {
+        expect(diagnostic).not.toContain(sensitiveValue);
+      }
+    }
+  });
+
+  it.each([
+    'http://contract.example',
+    'https://contract.example/',
+    'https://user@contract.example',
+    'https://contract.example/path',
+    'https://contract.example?debug=1',
+    'https://contract.example#fragment',
+    'https://*.contract.example',
+    'null',
+    'https://localhost',
+    'https://127.0.0.1',
+    'https://[::1]'
+  ])('rejects unsafe production origin %s', (allowedOrigin) => {
+    try {
+      loadValidatedConfig(productionEnvironment({ ALLOWED_ORIGINS: allowedOrigin }));
+      throw new Error('Expected production validation to fail.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigValidationError);
+      expect((error as ConfigValidationError).issues).toContain(
+        'ALLOWED_ORIGINS contains an invalid production origin.'
+      );
+      expect((error as ConfigValidationError).message).not.toContain(allowedOrigin);
     }
   });
 });
@@ -177,6 +316,63 @@ describe('bounded scoped rate limiters', () => {
 
     enforceReportRateLimit(request);
     expect(() => enforceReportRateLimit(request)).toThrowError(
+      expect.objectContaining({
+        code: 'RATE_LIMIT_EXCEEDED',
+        scope: 'report'
+      })
+    );
+  });
+
+  it('ignores forged X-Forwarded-For prefixes and limits the penultimate client address', () => {
+    const config = loadConfig({ AUTH_RATE_LIMIT_MAX: '1' });
+    const limiters = createRateLimiters(config, { maxBuckets: 10 });
+    const firstRequest = networkRequest(
+      `203.0.113.10, 198.51.100.40, ${TEST_LOAD_BALANCER_ADDRESS}`,
+      '10.0.0.1'
+    );
+    const secondRequest = networkRequest(
+      `203.0.113.11, 198.51.100.40, ${TEST_LOAD_BALANCER_ADDRESS}`,
+      '10.0.0.1'
+    );
+
+    limiters.auth(firstRequest);
+    expect(() => limiters.auth(secondRequest)).toThrowError(
+      expect.objectContaining({
+        code: 'RATE_LIMIT_EXCEEDED',
+        scope: 'auth'
+      })
+    );
+  });
+
+  it('falls back to the kernel peer for malformed or ambiguous forwarded chains', () => {
+    const config = loadConfig({ PAYMENT_RATE_LIMIT_MAX: '1' });
+    const limiters = createRateLimiters(config, { maxBuckets: 10 });
+    const malformedChain = networkRequest(
+      '198.51.100.50, not-a-load-balancer-ip',
+      '192.0.2.44'
+    );
+    const ambiguousSingleAddress = networkRequest('203.0.113.99', '192.0.2.44');
+
+    limiters.payment(malformedChain);
+    expect(() => limiters.payment(ambiguousSingleAddress)).toThrowError(
+      expect.objectContaining({
+        code: 'RATE_LIMIT_EXCEEDED',
+        scope: 'payment'
+      })
+    );
+  });
+
+  it('uses one fail-closed bucket when neither proxy nor kernel address is trustworthy', () => {
+    const config = loadConfig({ REPORT_RATE_LIMIT_MAX: '1' });
+    const limiters = createRateLimiters(config, { maxBuckets: 10 });
+    const ambiguousHeaderArray = networkRequest([
+      '198.51.100.60',
+      TEST_LOAD_BALANCER_ADDRESS
+    ]);
+    const invalidAddresses = networkRequest('not-an-ip, still-not-an-ip', 'proxy-host');
+
+    limiters.report(ambiguousHeaderArray);
+    expect(() => limiters.report(invalidAddresses)).toThrowError(
       expect.objectContaining({
         code: 'RATE_LIMIT_EXCEEDED',
         scope: 'report'
