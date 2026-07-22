@@ -209,4 +209,4 @@ describe('Cloud Run observability safety contracts', () => {
     });
     expect(JSON.stringify(paymentFailure)).not.toContain('provider raw response');
   });
-});
+});
