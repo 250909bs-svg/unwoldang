@@ -8,7 +8,6 @@ import { buildMzLoveViewModel } from '../lib/mz-love-fact/viewModel';
 import { mapIntakeRelationshipStatus } from '../lib/mz-love-fact/relationshipStatusAdapter';
 import { getMzLoveScene } from '../lib/mz-love-fact/sceneManifest';
 import { buildPartnerSpecificityProfile } from '../lib/mz-love-fact/partnerSpecificity';
-import { getPremiumLoveAnswers } from '../lib/mz-love-fact/premiumLove';
 import type { MzLoveChapterId, SceneArtwork } from '../lib/mz-love-fact/types';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { validateLoveReadingIntakeContext } from '../products/love-reading/intakeContract';
@@ -164,7 +163,12 @@ function ScenePicture({
 }
 
 function scrollToStoryScene(sceneId: string) {
-  document.getElementById(sceneId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const target = document.getElementById(sceneId);
+  if (!target) return;
+
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  target.focus({ preventScroll: true });
 }
 
 function SpeechBalloon({
@@ -206,10 +210,18 @@ function WebtoonScene({
   children: ReactNode;
 }) {
   return (
-    <article id={id} className={['mz-love-story-panel', className].filter(Boolean).join(' ')}>
-      <ScenePicture scene={scene} eager={eager} />
-      <span className="mz-love-story-shade" aria-hidden="true" />
-      <span className="mz-love-story-episode">{episode}</span>
+    <article
+      id={id}
+      className={['mz-love-story-panel', className].filter(Boolean).join(' ')}
+      tabIndex={-1}
+      aria-label={episode + ' ' + scene.alt}
+    >
+      <div className="mz-love-story-art">
+        <ScenePicture scene={scene} eager={eager} />
+        <span className="mz-love-story-shade" aria-hidden="true" />
+        <span className="mz-love-story-episode">{episode}</span>
+        <span className="mz-love-story-cut" aria-hidden="true">CUT</span>
+      </div>
       <div className="mz-love-story-content">{children}</div>
       {nextId ? (
         <button
@@ -376,23 +388,41 @@ export default function LoveReadingPreview() {
   }
 
   const { report, viewModel } = result;
+  const chapterById = new Map(viewModel.chapters.map((chapter) => [chapter.id, chapter]));
   const focus = isLoveFocus(formData.loveFocus) ? formData.loveFocus : 'my-attraction';
-  const focusChapter = viewModel.chapters.find((chapter) => chapter.id === FOCUS_CHAPTERS[focus]);
+  const focusChapter = chapterById.get(FOCUS_CHAPTERS[focus]);
   const openingScene = getMzLoveScene('hero-fan-closed');
   const roomScene = getMzLoveScene('room-consultation');
   const whisperScene = getMzLoveScene('whisper-fact');
   const futurePartnerScene = getMzLoveScene('future-partner-fan');
   const timingScene = getMzLoveScene('timing-rising-moon');
   const finalScene = getMzLoveScene('final-fact-bomb');
-  const loveSelfChapter = viewModel.chapters.find((chapter) => chapter.id === 'love-self');
+  const loveSelfChapter = chapterById.get('love-self');
+  const repeatedAttractionChapter = chapterById.get('repeated-attraction');
+  const attractedPartnerChapter = chapterById.get('attracted-partner');
+  const lastingPartnerChapter = chapterById.get('lasting-partner');
+  const nextPartnerChapter = chapterById.get('next-partner');
+  const meetingChapter = chapterById.get('meeting-scenes');
+  const relationshipStatusChapter = chapterById.get('relationship-status');
   const specificity = buildPartnerSpecificityProfile(report, formData.interestedIn);
-  const premiumAnswers = getPremiumLoveAnswers(report, formData.interestedIn);
-  const premiumAnswerById = new Map(premiumAnswers.map((answer) => [answer.id, answer]));
+
   const meetingScene = getMzLoveScene(specificity.meeting.sceneKey);
+  const relationshipScene = formData.relationshipStatus === 'single'
+    ? meetingScene
+    : relationshipStatusChapter?.scene || roomScene;
+  const attractedScene = attractedPartnerChapter?.scene || getMzLoveScene('attraction-spark');
+  const lastingScene = lastingPartnerChapter?.scene || getMzLoveScene('longevity-lantern');
   const elementTotal = Math.max(1, report.fiveElements.reduce((sum, item) => sum + item.value, 0));
   const displayName = formData.name?.trim() || report.customerName;
   const helpful = report.helpfulElements.join('·') || '균형 기운';
   const cautious = report.cautiousElements.join('·') || '과한 기운';
+  const isSingle = formData.relationshipStatus === 'single';
+  const firstRedFlag = viewModel.redFlags[0] || repeatedAttractionChapter?.checkSignal;
+  const firstGreenFlag = viewModel.greenFlags[0] || lastingPartnerChapter?.checkSignal;
+  const firstWeekPlan = viewModel.actionPlan.thirtyDays[0];
+  const previewBasis = [...(loveSelfChapter?.calculationBasis || []), ...(attractedPartnerChapter?.calculationBasis || [])]
+    .filter((basis, index, items) => items.findIndex((item) => item.id === basis.id) === index)
+    .slice(0, 3);
   const precisionLabel = formData.isUnknownTime
     ? `${report.engineMeta?.scenarioCount || 12}개 출생시간 가능성 비교`
     : '입력한 분 단위 출생시각 반영';
@@ -467,6 +497,10 @@ export default function LoveReadingPreview() {
             <SpeechBalloon speaker={displayName} side="right" tone="customer">
               <p>“{formData.q1?.trim()}”</p>
             </SpeechBalloon>
+            <aside className="mz-love-opening-strip">
+              <small>이 미리보기에서 무료 공개</small>
+              <strong>원국 · 끌리는 타입 · 오래 갈 타입 · 반복 패턴 · 만남 환경</strong>
+            </aside>
           </div>
         </WebtoonScene>
 
@@ -521,6 +555,21 @@ export default function LoveReadingPreview() {
               <span><small>주의</small><strong>{cautious}</strong></span>
             </div>
 
+            <article className="mz-love-origin-reading">
+              <header>
+                <small>무료 원국 해석</small>
+                <h2>연애할 때 드러나는 {displayName}의 기본값</h2>
+              </header>
+              <p>{loveSelfChapter?.interpretation}</p>
+              {previewBasis.length ? (
+                <div aria-label="개인화 계산 근거">
+                  {previewBasis.map((basis) => (
+                    <span key={basis.id}><small>{basis.label}</small><strong>{basis.value}</strong></span>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+
             <SpeechBalloon speaker="MZ무당 · 근거" side="right" tone="fact">
               <p>오행 분포는 {report.fiveElements.map((item) => item.label + ' ' + Math.round((item.value / elementTotal) * 100) + '%').join(' · ')}.</p>
               <p>이 균형을 배우자궁·십성과 함께 봐야 연애 습관이 보여.</p>
@@ -538,20 +587,28 @@ export default function LoveReadingPreview() {
           <div className="mz-love-dialogue-stack">
             <SpeechBalloon speaker="MZ무당 · 첫 팩폭">
               <p>네 답은 <b>반응 {reactionProfile.id} · {reactionProfile.profileTitle}</b>.</p>
-              <p>{loveSelfChapter?.factBomb || '네가 사랑에 빠지는 방식부터 먼저 짚어볼게.'}</p>
+              <p>{repeatedAttractionChapter?.factBomb || '네가 사랑에서 반복하는 반응부터 먼저 짚어볼게.'}</p>
             </SpeechBalloon>
             <SpeechBalloon speaker={displayName} side="right" tone="customer">
               <p>“{formData.q2?.trim()}”</p>
             </SpeechBalloon>
             <SpeechBalloon speaker="MZ무당">
-              <p>{loveSelfChapter?.interpretation || '말보다 반복되는 행동을 봐야 네 연애의 답이 선명해져.'}</p>
+              <p>{repeatedAttractionChapter?.interpretation || '말보다 반복되는 행동을 봐야 네 연애의 답이 선명해져.'}</p>
             </SpeechBalloon>
             <aside className="mz-love-story-caption">
               <small>현실에서 나타나는 장면</small>
               <p>{reactionProfile.response}</p>
-              <p>{loveSelfChapter?.realLifeScene}</p>
-              <strong>현실 체크 · {loveSelfChapter?.checkSignal}</strong>
+              <p>{repeatedAttractionChapter?.realLifeScene}</p>
+              <strong>현실 체크 · {repeatedAttractionChapter?.checkSignal}</strong>
             </aside>
+            <div className="mz-love-story-flags" aria-label="무료 관계 신호 두 가지">
+              {firstRedFlag ? (
+                <article className="is-red"><small>먼저 멈춰 볼 신호</small><p>{firstRedFlag}</p></article>
+              ) : null}
+              {firstGreenFlag ? (
+                <article className="is-green"><small>더 지켜볼 신호</small><p>{firstGreenFlag}</p></article>
+              ) : null}
+            </div>
           </div>
         </WebtoonScene>
 
@@ -567,9 +624,37 @@ export default function LoveReadingPreview() {
             <SpeechBalloon speaker={displayName} side="right" tone="customer">
               <p>“{FOCUS_LABELS[focus]}이 제일 궁금해요.”</p>
             </SpeechBalloon>
+
+            <section className="mz-love-type-comparison" aria-label="끌리는 타입과 오래 갈 타입 비교">
+              <article className="is-attracted">
+                <div className="mz-love-type-comparison__art">
+                  <ScenePicture scene={attractedScene} />
+                  <span>FIRST PULL</span>
+                </div>
+                <div>
+                  <small>첫눈에 끌리기 쉬운 쪽</small>
+                  <h2>{attractedPartnerChapter?.title}</h2>
+                  <p>{attractedPartnerChapter?.factBomb}</p>
+                  <strong>{attractedPartnerChapter?.interpretation}</strong>
+                </div>
+              </article>
+              <article className="is-lasting">
+                <div className="mz-love-type-comparison__art">
+                  <ScenePicture scene={lastingScene} />
+                  <span>LONG RUN</span>
+                </div>
+                <div>
+                  <small>실제로 오래 갈 가능성이 큰 쪽</small>
+                  <h2>{lastingPartnerChapter?.title}</h2>
+                  <p>{lastingPartnerChapter?.factBomb}</p>
+                  <strong>{lastingPartnerChapter?.interpretation}</strong>
+                </div>
+              </article>
+            </section>
+
             <SpeechBalloon speaker="MZ무당">
               <h2>{focusChapter?.title || FOCUS_LABELS[focus]}</h2>
-              <p>{focusChapter?.factBomb || premiumAnswerById.get('who')?.answer}</p>
+              <p>{focusChapter?.factBomb || '네 질문은 상대를 단정하기보다 반복되는 관계 신호부터 확인해야 답이 보여.'}</p>
               <p>{focusChapter?.interpretation}</p>
             </SpeechBalloon>
             <SpeechBalloon speaker="MZ무당 · 이번 주" side="right" tone="fact">
@@ -581,41 +666,65 @@ export default function LoveReadingPreview() {
         <WebtoonScene
           id="love-story-partner"
           episode="CHAPTER · 04"
-          scene={futurePartnerScene}
+          scene={isSingle ? futurePartnerScene : relationshipStatusChapter?.scene || roomScene}
           nextId="love-story-meeting"
-          nextLabel="만남 조건 후보 보기"
+          nextLabel={isSingle ? '만남 환경 후보 보기' : '현재 관계 장면 보기'}
           className="is-partner-vault"
         >
           <div className="mz-love-dialogue-stack is-vault-dialogue">
             <SpeechBalloon speaker="MZ무당">
-              <p>배우자궁·십성·오행을 겹치면 <b>{specificity.height.label}</b>, <b>{specificity.face.label}</b> 같은 대표 단서가 보여.</p>
-              <em>명리상 상징 후보일 뿐, 실제 사람의 얼굴·키·직업이나 미래를 확정하는 말은 아니야.</em>
+              {isSingle ? (
+                <>
+                  <p>원국에서 먼저 보이는 인연상은 <b>강한 말보다 다음 행동을 분명히 만드는 사람</b>이야.</p>
+                  <p>{nextPartnerChapter?.interpretation}</p>
+                </>
+              ) : (
+                <>
+                  <p>새 사람을 예언할 때가 아니야. <b>지금 관계가 오래 갈 조건</b>부터 볼게.</p>
+                  <p>{relationshipStatusChapter?.interpretation}</p>
+                </>
+              )}
             </SpeechBalloon>
 
-            <section className="mz-love-portrait-vault" aria-label="잠긴 관계 상징 후보">
+            <section className="mz-love-portrait-vault" aria-label="무료 관계 단서와 잠긴 상세 분석">
               <div className="mz-love-vault-lock" aria-hidden="true">
-                <LockKeyhole size={30} />
+                <LockKeyhole size={24} />
               </div>
-              <div className="mz-love-vault-portrait" aria-hidden="true">
-                <ScenePicture scene={futurePartnerScene} />
-                <span className="mz-love-vault-portrait__seal"><LockKeyhole size={36} /></span>
-              </div>
-              <span>MYEONGRI CLUES · LOCKED</span>
-              <h2>관계에서 알아볼 대표 단서</h2>
+              <span>FREE CLUE · LOCKED DETAILS</span>
+              <h2>{isSingle ? '어떤 사람과 관계가 이어질까' : '지금 관계가 오래 가려면'}</h2>
+              <p className="mz-love-vault-free-clue">
+                {isSingle ? lastingPartnerChapter?.realLifeScene : relationshipStatusChapter?.realLifeScene}
+              </p>
               <dl>
-                <div><dt>대표 키감 단서</dt><dd>{specificity.height.label}</dd></div>
-                <div><dt>얼굴 인상 상징</dt><dd>{specificity.face.primary}</dd></div>
-                <div className="is-locked"><dt>직업 환경 Top 3 후보</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
-                <div className="is-locked"><dt>만남 장소·장면 후보</dt><dd><LockKeyhole size={11} /> 본편 공개</dd></div>
+                <div>
+                  <dt>{isSingle ? '첫 끌림의 방향' : '지금 관계의 핵심'}</dt>
+                  <dd>{isSingle ? attractedPartnerChapter?.factBomb : relationshipStatusChapter?.factBomb}</dd>
+                </div>
+                <div>
+                  <dt>오래 갈 행동 신호</dt>
+                  <dd>{lastingPartnerChapter?.checkSignal}</dd>
+                </div>
+                <div className="is-locked">
+                  <dt>{isSingle ? '세부 외형·키 조합' : '갈등 트리거·대화 복구 순서'}</dt>
+                  <dd><LockKeyhole size={11} /> 본편 공개</dd>
+                </div>
+                <div className="is-locked">
+                  <dt>{isSingle ? '직업 환경 Top 3·구체 장소' : '관계 회복·경계 상세 분석'}</dt>
+                  <dd><LockKeyhole size={11} /> 본편 공개</dd>
+                </div>
               </dl>
               <button type="button" onClick={continueToCheckout}>
                 <LockKeyhole size={17} aria-hidden="true" />
-                본편에서 직업·장소 후보 보기
+                {isSingle ? '세부 인연상·직업·장소 잠금 풀기' : '현재 관계의 본편 분석 잠금 풀기'}
               </button>
             </section>
 
             <SpeechBalloon speaker="해석 메모" side="right" tone="fact">
-              <p>본편에서는 이 후보가 나온 근거와, 현실에서 확인할 행동 신호를 함께 보여줄게.</p>
+              <p>
+                {isSingle
+                  ? '무료 단서는 행동 중심으로 공개했어. 숫자 외형·직업·정확한 장소와 반대 가능성은 본편에서 근거와 함께 볼 수 있어.'
+                  : '무료 단서는 현재 관계의 반복 장면을 중심으로 공개했어. 갈등 트리거·회복 순서·경계 기준은 본편에서 근거와 함께 볼 수 있어.'}
+              </p>
             </SpeechBalloon>
           </div>
         </WebtoonScene>
@@ -623,38 +732,62 @@ export default function LoveReadingPreview() {
         <WebtoonScene
           id="love-story-meeting"
           episode="CHAPTER · 05"
-          scene={meetingScene}
+          scene={relationshipScene}
           nextId="love-story-locked"
           nextLabel="잠긴 본편 목차 보기"
           className="is-meeting"
         >
           <div className="mz-love-dialogue-stack">
             <SpeechBalloon speaker="MZ무당">
-              <p>만남 장면은 <b>{specificity.meeting.primaryContext}</b> 쪽을 먼저 봐.</p>
-              <em>도움 오행 {report.helpfulElements[0] || specificity.meeting.evidence[0]}에서 읽은 후보이며, 특정 장소나 만남을 예언하는 뜻은 아니야.</em>
+              {isSingle ? (
+                <>
+                  <p>접점을 늘려 볼 1순위 환경 후보는 <b>{specificity.meeting.primaryContext}</b> 쪽이야.</p>
+                  <p>{meetingChapter?.interpretation}</p>
+                </>
+              ) : (
+                <>
+                  <p><b>{viewModel.cover.relationshipLabel}</b>인 지금은 장소보다 관계 안에서 반복되는 장면을 봐야 해.</p>
+                  <p>{relationshipStatusChapter?.factBomb}</p>
+                </>
+              )}
             </SpeechBalloon>
 
-            <div className="mz-love-preview-sealed-grid" aria-label="본편에서 설명하는 관계 조건 후보">
+            <article className="mz-love-meeting-poster">
+              <small>{isSingle ? '원국에서 읽은 만남 환경 후보' : '현재 관계에서 먼저 확인할 장면'}</small>
+              <h2>{isSingle ? specificity.meeting.primaryContext : relationshipStatusChapter?.title}</h2>
+              <p>{isSingle ? specificity.meeting.scene : relationshipStatusChapter?.realLifeScene}</p>
+              <strong>
+                {isSingle
+                  ? '한 번의 우연보다 두 번째 대화가 자연스럽게 이어지는지 확인해.'
+                  : relationshipStatusChapter?.checkSignal}
+              </strong>
+            </article>
+
+            <div className="mz-love-preview-sealed-grid" aria-label={isSingle ? '잠긴 만남 상세 후보' : '잠긴 현재 관계 상세 분석'}>
               <article>
                 <LockKeyhole size={17} aria-hidden="true" />
-                <span>만남 장소 후보</span>
-                <strong>장면·조건 공개</strong>
+                <span>{isSingle ? '구체 장소·대안 후보' : '질문 두 가지 전체 직답'}</span>
+                <strong>본편에서 근거와 함께 공개</strong>
               </article>
               <article>
                 <LockKeyhole size={17} aria-hidden="true" />
-                <span>직업 환경 Top 3</span>
-                <strong>대표 상징 · {specificity.professions[0].fieldLabel}</strong>
+                <span>{isSingle ? '직업 환경 Top 3' : '관계 회복·경계 패턴'}</span>
+                <strong>세부 후보 잠금</strong>
               </article>
               <article>
                 <LockKeyhole size={17} aria-hidden="true" />
-                <span>알아볼 행동 신호</span>
-                <strong>현실 확인 기준 공개</strong>
+                <span>{isSingle ? '알아볼 행동 신호' : '앞으로의 조건별 흐름'}</span>
+                <strong>현실 확인 기준 잠금</strong>
               </article>
             </div>
 
             <SpeechBalloon speaker="MZ무당 · 계산 근거" side="right" tone="fact">
-              <p>배우자궁·상위 십성·도움 오행을 교차 계산했어.</p>
-              <em>{specificity.evidenceSummary}</em>
+              <p>{isSingle ? '배우자궁·상위 십성·도움 오행을 교차 계산했어.' : '관계 상태·기간·연애 반응과 원국을 함께 읽었어.'}</p>
+              <em>
+                {isSingle
+                  ? specificity.evidenceSummary
+                  : relationshipStatusChapter?.calculationBasis.slice(0, 2).map((basis) => `${basis.label} ${basis.value}`).join(' · ')}
+              </em>
             </SpeechBalloon>
           </div>
         </WebtoonScene>
@@ -673,12 +806,40 @@ export default function LoveReadingPreview() {
               <p>대화할 때, 기다릴 때, 멈출 때를 조건별로 나눠뒀어.</p>
               <em>특정 년·월에 사건이 생긴다고 단정하지 않고, 각 구간에서 선택할 행동만 짚어줄게.</em>
             </SpeechBalloon>
-            <div className="mz-love-locked-clues">
+            <div className="mz-love-timing-strip" aria-label="조건별 관계 흐름 잠금 단계">
               {[
-                '인상 상징 후보와 실제 확인할 관계 신호',
-                '생활·활동 분야 후보와 연락 리듬',
-                '12개월 조건별 흐름과 30일 행동 계획'
-              ].map((label) => (
+                { label: '현재 기준', open: true },
+                { label: '접점 확장', open: false },
+                { label: '속도 조절', open: false },
+                { label: '관계 확인', open: false },
+                { label: '선택 기준', open: false }
+              ].map((stage) => (
+                <span key={stage.label} className={stage.open ? 'is-preview' : undefined}>
+                  <small>{stage.open ? 'OPEN' : 'LOCK'}</small>
+                  <strong>{stage.label}</strong>
+                  {stage.open ? null : <LockKeyhole size={12} aria-hidden="true" />}
+                </span>
+              ))}
+            </div>
+
+            {firstWeekPlan ? (
+              <article className="mz-love-week-one">
+                <small>30일 계획 · 1주차 무료 공개</small>
+                <h2>{firstWeekPlan.title}</h2>
+                <p>{firstWeekPlan.task}</p>
+              </article>
+            ) : null}
+
+            <div className="mz-love-locked-clues">
+              {(isSingle ? [
+                '세부 외형·키·직업·구체 장소 후보',
+                '12개월 구간별 흐름과 월별 행동',
+                '30일 2~4주차 계획과 전체 관계 신호'
+              ] : [
+                '현재 관계의 갈등 트리거와 회복 순서',
+                '12개월 구간별 관계 흐름과 행동 기준',
+                '30일 2~4주차 계획과 전체 관계 신호'
+              ]).map((label) => (
                 <span key={label}><LockKeyhole size={16} aria-hidden="true" /> {label}</span>
               ))}
             </div>
@@ -702,7 +863,11 @@ export default function LoveReadingPreview() {
 
             <aside className="mz-love-specificity-note">
               <Sparkles size={17} aria-hidden="true" />
-              <p>{specificity.disclosure}</p>
+              <p>
+                {isSingle
+                  ? specificity.disclosure
+                  : '현재 관계의 결과를 단정하지 않고, 원국과 입력한 관계 장면을 바탕으로 확인할 행동 신호와 경계 기준을 제시합니다.'}
+              </p>
             </aside>
 
             {report.engineMeta?.uncertainty?.length ? (
@@ -715,8 +880,8 @@ export default function LoveReadingPreview() {
             <button type="button" className="mz-love-story-unlock" onClick={continueToCheckout}>
               <LockKeyhole size={19} aria-hidden="true" />
               <span>
-                <small>대표 인연상 후보와 13개 본편까지</small>
-                <strong>이 원국으로 웹툰 본편 잠금 풀기</strong>
+                <small>{isSingle ? '대표 인연상 후보와 13개 본편까지' : '현재 관계 분석과 13개 본편까지'}</small>
+                <strong>{isSingle ? '이 원국으로 웹툰 본편 잠금 풀기' : '현재 관계 웹툰 본편 잠금 풀기'}</strong>
               </span>
               <ArrowRight size={21} aria-hidden="true" />
             </button>
