@@ -19,7 +19,7 @@ const archivedDetailPaths = [
 ] as const;
 const legacyUnknownDetailPaths = ['/detail/general-signature'] as const;
 const archivedDetailPattern = `/detail/:id(${archivedDetailPaths.map((path) => path.slice('/detail/'.length)).join('|')})`;
-const routeSeo = seoRouteData as Record<string, { indexable: boolean; serviceId?: string; price?: number }>;
+const routeSeo = seoRouteData as Record<string, { indexable: boolean; faqs?: unknown[] } & Record<string, unknown>>;
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
 describe('retired detail page indexing', () => {
@@ -95,11 +95,13 @@ describe('retired detail page indexing', () => {
 
   it('keeps SEO sale metadata aligned with the shared product registry', () => {
     activeProducts.forEach((product) => {
-      expect(routeSeo[product.routes.detail]).toMatchObject({
-        indexable: true,
-        serviceId: product.id,
-        price: product.price
-      });
+      const seo = routeSeo[product.routes.detail];
+      expect(seo?.indexable).toBe(true);
+      expect(seo?.faqs?.length).toBeGreaterThan(0);
+      expect(seo).not.toHaveProperty('serviceId');
+      expect(seo).not.toHaveProperty('productName');
+      expect(seo).not.toHaveProperty('price');
+      expect(seo).not.toHaveProperty('priceCurrency');
     });
 
     Object.values(productRegistry)
@@ -112,8 +114,26 @@ describe('retired detail page indexing', () => {
       });
 
     const generatorSource = readFileSync(new URL('../../scripts/generate-seo-pages.mjs', import.meta.url), 'utf8');
-    expect(generatorSource).toContain("src', 'products', 'manifest.json");
-    expect(generatorSource).toContain("=== 'active'");
+    expect(generatorSource).toContain("ssrLoadModule('/src/products/registry.ts')");
+    expect(generatorSource).toContain("ssrLoadModule('/src/content/seoDocument.ts')");
+    expect(generatorSource).not.toContain('manifest.json');
+    expect(generatorSource).not.toContain('detailRouteAliases');
+  });
+
+  it('keeps conversion and private routes noindex at the edge', () => {
+    const protectedSources = [
+      '/form/:path*',
+      '/checkout',
+      '/payment/:path*',
+      '/report/:path*',
+      '/my/:path*',
+      '/admin/:path*'
+    ];
+
+    protectedSources.forEach((source) => {
+      const rule = vercelConfig.headers.find((header) => header.source === source);
+      expect(rule?.headers).toContainEqual({ key: 'X-Robots-Tag', value: 'noindex, nofollow' });
+    });
   });
 
   it('permanently folds obsolete menu and tarot landings into the current home page', () => {
@@ -196,7 +216,14 @@ describe('retired detail page indexing', () => {
 
   it('does not publish archived or unknown detail URLs in the sitemap', () => {
     const sitemap = readFileSync(new URL('../../public/sitemap.xml', import.meta.url), 'utf8');
+    const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+    const detailLocations = locations
+      .filter((location) => new URL(location).pathname.startsWith('/detail/'))
+      .map((location) => new URL(location).pathname)
+      .sort();
 
+    expect(new Set(locations).size).toBe(locations.length);
+    expect(detailLocations).toEqual([...activeDetailPaths].sort());
     activeDetailPaths.forEach((path) => expect(sitemap).toContain(path));
     archivedDetailPaths.forEach((path) => expect(sitemap).not.toContain(path));
     legacyUnknownDetailPaths.forEach((path) => expect(sitemap).not.toContain(path));
