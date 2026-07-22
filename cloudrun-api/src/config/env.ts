@@ -1,3 +1,5 @@
+import { resolveFirestoreCollections } from '../repositories/collections.ts';
+
 export type RuntimeEnv = Record<string, string | undefined>;
 
 export type AppConfig = ReturnType<typeof loadConfig>;
@@ -14,6 +16,7 @@ export function loadConfig(env: RuntimeEnv = process.env) {
   const production = env.NODE_ENV === 'production' || Boolean(trimmed(env, 'K_SERVICE'));
   const configuredOrderClaimTtl = numeric(env, 'PAYMENT_ORDER_CLAIM_TTL_MS', 2 * 60 * 60 * 1000);
   const configuredGenerationLockTtl = numeric(env, 'REPORT_GENERATION_LOCK_TTL_MS', 2 * 60 * 1000);
+  const firestoreCollections = resolveFirestoreCollections(env);
 
   return {
     port: numeric(env, 'PORT', 8080),
@@ -34,7 +37,8 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       cacheMaxBytes: 900_000,
       rateLimitWindowMs: numeric(env, 'REPORT_RATE_LIMIT_WINDOW_MS', 60 * 1000),
       rateLimitMax: numeric(env, 'REPORT_RATE_LIMIT_MAX', 12),
-      requireTokenForArchive: env.REQUIRE_REPORT_TOKEN_FOR_ARCHIVE !== 'false'
+      requireTokenForArchive:
+        production || env.REQUIRE_REPORT_TOKEN_FOR_ARCHIVE !== 'false'
     },
     auth: {
       accessTokenTtlMs: numeric(env, 'AUTH_ACCESS_TOKEN_TTL_MS', 30 * 24 * 60 * 60 * 1000),
@@ -48,7 +52,7 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       apiBaseUrl: (trimmed(env, 'PORTONE_API_BASE_URL') || 'https://api.portone.io').replace(/\/$/, ''),
       apiSecret: trimmed(env, 'PORTONE_API_SECRET'),
       storeId: trimmed(env, 'PORTONE_STORE_ID'),
-      ledgerCollection: trimmed(env, 'PORTONE_PAYMENT_LEDGER_COLLECTION') || 'portonePaymentConfirmations'
+      ledgerCollection: firestoreCollections.portOnePaymentConfirmations
     },
     kakao: {
       restApiKey: trimmed(env, 'KAKAO_REST_API_KEY'),
@@ -64,8 +68,9 @@ export function loadConfig(env: RuntimeEnv = process.env) {
         trimmed(env, 'GCLOUD_PROJECT') ||
         trimmed(env, 'GCP_PROJECT'),
       databaseId: trimmed(env, 'FIRESTORE_DATABASE_ID') || '(default)',
-      archiveCollection: trimmed(env, 'FIRESTORE_ARCHIVE_COLLECTION') || 'reportArchives',
-      accessToken: trimmed(env, 'FIRESTORE_ACCESS_TOKEN')
+      archiveCollection: firestoreCollections.reportArchives,
+      accessToken: trimmed(env, 'FIRESTORE_ACCESS_TOKEN'),
+      collections: firestoreCollections
     },
     gemini: {
       configured: Boolean(trimmed(env, 'GEMINI_API_KEY')),
