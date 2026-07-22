@@ -9,6 +9,7 @@ import type {
 } from '../api/mockData';
 import { useAuth } from '../context/AuthContext';
 import { validateBirthInput } from '../lib/birthInputValidation';
+import { getMotionSafeScrollBehavior, useReducedMotion } from '../shared/ui';
 import '../styles/mz-love-intake.css';
 
 type IntakeLocationState = {
@@ -235,6 +236,7 @@ function validationStep(field: string): IntakeStep {
 }
 
 export default function LoveReadingIntake() {
+  const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -261,6 +263,7 @@ export default function LoveReadingIntake() {
   const [videoFailed, setVideoFailed] = useState(false);
   const hourInputRef = useRef<HTMLInputElement>(null);
   const minuteInputRef = useRef<HTMLInputElement>(null);
+  const stepContentRef = useRef<HTMLElement>(null);
   const meta = STEP_META[step];
   const hasSavedAnswers = Boolean(
     draft.birthDate || draft.birthTime || draft.name || draft.gender || draft.interestedIn ||
@@ -282,7 +285,24 @@ export default function LoveReadingIntake() {
   }, [draft, draftKey]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: getMotionSafeScrollBehavior() });
+  }, [step]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const section = stepContentRef.current;
+      const activeElement = document.activeElement;
+
+      if (!section || (activeElement instanceof HTMLElement && section.contains(activeElement))) {
+        return;
+      }
+
+      section
+        .querySelector<HTMLElement>('input:not(:disabled), textarea:not(:disabled), button:not(:disabled), select:not(:disabled)')
+        ?.focus();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [step]);
 
   useEffect(() => {
@@ -501,6 +521,8 @@ export default function LoveReadingIntake() {
                 autoComplete="bday"
                 maxLength={10}
                 value={displayBirthDate(draft.birthDate)}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'mz-love-intake-error' : undefined}
                 placeholder="2000.01.01"
                 onChange={(event) => handleBirthDateChange(event.target.value)}
               />
@@ -544,6 +566,8 @@ export default function LoveReadingIntake() {
                   enterKeyHint="next"
                   maxLength={2}
                   value={timeHour}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'mz-love-intake-error' : undefined}
                   placeholder="12"
                   aria-label="태어난 시, 1부터 12"
                   onChange={(event) => handleTimeHourChange(event.target.value)}
@@ -566,6 +590,8 @@ export default function LoveReadingIntake() {
                   enterKeyHint="next"
                   maxLength={2}
                   value={timeMinute}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'mz-love-intake-error' : undefined}
                   placeholder="30"
                   aria-label="태어난 분, 0부터 59"
                   onChange={(event) => handleTimeMinuteChange(event.target.value)}
@@ -728,7 +754,7 @@ export default function LoveReadingIntake() {
   return (
     <main className="mz-love-intake-page">
       <div className="mz-love-intake-background" aria-hidden="true">
-        {videoFailed ? (
+        {videoFailed || reduceMotion ? (
           <img src={BACKGROUND_POSTER} alt="" />
         ) : (
           <video
@@ -736,7 +762,7 @@ export default function LoveReadingIntake() {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             poster={BACKGROUND_POSTER}
             onError={() => setVideoFailed(true)}
           >
@@ -756,13 +782,13 @@ export default function LoveReadingIntake() {
         </div>
       </header>
 
-      <section className="mz-love-intake-content" key={step} aria-live="polite">
+      <section ref={stepContentRef} className="mz-love-intake-content" key={step}>
         <div className="mz-love-intake-copy">
           <h1>{meta.title}</h1>
           <p>{meta.guide}</p>
         </div>
         {renderStep()}
-        {error ? <p className="mz-love-intake-error" role="alert">{error}</p> : null}
+        {error ? <p id="mz-love-intake-error" className="mz-love-intake-error" role="alert">{error}</p> : null}
       </section>
 
       {step === 7 ? (

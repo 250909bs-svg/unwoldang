@@ -1,10 +1,12 @@
 import { lazy, Suspense, useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { buildHashCallbackLocation } from './lib/auth';
+import { readPendingPayment } from './features/payments/storage';
 import BottomTabBar from './components/BottomTabBar';
 import Footer from './components/Footer';
 import Seo from './components/Seo';
 import ProductRouteBoundary from './products/components/ProductRouteBoundary';
+import { Loading as UiLoading } from './shared/ui';
 import {
   HistoricalReportRouteBoundary,
   ProductCheckoutRouteBoundary,
@@ -44,8 +46,8 @@ if (callbackHashLocation) {
 
 function RouteLoadingFallback() {
   return (
-    <main className="app-route-loading" role="status" aria-live="polite" aria-busy="true">
-      <strong>페이지를 불러오는 중이에요.</strong>
+    <main className="app-route-loading" aria-busy="true">
+      <UiLoading size="lg" label={<strong>페이지를 불러오는 중이에요.</strong>} />
       <span>잠시만 기다려 주세요.</span>
     </main>
   );
@@ -173,6 +175,8 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
 function AppShell() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isCheckoutRoute = location.pathname === '/checkout';
+  const isLoadingRoute = location.pathname === '/loading';
   const isPastLifeLandingRoute = location.pathname.startsWith('/detail/past-life-goblin');
   const isPastLifeReportRoute = location.pathname === '/report/past-life-goblin';
   const isGeneralDetailRoute = location.pathname === '/detail/general-saju';
@@ -182,6 +186,19 @@ function AppShell() {
   const isLoveReportRoute = location.pathname === '/report/love-reading';
   const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
+  const locationProduct = (location.state as { product?: unknown } | null)?.product;
+  const persistedProduct = isCheckoutRoute || isLoadingRoute ? readPendingPayment()?.productId : undefined;
+  const flowProduct = typeof locationProduct === 'string' ? locationProduct : persistedProduct;
+  const uiThemeProduct = location.pathname.includes('past-life-goblin')
+    ? 'past-life-goblin'
+    : location.pathname.includes('love-reading')
+      ? 'love-reading'
+      : location.pathname.includes('general-signature') || location.pathname.includes('general-saju')
+        ? 'general-signature'
+        : flowProduct;
+  const uiTheme = ['past-life-goblin', 'love-reading', 'general-signature'].includes(uiThemeProduct || '')
+    ? uiThemeProduct
+    : 'default';
   const usesDarkAppShell =
     location.pathname === '/' ||
     location.pathname.startsWith('/test') ||
@@ -203,6 +220,7 @@ function AppShell() {
 
   return (
     <div
+      data-ui-theme={uiTheme}
       className={
         isAdminRoute
           ? 'app-container admin-app-container'
@@ -221,7 +239,7 @@ function AppShell() {
             : 'app-container'
       }
     >
-      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute} />
+      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute || isCheckoutRoute} />
     </div>
   );
 }

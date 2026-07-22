@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSPropertie
 import { ChevronLeft, ChevronRight, Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
-import PastLifeStoryReport from '../components/PastLifeStoryReport';
 import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
@@ -15,9 +14,11 @@ import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 import { canStartProduct, getProductById } from '../products/registry';
+import { getMotionSafeScrollBehavior, useReducedMotion } from '../shared/ui';
 import '../styles/past-life.css';
 
 const LoveReadingStoryReport = lazy(() => import('../components/LoveReadingStoryReport'));
+const PastLifeStoryReport = lazy(() => import('../components/PastLifeStoryReport'));
 
 type ReportLocationState = {
   formData?: Partial<IntakeFormData>;
@@ -6310,6 +6311,7 @@ function drawWrappedCanvasText(
 }
 
 export default function Report() {
+  const reduceMotion = useReducedMotion();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -6605,6 +6607,11 @@ export default function Report() {
       return;
     }
 
+    if (reduceMotion) {
+      video.pause();
+      return;
+    }
+
     video.defaultMuted = true;
     video.muted = true;
     video.volume = 0;
@@ -6619,7 +6626,7 @@ export default function Report() {
     };
 
     void playMutedVideo();
-  }, [reportCharacterVideo]);
+  }, [reduceMotion, reportCharacterVideo]);
 
   if (shouldBlockPreview) {
     return (
@@ -6677,7 +6684,7 @@ export default function Report() {
       ];
 
   const scrollToSection = (targetId: string) => {
-    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById(targetId)?.scrollIntoView({ behavior: getMotionSafeScrollBehavior(), block: 'start' });
   };
 
   const handlePrintReport = () => {
@@ -6833,7 +6840,7 @@ body {
         var targetId = button.getAttribute('data-export-target');
         var target = targetId ? document.getElementById(targetId) : null;
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
         }
       });
     });
@@ -7209,17 +7216,21 @@ body {
                 ref={reportVideoRef}
                 className="premium-report-character-video"
                 src={reportCharacterVideo}
-                autoPlay
+                autoPlay={!reduceMotion}
                 muted={isReportVideoMuted}
                 loop
                 playsInline
-                preload="auto"
+                preload={reduceMotion ? 'metadata' : 'auto'}
                 onLoadedMetadata={forceMuteReportVideo}
                 onLoadedData={() => {
-                  void reportVideoRef.current?.play().catch(() => undefined);
+                  if (!reduceMotion) {
+                    void reportVideoRef.current?.play().catch(() => undefined);
+                  }
                 }}
                 onCanPlay={() => {
-                  void reportVideoRef.current?.play().catch(() => undefined);
+                  if (!reduceMotion) {
+                    void reportVideoRef.current?.play().catch(() => undefined);
+                  }
                 }}
                 onClick={() => {
                   if (!isReportVideoMuted) {
@@ -7287,7 +7298,15 @@ body {
 
           {isPastLifeShowcase && report.pastLifeProfile ? (
             <>
-              <PastLifeStoryReport report={report} profile={report.pastLifeProfile} />
+              <Suspense
+                fallback={(
+                  <section className="premium-report-section" role="status" aria-live="polite" aria-busy="true">
+                    <strong>전생 장부를 불러오는 중입니다.</strong>
+                  </section>
+                )}
+              >
+                <PastLifeStoryReport report={report} profile={report.pastLifeProfile} />
+              </Suspense>
               <div className="premium-divider" />
             </>
           ) : null}

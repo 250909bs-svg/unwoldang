@@ -44,7 +44,11 @@
   align-items: center;
   justify-content: space-between;
   margin: 0 auto;
-  padding: 10px 24px;
+  padding:
+    calc(10px + env(safe-area-inset-top, 0px))
+    max(24px, env(safe-area-inset-right, 0px))
+    10px
+    max(24px, env(safe-area-inset-left, 0px));
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(7, 10, 16, 0.78);
   backdrop-filter: blur(18px);
@@ -782,8 +786,8 @@
 @media (max-width: 560px) {
   .general-saju-header {
     min-height: 62px;
-    padding-right: 16px;
-    padding-left: 16px;
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
   }
 
   .general-saju-header-cta {

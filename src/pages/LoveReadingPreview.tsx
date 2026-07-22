@@ -11,6 +11,7 @@ import { buildPartnerSpecificityProfile } from '../lib/mz-love-fact/partnerSpeci
 import { getPremiumLoveAnswers } from '../lib/mz-love-fact/premiumLove';
 import type { MzLoveChapterId, SceneArtwork } from '../lib/mz-love-fact/types';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
+import { getMotionSafeScrollBehavior } from '../shared/ui';
 import '../styles/mz-love-intake.css';
 
 type PreviewLocationState = {
@@ -92,7 +93,7 @@ function ScenePicture({
 }
 
 function scrollToStoryScene(sceneId: string) {
-  document.getElementById(sceneId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById(sceneId)?.scrollIntoView({ behavior: getMotionSafeScrollBehavior(), block: 'start' });
 }
 
 function SpeechBalloon({

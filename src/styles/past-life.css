@@ -2105,7 +2105,7 @@ body.home-all-black .app-container.past-life-app-container {
 .past-life-report-paper #pastlife-present,
 .past-life-report-paper #pastlife-release {
   position: relative;
-  scroll-margin-top: 74px;
+  scroll-margin-top: calc(74px + var(--ui-safe-area-top));
 }
 
 .past-life-report-paper #pastlife-seal::before,
@@ -4064,7 +4064,7 @@ body.home-all-black .app-container.past-life-app-container {
 
 .past-life-story-prologue,
 .past-life-identity-ledger {
-  scroll-margin-top: 76px;
+  scroll-margin-top: calc(76px + var(--ui-safe-area-top));
 }
 
 .past-life-story-prologue {
@@ -4409,7 +4409,7 @@ body.home-all-black .app-container.past-life-app-container {
   display: grid;
   grid-template-columns: minmax(300px, 42%) minmax(0, 1fr);
   min-height: 800px;
-  scroll-margin-top: 74px;
+  scroll-margin-top: calc(74px + var(--ui-safe-area-top));
   border-bottom: 1px solid rgba(185, 170, 145, 0.12);
 }
 
@@ -5114,5 +5114,36 @@ body.home-all-black .app-container.past-life-app-container {
 
   .past-life-guide-ending-dialogue a {
     width: 100%;
+  }
+}
+
+@media screen {
+  .past-life-story-chapter {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1280px;
+  }
+}
+
+.is-export-static .past-life-story-chapter {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+@media print {
+  .past-life-story-chapter {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .past-life-goblin-flow-page .intake-story-actions {
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 768px) and (max-height: 600px) {
+  .past-life-goblin-flow-page .intake-story-actions {
+    position: static;
   }
 }

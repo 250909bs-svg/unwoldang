@@ -25,6 +25,7 @@ import {
   shouldUseDemoPayment
 } from '../lib/runtimeConfig';
 import { getProductById } from '../products/registry';
+import { Alert, Button, Modal } from '../shared/ui';
 
 type CheckoutState = {
   product?: string;
@@ -284,8 +285,10 @@ export default function Checkout() {
                   ? '/media/dokkaebi-poster.webp'
                   : isLoveReadingProduct
                     ? '/images/mz-love-fact/generated/hero-fan-closed.webp'
-                    : '/intake-beauty-red.png'}
+                    : '/intake-beauty-red.webp'}
                 alt={isLoveReadingProduct ? '접힌 부채를 들고 연애운 장부를 여는 MZ무당' : ''}
+                loading="lazy"
+                decoding="async"
               />
               <div>
                 <span>{isPastLifeProduct ? '다섯 권' : isLoveReadingProduct ? '13개 챕터' : '질문 2개'}</span>
@@ -298,8 +301,10 @@ export default function Checkout() {
                   ? '/media/dokkaebi-poster.webp'
                   : isLoveReadingProduct
                     ? '/images/mz-love-fact/generated/room-consultation.webp'
-                    : '/intake-night-blue.png'}
+                    : '/intake-night-blue.webp'}
                 alt={isLoveReadingProduct ? '붉은 촛불과 부채가 놓인 MZ무당 연애 상담실' : ''}
+                loading="lazy"
+                decoding="async"
               />
               <div>
                 <span>운월당</span>
@@ -447,7 +452,7 @@ export default function Checkout() {
             <span>마케팅 수신 동의 (선택)</span>
           </label>
 
-          {error ? <div className="checkout-luxe-error">{error}</div> : null}
+          {error ? <Alert tone="error" className="checkout-luxe-error">{error}</Alert> : null}
 
           <p className="checkout-luxe-safe-copy">
             {isDemoPayment
@@ -456,18 +461,23 @@ export default function Checkout() {
           </p>
         </section>
 
-        {activeLegalContent ? (
-          <div className="checkout-legal-backdrop" role="presentation" onMouseDown={() => setLegalModal(null)}>
-            <section
-              className="checkout-legal-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="checkout-legal-title"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
+        <Modal
+          open={Boolean(activeLegalContent)}
+          onClose={() => setLegalModal(null)}
+          title={activeLegalTitle}
+          titleHidden
+          unstyled
+          portal={false}
+          overlayClassName="checkout-legal-backdrop"
+          className="checkout-legal-modal"
+          bodyClassName="checkout-legal-modal-body"
+          showCloseButton={false}
+        >
+          {activeLegalContent ? (
+            <>
               <header className="checkout-legal-head">
                 <div>
-                  <h2 id="checkout-legal-title">{activeLegalTitle}</h2>
+                  <h2>{activeLegalTitle}</h2>
                   <p>{activeLegalContent.subtitle}</p>
                 </div>
                 <button type="button" className="checkout-legal-close" aria-label="닫기" onClick={() => setLegalModal(null)}>
@@ -487,13 +497,13 @@ export default function Checkout() {
               </div>
 
               <footer className="checkout-legal-actions">
-                <button type="button" onClick={() => setLegalModal(null)}>
+                <Button type="button" onClick={() => setLegalModal(null)}>
                   확인
-                </button>
+                </Button>
               </footer>
-            </section>
-          </div>
-        ) : null}
+            </>
+          ) : null}
+        </Modal>
       </div>
     </main>
   );

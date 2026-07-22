@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { getMotionSafeScrollBehavior } from '../shared/ui';
 import { findServiceById, serviceCatalog, serviceCategories, type ServiceCategoryId, type ServiceId } from '../api/mockData';
 import { readStoredAuthUser } from '../lib/auth';
 import {
@@ -2234,7 +2235,7 @@ export default function Admin() {
     setActiveView(view);
 
     if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: getMotionSafeScrollBehavior() });
     }
   };
 

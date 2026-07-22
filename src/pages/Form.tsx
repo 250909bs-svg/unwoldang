@@ -19,6 +19,7 @@ import { validateBirthInput } from '../lib/birthInputValidation';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
 import { getProductById } from '../products/registry';
+import { useReducedMotion } from '../shared/ui';
 import '../styles/mz-love-fact.css';
 import '../styles/past-life.css';
 
@@ -190,16 +191,16 @@ const stepVisuals: Record<
   }
 > = {
   1: {
-    background: '/intake-night-blue.png'
+    background: '/intake-night-blue.webp'
   },
   2: {
-    background: '/intake-blossom-girl.png'
+    background: '/intake-blossom-girl.webp'
   },
   3: {
-    background: '/intake-beauty-red.png'
+    background: '/intake-beauty-red.webp'
   },
   4: {
-    background: '/intake-sunlight-girl.png'
+    background: '/intake-sunlight-girl.webp'
   }
 };
 
@@ -210,16 +211,16 @@ const yearlyStepVisuals: Record<
   }
 > = {
   1: {
-    background: '/intake-lantern-night.png'
+    background: '/intake-lantern-night.webp'
   },
   2: {
-    background: '/intake-night-blue.png'
+    background: '/intake-night-blue.webp'
   },
   3: {
-    background: '/intake-sunlight-girl.png'
+    background: '/intake-sunlight-girl.webp'
   },
   4: {
-    background: '/intake-beauty-red.png'
+    background: '/intake-beauty-red.webp'
   }
 };
 
@@ -314,6 +315,7 @@ function getPartnerExactBirthTimeValue(partner: PartnerBirthData) {
 }
 
 export default function Form() {
+  const reduceMotion = useReducedMotion();
   const { id } = useParams<{ id: string }>();
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
@@ -792,7 +794,7 @@ export default function Form() {
                   className="intake-story-hero-image mz-love-intake-hero-image"
                 />
               </picture>
-            ) : isCinematicFlow ? (
+            ) : isCinematicFlow && !reduceMotion ? (
               <video
                 className="intake-story-hero-video"
                 src={intakeVideoSource}
@@ -850,6 +852,7 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.calendar === 'solar' ? 'intake-story-pill active' : 'intake-story-pill'}
+                    aria-pressed={formData.calendar === 'solar'}
                     onClick={() => {
                       updateField('calendar', 'solar');
                       updateField('isLeapMonth', false);
@@ -860,6 +863,7 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.calendar === 'lunar' ? 'intake-story-pill active' : 'intake-story-pill'}
+                    aria-pressed={formData.calendar === 'lunar'}
                     onClick={() => updateField('calendar', 'lunar')}
                   >
                     음력
@@ -870,6 +874,7 @@ export default function Form() {
                   type="text"
                   inputMode="numeric"
                   value={birthDigits}
+                  aria-label="생년월일 8자리"
                   onChange={(event) => updateBirthDate(event.target.value)}
                   placeholder="19901231"
                 />
@@ -902,7 +907,7 @@ export default function Form() {
                   정확한 시각을 알면 시·분을 먼저 입력하세요. 모르면 아래 시간대만 선택할 수 있습니다.
                 </p>
                 <div className="intake-story-select-wrap">
-                  <select value={getBirthTimeSelectValue(formData)} onChange={(event) => updateBirthTime(event.target.value)}>
+                  <select aria-label="출생 시간대" value={getBirthTimeSelectValue(formData)} onChange={(event) => updateBirthTime(event.target.value)}>
                     <option value="">태어난 시간 선택</option>
                     {birthTimeOptions.filter((option) => option.value !== 'unknown').map((option) => (
                       <option key={option.value} value={option.value}>
@@ -919,6 +924,7 @@ export default function Form() {
                 <span>출생 지역</span>
                 <div className="intake-story-select-wrap">
                   <select
+                    aria-label="출생 지역"
                     value={formData.birthLocation?.label || birthLocationOptions[0].label}
                     onChange={(event) => updateBirthLocation(event.target.value)}
                   >
@@ -941,6 +947,7 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.dayBoundaryPolicy !== 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                    aria-pressed={formData.dayBoundaryPolicy !== 'late-zi'}
                     onClick={() => updateField('dayBoundaryPolicy', 'midnight')}
                   >
                     자정 기준
@@ -948,6 +955,7 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.dayBoundaryPolicy === 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                    aria-pressed={formData.dayBoundaryPolicy === 'late-zi'}
                     onClick={() => updateField('dayBoundaryPolicy', 'late-zi')}
                   >
                     야자시 익일 기준
@@ -964,6 +972,7 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.gender === 'male' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                    aria-pressed={formData.gender === 'male'}
                     onClick={() => updateField('gender', 'male')}
                   >
                     남성
@@ -971,6 +980,7 @@ export default function Form() {
                   <button
                     type="button"
                     className={formData.gender === 'female' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                    aria-pressed={formData.gender === 'female'}
                     onClick={() => updateField('gender', 'female')}
                   >
                     여성
@@ -1032,6 +1042,7 @@ export default function Form() {
                     <button
                       type="button"
                       className={partnerData.gender === 'male' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      aria-pressed={partnerData.gender === 'male'}
                       onClick={() => updatePartnerField('gender', 'male')}
                     >
                       남성
@@ -1039,6 +1050,7 @@ export default function Form() {
                     <button
                       type="button"
                       className={partnerData.gender === 'female' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      aria-pressed={partnerData.gender === 'female'}
                       onClick={() => updatePartnerField('gender', 'female')}
                     >
                       여성
@@ -1068,6 +1080,7 @@ export default function Form() {
                     <button
                       type="button"
                       className={partnerData.calendar === 'solar' ? 'intake-story-pill active' : 'intake-story-pill'}
+                      aria-pressed={partnerData.calendar === 'solar'}
                       onClick={() => {
                         updatePartnerField('calendar', 'solar');
                         updatePartnerField('isLeapMonth', false);
@@ -1078,6 +1091,7 @@ export default function Form() {
                     <button
                       type="button"
                       className={partnerData.calendar === 'lunar' ? 'intake-story-pill active' : 'intake-story-pill'}
+                      aria-pressed={partnerData.calendar === 'lunar'}
                       onClick={() => updatePartnerField('calendar', 'lunar')}
                     >
                       음력
@@ -1087,6 +1101,7 @@ export default function Form() {
                     type="text"
                     inputMode="numeric"
                     value={partnerBirthDigits}
+                    aria-label="상대방 생년월일 8자리"
                     onChange={(event) => updatePartnerBirthDate(event.target.value)}
                     placeholder="19901231"
                   />
@@ -1116,6 +1131,7 @@ export default function Form() {
                   />
                   <div className="intake-story-select-wrap">
                     <select
+                      aria-label="상대방 출생 시간대"
                       value={getPartnerBirthTimeSelectValue(partnerData)}
                       disabled={partnerData.isUnknownTime}
                       onChange={(event) => updatePartnerBirthTime(event.target.value)}
@@ -1135,6 +1151,7 @@ export default function Form() {
                   <span>상대방 출생 지역</span>
                   <div className="intake-story-select-wrap">
                     <select
+                      aria-label="상대방 출생 지역"
                       value={partnerData.birthLocation?.label || birthLocationOptions[0].label}
                       onChange={(event) => updatePartnerBirthLocation(event.target.value)}
                     >
@@ -1157,6 +1174,7 @@ export default function Form() {
                     <button
                       type="button"
                       className={partnerData.dayBoundaryPolicy !== 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      aria-pressed={partnerData.dayBoundaryPolicy !== 'late-zi'}
                       onClick={() => updatePartnerField('dayBoundaryPolicy', 'midnight')}
                     >
                       자정 기준
@@ -1164,6 +1182,7 @@ export default function Form() {
                     <button
                       type="button"
                       className={partnerData.dayBoundaryPolicy === 'late-zi' ? 'intake-story-segment-button active' : 'intake-story-segment-button'}
+                      aria-pressed={partnerData.dayBoundaryPolicy === 'late-zi'}
                       onClick={() => updatePartnerField('dayBoundaryPolicy', 'late-zi')}
                     >
                       야자시 익일 기준
@@ -1196,6 +1215,7 @@ export default function Form() {
                           ? 'intake-relationship-card active'
                           : 'intake-relationship-card'
                       }
+                      aria-pressed={formData.relationshipStatus === option.value}
                       onClick={() => selectRelationshipStatus(option.value)}
                     >
                       <strong>{option.label}</strong>
@@ -1223,6 +1243,7 @@ export default function Form() {
                           ? 'intake-duration-chip active'
                           : 'intake-duration-chip'
                       }
+                      aria-pressed={formData.relationshipDuration === option.value}
                       onClick={() => updateField('relationshipDuration', option.value)}
                     >
                       {option.label}

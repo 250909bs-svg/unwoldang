@@ -2498,3 +2498,22 @@
     display: none !important;
   }
 }
+
+@media screen {
+  .mz-love-report__chapter {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1100px;
+  }
+}
+
+.is-export-static .mz-love-report__chapter {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+@media print {
+  .mz-love-report__chapter {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+}

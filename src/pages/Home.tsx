@@ -12,20 +12,38 @@ import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
 import { activeProducts, canDiscoverProduct, getProductById } from '../products/registry';
 import type { ProductId } from '../products/types';
+import { Modal, useReducedMotion } from '../shared/ui';
 
 const illustrationDeck = {
   generalSaju: '/home-general-saju-card.webp',
-  yearlyFortune: '/home-yearly-fortune-card.png',
-  concernReading: '/home-concern-reading-card.png',
+  yearlyFortune: '/home-yearly-fortune-card.webp',
+  concernReading: '/home-concern-reading-card.webp',
   loveReading: '/home-love-reading-card.png',
-  loveReunion: '/home-love-reunion-card.png',
-  matchCouple: '/home-match-couple-card.png',
-  sunlight: '/intake-sunlight-girl.png',
-  red: '/intake-beauty-red.png',
-  moon: '/intake-night-blue.png',
-  lantern: '/intake-lantern-night.png',
-  blossom: '/intake-blossom-girl.png'
+  loveReunion: '/home-love-reunion-card.webp',
+  matchCouple: '/home-match-couple-card.webp',
+  sunlight: '/intake-sunlight-girl.webp',
+  red: '/intake-beauty-red.webp',
+  moon: '/intake-night-blue.webp',
+  lantern: '/intake-lantern-night.webp',
+  blossom: '/intake-blossom-girl.webp'
 } as const;
+
+
+const optimizedHomeImageSources = new Set([
+  '/intake-night-blue.png',
+  '/intake-lantern-night.png',
+  '/intake-sunlight-girl.png',
+  '/intake-beauty-red.png',
+  '/intake-blossom-girl.png',
+  '/home-yearly-fortune-card.png',
+  '/home-concern-reading-card.png',
+  '/home-love-reunion-card.png',
+  '/home-match-couple-card.png'
+]);
+
+function getOptimizedHomeImage(source: string) {
+  return optimizedHomeImageSources.has(source) ? source.replace(/\.png$/, '.webp') : source;
+}
 
 const goblinPastLifePoster = '/media/dokkaebi-poster.webp';
 
@@ -147,6 +165,7 @@ type HomeCategoryId = (typeof homeCategoryTabs)[number]['id'];
 const homeProductCards = activeProducts.map((product) => ({
   id: product.id,
   ...product.home,
+  image: getOptimizedHomeImage(product.home.image),
   to: product.routes.detail
 }));
 
@@ -305,6 +324,7 @@ const discoverableHomeDiscoverySections = homeDiscoverySections
   .filter((section) => section.cards.length > 0);
 
 export default function Home() {
+  const reduceMotion = useReducedMotion();
   const [activeCardNewsIndex, setActiveCardNewsIndex] = useState(0);
   const [activeHomeCategory, setActiveHomeCategory] = useState<HomeCategoryId>('all');
   const cardNewsPointerIdRef = useRef<number | null>(null);
@@ -417,12 +437,16 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (reduceMotion) {
+      return undefined;
+    }
+
     const timer = window.setTimeout(() => {
       setActiveCardNewsIndex((prev) => (prev + 1) % discoverableCardNewsSlides.length);
     }, 6000);
 
     return () => window.clearTimeout(timer);
-  }, [activeCardNewsIndex]);
+  }, [activeCardNewsIndex, reduceMotion]);
 
   useEffect(() => {
     const syncAuthUser = () => setAuthUser(readStoredAuthUser());
@@ -436,26 +460,6 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!menuOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    const closeWithEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setMenuOpen(false);
-      }
-    };
-
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', closeWithEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', closeWithEscape);
-    };
-  }, [menuOpen]);
 
   return (
     <main className="app-home-shell">
@@ -476,56 +480,57 @@ export default function Home() {
           }
         />
 
-        {menuOpen ? (
-          <div className="home-menu-overlay" role="presentation" onClick={() => setMenuOpen(false)}>
-            <aside
-              className="home-menu-panel"
-              role="dialog"
-              aria-modal="true"
-              aria-label="운월당 메뉴"
-              onClick={(event) => event.stopPropagation()}
+        <Modal
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          title="운월당 메뉴"
+          titleHidden
+          unstyled
+          portal={false}
+          overlayClassName="home-menu-overlay"
+          className="home-menu-panel"
+          bodyClassName="home-menu-modal-body"
+          showCloseButton={false}
+        >
+          <div className="home-menu-profile">
+            <span className="home-menu-avatar" aria-hidden="true">
+              <img src={menuAvatar} alt="" loading="lazy" decoding="async" />
+            </span>
+            <div className="home-menu-profile-copy">
+              <strong>{menuNickname}</strong>
+              <span>{menuStatusLabel}</span>
+            </div>
+            <button
+              type="button"
+              className="home-menu-close"
+              aria-label="메뉴 닫기"
+              onClick={() => setMenuOpen(false)}
             >
-              <div className="home-menu-profile">
-                <span className="home-menu-avatar" aria-hidden="true">
-                  <img src={menuAvatar} alt="" />
-                </span>
-                <div className="home-menu-profile-copy">
-                  <strong>{menuNickname}</strong>
-                  <span>{menuStatusLabel}</span>
-                </div>
-                <button
-                  type="button"
-                  className="home-menu-close"
-                  aria-label="메뉴 닫기"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <X size={18} strokeWidth={2.35} />
-                </button>
-              </div>
-
-              <nav className="home-menu-list" aria-label="운월당 주요 메뉴">
-                {discoverableHomeMenuItems.map((item) => (
-                  <Link
-                    key={item.label}
-                    to={item.to}
-                    state={'state' in item ? item.state : undefined}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-
-              <div className="home-menu-contact">
-                <a href={supportMailHref} className="home-menu-kakao">
-                  <MessageCircle size={15} fill="currentColor" strokeWidth={2.2} />
-                  <span>카카오톡 문의</span>
-                </a>
-                <p>운영시간 평일 09:00~18:00</p>
-              </div>
-            </aside>
+              <X size={18} strokeWidth={2.35} />
+            </button>
           </div>
-        ) : null}
+
+          <nav className="home-menu-list" aria-label="운월당 주요 메뉴">
+            {discoverableHomeMenuItems.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                state={'state' in item ? item.state : undefined}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="home-menu-contact">
+            <a href={supportMailHref} className="home-menu-kakao">
+              <MessageCircle size={15} fill="currentColor" strokeWidth={2.2} />
+              <span>카카오톡 문의</span>
+            </a>
+            <p>운영시간 평일 09:00~18:00</p>
+          </div>
+        </Modal>
 
         <nav className="home-category-nav" aria-label="운월당 카테고리">
           <div
@@ -586,16 +591,16 @@ export default function Home() {
                     aria-hidden={slide.offset !== 0}
                     tabIndex={slide.offset === 0 ? 0 : -1}
                   >
-                    {slide.video ? (
+                    {slide.video && slide.offset === 0 && !reduceMotion ? (
                       <video
                         className="home-cardnews-image home-cardnews-video"
                         src={slide.video}
                         poster={slide.image}
-                        autoPlay={slide.offset === 0}
+                        autoPlay={slide.offset === 0 && !reduceMotion}
                         muted
                         loop
                         playsInline
-                        preload={slide.offset === 0 ? 'metadata' : 'none'}
+                        preload={slide.offset === 0 && !reduceMotion ? 'metadata' : 'none'}
                         aria-hidden="true"
                       />
                     ) : slide.image === illustrationDeck.loveReading ? (
@@ -605,7 +610,14 @@ export default function Home() {
                         sizes="(max-width: 640px) 92vw, 580px"
                       />
                     ) : (
-                      <img src={slide.image} alt={`${slide.kicker} 카드뉴스`} className="home-cardnews-image" />
+                      <img
+                        src={slide.image}
+                        alt={`${slide.kicker} 카드뉴스`}
+                        className="home-cardnews-image"
+                        loading={slide.offset === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        fetchPriority={slide.offset === 0 ? 'high' : 'auto'}
+                      />
                     )}
                     <span className="home-cardnews-rank">TOP {slide.rank}</span>
                     <div className="home-cardnews-overlay" />
@@ -675,7 +687,7 @@ export default function Home() {
                               sizes="(max-width: 768px) 74vw, 320px"
                             />
                           ) : (
-                            <img src={card.image} alt={card.title} className="home-showcase-cover-image" />
+                            <img src={card.image} alt={card.title} className="home-showcase-cover-image" loading="lazy" decoding="async" />
                           )}
                           <div className="home-showcase-cover-overlay" />
                           <div className="home-showcase-cover-copy">
@@ -710,16 +722,16 @@ export default function Home() {
                 }`}
                 aria-label={product.fullPoster ? `${product.title} 상세페이지 보기` : undefined}
               >
-                {product.video ? (
+                {product.video && !reduceMotion ? (
                   <video
                     src={product.video}
                     poster={product.image}
                     className="home-filter-product-image home-filter-product-video"
-                    autoPlay
+                    autoPlay={!reduceMotion}
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload={reduceMotion ? 'none' : 'metadata'}
                     aria-hidden="true"
                   />
                 ) : product.image === illustrationDeck.loveReading ? (
@@ -734,6 +746,8 @@ export default function Home() {
                     src={product.image}
                     alt=""
                     className="home-filter-product-image"
+                    loading="lazy"
+                    decoding="async"
                     style={product.imagePosition ? { objectPosition: product.imagePosition } : undefined}
                   />
                 )}

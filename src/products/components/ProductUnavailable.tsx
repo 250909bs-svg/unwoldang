@@ -1,6 +1,7 @@
 import { Archive, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MobileTopBar from '../../components/MobileTopBar';
+import { Card } from '../../shared/ui';
 import type { ProductDefinition } from '../types';
 
 type ProductUnavailableProps = {
@@ -16,7 +17,7 @@ export default function ProductUnavailable({ product }: ProductUnavailableProps)
         <MobileTopBar title="상품 안내" backTo="/" backLabel="홈" />
 
         <section className="mobile-page-content centered">
-          <article className="mobile-loading-card">
+          <Card className="mobile-loading-card" padding="none" role="article">
             <span className="mobile-chip">{isDraft ? 'COMING SOON' : 'SALES ARCHIVED'}</span>
             <h1>{isDraft ? `${product.displayName}은 현재 준비 중이에요.` : '현재 개편 중인 상품입니다.'}</h1>
             <p>
@@ -34,7 +35,7 @@ export default function ProductUnavailable({ product }: ProductUnavailableProps)
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
             </div>
-          </article>
+          </Card>
         </section>
       </div>
     </main>

@@ -1,10 +1,11 @@
 import { Search as SearchIcon, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
 import { activeProducts, canDiscoverProduct } from '../products/registry';
 import type { ProductId } from '../products/types';
+import { EmptyState, Input, LiveRegion } from '../shared/ui';
 
 type SearchProduct = {
   id: ProductId;
@@ -14,9 +15,27 @@ type SearchProduct = {
   keywords: readonly string[];
 };
 
+
+const optimizedSearchImageSources = new Set([
+  '/intake-night-blue.png',
+  '/intake-lantern-night.png',
+  '/intake-sunlight-girl.png',
+  '/intake-beauty-red.png',
+  '/intake-blossom-girl.png',
+  '/home-yearly-fortune-card.png',
+  '/home-concern-reading-card.png',
+  '/home-love-reunion-card.png',
+  '/home-match-couple-card.png'
+]);
+
+function getOptimizedSearchImage(source: string) {
+  return optimizedSearchImageSources.has(source) ? source.replace(/\.png$/, '.webp') : source;
+}
+
 const searchProducts: SearchProduct[] = activeProducts.map((product) => ({
   id: product.id,
   ...product.search,
+  image: getOptimizedSearchImage(product.search.image),
   to: product.routes.detail
 }));
 const livePopularIds = ['past-life-goblin', 'concern-reading', 'love-reading', 'general-signature', 'match-couple'] as const;
@@ -37,6 +56,7 @@ function normalizeText(value: string) {
 
 export default function Search() {
   const [query, setQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const normalizedQuery = normalizeText(query);
   const livePopular = livePopularIds
     .filter((id) => canDiscoverProduct(id))
@@ -53,25 +73,34 @@ export default function Search() {
     });
   }, [livePopular, normalizedQuery]);
 
+  const clearQuery = () => {
+    setQuery('');
+    searchInputRef.current?.focus();
+  };
+
   return (
     <main className="search-page-shell">
       <MobileTopBar title="검색" backTo="/" backLabel="홈" />
 
       <div className="search-page-inner">
         <header className="search-topbar">
-          <label className="search-input-box">
-            <SearchIcon size={18} />
-            <input
+          <div className="search-input-box">
+            <SearchIcon size={18} aria-hidden="true" />
+            <Input
+              ref={searchInputRef}
+              label="상품 검색"
+              hideLabel
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="검색어를 입력하세요"
+              autoComplete="off"
             />
             {query ? (
-              <button type="button" aria-label="검색어 지우기" onClick={() => setQuery('')}>
-                <X size={16} />
+              <button type="button" aria-label="검색어 지우기" onClick={clearQuery}>
+                <X size={16} aria-hidden="true" />
               </button>
             ) : null}
-          </label>
+          </div>
         </header>
 
         <section className="search-section">
@@ -95,6 +124,7 @@ export default function Search() {
             <h2>{query ? '검색 결과' : '실시간 인기순'}</h2>
             {!query ? <span className="search-live-badge">LIVE</span> : null}
           </div>
+          <LiveRegion message={query ? `검색 결과 ${results.length}개` : undefined} />
           {results.length ? (
             <div className="search-popular-stack">
               {results.map((product, index) => (
@@ -104,7 +134,7 @@ export default function Search() {
                     {product.id === 'love-reading' ? (
                       <LoveReadingCardPicture alt={product.title} sizes="60px" />
                     ) : (
-                      <img src={product.image} alt={product.title} />
+                      <img src={product.image} alt={product.title} loading="lazy" decoding="async" />
                     )}
                   </span>
                   <strong>{product.title}</strong>
@@ -112,10 +142,11 @@ export default function Search() {
               ))}
             </div>
           ) : (
-            <div className="search-empty-state">
-              <strong>검색 결과가 없습니다</strong>
-              <p>재물, 연애, 결혼, 궁합처럼 짧게 검색해보세요.</p>
-            </div>
+            <EmptyState
+              className="search-empty-state"
+              title={<strong>검색 결과가 없습니다</strong>}
+              description={<p>재물, 연애, 결혼, 궁합처럼 짧게 검색해보세요.</p>}
+            />
           )}
         </section>
       </div>

@@ -2477,3 +2477,15 @@ body:has(.mz-love-preview-page) {
   font-weight: 850;
   letter-spacing: -0.025em;
 }
+
+@media (max-width: 768px) and (max-height: 600px) {
+  .mz-love-intake-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .mz-love-intake-footer {
+    position: static;
+  }
+}

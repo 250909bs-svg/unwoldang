@@ -57,7 +57,7 @@ export default function Login() {
         <MobileTopBar title="로그인" backTo="/" backLabel="홈" />
 
         <section className="login-visual-hero login-poster-hero" aria-label="카카오 로그인">
-          <img src="/my-kakao-login-hero.png" alt="운월당 카카오 로그인 안내" className="login-visual-image" />
+          <img src="/my-kakao-login-hero.webp" alt="운월당 카카오 로그인 안내" className="login-visual-image" />
           <div className="login-visual-gradient" />
 
           <div className="login-visual-action-card login-poster-action-card">
