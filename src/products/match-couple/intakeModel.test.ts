@@ -195,15 +195,27 @@ describe('match-couple dedicated intake wiring', () => {
     expect(intakeSource).toContain("{([0, 1] as const).map((index) => (");
   });
 
-  it('redirects through login, scopes drafts to the user, and preserves both submit paths', () => {
-    expect(intakeSource).toContain("navigate('/login'");
-    expect(intakeSource).toContain('returnTo: matchCoupleProduct.routes.intake');
-    expect(intakeSource).toContain('DRAFT_PREFIX');
-    expect(intakeSource).toContain('encodeURIComponent(userId.trim())');
+  it('allows guest input, scopes drafts through the shared API, and submits to free preview', () => {
+    expect(intakeSource).not.toContain("navigate('/login'");
+    expect(intakeSource).not.toContain('로그인 화면으로 이동하고 있습니다.');
+    expect(intakeSource).toContain('resolveMatchCoupleDraft({');
+    expect(intakeSource).toContain('routeFormData: locationState?.formData');
+    expect(intakeSource).toContain('routeDraftOwnerId: locationState?.draftOwnerId');
+    expect(intakeSource).toContain('currentUserId: user?.id');
+    expect(intakeSource).toContain('saveMatchCoupleDraft(serializeMatchCoupleIntake(intake), user?.id)');
     expect(intakeSource).toContain('serializeMatchCoupleIntake(intake)');
-    expect(intakeSource).toContain('locationState?.recoveredEntitlement');
-    expect(intakeSource).toContain('navigate(matchCoupleProduct.routes.loading');
-    expect(intakeSource).toContain('navigate(matchCoupleProduct.routes.checkout');
+    expect(intakeSource).toContain("const MATCH_COUPLE_PREVIEW_PATH = '/preview/match-couple'");
+    expect(intakeSource).toContain('navigate(MATCH_COUPLE_PREVIEW_PATH');
     expect(intakeSource).toContain('draftOwnerId: user?.id');
+    expect(intakeSource).toContain('recoveredEntitlement: locationState?.recoveredEntitlement');
+    expect(intakeSource).toContain('무료 궁합 미리보기');
+    expect(intakeSource).not.toContain('navigate(matchCoupleProduct.routes.loading');
+    expect(intakeSource).not.toContain('navigate(matchCoupleProduct.routes.checkout');
+  });
+
+  it('keeps validation and sensitive-input disclosure rules in the guest flow', () => {
+    expect(intakeSource).toContain('if (!validation.valid)');
+    expect(intakeSource).toContain('개인 리포트 생성과 보관에만 사용되며 공유 문구에는 포함하지 않습니다.');
+    expect(intakeSource).toContain('maxLength={120}');
   });
 });

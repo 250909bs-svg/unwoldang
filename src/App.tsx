@@ -34,6 +34,7 @@ const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
 const MatchCoupleDetail = lazy(() => import('./products/match-couple/Detail'));
 const MatchCoupleIntake = lazy(() => import('./products/match-couple/Intake'));
+const MatchCouplePreview = lazy(() => import('./products/match-couple/Preview'));
 const Report = lazy(() => import('./products/match-couple/ReportRoute'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -136,6 +137,15 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
             }
           />
           <Route
+            path="/preview/match-couple"
+            element={
+              <ProductRouteBoundary productId="match-couple">
+                <MatchCouplePreview />
+              </ProductRouteBoundary>
+            }
+          />
+
+          <Route
             path="/form/match-couple"
             element={
               <ProductRouteBoundary productId="match-couple">
@@ -201,6 +211,7 @@ function AppShell() {
   const isMatchCoupleRoute = [
     '/detail/match-couple',
     '/form/match-couple',
+    '/preview/match-couple',
     '/report/match-couple'
   ].includes(location.pathname);
   const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;

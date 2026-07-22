@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { resolveMatchCoupleDraft, saveMatchCoupleDraft } from './draftStorage';
 import { matchCoupleProduct } from './index';
 import {
   hydrateMatchCoupleIntake,
@@ -31,7 +32,7 @@ type IntakeLocationState = {
   };
 };
 
-const DRAFT_PREFIX = 'unwoldang.intake.match-couple.v1';
+const MATCH_COUPLE_PREVIEW_PATH = '/preview/match-couple';
 
 const stepCopy: Record<IntakeStep, { label: string; title: string; description: string }> = {
   1: {
@@ -71,24 +72,6 @@ const relationshipDurations: Array<{ value: MatchCoupleRelationshipDuration; lab
   { value: 'under10', label: '5~10년' },
   { value: 'over10', label: '10년 이상' }
 ];
-
-function getDraftKey(userId?: string) {
-  return userId?.trim() ? `${DRAFT_PREFIX}.${encodeURIComponent(userId.trim())}` : null;
-}
-
-function readStoredDraft(draftKey: string | null) {
-  if (typeof window === 'undefined' || !draftKey) return undefined;
-
-  const raw = window.sessionStorage.getItem(draftKey);
-  if (!raw) return undefined;
-
-  try {
-    return JSON.parse(raw) as Partial<MatchCoupleStoredFormData>;
-  } catch {
-    window.sessionStorage.removeItem(draftKey);
-    return undefined;
-  }
-}
 
 type PersonFieldsProps = {
   personKey: PersonKey;
@@ -244,41 +227,24 @@ function PersonFields({ personKey, person, onChange }: PersonFieldsProps) {
 export default function MatchCoupleIntake() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const locationState = (location.state as IntakeLocationState | null) ?? null;
   const tabOrigin = locationState?.tabOrigin || matchCoupleProduct.routes.detail;
-  const draftKey = getDraftKey(user?.id);
-  const ownsLocationDraft = !locationState?.draftOwnerId || locationState.draftOwnerId === user?.id;
-  const initialState = ownsLocationDraft ? locationState?.formData : undefined;
   const [step, setStep] = useState<IntakeStep>(1);
   const [showErrors, setShowErrors] = useState(false);
   const [intake, setIntake] = useState<MatchCoupleIntakeState>(() =>
-    hydrateMatchCoupleIntake(initialState ?? readStoredDraft(draftKey))
+    hydrateMatchCoupleIntake(resolveMatchCoupleDraft({
+      routeFormData: locationState?.formData,
+      routeDraftOwnerId: locationState?.draftOwnerId,
+      currentUserId: user?.id
+    }))
   );
   const validation = useMemo(() => validateMatchCoupleIntake(intake), [intake]);
   const currentErrors = validation.stepErrors[step];
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login', {
-        replace: true,
-        state: {
-          returnTo: matchCoupleProduct.routes.intake,
-          tabOrigin
-        }
-      });
-    }
-  }, [isAuthenticated, navigate, tabOrigin]);
-
-  useEffect(() => {
-    if (!draftKey || !isAuthenticated || typeof window === 'undefined') return;
-
-    try {
-      window.sessionStorage.setItem(draftKey, JSON.stringify(serializeMatchCoupleIntake(intake)));
-    } catch {
-      // Route state still preserves the form when browser storage is unavailable.
-    }
-  }, [draftKey, intake, isAuthenticated]);
+    saveMatchCoupleDraft(serializeMatchCoupleIntake(intake), user?.id);
+  }, [intake, user?.id]);
 
   useEffect(() => {
     setShowErrors(false);
@@ -344,45 +310,16 @@ export default function MatchCoupleIntake() {
 
     const formData = serializeMatchCoupleIntake(intake);
 
-    try {
-      if (draftKey) {
-        window.sessionStorage.setItem(draftKey, JSON.stringify(formData));
-      }
-    } catch {
-      // Route state carries the validated payload when session storage is unavailable.
-    }
-
-    if (locationState?.recoveredEntitlement) {
-      navigate(matchCoupleProduct.routes.loading, {
-        state: {
-          product: matchCoupleProduct.id,
-          formData,
-          paymentMethod: 'portone',
-          orderId: locationState.recoveredEntitlement.orderId,
-          reportAccessToken: locationState.recoveredEntitlement.reportAccessToken,
-          tabOrigin
-        }
-      });
-      return;
-    }
-
-    navigate(matchCoupleProduct.routes.checkout, {
+    saveMatchCoupleDraft(formData, user?.id);
+    navigate(MATCH_COUPLE_PREVIEW_PATH, {
       state: {
-        product: matchCoupleProduct.id,
         formData,
         tabOrigin,
-        draftOwnerId: user?.id
+        draftOwnerId: user?.id,
+        recoveredEntitlement: locationState?.recoveredEntitlement
       }
     });
   };
-
-  if (!isAuthenticated) {
-    return (
-      <main className="match-intake-page" role="status" aria-live="polite">
-        <p>로그인 화면으로 이동하고 있습니다.</p>
-      </main>
-    );
-  }
 
   return (
     <main className="match-intake-page">
@@ -535,9 +472,7 @@ export default function MatchCoupleIntake() {
               </button>
             ) : (
               <button type="submit" className="match-intake-primary">
-                {locationState?.recoveredEntitlement
-                  ? '결제 완료 리포트 이어서 만들기'
-                  : `${matchCoupleProduct.price.toLocaleString('ko-KR')}원 결제 정보 확인`}
+                무료 궁합 미리보기
                 <ChevronRight size={18} aria-hidden="true" />
               </button>
             )}

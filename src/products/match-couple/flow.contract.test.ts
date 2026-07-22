@@ -15,6 +15,7 @@ describe('match-couple dedicated flow contract', () => {
       intake: '/form/match-couple',
       checkout: '/checkout',
       loading: '/loading',
+      preview: '/preview/match-couple',
       report: '/report/match-couple'
     });
   });
@@ -22,9 +23,16 @@ describe('match-couple dedicated flow contract', () => {
   it('wires dedicated screens before the generic routes', () => {
     expect(appSource).toContain("import('./products/match-couple/Detail')");
     expect(appSource).toContain("import('./products/match-couple/Intake')");
+    expect(appSource).toContain("import('./products/match-couple/Preview')");
     expect(appSource).toContain("import('./products/match-couple/ReportRoute')");
     expect(appSource.indexOf('path="/detail/match-couple"')).toBeLessThan(appSource.indexOf('path="/detail/:id"'));
     expect(appSource.indexOf('path="/form/match-couple"')).toBeLessThan(appSource.indexOf('path="/form/:id"'));
+    expect(appSource).toContain('path="/preview/match-couple"');
+    const genericPreviewIndex = appSource.indexOf('path="/preview/:id"');
+    if (genericPreviewIndex >= 0) {
+      expect(appSource.indexOf('path="/preview/match-couple"')).toBeLessThan(genericPreviewIndex);
+    }
+    expect(appSource).toContain("'/preview/match-couple'");
     expect(appSource).toContain('<Report />');
   });
 
