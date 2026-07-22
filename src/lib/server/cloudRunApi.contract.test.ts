@@ -6,6 +6,7 @@ import {
   type CreateAppOptions
 } from '../../../cloudrun-api/src/app.ts';
 import { loadConfig } from '../../../cloudrun-api/src/config/env.ts';
+import { API_ERROR_CODE } from '../../../cloudrun-api/src/contracts/api.ts';
 import {
   PRODUCT_STATUS,
   SERVER_PRODUCT_CATALOG
@@ -178,6 +179,7 @@ describe('Cloud Run API HTTP contracts', () => {
     expect(PUBLIC_ROUTES).toEqual(EXPECTED_PUBLIC_ROUTES);
     expect(response.status).toBe(404);
     expect(body).toEqual({
+      code: API_ERROR_CODE.UNSUPPORTED_ROUTE,
       message: '지원하지 않는 경로입니다.',
       routes: [...EXPECTED_PUBLIC_ROUTES]
     });
@@ -253,6 +255,12 @@ describe('Cloud Run API HTTP contracts', () => {
       }
     ] as const;
 
+    const expectedCodeByStatus = {
+      401: API_ERROR_CODE.AUTH_REQUIRED,
+      500: API_ERROR_CODE.INTERNAL_ERROR,
+      503: API_ERROR_CODE.SERVICE_UNAVAILABLE
+    } as const;
+
     for (const contract of cases) {
       for (const path of contract.paths) {
         const isPost = contract.method === 'POST';
@@ -263,7 +271,13 @@ describe('Cloud Run API HTTP contracts', () => {
         });
 
         expect(response.status).toBe(contract.status);
-        expect(await readJson(response)).toEqual({ message: contract.message });
+        expect(await readJson(response)).toEqual({
+          code: expectedCodeByStatus[contract.status],
+          message:
+            contract.status >= 500
+              ? '요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+              : contract.message
+        });
       }
     }
   });
@@ -277,6 +291,7 @@ describe('Cloud Run API HTTP contracts', () => {
 
     expect(response.status).toBe(400);
     expect(await readJson(response)).toEqual({
+      code: API_ERROR_CODE.REQUEST_INVALID,
       message: 'JSON 본문 형식이 올바르지 않습니다.'
     });
   });
@@ -333,6 +348,7 @@ describe('Cloud Run API HTTP contracts', () => {
 
       expect(limited.status).toBe(429);
       expect(await readJson(limited)).toEqual({
+        code: API_ERROR_CODE.RATE_LIMITED,
         message: 'AI report request limit exceeded. Please try again shortly.'
       });
       expect(reportGenerator).toHaveBeenCalledTimes(1);
@@ -381,11 +397,13 @@ describe('Cloud Run API HTTP contracts', () => {
       {
         productId: 'life-flow',
         status: 409,
+        code: API_ERROR_CODE.STATE_CONFLICT,
         message: '현재 신규 판매 중인 상품이 아닙니다.'
       },
       {
         productId: 'unknown-product',
         status: 400,
+        code: API_ERROR_CODE.REQUEST_INVALID,
         message: '서버 상품표에서 확인할 수 없는 productId입니다.'
       }
     ] as const;
@@ -401,7 +419,10 @@ describe('Cloud Run API HTTP contracts', () => {
       });
 
       expect(response.status).toBe(contract.status);
-      expect(await readJson(response)).toEqual({ message: contract.message });
+      expect(await readJson(response)).toEqual({
+        code: contract.code,
+        message: contract.message
+      });
     }
   });
 
@@ -471,6 +492,7 @@ describe('Cloud Run API HTTP contracts', () => {
 
     expect(mismatch.status).toBe(409);
     expect(await readJson(mismatch)).toEqual({
+      code: API_ERROR_CODE.STATE_CONFLICT,
       message: '주문 금액이 서버 상품 가격과 일치하지 않습니다.'
     });
   });

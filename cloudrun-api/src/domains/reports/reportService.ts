@@ -3,8 +3,15 @@ import type { AppConfig } from '../../config/env.ts';
 import type { ReportAccessClaims } from '../../contracts/auth.ts';
 import {
   ReportGenerationInProgressError,
+  ReportInputConflictError,
   ReportRequestError
 } from '../../contracts/errors.ts';
+import {
+  assertProductAvailableForExistingAccess,
+  PRODUCT_STATUS,
+  SERVER_PRODUCT_CATALOG,
+  type ServerProductCatalog
+} from '../../contracts/products.ts';
 import type { PaymentLedger } from '../../repositories/paymentLedgerRepository.ts';
 import type { generateGeminiSajuReport } from '../../../../src/lib/server/geminiReportService.ts';
 
@@ -90,7 +97,8 @@ export class ReportService {
   constructor(
     private readonly config: AppConfig,
     private readonly ledgerRepository: ReportLedgerRepository,
-    private readonly generateReport: ReportGenerator
+    private readonly generateReport: ReportGenerator,
+    private readonly productCatalog: ServerProductCatalog = SERVER_PRODUCT_CATALOG
   ) {}
 
   private getInputHash(claims: ReportAccessClaims, reportBody: Record<string, unknown>) {
@@ -107,6 +115,11 @@ export class ReportService {
   }
 
   private assertLedgerMatchesClaims(ledger: ReportLedger, claims: ReportAccessClaims) {
+    assertProductAvailableForExistingAccess(
+      claims.productId,
+      this.productCatalog
+    );
+
     if (
       ledger.paymentId !== claims.paymentId ||
       ledger.orderId !== claims.orderId ||
@@ -122,7 +135,7 @@ export class ReportService {
 
   private assertCompatibleInput(ledger: ReportLedger, inputHash: string) {
     if (ledger.reportInputHash && ledger.reportInputHash !== inputHash) {
-      throw new ReportRequestError(409, 'This payment has already been bound to a different report input.');
+      throw new ReportInputConflictError();
     }
   }
 
@@ -132,7 +145,7 @@ export class ReportService {
     }
 
     if (ledger.reportInputHash !== inputHash) {
-      throw new ReportRequestError(409, 'This payment has already been used for a different report input.');
+      throw new ReportInputConflictError();
     }
 
     const reportJson = ledger.reportJson;
@@ -200,6 +213,15 @@ export class ReportService {
 
     if (cached) {
       return { kind: 'cached', payload: cached };
+    }
+
+    if (
+      this.productCatalog[claims.productId]?.status !== PRODUCT_STATUS.ACTIVE
+    ) {
+      throw new ReportRequestError(
+        409,
+        'Archived products only allow replay of an existing completed report.'
+      );
     }
 
     const status = ledger.reportGenerationStatus;
@@ -271,8 +293,8 @@ export class ReportService {
         if (cached) {
           return cached;
         }
-      } catch (readError) {
-        console.error('Report cache verification after completion write failed:', readError);
+      } catch {
+        console.error('REPORT_CACHE_VERIFICATION_AFTER_WRITE_FAILED');
       }
 
       throw writeError;
@@ -292,8 +314,8 @@ export class ReportService {
         failedAt: new Date().toISOString(),
         failure
       });
-    } catch (recoveryError) {
-      console.error('Failed to release report generation lock:', recoveryError);
+    } catch {
+      console.error('REPORT_GENERATION_LOCK_RELEASE_FAILED');
     }
   }
 

@@ -7,6 +7,10 @@ import {
   ReportRequestError
 } from '../../../cloudrun-api/src/contracts/errors.ts';
 import {
+  SERVER_PRODUCT_CATALOG,
+  type ServerProductCatalog
+} from '../../../cloudrun-api/src/contracts/products.ts';
+import {
   ReportService,
   type ReportLedger,
   type ReportLedgerRepository,
@@ -229,6 +233,7 @@ describe('Cloud Run paid report persistence contracts', () => {
       })
     ).rejects.toMatchObject({
       status: 409,
+      code: 'REPORT_INPUT_CONFLICT',
       message: 'This payment has already been bound to a different report input.'
     });
     expect(generator).toHaveBeenCalledTimes(1);
@@ -342,6 +347,67 @@ describe('Cloud Run paid report persistence contracts', () => {
       status: 503,
       message: 'The saved report cache failed its integrity check.'
     });
+    expect(generator).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks report generation when an entitled product is moved to draft', async () => {
+    const repository = new FakeReportLedgerRepository();
+    const generator = vi.fn(async () => createPayload());
+    const draftCatalog: ServerProductCatalog = {
+      ...SERVER_PRODUCT_CATALOG,
+      'general-signature': {
+        ...SERVER_PRODUCT_CATALOG['general-signature'],
+        status: 'draft'
+      }
+    };
+    const service = new ReportService(
+      config,
+      repository,
+      generator,
+      draftCatalog
+    );
+
+    await expect(service.generate(CLAIMS, REPORT_BODY)).rejects.toMatchObject({ status: 409 });
+    expect(repository.acquireCalls).toHaveLength(0);
+    expect(generator).not.toHaveBeenCalled();
+  });
+
+  it('allows archived products to replay a completed cache but never starts a new generation', async () => {
+    const repository = new FakeReportLedgerRepository();
+    const payload = createPayload();
+    const generator = vi.fn(async () => payload);
+    const activeService = new ReportService(config, repository, generator);
+
+    await activeService.generate(CLAIMS, REPORT_BODY);
+
+    const archivedCatalog: ServerProductCatalog = {
+      ...SERVER_PRODUCT_CATALOG,
+      'general-signature': {
+        ...SERVER_PRODUCT_CATALOG['general-signature'],
+        status: 'archived'
+      }
+    };
+    const archivedService = new ReportService(
+      config,
+      repository,
+      generator,
+      archivedCatalog
+    );
+
+    await expect(archivedService.generate(CLAIMS, REPORT_BODY)).resolves.toEqual(payload);
+    expect(generator).toHaveBeenCalledTimes(1);
+
+    const emptyRepository = new FakeReportLedgerRepository();
+    const emptyArchivedService = new ReportService(
+      config,
+      emptyRepository,
+      generator,
+      archivedCatalog
+    );
+    await expect(
+      emptyArchivedService.generate(CLAIMS, REPORT_BODY)
+    ).rejects.toMatchObject({ status: 409 });
+    expect(emptyRepository.acquireCalls).toHaveLength(0);
     expect(generator).toHaveBeenCalledTimes(1);
   });
 });

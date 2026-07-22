@@ -1,10 +1,15 @@
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http';
 import type { AuthenticatedUser, ReportAccessClaims } from '../contracts/auth.ts';
+import { API_ERROR_CODE } from '../contracts/api.ts';
 import {
-  KakaoAuthError,
-  PaymentRequestError,
-  ReportGenerationInProgressError,
-  ReportRequestError
+  parseConfirmPaymentRequest,
+  parseCreateOrderRequest,
+  parseGenerateReportRequest,
+  parseRenewEntitlementRequest,
+  parseSaveReportArchiveRequest
+} from '../contracts/apiSchemas.ts';
+import {
+  toPublicApiError
 } from '../contracts/errors.ts';
 import { readJsonBody } from './body.ts';
 import { sendJson } from '../middleware/error.ts';
@@ -56,8 +61,21 @@ function isPath(pathname: string, barePath: string) {
   return pathname === barePath || pathname === `/api${barePath}`;
 }
 
-function errorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+function sendApiError(
+  res: ServerResponse,
+  error: unknown,
+  fallbackMessage: string
+) {
+  const { status, body } = toPublicApiError(error, {
+    code: API_ERROR_CODE.INTERNAL_ERROR,
+    message: fallbackMessage
+  });
+
+  if (body.retryAfterSeconds) {
+    res.setHeader('Retry-After', String(body.retryAfterSeconds));
+  }
+
+  sendJson(res, status, body);
 }
 
 export function createRouter(dependencies: RouterDependencies): RequestListener {
@@ -80,27 +98,16 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     if (req.method === 'POST' && isPath(url.pathname, '/report')) {
       try {
         dependencies.enforceReportRateLimit(req);
-        const body = (await readJsonBody(req)) as Record<string, unknown>;
-        const reportAccess = dependencies.auth.assertReportAccess(req, body);
+        const rawBody = (await readJsonBody(req)) as Record<string, unknown>;
+        const reportAccess = dependencies.auth.assertReportAccess(req, rawBody);
+        const body = parseGenerateReportRequest(rawBody);
         const { reportAccessToken, orderId, ...reportBody } = body;
         void reportAccessToken;
         void orderId;
-        const payload = await dependencies.reports.generate(reportAccess, reportBody);
+        const payload = await dependencies.reports.generate(reportAccess, reportBody as Record<string, unknown>);
         sendJson(res, 200, payload);
       } catch (error) {
-        const status = error instanceof ReportRequestError ? error.status : 500;
-        const message = errorMessage(error, 'Cloud Run 리포트 생성 중 오류가 발생했습니다.');
-
-        if (error instanceof ReportGenerationInProgressError) {
-          res.setHeader('Retry-After', String(error.retryAfterSeconds));
-          sendJson(res, status, {
-            message,
-            code: error.code,
-            retryAfterSeconds: error.retryAfterSeconds
-          });
-        } else {
-          sendJson(res, status, { message });
-        }
+        sendApiError(res, error, 'Cloud Run 리포트 생성 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -108,11 +115,13 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     if (req.method === 'POST' && isPath(url.pathname, '/payments/portone/order')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);
-        const body = (await readJsonBody(req)) as Record<string, unknown>;
+        const body = parseCreateOrderRequest(await readJsonBody(req)) as unknown as Record<
+          string,
+          unknown
+        >;
         sendJson(res, 200, dependencies.payments.createOrder(user, body));
       } catch (error) {
-        const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '결제 주문 인증 정보 발급 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '결제 주문 인증 정보 발급 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -120,11 +129,13 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     if (req.method === 'POST' && isPath(url.pathname, '/payments/portone/confirm')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);
-        const body = (await readJsonBody(req)) as Record<string, unknown>;
+        const body = parseConfirmPaymentRequest(await readJsonBody(req)) as unknown as Record<
+          string,
+          unknown
+        >;
         sendJson(res, 200, await dependencies.payments.confirm(user, body));
       } catch (error) {
-        const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, 'PortOne 결제 검증 처리 중 오류가 발생했습니다.') });
+        sendApiError(res, error, 'PortOne 결제 검증 처리 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -134,8 +145,7 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
         const user = dependencies.auth.verifyUserAccess(req);
         sendJson(res, 200, { entitlements: await dependencies.payments.listEntitlements(user) });
       } catch (error) {
-        const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '리포트 결제 권한 조회 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '리포트 결제 권한 조회 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -143,11 +153,13 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     if (req.method === 'POST' && isPath(url.pathname, '/payments/portone/entitlement/renew')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);
-        const body = (await readJsonBody(req)) as Record<string, unknown>;
+        const body = parseRenewEntitlementRequest(await readJsonBody(req)) as unknown as Record<
+          string,
+          unknown
+        >;
         sendJson(res, 200, await dependencies.payments.renew(user, body));
       } catch (error) {
-        const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '리포트 결제 권한 복구 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '리포트 결제 권한 복구 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -157,11 +169,7 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
         const body = (await readJsonBody(req)) as Record<string, unknown>;
         sendJson(res, 200, await dependencies.kakao.exchange(body));
       } catch (error) {
-        const status =
-          error instanceof KakaoAuthError || error instanceof PaymentRequestError || error instanceof ReportRequestError
-            ? error.status
-            : 500;
-        sendJson(res, status, { message: errorMessage(error, '카카오 로그인 처리 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '카카오 로그인 처리 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -174,8 +182,7 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
           storage: 'firestore'
         });
       } catch (error) {
-        const status = error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '리포트 보관함 조회 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '리포트 보관함 조회 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -183,14 +190,13 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     if (req.method === 'POST' && isPath(url.pathname, '/archive/reports')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);
-        const body = (await readJsonBody(req)) as Record<string, unknown>;
+        const body = parseSaveReportArchiveRequest(await readJsonBody(req));
         sendJson(res, 200, {
           ok: true,
-          entry: await dependencies.archives.save(user.userId, body)
+          entry: await dependencies.archives.save(user.userId, body as Record<string, unknown>)
         });
       } catch (error) {
-        const status = error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '리포트 보관함 저장 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '리포트 보관함 저장 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -200,8 +206,7 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
         const body = (await readJsonBody(req)) as Record<string, unknown>;
         sendJson(res, 200, dependencies.admin.login(body));
       } catch (error) {
-        const status = error instanceof ReportRequestError || error instanceof PaymentRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '관리자 로그인 처리 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '관리자 로그인 처리 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -214,13 +219,13 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
           storage: 'firestore'
         });
       } catch (error) {
-        const status = error instanceof ReportRequestError ? error.status : 500;
-        sendJson(res, status, { message: errorMessage(error, '관리자 리포트 조회 중 오류가 발생했습니다.') });
+        sendApiError(res, error, '관리자 리포트 조회 중 오류가 발생했습니다.');
       }
       return;
     }
 
     sendJson(res, 404, {
+      code: API_ERROR_CODE.UNSUPPORTED_ROUTE,
       message: '지원하지 않는 경로입니다.',
       routes: PUBLIC_ROUTES
     });

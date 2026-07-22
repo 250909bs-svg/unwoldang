@@ -1,4 +1,5 @@
 import type { AppConfig } from '../../config/env.ts';
+import { API_ERROR_CODE } from '../../contracts/api.ts';
 import { PaymentRequestError } from '../../contracts/errors.ts';
 
 export type PortOnePayment = Record<string, unknown>;
@@ -9,17 +10,6 @@ export type FetchImplementation = typeof fetch;
 
 export interface PortOnePaymentClient {
   fetchPayment(paymentId: string): Promise<PortOnePayment>;
-}
-
-function getPortOneErrorMessage(
-  parsed: Record<string, unknown> | null,
-  fallback: string
-) {
-  return (
-    (typeof parsed?.message === 'string' && parsed.message) ||
-    (typeof parsed?.code === 'string' && parsed.code) ||
-    fallback
-  );
 }
 
 function getPortOnePaymentPayload(parsed: Record<string, unknown> | null) {
@@ -63,7 +53,11 @@ export class PortOneClient implements PortOnePaymentClient {
     if (!response.ok || typeof parsed?.accessToken !== 'string') {
       throw new PaymentRequestError(
         response.status || 502,
-        getPortOneErrorMessage(parsed, 'PortOne access token 발급에 실패했습니다.')
+        'PortOne 결제 인증 서비스를 현재 사용할 수 없습니다.',
+        {
+          code: API_ERROR_CODE.PAYMENT_PROVIDER_FAILED,
+          exposeMessage: false
+        }
       );
     }
 
@@ -86,15 +80,23 @@ export class PortOneClient implements PortOnePaymentClient {
 
     if (!response.ok) {
       throw new PaymentRequestError(
-        response.status,
-        getPortOneErrorMessage(parsed, 'PortOne 결제 내역 조회에 실패했습니다.')
+        response.status || 502,
+        'PortOne 결제 조회 서비스를 현재 사용할 수 없습니다.',
+        {
+          code: API_ERROR_CODE.PAYMENT_PROVIDER_FAILED,
+          exposeMessage: false
+        }
       );
     }
 
     const payment = getPortOnePaymentPayload(parsed);
 
     if (!payment) {
-      throw new PaymentRequestError(502, 'PortOne 결제 내역 응답이 비어 있습니다.');
+      throw new PaymentRequestError(
+        502,
+        'PortOne 결제 내역 응답이 비어 있습니다.',
+        { code: API_ERROR_CODE.PAYMENT_PROVIDER_FAILED, exposeMessage: false }
+      );
     }
 
     return payment;
