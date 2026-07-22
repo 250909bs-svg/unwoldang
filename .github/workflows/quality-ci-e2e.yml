@@ -16,7 +16,7 @@ concurrency:
 jobs:
   quality:
     name: Frontend and Cloud Run quality
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 20
 
     steps:
