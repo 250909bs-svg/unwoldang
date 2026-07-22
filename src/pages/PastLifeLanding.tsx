@@ -2,7 +2,9 @@ import { ArrowRight, BookOpen, Check, ChevronRight, Flame, KeyRound, ShieldCheck
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HeroFilm from '../components/HeroFilm';
+import PastLifeWebtoonPreview from '../components/PastLifeWebtoonPreview';
 import {
+  PAST_LIFE_NARRATIVE_POLICY,
   PAST_LIFE_PRODUCT,
   pastLifeChapters,
   pastLifeFaq,
@@ -56,9 +58,9 @@ export default function PastLifeLanding() {
             지금의 나를 이해하게 되는 장부.
           </h1>
           <p>
-            나는 누구였고, 누구와 얽혔으며, 무엇을 남겼는지.
+            내 사주에는 어떤 역할과 관계의 기질이 반복되는지.
             <br />
-            전생의 이야기를 현생의 연애, 돈, 가족, 직업과 연결해 풀어냅니다.
+            그 반복 기질을 상징 서사로 번역해 현생의 연애, 돈, 가족, 직업과 연결합니다.
           </p>
 
           <div className="dokkaebi-hero-price">
@@ -76,7 +78,7 @@ export default function PastLifeLanding() {
             </a>
           </div>
 
-          <p className="dokkaebi-trust-line">전생의 정체 · 인연 · 업 · 현생의 반복 · 해원 퀘스트</p>
+          <p className="dokkaebi-trust-line">상징 캐릭터 · 관계 패턴 · 반복 선택 · 현생 행동 · 30일 퀘스트</p>
         </div>
 
         <HeroFilm
@@ -88,6 +90,8 @@ export default function PastLifeLanding() {
           actionState={startState}
         />
       </section>
+
+      <PastLifeWebtoonPreview />
 
       <section className="dokkaebi-question-path" aria-labelledby="dokkaebi-question-title">
         <div className="dokkaebi-section-heading">
@@ -109,7 +113,7 @@ export default function PastLifeLanding() {
       <section className="dokkaebi-ledgers" aria-labelledby="dokkaebi-ledgers-title">
         <div className="dokkaebi-section-heading align-left">
           <span>다섯 권의 흑장부</span>
-          <h2 id="dokkaebi-ledgers-title">26개의 주제를 한 생의 순서로 읽습니다</h2>
+          <h2 id="dokkaebi-ledgers-title">26개의 주제를 한 편의 상징 서사로 읽습니다</h2>
           <p>정보를 늘어놓지 않고 봉인, 인연, 업, 현생, 해원의 순서로 정리해 끝까지 읽히는 장부로 구성했습니다.</p>
         </div>
 
@@ -122,7 +126,8 @@ export default function PastLifeLanding() {
                   <img
                     src={chapter.image}
                     alt={chapter.imageAlt}
-                    loading={index === 0 ? 'eager' : 'lazy'}
+                    loading="lazy"
+                    decoding="async"
                     style={{ objectPosition: chapter.crop }}
                   />
                   <i className="dokkaebi-ledger-flame" aria-hidden="true" />
@@ -169,14 +174,14 @@ export default function PastLifeLanding() {
         </div>
 
         <blockquote>
-          “당신은 남의 이름을 지켜주면서 자기 이름은 오래 숨긴 사람입니다.”
+          “상징 서사 속 인물은 남의 이름을 지키느라 자기 이름은 뒤로 미룬 사람으로 그려집니다.”
         </blockquote>
       </section>
 
       <section className="dokkaebi-value" aria-labelledby="dokkaebi-value-title">
         <div className="dokkaebi-value-intro">
           <span>개인 맞춤 전생장부 · {PAST_LIFE_PRODUCT.price}</span>
-          <h2 id="dokkaebi-value-title">장부 한 권이 아니라, 한 생의 구조를 받습니다.</h2>
+          <h2 id="dokkaebi-value-title">장부 한 권이 아니라, 반복 기질의 구조를 받습니다.</h2>
           <p>세계관 장식보다 계산 근거와 현생의 행동이 먼저 남도록 구성했습니다.</p>
         </div>
         <ul>
@@ -215,9 +220,9 @@ export default function PastLifeLanding() {
         <span>{PAST_LIFE_PRODUCT.brand}</span>
         <h2 id="dokkaebi-final-title">{PAST_LIFE_PRODUCT.name}</h2>
         <p>
-          전생은 바꿀 수 없지만,
+          과거를 증명하는 이야기가 아니라,
           <br />
-          그때부터 이어진 습관은 이번 생에서 끝낼 수 있습니다.
+          지금 반복하는 선택을 바꾸기 위한 상징 장부입니다.
         </p>
         <strong>{PAST_LIFE_PRODUCT.price}</strong>
         <Link to="/form/past-life-goblin" state={startState} className="dokkaebi-primary-action">
@@ -244,8 +249,7 @@ export default function PastLifeLanding() {
           ))}
         </div>
         <p className="dokkaebi-legal-note">
-          본 콘텐츠는 사주에 나타난 성향과 반복 패턴을 상징적인 전생 서사로 풀어낸 자기이해형 콘텐츠입니다.
-          역사적 사실이나 초자연적 사실을 증명하는 서비스가 아닙니다.
+          {PAST_LIFE_NARRATIVE_POLICY.notice}
         </p>
       </section>
 

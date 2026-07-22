@@ -1,7 +1,8 @@
-import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PAST_LIFE_PRODUCT } from '../content/pastLifeExperience';
+import { canAutoplayPastLifeVideo, pausePastLifeVideos, shouldPresentPastLifePoster } from '../products/past-life-goblin/mediaPolicy';
 import '../styles/past-life.css';
 
 const nextStoryState = { tabOrigin: '/' } as const;
@@ -15,12 +16,14 @@ export default function PastLifeImmersion() {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const activeIndexRef = useRef(0);
   const isMutedRef = useRef(true);
+  const manuallyPausedRef = useRef(false);
   const hasEnteredRef = useRef(false);
   const hasPresentedChoiceRef = useRef(getInitialReducedMotion());
   const transitionLockRef = useRef(false);
   const transitionTimersRef = useRef<number[]>([]);
   const failedClipsRef = useRef(new Set<number>());
   const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showChoices, setShowChoices] = useState(getInitialReducedMotion);
   const [hasFailed, setHasFailed] = useState(false);
@@ -64,7 +67,7 @@ export default function PastLifeImmersion() {
   useEffect(() => {
     return () => {
       transitionTimersRef.current.forEach((timer) => window.clearTimeout(timer));
-      videoRefs.current.forEach((video) => video?.pause());
+      pausePastLifeVideos(videoRefs.current);
     };
   }, []);
 
@@ -88,13 +91,22 @@ export default function PastLifeImmersion() {
   }, [activeIndex, hasFailed, prefersReducedMotion]);
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      return;
-    }
-
     const resumeActiveClip = () => {
+      if (
+        !canAutoplayPastLifeVideo({
+          prefersReducedMotion,
+          hasFailed,
+          manuallyPaused: manuallyPausedRef.current,
+          visibilityState: document.visibilityState
+        })
+      ) {
+        pausePastLifeVideos(videoRefs.current);
+        setIsPlaying(false);
+        return;
+      }
+
       const activeVideo = videoRefs.current[activeIndexRef.current];
-      if (!activeVideo || !activeVideo.paused || activeVideo.ended) {
+      if (!activeVideo || activeVideo.ended || !activeVideo.paused) {
         return;
       }
 
@@ -103,20 +115,19 @@ export default function PastLifeImmersion() {
     };
 
     const timer = window.setTimeout(resumeActiveClip, 0);
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        resumeActiveClip();
-      }
-    };
+    const handleVisibility = () => resumeActiveClip();
+    const handlePageHide = () => pausePastLifeVideos(videoRefs.current);
 
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('pageshow', resumeActiveClip);
+    window.addEventListener('pagehide', handlePageHide);
     return () => {
       window.clearTimeout(timer);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('pageshow', resumeActiveClip);
+      window.removeEventListener('pagehide', handlePageHide);
     };
-  }, [prefersReducedMotion]);
+  }, [hasFailed, prefersReducedMotion]);
 
   const activateClip = (index: number) => {
     activeIndexRef.current = index;
@@ -200,6 +211,7 @@ export default function PastLifeImmersion() {
       return;
     }
 
+    manuallyPausedRef.current = false;
     hasEnteredRef.current = true;
     setShowChoices(false);
     startNextClip(0);
@@ -230,6 +242,25 @@ export default function PastLifeImmersion() {
     setShowChoices(true);
   };
 
+  const togglePlayback = () => {
+    const video = videoRefs.current[activeIndexRef.current];
+
+    if (!video || hasFailed || prefersReducedMotion) {
+      return;
+    }
+
+    if (video.paused) {
+      manuallyPausedRef.current = false;
+      video.muted = isMutedRef.current;
+      void video.play().catch(() => undefined);
+      return;
+    }
+
+    manuallyPausedRef.current = true;
+    pausePastLifeVideos(videoRefs.current);
+    setIsPlaying(false);
+  };
+
   const toggleSound = () => {
     const video = videoRefs.current[activeIndexRef.current];
 
@@ -245,7 +276,7 @@ export default function PastLifeImmersion() {
         clip.muted = nextMuted;
       }
     });
-    if (video.paused && video.currentTime < video.duration) {
+    if (video.paused && !manuallyPausedRef.current && video.currentTime < video.duration) {
       void video.play().catch(() => undefined);
     }
   };
@@ -255,7 +286,12 @@ export default function PastLifeImmersion() {
       setIsFirstClipReady(true);
     }
 
-    if (index !== activeIndexRef.current || !video.paused || prefersReducedMotion) {
+    if (
+      index !== activeIndexRef.current ||
+      !video.paused ||
+      prefersReducedMotion ||
+      manuallyPausedRef.current
+    ) {
       return;
     }
 
@@ -269,6 +305,7 @@ export default function PastLifeImmersion() {
       return;
     }
 
+    manuallyPausedRef.current = false;
     video.muted = isMutedRef.current;
     void video.play().catch(() => undefined);
   };
@@ -282,7 +319,7 @@ export default function PastLifeImmersion() {
     resumeFirstClip();
   };
 
-  const showPoster = hasFailed || prefersReducedMotion;
+  const showPoster = shouldPresentPastLifePoster(prefersReducedMotion, hasFailed);
 
   return (
     <main className="dokkaebi-immersion-page" aria-label="도깨비 전생사주 몰입 이야기">
@@ -290,16 +327,28 @@ export default function PastLifeImmersion() {
         <Link to="/detail/past-life-goblin" className="dokkaebi-immersion-back" aria-label="이전 화면으로 돌아가기">
           <ArrowLeft size={22} aria-hidden="true" />
         </Link>
-        <button
-          type="button"
-          className="dokkaebi-immersion-sound"
-          onClick={toggleSound}
-          disabled={showPoster}
-          aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
-          title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
-        >
-          {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-        </button>
+        <div className="dokkaebi-immersion-controls" aria-label="몰입 영상 제어">
+          <button
+            type="button"
+            className="dokkaebi-immersion-playback"
+            onClick={togglePlayback}
+            disabled={showPoster}
+            aria-label={isPlaying ? '영상 일시정지' : '영상 재생'}
+            title={isPlaying ? '영상 일시정지' : '영상 재생'}
+          >
+            {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+          </button>
+          <button
+            type="button"
+            className="dokkaebi-immersion-sound"
+            onClick={toggleSound}
+            disabled={showPoster}
+            aria-label={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+            title={isMuted ? '영상 소리 켜기' : '영상 소리 끄기'}
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+        </div>
       </header>
 
       <figure className="dokkaebi-immersion-stage">
@@ -326,9 +375,17 @@ export default function PastLifeImmersion() {
               onLoadedData={(event) => handleClipReady(index, event.currentTarget)}
               onCanPlay={(event) => handleClipReady(index, event.currentTarget)}
               onPlaying={() => {
+                if (index === activeIndexRef.current) {
+                  setIsPlaying(true);
+                }
                 if (index === 0) {
                   setIsFirstClipReady(true);
                   setHasFirstClipStarted(true);
+                }
+              }}
+              onPause={() => {
+                if (index === activeIndexRef.current) {
+                  setIsPlaying(false);
                 }
               }}
               onTimeUpdate={() => handleTimeUpdate(index)}

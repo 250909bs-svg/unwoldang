@@ -29,6 +29,7 @@ import {
   type SajuReportData
 } from '../saju/report';
 import { buildSajuReport } from '../saju/reportBuilder';
+import { ensurePastLifeGoblinReport } from '../../products/past-life-goblin/reportBuilder';
 import {
   hasMalformedReportEvidenceReference,
   lockCommercialReportFacts,
@@ -1219,10 +1220,15 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
     );
   }
   const builtReport = buildSajuReport(serviceId, formData, deterministicBasis);
+  const productReport = ensurePastLifeGoblinReport(builtReport);
+
   const fallbackReport =
     serviceId === 'past-life-goblin'
-      ? { ...builtReport, pastLifeProfile: buildPastLifeProfile(builtReport, formData) }
-      : builtReport;
+      ? {
+          ...productReport,
+          pastLifeProfile: buildPastLifeProfile(productReport, formData)
+        }
+      : productReport;
 
   let draft: GeminiDraft | null = null;
 

@@ -1,0 +1,1390 @@
+/* Product-owned vertical webtoon rail for past-life-goblin only. */
+
+.past-life-webtoon {
+  --past-webtoon-ink: #030507;
+  --past-webtoon-panel: #080c10;
+  --past-webtoon-hanji: #ece3d3;
+  --past-webtoon-muted: #a79c8c;
+  --past-webtoon-cyan: #55dce3;
+  --past-webtoon-red: #c2483e;
+  --past-webtoon-brass: #c29a59;
+  position: relative;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  overflow: clip;
+  border-inline: 1px solid rgba(179, 138, 76, 0.16);
+  background: var(--past-webtoon-ink);
+  color: var(--past-webtoon-hanji);
+  color-scheme: dark;
+  font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  isolation: isolate;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.past-life-webtoon *,
+.past-life-webtoon *::before,
+.past-life-webtoon *::after {
+  box-sizing: border-box;
+}
+
+.past-life-webtoon img {
+  display: block;
+  max-width: 100%;
+}
+
+.past-life-webtoon a {
+  color: inherit;
+}
+
+.past-life-webtoon__prologue {
+  position: relative;
+  display: grid;
+  min-height: min(920px, calc(100svh - 60px));
+  align-items: end;
+  overflow: hidden;
+  background: #030507;
+}
+
+.past-life-webtoon__prologue picture,
+.past-life-webtoon__prologue picture::after {
+  position: absolute;
+  inset: 0;
+}
+
+.past-life-webtoon__prologue picture::after {
+  background:
+    linear-gradient(180deg, rgba(3, 5, 7, 0.04) 18%, rgba(3, 5, 7, 0.18) 46%, #030507 96%),
+    radial-gradient(circle at 50% 28%, transparent 18%, rgba(3, 5, 7, 0.42) 78%);
+  content: "";
+}
+
+.past-life-webtoon__prologue img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 24%;
+  filter: saturate(0.92) contrast(1.04) brightness(0.88);
+}
+
+.past-life-webtoon__prologue-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 14px;
+  padding: 46px 24px 38px;
+}
+
+.past-life-webtoon__eyebrow,
+.past-life-webtoon__symbolic-label {
+  width: fit-content;
+  padding: 5px 8px;
+  border: 1px solid rgba(85, 220, 227, 0.34);
+  background: rgba(3, 8, 11, 0.76);
+  color: #9ce9ed;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.past-life-webtoon__prologue h2 {
+  margin: 0;
+  color: #f3eadc;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(2rem, 8vw, 3.35rem);
+  line-height: 1.28;
+  text-wrap: balance;
+}
+
+.past-life-webtoon__prologue blockquote {
+  width: min(88%, 390px);
+  margin: 2px 0 0 auto;
+  padding: 14px 16px;
+  border: 1px solid rgba(85, 220, 227, 0.22);
+  border-radius: 19px 19px 5px 19px;
+  background: rgba(5, 13, 18, 0.9);
+  color: #eee4d6;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(12px);
+}
+
+.past-life-webtoon__prologue p {
+  margin: 0;
+  color: #aaa092;
+  font-size: 0.8rem;
+  line-height: 1.75;
+}
+
+.past-life-webtoon__docket {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  padding: 66px 24px 72px;
+  border-block: 1px solid rgba(179, 138, 76, 0.18);
+  background:
+    linear-gradient(140deg, rgba(179, 138, 76, 0.07), transparent 44%),
+    #090c10;
+}
+
+.past-life-webtoon__docket::before {
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(179, 138, 76, 0.12);
+  content: "";
+  pointer-events: none;
+}
+
+.past-life-webtoon__docket > * {
+  position: relative;
+}
+
+.past-life-webtoon__docket h2,
+.past-life-webtoon__episode-title h2,
+.past-life-webtoon__mission h2,
+.past-life-webtoon__epilogue h2 {
+  margin: 0;
+  color: #f0e6d7;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  text-wrap: balance;
+}
+
+.past-life-webtoon__docket h2 {
+  font-size: 1.62rem;
+  line-height: 1.46;
+}
+
+.past-life-webtoon__docket > p {
+  margin: 0;
+  color: var(--past-webtoon-muted);
+  font-size: 0.82rem;
+  line-height: 1.82;
+}
+
+.past-life-webtoon__docket-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid rgba(185, 170, 145, 0.13);
+  background: rgba(185, 170, 145, 0.13);
+}
+
+.past-life-webtoon__docket-grid > div {
+  min-width: 0;
+  padding: 14px 13px;
+  background: rgba(4, 7, 10, 0.88);
+}
+
+.past-life-webtoon__docket-grid dt {
+  color: #6fd7dc;
+  font-size: 0.63rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__docket-grid dd {
+  margin: 6px 0 0;
+  color: #d8cdbd;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.8rem;
+  line-height: 1.62;
+}
+
+.past-life-webtoon__docket-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.past-life-webtoon__docket-evidence span {
+  padding: 6px 8px;
+  border: 1px solid rgba(185, 170, 145, 0.14);
+  color: #8e8579;
+  font-size: 0.62rem;
+}
+
+.past-life-webtoon__episode {
+  position: relative;
+  scroll-margin-top: 70px;
+  background: #030507;
+  content-visibility: auto;
+  contain-intrinsic-size: 3200px;
+}
+
+.past-life-webtoon__episode + .past-life-webtoon__episode {
+  border-top: 1px solid rgba(179, 138, 76, 0.16);
+}
+
+.past-life-webtoon__episode.is-focus {
+  box-shadow: inset 3px 0 var(--past-webtoon-cyan);
+}
+
+.past-life-webtoon__episode-title {
+  position: relative;
+  display: grid;
+  min-height: 58svh;
+  align-content: end;
+  gap: 11px;
+  padding: 84px 24px 44px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 74% 26%, rgba(85, 220, 227, 0.14), transparent 18rem),
+    linear-gradient(180deg, #071017, #030507 80%);
+}
+
+.past-life-webtoon__episode-title::before {
+  position: absolute;
+  top: 54px;
+  right: 30px;
+  width: 78px;
+  height: 78px;
+  border: 1px solid rgba(194, 154, 89, 0.42);
+  color: rgba(194, 154, 89, 0.62);
+  content: attr(data-seal);
+  display: grid;
+  place-items: center;
+  font-family: "Noto Serif KR", serif;
+  font-size: 1.35rem;
+  transform: rotate(-6deg);
+}
+
+.past-life-webtoon__episode-title > * {
+  position: relative;
+}
+
+.past-life-webtoon__episode-title > span {
+  color: var(--past-webtoon-cyan);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+
+.past-life-webtoon__episode-title h2 {
+  font-size: clamp(2.5rem, 12vw, 4.2rem);
+  line-height: 1.05;
+}
+
+.past-life-webtoon__episode-title p {
+  max-width: 27em;
+  margin: 3px 0 0;
+  color: #aaa092;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+.past-life-webtoon__focus-badge {
+  width: fit-content;
+  margin-bottom: 5px;
+  padding: 7px 9px;
+  border: 1px solid rgba(85, 220, 227, 0.34);
+  background: rgba(85, 220, 227, 0.07);
+  color: #a2edf0 !important;
+  letter-spacing: 0 !important;
+}
+
+.past-life-webtoon__panel {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: #020304;
+}
+
+.past-life-webtoon__panel picture,
+.past-life-webtoon__panel img {
+  width: 100%;
+}
+
+.past-life-webtoon__panel img {
+  height: auto;
+  filter: saturate(0.95) contrast(1.035);
+}
+
+.past-life-webtoon__panel::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2, 3, 4, 0.02) 42%, rgba(2, 3, 4, 0.72) 100%),
+    radial-gradient(circle at 50% 44%, transparent 48%, rgba(2, 3, 4, 0.2));
+  content: "";
+  pointer-events: none;
+}
+
+.past-life-webtoon__panel .past-life-webtoon__symbolic-label {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+}
+
+.past-life-webtoon__bubble {
+  position: absolute;
+  z-index: 4;
+  top: 18%;
+  width: fit-content;
+  max-width: 76%;
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(235, 224, 207, 0.2);
+  background: rgba(7, 11, 15, 0.91);
+  color: #f0e7d9;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(0.72rem, 3.2vw, 0.88rem);
+  line-height: 1.66;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(10px);
+}
+
+.past-life-webtoon__bubble[data-speaker="goblin"] {
+  right: 14px;
+  border-color: rgba(85, 220, 227, 0.3);
+  border-radius: 17px 17px 4px 17px;
+}
+
+.past-life-webtoon__bubble[data-speaker="self"] {
+  top: 16%;
+  left: 14px;
+  border-color: rgba(194, 154, 89, 0.3);
+  border-radius: 17px 17px 17px 4px;
+}
+
+.past-life-webtoon__bubble[data-speaker="connection"] {
+  top: 62%;
+  right: 14px;
+  border-color: rgba(194, 72, 62, 0.36);
+  border-radius: 17px 17px 4px 17px;
+}
+
+.past-life-webtoon__narration {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 42px 20px 18px;
+  color: #d9cebf;
+  font-size: 0.75rem;
+  line-height: 1.72;
+}
+
+.past-life-webtoon__narration strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #8fe4e8;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.past-life-webtoon__topics {
+  margin: 0;
+  border: 0;
+  border-block: 1px solid rgba(185, 170, 145, 0.13);
+  background: #0a0d11;
+}
+
+.past-life-webtoon__topics summary,
+.past-life-webtoon__evidence summary {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  color: #d8cdbc;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 800;
+  list-style: none;
+}
+
+.past-life-webtoon__topics summary::-webkit-details-marker,
+.past-life-webtoon__evidence summary::-webkit-details-marker {
+  display: none;
+}
+
+.past-life-webtoon__topics summary::after,
+.past-life-webtoon__evidence summary::after {
+  color: var(--past-webtoon-cyan);
+  content: "+";
+  font-size: 1rem;
+}
+
+.past-life-webtoon__topics[open] summary::after,
+.past-life-webtoon__evidence[open] summary::after {
+  content: "−";
+}
+
+.past-life-webtoon__topic-list {
+  display: grid;
+  gap: 1px;
+  padding: 0 12px 14px;
+  background: rgba(185, 170, 145, 0.09);
+}
+
+.past-life-webtoon__topic {
+  padding: 18px 16px 20px;
+  background: #070a0e;
+}
+
+.past-life-webtoon__topic span {
+  color: var(--past-webtoon-brass);
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__topic h3 {
+  margin: 7px 0 9px;
+  color: #e8decf;
+  font-family: "Noto Serif KR", serif;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.past-life-webtoon__topic p {
+  margin: 0;
+  color: #a79d90;
+  font-size: 0.78rem;
+  line-height: 1.8;
+}
+
+.past-life-webtoon__topic p + p {
+  margin-top: 8px;
+}
+
+.past-life-webtoon__interlude {
+  display: grid;
+  min-height: 42svh;
+  place-items: center;
+  padding: 62px 28px;
+  background:
+    radial-gradient(circle, rgba(85, 220, 227, 0.07), transparent 14rem),
+    #030507;
+  text-align: center;
+}
+
+.past-life-webtoon__interlude p {
+  max-width: 24em;
+  margin: 0;
+  color: #c9bdad;
+  font-family: "Noto Serif KR", serif;
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.past-life-webtoon__evidence {
+  margin: 0 16px 48px;
+  border: 1px solid rgba(85, 220, 227, 0.18);
+  background: linear-gradient(145deg, rgba(15, 29, 36, 0.86), rgba(5, 8, 11, 0.94));
+}
+
+.past-life-webtoon__evidence summary {
+  min-height: 60px;
+  color: #9ee8eb;
+}
+
+.past-life-webtoon__evidence ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0 18px 18px;
+  list-style: none;
+  counter-reset: evidence-step;
+}
+
+.past-life-webtoon__evidence li {
+  position: relative;
+  padding: 15px 0 15px 38px;
+  border-top: 1px solid rgba(185, 170, 145, 0.1);
+  color: #b5aa9b;
+  counter-increment: evidence-step;
+  font-size: 0.76rem;
+  line-height: 1.72;
+}
+
+.past-life-webtoon__evidence li::before {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid rgba(194, 154, 89, 0.36);
+  color: var(--past-webtoon-brass);
+  content: counter(evidence-step, decimal-leading-zero);
+  font-size: 0.58rem;
+}
+
+.past-life-webtoon__evidence strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #e3d8c8;
+  font-size: 0.7rem;
+}
+
+.past-life-webtoon__evidence-source {
+  margin: 0 18px 18px;
+  padding: 13px 14px;
+  border-left: 2px solid rgba(85, 220, 227, 0.45);
+  background: rgba(3, 6, 9, 0.54);
+  color: #857d72;
+  font-size: 0.66rem;
+  line-height: 1.7;
+}
+
+.past-life-webtoon__question {
+  display: grid;
+  gap: 9px;
+  margin: 0 16px 42px;
+  padding: 20px 18px;
+  border: 1px solid rgba(194, 72, 62, 0.28);
+  border-radius: 20px 20px 5px 20px;
+  background: linear-gradient(135deg, rgba(77, 18, 20, 0.62), rgba(9, 8, 11, 0.95));
+}
+
+.past-life-webtoon__question > span {
+  color: #e79782;
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__question blockquote {
+  margin: 0;
+  color: #f0e6d8;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.9rem;
+  line-height: 1.72;
+}
+
+.past-life-webtoon__question p {
+  margin: 0;
+  color: #b2a698;
+  font-size: 0.76rem;
+  line-height: 1.72;
+}
+
+.past-life-webtoon__bridge {
+  display: grid;
+  gap: 10px;
+  padding: 30px 22px 72px;
+  text-align: center;
+}
+
+.past-life-webtoon__bridge span {
+  color: #6bd3d8;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__bridge p {
+  margin: 0;
+  color: #b7ac9d;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.past-life-webtoon__bridge a {
+  justify-self: center;
+  min-height: 44px;
+  margin-top: 5px;
+  padding: 12px 14px;
+  color: #8fe4e8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.past-life-webtoon__mission {
+  display: grid;
+  gap: 20px;
+  padding: 74px 22px 78px;
+  border-block: 1px solid rgba(194, 154, 89, 0.2);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(194, 154, 89, 0.12), transparent 18rem),
+    #090c0f;
+}
+
+.past-life-webtoon__mission > span {
+  color: var(--past-webtoon-brass);
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__mission h2 {
+  font-size: 1.8rem;
+  line-height: 1.42;
+}
+
+.past-life-webtoon__mission > p {
+  margin: 0;
+  color: #a79c8d;
+  font-size: 0.8rem;
+  line-height: 1.78;
+}
+
+.past-life-webtoon__mission progress {
+  width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: 999px;
+  accent-color: var(--past-webtoon-cyan);
+}
+
+.past-life-webtoon__mission fieldset {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 16px 13px 13px;
+  border: 1px solid rgba(185, 170, 145, 0.14);
+  background: rgba(3, 6, 8, 0.62);
+}
+
+.past-life-webtoon__mission legend {
+  padding: 0 7px;
+  color: #d0aa69;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__mission label {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-height: 48px;
+  padding: 10px;
+  background: rgba(49, 59, 60, 0.22);
+  color: #d9cebf;
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.62;
+}
+
+.past-life-webtoon__mission input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--past-webtoon-cyan);
+}
+
+.past-life-webtoon__mission label:has(input:checked) {
+  color: #7f786f;
+  text-decoration: line-through;
+}
+
+.past-life-webtoon__mission-status {
+  min-height: 1.4em;
+  margin: -8px 0 0;
+  color: #83dce0;
+  font-size: 0.68rem;
+  text-align: right;
+}
+
+.past-life-webtoon__epilogue {
+  display: grid;
+  min-height: 84svh;
+  align-content: center;
+  gap: 18px;
+  padding: 82px 24px;
+  background:
+    linear-gradient(180deg, rgba(3, 5, 7, 0.05), #030507 76%),
+    radial-gradient(circle at 50% 28%, rgba(194, 154, 89, 0.17), transparent 18rem);
+  text-align: center;
+}
+
+.past-life-webtoon__epilogue img {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto;
+  border: 1px solid rgba(85, 220, 227, 0.32);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.past-life-webtoon__epilogue h2 {
+  font-size: 1.7rem;
+  line-height: 1.5;
+}
+
+.past-life-webtoon__epilogue p {
+  margin: 0;
+  color: #aaa092;
+  font-size: 0.82rem;
+  line-height: 1.82;
+}
+
+.past-life-webtoon__epilogue a {
+  justify-self: center;
+  min-height: 46px;
+  margin-top: 8px;
+  padding: 13px 18px;
+  border: 1px solid rgba(85, 220, 227, 0.3);
+  background: rgba(85, 220, 227, 0.06);
+  color: #9ae8eb;
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.past-life-webtoon :is(a, button, summary, input):focus-visible {
+  outline: 2px solid var(--past-webtoon-cyan);
+  outline-offset: 3px;
+}
+
+/* Landing teaser stays isolated under the product-specific root. */
+.dokkaebi-webtoon-preview {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  overflow: hidden;
+  border-inline: 1px solid rgba(179, 138, 76, 0.16);
+  background: #030507;
+  color: #ece3d3;
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+}
+
+.dokkaebi-webtoon-preview *,
+.dokkaebi-webtoon-preview *::before,
+.dokkaebi-webtoon-preview *::after {
+  box-sizing: border-box;
+}
+
+.dokkaebi-webtoon-preview__intro {
+  display: grid;
+  min-height: 70svh;
+  align-content: center;
+  gap: 14px;
+  padding: 80px 24px;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(85, 220, 227, 0.1), transparent 16rem),
+    #030507;
+  text-align: center;
+}
+
+.dokkaebi-webtoon-preview__intro span {
+  color: #77dce1;
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.dokkaebi-webtoon-preview__intro h2 {
+  margin: 0;
+  color: #f1e7d8;
+  font-family: "Noto Serif KR", serif;
+  font-size: clamp(2rem, 9vw, 3rem);
+  line-height: 1.32;
+}
+
+.dokkaebi-webtoon-preview__intro p {
+  margin: 0;
+  color: #a59a8b;
+  font-size: 0.8rem;
+  line-height: 1.78;
+}
+
+.dokkaebi-webtoon-preview__scene {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: #020304;
+}
+
+.dokkaebi-webtoon-preview__scene img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.dokkaebi-webtoon-preview__scene::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 42%, rgba(2, 3, 4, 0.84));
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-webtoon-preview__scene-copy {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  z-index: 2;
+}
+
+.dokkaebi-webtoon-preview__scene-copy > span {
+  color: #72d8dd;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.dokkaebi-webtoon-preview__scene-copy h3 {
+  margin: 7px 0;
+  color: #f0e6d7;
+  font-family: "Noto Serif KR", serif;
+  font-size: 1.35rem;
+}
+
+.dokkaebi-webtoon-preview__scene-copy p {
+  max-width: 90%;
+  margin: 0;
+  color: #c6baaa;
+  font-size: 0.75rem;
+  line-height: 1.72;
+}
+
+.dokkaebi-webtoon-preview__dialogue {
+  display: grid;
+  min-height: 34svh;
+  place-items: center;
+  padding: 48px 24px;
+  background: #030507;
+}
+
+.dokkaebi-webtoon-preview__dialogue p {
+  max-width: 23em;
+  margin: 0;
+  padding: 13px 15px;
+  border: 1px solid rgba(85, 220, 227, 0.24);
+  border-radius: 18px 18px 5px 18px;
+  background: #081015;
+  color: #e8ded0;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.86rem;
+  line-height: 1.75;
+}
+
+.dokkaebi-webtoon-preview__outro {
+  display: grid;
+  gap: 16px;
+  padding: 72px 24px 84px;
+  border-top: 1px solid rgba(179, 138, 76, 0.18);
+  background: linear-gradient(180deg, rgba(179, 138, 76, 0.08), transparent), #080b0f;
+  text-align: center;
+}
+
+.dokkaebi-webtoon-preview__outro p,
+.dokkaebi-webtoon-preview__notice {
+  margin: 0;
+  color: #a59a8b;
+  font-size: 0.76rem;
+  line-height: 1.76;
+}
+
+.dokkaebi-webtoon-preview__outro a {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 18px;
+  border: 1px solid #c29a59;
+  background: linear-gradient(135deg, #c29a59, #86612d);
+  color: #080604;
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+@media (max-width: 420px) {
+  .past-life-webtoon {
+    border-inline: 0;
+  }
+
+  .past-life-webtoon__prologue-copy,
+  .past-life-webtoon__docket,
+  .past-life-webtoon__episode-title,
+  .past-life-webtoon__mission,
+  .past-life-webtoon__epilogue {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .past-life-webtoon__bubble {
+    max-width: 82%;
+  }
+
+  .past-life-webtoon__docket-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .past-life-webtoon__panel img,
+  .dokkaebi-webtoon-preview__scene img {
+    transition: filter 220ms ease;
+  }
+
+  .past-life-webtoon__panel:hover img,
+  .dokkaebi-webtoon-preview__scene:hover img {
+    filter: saturate(1.02) contrast(1.05);
+  }
+}
+
+
+/* Renderer completion rules: character reveals, evidence cards, and the landing rail. */
+.past-life-webtoon__characters {
+  display: grid;
+  gap: 1px;
+  padding: 72px 0 0;
+  border-block: 1px solid rgba(179, 138, 76, 0.16);
+  background: rgba(185, 170, 145, 0.12);
+}
+
+.past-life-webtoon__characters > header {
+  display: grid;
+  gap: 10px;
+  padding: 0 24px 38px;
+  background: #030507;
+  text-align: center;
+}
+
+.past-life-webtoon__characters > header > span {
+  color: #72d8dd;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.past-life-webtoon__characters > header h2 {
+  margin: 0;
+  color: #f0e6d7;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.75rem;
+  line-height: 1.42;
+}
+
+.past-life-webtoon__characters > header p {
+  margin: 0;
+  color: #91887c;
+  font-size: 0.76rem;
+  line-height: 1.72;
+}
+
+.past-life-webtoon__character-panel {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: #030507;
+}
+
+.past-life-webtoon__character-panel img {
+  width: 100%;
+  height: auto;
+  min-height: 620px;
+  object-fit: cover;
+  object-position: center 22%;
+  filter: saturate(0.92) contrast(1.04);
+}
+
+.past-life-webtoon__character-panel::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 48%, rgba(3, 5, 7, 0.98) 94%);
+  content: "";
+  pointer-events: none;
+}
+
+.past-life-webtoon__character-panel figcaption {
+  position: absolute;
+  right: 20px;
+  bottom: 24px;
+  left: 20px;
+  z-index: 2;
+}
+
+.past-life-webtoon__character-panel figcaption > span {
+  color: #76dce1;
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.past-life-webtoon__character-panel h3 {
+  margin: 8px 0 9px;
+  color: #f1e7d8;
+  font-family: "Noto Serif KR", serif;
+  font-size: 1.45rem;
+  line-height: 1.44;
+}
+
+.past-life-webtoon__character-panel p,
+.past-life-webtoon__character-panel small {
+  display: block;
+  margin: 0;
+  color: #b4a99a;
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.past-life-webtoon__character-panel small {
+  margin-top: 9px;
+  color: #777066;
+  font-size: 0.63rem;
+}
+
+.past-life-webtoon__bubble--left {
+  right: auto !important;
+  left: 14px;
+  border-radius: 17px 17px 17px 4px !important;
+}
+
+.past-life-webtoon__bubble--right {
+  right: 14px;
+  left: auto;
+  border-radius: 17px 17px 4px 17px;
+}
+
+.past-life-webtoon__questions {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.past-life-webtoon__question > strong {
+  color: #e0c5aa;
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+
+.past-life-webtoon__evidence-sources {
+  display: grid;
+  gap: 1px;
+  margin: 0 18px 18px;
+  background: rgba(185, 170, 145, 0.11);
+}
+
+.past-life-webtoon__evidence-sources article {
+  padding: 14px;
+  background: rgba(3, 6, 9, 0.82);
+}
+
+.past-life-webtoon__evidence-sources strong,
+.past-life-webtoon__evidence-sources span,
+.past-life-webtoon__evidence-sources p,
+.past-life-webtoon__evidence-sources small {
+  display: block;
+}
+
+.past-life-webtoon__evidence-sources strong {
+  color: #8de3e7;
+}
+
+.past-life-webtoon__evidence-sources span {
+  margin-top: 4px;
+  color: #d6cbbb;
+  font-size: 0.72rem;
+}
+
+.past-life-webtoon__evidence-sources p,
+.past-life-webtoon__evidence-sources small {
+  margin: 7px 0 0;
+  color: #857d72;
+  font-size: 0.65rem;
+  line-height: 1.68;
+}
+
+.past-life-webtoon__evidence-sources small {
+  padding-left: 9px;
+  border-left: 2px solid rgba(194, 154, 89, 0.38);
+}
+
+.past-life-webtoon__mission label strong,
+.past-life-webtoon__mission label small {
+  display: block;
+}
+
+.past-life-webtoon__mission label strong {
+  color: #e5d9c8;
+  font-size: 0.76rem;
+}
+
+.past-life-webtoon__mission label small {
+  margin-top: 4px;
+  color: #9b9184;
+  font-size: 0.68rem;
+  line-height: 1.62;
+}
+
+.dokkaebi-webtoon-preview__rail {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  overflow: hidden;
+  border-inline: 1px solid rgba(179, 138, 76, 0.16);
+  background: #030507;
+  color: #ece3d3;
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+}
+
+.dokkaebi-webtoon-preview__rail *,
+.dokkaebi-webtoon-preview__rail *::before,
+.dokkaebi-webtoon-preview__rail *::after {
+  box-sizing: border-box;
+}
+
+.dokkaebi-webtoon-preview__title,
+.dokkaebi-webtoon-preview__lead {
+  margin: 0;
+}
+
+.dokkaebi-webtoon-preview__episodes {
+  display: grid;
+  gap: 1px;
+  background: rgba(179, 138, 76, 0.16);
+}
+
+.dokkaebi-webtoon-preview__episode {
+  background: #030507;
+}
+
+.dokkaebi-webtoon-preview__chapter {
+  display: grid;
+  min-height: 38svh;
+  align-content: end;
+  gap: 8px;
+  padding: 54px 22px 30px;
+  background:
+    radial-gradient(circle at 80% 24%, rgba(85, 220, 227, 0.1), transparent 14rem),
+    #05090d;
+}
+
+.dokkaebi-webtoon-preview__volume {
+  color: #72d8dd;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.dokkaebi-webtoon-preview__chapter-title {
+  margin: 0;
+  color: #f0e6d7;
+  font-family: "Noto Serif KR", serif;
+  font-size: 2.2rem;
+  line-height: 1.12;
+}
+
+.dokkaebi-webtoon-preview__chapter-line {
+  margin: 0;
+  color: #9e9487;
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.dokkaebi-webtoon-preview__panel {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: #020304;
+}
+
+.dokkaebi-webtoon-preview__picture,
+.dokkaebi-webtoon-preview__image {
+  display: block;
+  width: 100%;
+}
+
+.dokkaebi-webtoon-preview__image {
+  height: auto;
+}
+
+.dokkaebi-webtoon-preview__panel::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 38%, rgba(2, 3, 4, 0.84));
+  content: "";
+  pointer-events: none;
+}
+
+.dokkaebi-webtoon-preview__caption {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dokkaebi-webtoon-preview__symbolic-label {
+  position: absolute;
+  top: 13px;
+  left: 13px;
+  padding: 5px 7px;
+  border: 1px solid rgba(85, 220, 227, 0.3);
+  background: rgba(3, 8, 11, 0.78);
+  color: #9ce9ed;
+  font-size: 0.58rem;
+  font-weight: 850;
+}
+
+.dokkaebi-webtoon-preview__narration {
+  position: absolute;
+  right: 18px;
+  bottom: 17px;
+  left: 18px;
+  margin: 0;
+  color: #d7ccbd;
+  font-size: 0.74rem;
+  line-height: 1.68;
+}
+
+.dokkaebi-webtoon-preview__dialogue {
+  position: absolute;
+  top: 20%;
+  right: 14px;
+  display: block;
+  width: fit-content;
+  max-width: 76%;
+  min-height: 0;
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(85, 220, 227, 0.28);
+  border-radius: 17px 17px 4px 17px;
+  background: rgba(6, 13, 18, 0.91);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+  pointer-events: auto;
+}
+
+.dokkaebi-webtoon-preview__speaker {
+  display: block;
+  color: #75dce1;
+  font-size: 0.56rem;
+  font-weight: 850;
+}
+
+.dokkaebi-webtoon-preview__dialogue .dokkaebi-webtoon-preview__speech {
+  max-width: none;
+  margin: 5px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #eee4d6;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.76rem;
+  line-height: 1.62;
+}
+
+.dokkaebi-webtoon-preview__ending {
+  display: grid;
+  gap: 17px;
+  padding: 70px 22px 82px;
+  border-top: 1px solid rgba(179, 138, 76, 0.18);
+  background: linear-gradient(180deg, rgba(179, 138, 76, 0.08), transparent), #080b0f;
+  text-align: center;
+}
+
+.dokkaebi-webtoon-preview__cta {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #c29a59;
+  background: linear-gradient(135deg, #c29a59, #86612d);
+  color: #080604;
+  text-decoration: none;
+}
+
+.dokkaebi-webtoon-preview__cta-label {
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-align: left;
+}
+
+.dokkaebi-webtoon-preview__cta-price {
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.82rem;
+}
+
+
+/* Keep the paid report on the same continuous mobile-first rail on wide screens. */
+.past-life-report-page .past-life-report-shell {
+  width: min(620px, 100%);
+  max-width: 620px;
+}
+
+.past-life-report-page .past-life-report-cover {
+  grid-template-columns: 1fr;
+  gap: 28px;
+  padding: 34px 28px 30px;
+}
+
+.past-life-report-page .past-life-report-cover-visual {
+  width: min(100%, 360px);
+  margin-inline: auto;
+}
+
+.past-life-report-page .past-life-report-cover-copy {
+  align-items: center;
+  text-align: center;
+}
+
+.past-life-report-page .past-life-report-cover-copy p {
+  margin-inline: auto;
+}
+
+.past-life-report-page .past-life-report-seals {
+  position: static;
+  display: grid;
+  width: auto;
+  grid-auto-columns: minmax(124px, 1fr);
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  margin: 10px -28px -30px;
+  overflow-x: auto;
+  border-right: 0;
+  border-left: 0;
+  box-shadow: none;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.past-life-report-page .past-life-report-seals a {
+  min-height: 72px;
+  scroll-snap-align: start;
+}
+
+.past-life-report-page .past-life-report-seals a.active {
+  box-shadow: inset 0 -2px #27dde8;
+}
+
+@media print {
+  .past-life-webtoon {
+    width: 100%;
+    max-width: none;
+    overflow: visible;
+    border: 0;
+    color: #201a16;
+    background: #fff;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .past-life-webtoon__episode {
+    content-visibility: visible;
+    break-before: page;
+    background: #fff;
+  }
+
+  .past-life-webtoon__prologue,
+  .past-life-webtoon__episode-title,
+  .past-life-webtoon__interlude,
+  .past-life-webtoon__mission,
+  .past-life-webtoon__epilogue {
+    min-height: 0;
+  }
+
+  .past-life-webtoon__topics,
+  .past-life-webtoon__evidence {
+    break-inside: avoid;
+    background: #fff;
+  }
+
+  .past-life-webtoon__topics:not([open]) > :not(summary),
+  .past-life-webtoon__evidence:not([open]) > :not(summary) {
+    display: block;
+  }
+
+  .past-life-webtoon__mission input {
+    pointer-events: none;
+  }
+}

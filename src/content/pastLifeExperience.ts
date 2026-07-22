@@ -1,105 +1,51 @@
-export const PAST_LIFE_PRODUCT = {
-  brand: 'MZ 도깨비 전생사주',
-  name: '도깨비 전생장부: 봉인록',
-  price: '49,000원',
-  poster: '/media/dokkaebi-poster.webp',
-  guideAvatar: '/media/dokkaebi-guide-avatar.webp',
-  intakeImage: '/media/dokkaebi-guide-intake.webp',
-  film: '/media/dokkaebi-hero-optimized.mp4',
-  immersionFilm: '/media/dokkaebi-immersion.mp4',
-  immersionFilms: [
-    '/media/dokkaebi-story-01.mp4',
-    '/media/dokkaebi-story-04.mp4',
-    '/media/dokkaebi-immersion.mp4',
-    '/media/dokkaebi-story-02.mp4'
-  ],
-  primaryAction: '내 전생 장부 열기',
-  sampleAction: '샘플 장부 미리보기'
-} as const;
+import {
+  PAST_LIFE_NARRATIVE_POLICY,
+  PAST_LIFE_PRODUCT,
+  PAST_LIFE_REPORT_VOLUMES,
+  type PastLifeVolumeId
+} from '../products/past-life-goblin/contract';
+
+export { PAST_LIFE_NARRATIVE_POLICY, PAST_LIFE_PRODUCT, PAST_LIFE_REPORT_VOLUMES };
 
 export type PastLifeChapter = {
-  id: 'seal' | 'relationship' | 'karma' | 'present' | 'release';
+  id: PastLifeVolumeId;
   volume: string;
   title: string;
   line: string;
-  topics: string[];
+  topics: readonly string[];
   symbol: string;
   crop: string;
   image: string;
   imageAlt: string;
 };
 
-export const pastLifeChapters: PastLifeChapter[] = [
-  {
-    id: 'seal',
-    volume: '제1권',
-    title: '봉인록',
-    line: '이름이 지워진 자리에도 운명은 남는다.',
-    topics: ['전생 봉인명', '시대와 장소', '신분·직업·재능'],
-    symbol: '희미한 청염',
-    crop: '50% 35%',
-    image: '/media/dokkaebi-guide-chapter-01.webp',
-    imageAlt: '달빛 아래 같은 도깨비 장부지기가 청염으로 고객의 첫 장부를 여는 장면'
-  },
-  {
-    id: 'relationship',
-    volume: '제2권',
-    title: '인연록',
-    line: '사람은 떠나도 매듭은 남는다.',
-    topics: ['가장 사랑했던 사람', '다시 만난 인연', '귀인과 가족'],
-    symbol: '이어지는 적연',
-    crop: '50% 58%',
-    image: '/media/dokkaebi-guide-chapter-02.webp',
-    imageAlt: '비 내리는 달밤에 도깨비 장부지기가 붉은 인연의 실을 따라가는 장면'
-  },
-  {
-    id: 'karma',
-    volume: '제3권',
-    title: '업록',
-    line: '벌이 아니라 반복이 업을 드러낸다.',
-    topics: ['남긴 상처와 책임', '갚지 못한 빚', '끝내 못한 말'],
-    symbol: '엉킨 적연',
-    crop: '50% 66%',
-    image: '/media/dokkaebi-guide-chapter-03.webp',
-    imageAlt: '도깨비 장부지기가 흑장부 위에서 엉킨 붉은 실과 오래된 봉인을 풀어보는 장면'
-  },
-  {
-    id: 'present',
-    volume: '제4권',
-    title: '현생록',
-    line: '과거는 기억보다 습관으로 돌아온다.',
-    topics: ['연애의 반복', '돈·직업의 흔적', '복과 재능'],
-    symbol: '손목을 비추는 청염',
-    crop: '50% 52%',
-    image: '/media/dokkaebi-guide-chapter-04.webp',
-    imageAlt: '도깨비 장부지기가 거울 속 익명의 현생 인물과 반복되는 손짓을 마주한 장면'
-  },
-  {
-    id: 'release',
-    volume: '제5권',
-    title: '해원록',
-    line: '풀어야 할 것은 운명이 아니라 오래된 선택이다.',
-    topics: ['피해야 할 악연', '이번 생의 숙제', '30일 봉인 해제'],
-    symbol: '느슨해진 인연의 실',
-    crop: '50% 52%',
-    image: '/media/dokkaebi-guide-chapter-05.webp',
-    imageAlt: '새벽빛 문 앞에서 같은 도깨비 장부지기가 고객 손의 붉은 실을 풀어 돌려주는 장면'
-  }
-];
+export const pastLifeChapters = PAST_LIFE_REPORT_VOLUMES.map(
+  (volume): PastLifeChapter => ({
+    id: volume.id,
+    volume: volume.volume,
+    title: volume.title,
+    line: volume.line,
+    topics: volume.topics.map((topic) => topic.title),
+    symbol: volume.symbol,
+    crop: volume.crop,
+    image: volume.image,
+    imageAlt: volume.imageAlt
+  })
+);
 
 export const pastLifeQuestions = [
-  '전생에 나는 누구였나',
-  '누구를 사랑했고 누구에게 상처를 남겼나',
-  '무엇을 끝내지 못했나',
-  '왜 현생에서 같은 장면이 반복되나',
-  '이번 생에서는 어떻게 풀어야 하나'
+  '나는 어떤 상징 인물로 그려지나',
+  '어떤 관계 패턴에 가장 크게 흔들리나',
+  '무엇을 끝내지 못한 선택으로 읽나',
+  '왜 현생에서 같은 장면을 반복하나',
+  '이번 생에서는 어떤 행동으로 풀 수 있나'
 ] as const;
 
 export const pastLifeValueItems = [
   '다섯 권 26개 개인 맞춤 주제',
-  '전생 인물과 사건을 잇는 시네마틱 서사',
+  '반복 기질을 인물과 장면으로 번역한 상징 서사',
   '연애·돈·직업·가족의 현생 패턴 분석',
-  '전생 봉인명과 한 문장 공유 카드',
+  '상징 봉인명과 한 문장 공유 카드',
   '이번 생 핵심 퀘스트 카드',
   '30일 봉인 해제 기록'
 ] as const;
@@ -107,15 +53,15 @@ export const pastLifeValueItems = [
 export const pastLifeSamplePages = [
   {
     number: '01',
-    title: '전생의 정체',
-    label: '봉인명 · 불을 감춘 기록관',
-    body: '당신은 남의 이름을 지켜주면서 자기 이름은 오래 숨긴 사람입니다.'
+    title: '상징 캐릭터',
+    label: '상징 봉인명 · 불을 감춘 기록관',
+    body: '상징 서사 속 인물은 남의 이름을 지켜주면서 자기 이름은 오래 숨긴 사람으로 그려집니다.'
   },
   {
     number: '02',
-    title: '전생의 업',
+    title: '반복 선택의 상징',
     label: '침묵으로 떠안은 책임',
-    body: '틀린 것을 먼저 알아차리고도 관계가 깨질까 말하지 못한 선택이 현생의 뒷수습 습관으로 남았습니다.'
+    body: '틀린 것을 먼저 알아차리고도 관계가 깨질까 말하지 못하는 선택이 현생의 뒷수습 습관으로 반복되는 패턴으로 읽힙니다.'
   },
   {
     number: '03',
