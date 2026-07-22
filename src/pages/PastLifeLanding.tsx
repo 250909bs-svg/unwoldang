@@ -2,6 +2,7 @@ import { ArrowRight, BookOpen, Check, ChevronRight, Flame, KeyRound, ShieldCheck
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HeroFilm from '../components/HeroFilm';
+import PastLifeWebtoonPreview from '../components/PastLifeWebtoonPreview';
 import {
   PAST_LIFE_NARRATIVE_POLICY,
   PAST_LIFE_PRODUCT,
@@ -89,6 +90,8 @@ export default function PastLifeLanding() {
           actionState={startState}
         />
       </section>
+
+      <PastLifeWebtoonPreview />
 
       <section className="dokkaebi-question-path" aria-labelledby="dokkaebi-question-title">
         <div className="dokkaebi-section-heading">

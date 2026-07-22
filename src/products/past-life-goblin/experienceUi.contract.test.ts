@@ -1,9 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { PAST_LIFE_REPORT_VOLUMES } from './contract';
+import { PAST_LIFE_WEBTOON_SCENE_MANIFEST } from './sceneManifest';
+import { PAST_LIFE_WEBTOON_VOLUMES } from './webtoonContract';
 
 const landingSource = readFileSync(new URL('../../pages/PastLifeLanding.tsx', import.meta.url), 'utf8');
 const storyReportSource = readFileSync(
   new URL('../../components/PastLifeStoryReport.tsx', import.meta.url),
+  'utf8'
+);
+const webtoonPreviewSource = readFileSync(
+  new URL('../../components/PastLifeWebtoonPreview.tsx', import.meta.url),
   'utf8'
 );
 const experienceContentSource = readFileSync(
@@ -21,15 +28,20 @@ function imageTags(source: string) {
 describe('past-life-goblin media and style regression contract', () => {
   it('lazy-loads every non-critical report image and every landing ledger image', () => {
     const reportImages = imageTags(storyReportSource);
-    const landingImages = imageTags(landingSource);
+    const landingImages = [...imageTags(landingSource), ...imageTags(webtoonPreviewSource)];
     const eagerReportImages = reportImages.filter((tag) => tag.includes('loading="eager"'));
     const lazyReportImages = reportImages.filter((tag) => tag.includes('loading="lazy"'));
 
-    expect(reportImages.length).toBeGreaterThan(5);
+    expect(reportImages.length).toBeGreaterThan(2);
     expect(eagerReportImages).toHaveLength(1);
     expect(lazyReportImages).toHaveLength(reportImages.length - 1);
     expect(landingImages.length).toBeGreaterThan(0);
     landingImages.forEach((tag) => expect(tag).toContain('loading="lazy"'));
+    expect(Object.values(PAST_LIFE_WEBTOON_SCENE_MANIFEST)).toHaveLength(15);
+    Object.values(PAST_LIFE_WEBTOON_SCENE_MANIFEST).forEach((scene) => {
+      expect(scene.src).toMatch(/\.webp$/u);
+      expect(scene.avifSrc).toMatch(/\.avif$/u);
+    });
   });
 
   it('connects pause controls and lifecycle stops to both video experiences', () => {
@@ -78,22 +90,25 @@ describe('past-life-goblin media and style regression contract', () => {
     });
   });
 
-  it('derives report chapter identity from the product-owned volume contract', () => {
+  it('derives all webtoon episodes and topics from the product-owned volume contract', () => {
     expect(experienceContentSource).toContain(
       "from '../products/past-life-goblin/contract';"
     );
     expect(experienceContentSource).toContain(
       'export { PAST_LIFE_NARRATIVE_POLICY, PAST_LIFE_PRODUCT, PAST_LIFE_REPORT_VOLUMES };'
     );
-    expect(storyReportSource).toContain(
-      'const chapterSectionIds = PAST_LIFE_REPORT_VOLUMES.map((volume) => volume.sectionId);'
-    );
-    expect(storyReportSource).toContain(
-      'const sections = PAST_LIFE_REPORT_VOLUMES.flatMap((volume, index) => {'
-    );
-    expect(storyReportSource).toMatch(
-      /PAST_LIFE_REPORT_VOLUMES\s*\.slice\(0, index\)\s*\.reduce/gu
-    );
+    expect(storyReportSource).toContain('buildPastLifeWebtoonViewModel');
+    expect(storyReportSource).toContain('viewModel.volumes.map((volume, index) =>');
     expect(storyReportSource).not.toContain("['pastlife-seal', 'pastlife-relationship'");
+
+    expect(PAST_LIFE_WEBTOON_VOLUMES.map((volume) => volume.id)).toEqual(
+      PAST_LIFE_REPORT_VOLUMES.map((volume) => volume.id)
+    );
+    expect(PAST_LIFE_WEBTOON_VOLUMES.flatMap((volume) => volume.panels)).toHaveLength(15);
+    expect(
+      PAST_LIFE_WEBTOON_VOLUMES.flatMap((volume) =>
+        volume.panels.flatMap((panel) => panel.topicNumbers)
+      )
+    ).toEqual(Array.from({ length: 26 }, (_, index) => index + 1));
   });
 });
