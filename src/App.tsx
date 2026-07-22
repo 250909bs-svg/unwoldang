@@ -22,6 +22,7 @@ const PastLifeLanding = lazy(() => import('./pages/PastLifeLanding'));
 const Form = lazy(() => import('./pages/Form'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Loading = lazy(() => import('./pages/Loading'));
+const Report = lazy(() => import('./pages/Report'));
 const Login = lazy(() => import('./pages/Login'));
 const KakaoCallback = lazy(() => import('./pages/KakaoCallback'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback'));
@@ -35,7 +36,7 @@ const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
 const MatchCoupleDetail = lazy(() => import('./products/match-couple/Detail'));
 const MatchCoupleIntake = lazy(() => import('./products/match-couple/Intake'));
 const MatchCouplePreview = lazy(() => import('./products/match-couple/Preview'));
-const Report = lazy(() => import('./products/match-couple/ReportRoute'));
+const MatchCoupleReportRoute = lazy(() => import('./products/match-couple/ReportRoute'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -178,6 +179,14 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
             }
           />
           <Route
+            path="/report/match-couple"
+            element={
+              <HistoricalReportRouteBoundary>
+                <MatchCoupleReportRoute />
+              </HistoricalReportRouteBoundary>
+            }
+          />
+          <Route
             path="/report/:id"
             element={
               <HistoricalReportRouteBoundary>
@@ -236,34 +245,29 @@ function AppShell() {
     };
   }, [usesDarkAppShell]);
 
-  const appContainerClass = isAdminRoute
-    ? 'app-container admin-app-container'
-    : isGeneralDetailRoute
-      ? 'app-container general-saju-app-container'
-      : isLoveDetailRoute
-        ? 'app-container mz-love-app-container'
-        : isLoveFormRoute || isLovePreviewRoute
-          ? 'app-container mz-love-intake-app-container'
-          : isLoveReportRoute
-            ? 'app-container mz-love-report-app-container'
-            : isMatchCoupleRoute
-              ? 'app-container match-couple-app-container'
-              : isPastLifeLandingRoute
-                ? 'app-container past-life-app-container'
-                : isPastLifeReportRoute
-                  ? 'app-container past-life-report-app-container'
-                  : 'app-container';
-
   return (
-    <div className={appContainerClass}>
-      <AppRoutes
-        hideGlobalChrome={
-          isPastLifeLandingRoute ||
-          isImmersiveLoveRoute ||
-          isGeneralDetailRoute ||
-          isMatchCoupleRoute
-        }
-      />
+    <div
+      className={
+        isAdminRoute
+          ? 'app-container admin-app-container'
+          : isGeneralDetailRoute
+            ? 'app-container general-saju-app-container'
+          : isLoveDetailRoute
+            ? 'app-container mz-love-app-container'
+            : isLoveFormRoute || isLovePreviewRoute
+              ? 'app-container mz-love-intake-app-container'
+              : isLoveReportRoute
+                ? 'app-container mz-love-report-app-container'
+                : isMatchCoupleRoute
+                  ? 'app-container match-couple-app-container'
+          : isPastLifeLandingRoute
+            ? 'app-container past-life-app-container'
+            : isPastLifeReportRoute
+              ? 'app-container past-life-report-app-container'
+            : 'app-container'
+      }
+    >
+      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute || isMatchCoupleRoute} />
     </div>
   );
 }

@@ -33,7 +33,9 @@ describe('match-couple dedicated flow contract', () => {
       expect(appSource.indexOf('path="/preview/match-couple"')).toBeLessThan(genericPreviewIndex);
     }
     expect(appSource).toContain("'/preview/match-couple'");
-    expect(appSource).toContain('<Report />');
+    expect(appSource).toContain('<MatchCoupleReportRoute />');
+    expect(appSource.indexOf('path="/report/match-couple"')).toBeLessThan(appSource.indexOf('path="/report/:id"'));
+    expect(appSource).toContain("const Report = lazy(() => import('./pages/Report'))");
   });
 
   it('does not reactivate match-destiny', () => {
