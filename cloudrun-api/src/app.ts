@@ -17,7 +17,11 @@ import {
   type PaymentLedgerRepository as PaymentLedgerServiceRepository
 } from './domains/payments/paymentService.ts';
 import { PortOneClient } from './domains/payments/portoneClient.ts';
-import { ReportService } from './domains/reports/reportService.ts';
+import {
+  ReportService,
+  type ReportGenerationContext
+} from './domains/reports/reportService.ts';
+import type { ReportTelemetrySink } from './domains/reports/telemetry.ts';
 import { createRouter } from './http/router.ts';
 import { createAuthMiddleware } from './middleware/auth.ts';
 import { createCorsMiddleware } from './middleware/cors.ts';
@@ -26,16 +30,23 @@ import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
 
+type AppReportGenerator = (
+  body: ReportRequestBody,
+  context?: ReportGenerationContext
+) => ReturnType<typeof generateGeminiSajuReport>;
+
 export type CreateAppOptions = {
   config?: AppConfig;
   fetchImplementation?: typeof fetch;
-  reportGenerator?: typeof generateGeminiSajuReport;
+  reportGenerator?: AppReportGenerator;
+  reportTelemetry?: ReportTelemetrySink;
 };
 
 export function createApp(options: CreateAppOptions = {}): RequestListener {
   const config = options.config || loadConfig();
   const fetchImplementation = options.fetchImplementation || globalThis.fetch;
-  const reportGenerator = options.reportGenerator || generateGeminiSajuReport;
+  const reportGenerator: AppReportGenerator =
+    options.reportGenerator || generateGeminiSajuReport;
 
   const tokenService = new TokenService(config);
   const auth = createAuthMiddleware(config, tokenService);
@@ -88,7 +99,8 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
   const reportService = new ReportService(
     config,
     paymentLedgerRepository,
-    (body) => reportGenerator(body as ReportRequestBody)
+    (body, context) => reportGenerator(body as ReportRequestBody, context),
+    { telemetry: options.reportTelemetry }
   );
   const archiveService = new ArchiveService(
     config,

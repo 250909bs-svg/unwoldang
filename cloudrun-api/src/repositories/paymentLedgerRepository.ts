@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
-import { ReportRequestError } from '../contracts/errors.ts';
+import {
+  REPORT_ERROR_CODE,
+  ReportPlatformError,
+  ReportRequestError
+} from '../contracts/errors.ts';
 import { FirestoreRepository } from './firestoreRepository.ts';
 
 type FirestoreValue = {
@@ -47,6 +51,10 @@ export type PaymentLedger = {
   reportGenerationFailure: string;
   reportJson: string;
   reportJsonHash: string;
+  reportCacheSchemaVersion: string;
+  reportInputSchemaVersion: string;
+  reportResponseSchemaVersion: string;
+  reportGenerationMetaSchemaVersion: string;
   createTime: string;
   updateTime: string;
 };
@@ -91,12 +99,18 @@ export type AcquireReportGenerationOptions = {
 };
 
 export type CompleteReportGenerationOptions = {
+  lockId: string;
   completedAt: string;
   reportJson: string;
   reportJsonHash: string;
+  cacheSchemaVersion: string;
+  inputSchemaVersion: string;
+  responseSchemaVersion: string;
+  generationMetaSchemaVersion: string;
 };
 
 export type FailReportGenerationOptions = {
+  lockId: string;
   failedAt: string;
   failure: string;
 };
@@ -112,7 +126,11 @@ const ACQUIRE_REPORT_GENERATION_UPDATE_MASK = [
   'reportGenerationFailedAt',
   'reportGenerationFailure',
   'reportJson',
-  'reportJsonHash'
+  'reportJsonHash',
+  'reportCacheSchemaVersion',
+  'reportInputSchemaVersion',
+  'reportResponseSchemaVersion',
+  'reportGenerationMetaSchemaVersion'
 ];
 
 const COMPLETE_REPORT_GENERATION_UPDATE_MASK = [
@@ -123,7 +141,11 @@ const COMPLETE_REPORT_GENERATION_UPDATE_MASK = [
   'reportGenerationFailedAt',
   'reportGenerationFailure',
   'reportJson',
-  'reportJsonHash'
+  'reportJsonHash',
+  'reportCacheSchemaVersion',
+  'reportInputSchemaVersion',
+  'reportResponseSchemaVersion',
+  'reportGenerationMetaSchemaVersion'
 ];
 
 const FAIL_REPORT_GENERATION_UPDATE_MASK = [
@@ -134,7 +156,11 @@ const FAIL_REPORT_GENERATION_UPDATE_MASK = [
   'reportGenerationFailedAt',
   'reportGenerationFailure',
   'reportJson',
-  'reportJsonHash'
+  'reportJsonHash',
+  'reportCacheSchemaVersion',
+  'reportInputSchemaVersion',
+  'reportResponseSchemaVersion',
+  'reportGenerationMetaSchemaVersion'
 ];
 
 function readString(document: FirestoreDocument, fieldName: string) {
@@ -202,6 +228,10 @@ function parsePaymentLedger(
     reportGenerationFailure: readString(document, 'reportGenerationFailure'),
     reportJson: readString(document, 'reportJson'),
     reportJsonHash: readString(document, 'reportJsonHash'),
+    reportCacheSchemaVersion: readString(document, 'reportCacheSchemaVersion'),
+    reportInputSchemaVersion: readString(document, 'reportInputSchemaVersion'),
+    reportResponseSchemaVersion: readString(document, 'reportResponseSchemaVersion'),
+    reportGenerationMetaSchemaVersion: readString(document, 'reportGenerationMetaSchemaVersion'),
     createTime: typeof document.createTime === 'string' ? document.createTime : '',
     updateTime: typeof document.updateTime === 'string' ? document.updateTime : ''
   };
@@ -347,6 +377,22 @@ export class PaymentLedgerRepository {
       .map((document) => this.parseDocument(document));
   }
 
+  private assertLeaseOwner(ledger: PaymentLedger, lockId: string) {
+    if (
+      !ledger.updateTime ||
+      ledger.reportGenerationStatus !== 'generating' ||
+      !lockId ||
+      ledger.reportGenerationLockId !== lockId
+    ) {
+      throw new ReportPlatformError({
+        status: 409,
+        code: REPORT_ERROR_CODE.LEASE_LOST,
+        message: 'The report generation lease is no longer owned by this worker.',
+        retryable: true
+      });
+    }
+  }
+
   async acquireReportGeneration(
     ledger: PaymentLedger,
     input: AcquireReportGenerationOptions
@@ -375,6 +421,8 @@ export class PaymentLedgerRepository {
     ledger: PaymentLedger,
     input: CompleteReportGenerationOptions
   ) {
+    this.assertLeaseOwner(ledger, input.lockId);
+
     const document = await this.firestore.request<FirestoreDocument>(
       this.getPatchPath(ledger, COMPLETE_REPORT_GENERATION_UPDATE_MASK),
       {
@@ -384,7 +432,11 @@ export class PaymentLedgerRepository {
             reportGenerationStatus: { stringValue: 'completed' },
             reportGenerationCompletedAt: { timestampValue: input.completedAt },
             reportJson: { stringValue: input.reportJson },
-            reportJsonHash: { stringValue: input.reportJsonHash }
+            reportJsonHash: { stringValue: input.reportJsonHash },
+            reportCacheSchemaVersion: { stringValue: input.cacheSchemaVersion },
+            reportInputSchemaVersion: { stringValue: input.inputSchemaVersion },
+            reportResponseSchemaVersion: { stringValue: input.responseSchemaVersion },
+            reportGenerationMetaSchemaVersion: { stringValue: input.generationMetaSchemaVersion }
           }
         })
       }
@@ -397,6 +449,8 @@ export class PaymentLedgerRepository {
     ledger: PaymentLedger,
     input: FailReportGenerationOptions
   ) {
+    this.assertLeaseOwner(ledger, input.lockId);
+
     const document = await this.firestore.request<FirestoreDocument>(
       this.getPatchPath(ledger, FAIL_REPORT_GENERATION_UPDATE_MASK),
       {
