@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
+    "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs && node scripts/check-bundle-budget.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
+    "perf:bundle": "node scripts/check-bundle-budget.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
