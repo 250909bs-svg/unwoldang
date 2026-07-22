@@ -55,6 +55,21 @@ export const SERVER_PRODUCT_CATALOG = Object.freeze({
 
 export type ProductId = keyof typeof SERVER_PRODUCT_CATALOG;
 
+export const SERVER_PRODUCT_DISPLAY_NAMES = Object.freeze({
+  'general-signature': '운월선생 정통 종합사주',
+  'life-flow': '운월선생 신년운세',
+  'concern-reading': '운월당 고민풀이',
+  'past-life-goblin': 'MZ 도깨비 전생사주',
+  'love-reading': 'MZ무당 팩폭 연애운',
+  'love-reunion': '홍연아씨 재회 가능성',
+  'match-couple': '월연도령 사주궁합',
+  'match-destiny': '월연도령 운명 궁합',
+  'marriage-blueprint': '청연부인 결혼운 설계도',
+  'marriage-timing': '청연부인 혼인 시기 리포트',
+  'career-reading': '운월선생 직업운 설계도',
+  'money-reading': '운월선생 금전운 설계도'
+} as const satisfies Readonly<Record<ProductId, string>>);
+
 export function getProductContract(
   productId: string,
   catalog: ServerProductCatalog = SERVER_PRODUCT_CATALOG
