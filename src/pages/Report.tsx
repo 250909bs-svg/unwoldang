@@ -3,12 +3,16 @@ import { ChevronLeft, ChevronRight, Download, Share2, User, Volume2, VolumeX } f
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
 import PastLifeStoryReport from '../components/PastLifeStoryReport';
+import ReunionReportExperience from '../components/ReunionReportExperience';
 import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
 import { evaluateReportAccess } from '../lib/reportAccessGate';
+import { createReunionSampleInput } from '../lib/reunion/fixtures';
+import { hydrateReunionIntake } from '../lib/reunion/intake';
+import type { ReunionIntakeData } from '../lib/reunion/types';
 import { mapIntakeRelationshipStatus } from '../lib/mz-love-fact/relationshipStatusAdapter';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
@@ -6333,6 +6337,17 @@ export default function Report() {
         ? LOVE_PREVIEW_FORM_DATA
         : PREVIEW_FORM_DATA
       : formData || {};
+  const reunionReportInput = useMemo(() => {
+    if (service.id !== 'love-reunion') return null;
+    const candidate = reportInput as Partial<ReunionIntakeData>;
+    if (candidate.reunion) {
+      return hydrateReunionIntake(candidate);
+    }
+    if (reportData?.reunionStrategy) {
+      return hydrateReunionIntake({ name: reportData.customerName });
+    }
+    return reportAccess.usesPreviewData ? createReunionSampleInput() : null;
+  }, [reportAccess.usesPreviewData, reportData, reportInput, service.id]);
   const reportCharacterVideo =
     reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
@@ -6571,7 +6586,7 @@ export default function Report() {
       subtitle: report.subtitle,
       createdAt: report.createdAt,
       paymentMethod,
-      formData,
+      formData: report.serviceId === 'love-reunion' ? undefined : formData,
       reportData: report,
       reportProvider
     };
@@ -6636,6 +6651,16 @@ export default function Report() {
       </main>
     );
   }
+  if (reunionReportInput) {
+    return (
+      <ReunionReportExperience
+        formData={reunionReportInput}
+        accessMode={reportAccess.mode}
+        prebuiltReport={reportData?.reunionStrategy}
+      />
+    );
+  }
+
 
   const tocItems = isPastLifeShowcase
     ? [

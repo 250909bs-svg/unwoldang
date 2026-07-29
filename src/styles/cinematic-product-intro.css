@@ -1,0 +1,333 @@
+.cinematic-product-intro,
+.cinematic-product-intro *,
+.cinematic-product-intro *::before,
+.cinematic-product-intro *::after {
+  box-sizing: border-box;
+}
+
+.cinematic-product-intro {
+  --cinematic-accent: #24b9ca;
+  --cinematic-accent-soft: #a4eff3;
+  --cinematic-edge: rgba(109, 220, 230, 0.58);
+  position: relative;
+  left: 50%;
+  display: grid;
+  width: 100vw;
+  min-height: 100svh;
+  margin-left: -50vw;
+  place-items: center;
+  overflow: hidden;
+  color: #f8f5ef;
+  background: #020708;
+  color-scheme: dark;
+  font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  isolation: isolate;
+}
+
+.cinematic-product-intro--compatibility {
+  --cinematic-accent: #d09bdb;
+  --cinematic-accent-soft: #f3d4f7;
+  --cinematic-edge: rgba(225, 177, 235, 0.56);
+}
+
+.cinematic-product-intro__stage {
+  position: relative;
+  width: min(100%, 720px);
+  height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(16, 129, 145, 0.22), transparent 42%),
+    #020708;
+  box-shadow: 0 0 100px rgba(5, 112, 128, 0.17);
+  isolation: isolate;
+}
+
+.cinematic-product-intro__media {
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  opacity: 0;
+  filter: saturate(0.94) contrast(1.05) brightness(0.88);
+  transform: scale(1.004);
+  transition: opacity 620ms ease;
+}
+
+.cinematic-product-intro__media.is-visible {
+  opacity: 1;
+}
+
+.cinematic-product-intro__shade {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(1, 4, 5, 0.08) 0%, transparent 44%, rgba(1, 4, 5, 0.3) 66%, rgba(1, 4, 5, 0.94) 100%),
+    radial-gradient(circle at 50% 46%, transparent 36%, rgba(1, 5, 6, 0.34) 100%);
+}
+
+.cinematic-product-intro__loading {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  min-width: 190px;
+  justify-items: center;
+  gap: 13px;
+  transform: translate(-50%, -50%);
+  color: rgba(238, 253, 253, 0.82);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.cinematic-product-intro__loading span {
+  width: 35px;
+  height: 35px;
+  border: 1px solid rgba(167, 237, 242, 0.25);
+  border-top-color: var(--cinematic-accent-soft);
+  border-radius: 50%;
+  animation: cinematic-product-intro-spin 920ms linear infinite;
+}
+
+.cinematic-product-intro__sound {
+  position: absolute;
+  z-index: 4;
+  top: 49%;
+  left: 50%;
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(227, 252, 253, 0.26);
+  border-radius: 999px;
+  color: #f4ffff;
+  background: rgba(6, 18, 20, 0.68);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  white-space: nowrap;
+  animation: cinematic-product-intro-sound-in 500ms ease both;
+}
+
+.cinematic-product-intro__sound span {
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.cinematic-product-intro__review {
+  position: absolute;
+  z-index: 4;
+  bottom: calc(108px + env(safe-area-inset-bottom));
+  left: 50%;
+  display: flex;
+  width: max-content;
+  max-width: calc(100% - 40px);
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 13px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(207, 244, 246, 0.21);
+  border-radius: 999px;
+  color: #f7ffff;
+  background: rgba(3, 13, 15, 0.79);
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(13px);
+}
+
+.cinematic-product-intro__review small {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid rgba(122, 225, 233, 0.26);
+  border-radius: 999px;
+  color: var(--cinematic-accent-soft);
+  background: rgba(16, 117, 130, 0.24);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.cinematic-product-intro__review strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f9ffff;
+  font-size: clamp(11px, 3.2vw, 13px);
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: cinematic-product-intro-review-in 520ms ease both;
+}
+
+.cinematic-product-intro__action {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  padding: 24px 18px max(24px, env(safe-area-inset-bottom));
+}
+
+.cinematic-product-intro__action a {
+  position: relative;
+  display: grid;
+  width: min(100%, 510px);
+  min-height: 66px;
+  grid-template-columns: 22px 1fr 22px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 22px;
+  overflow: hidden;
+  border: 1px solid var(--cinematic-edge);
+  border-radius: 15px;
+  color: #f2ffff;
+  background:
+    linear-gradient(135deg, rgba(3, 39, 44, 0.99), rgba(6, 112, 126, 0.98) 53%, rgba(3, 35, 40, 0.99));
+  box-shadow:
+    0 18px 44px rgba(0, 48, 57, 0.55),
+    inset 0 0 0 1px rgba(185, 247, 250, 0.1);
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+}
+
+.cinematic-product-intro__action a::before {
+  position: absolute;
+  top: -80%;
+  left: -38%;
+  width: 34%;
+  height: 260%;
+  transform: rotate(20deg);
+  background: linear-gradient(90deg, transparent, rgba(205, 251, 253, 0.17), transparent);
+  content: '';
+  animation: cinematic-product-intro-shine 4.2s ease-in-out infinite;
+}
+
+.cinematic-product-intro__action a:hover {
+  filter: brightness(1.1) saturate(1.04);
+  transform: translateY(-2px);
+  box-shadow:
+    0 22px 54px rgba(0, 68, 79, 0.6),
+    inset 0 0 0 1px rgba(218, 253, 255, 0.15);
+}
+
+.cinematic-product-intro__action a:active {
+  transform: translateY(0) scale(0.992);
+}
+
+.cinematic-product-intro__action a:focus-visible,
+.cinematic-product-intro__sound:focus-visible {
+  outline: 3px solid var(--cinematic-accent-soft);
+  outline-offset: 3px;
+}
+
+.cinematic-product-intro__action strong {
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(17px, 4.8vw, 21px);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.cinematic-product-intro__action svg {
+  color: var(--cinematic-accent-soft);
+  filter: drop-shadow(0 1px 8px rgba(91, 220, 230, 0.3));
+}
+
+@keyframes cinematic-product-intro-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cinematic-product-intro-sound-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 8px));
+  }
+}
+
+@keyframes cinematic-product-intro-review-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+@keyframes cinematic-product-intro-shine {
+  0%, 62% { left: -38%; }
+  82%, 100% { left: 118%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-product-intro__media,
+  .cinematic-product-intro__sound,
+  .cinematic-product-intro__review strong,
+  .cinematic-product-intro__action a,
+  .cinematic-product-intro__action a::before,
+  .cinematic-product-intro__loading span {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .cinematic-product-intro__review {
+    max-width: calc(100% - 28px);
+  }
+
+  .cinematic-product-intro__action {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+.cinematic-product-intro__brand {
+  position: absolute;
+  z-index: 3;
+  top: max(36px, calc(env(safe-area-inset-top) + 24px));
+  right: 24px;
+  left: 24px;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 3px 24px rgba(0, 0, 0, 0.78);
+}
+
+.cinematic-product-intro__brand span {
+  color: var(--cinematic-accent-soft);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.cinematic-product-intro__brand h1 {
+  margin: 0;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(28px, 8.5vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+
+.cinematic-product-intro__brand p {
+  max-width: 420px;
+  margin: 0;
+  color: rgba(245, 251, 251, 0.84);
+  font-size: clamp(11px, 3.1vw, 14px);
+  font-weight: 650;
+  line-height: 1.5;
+}

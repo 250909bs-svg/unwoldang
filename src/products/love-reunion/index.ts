@@ -10,23 +10,24 @@ export const loveReunionProduct = {
     intake: '/form/love-reunion',
     checkout: '/checkout',
     loading: '/loading',
-    report: '/report/love-reunion'
+    report: '/report/love-reunion',
+    preview: '/preview/love-reunion'
   },
   discovery: {
-    title: '홍연아씨 재회 가능성',
-    summary: '다시 이어질 가능성과 연락 시기',
+    title: 'MZ큐피트 재회운',
+    summary: '두 사람의 명리 구조와 실제 이별·연락 행동을 분리해 읽는 재회 전략',
     category: 'love',
     featured: true,
     recommendationRank: 4
   },
   search: {
-    title: '홍연아씨 재회 가능성',
+    title: 'MZ큐피트 재회운',
     image: '/intake-beauty-red.png',
     keywords: ['재회', '전남친', '전여친', '이별', '연락', '미련', '다시']
   },
   home: {
-    title: '홍연아씨 재회운',
-    subtitle: '다시 이어질 가능성과 연락 시기',
+    title: 'MZ큐피트 재회운',
+    subtitle: '명리 구조와 이별·연락 행동을 함께 읽는 재회 전략',
     image: '/home-love-reunion-card.png',
     category: 'reunion'
   },

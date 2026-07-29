@@ -1,4 +1,5 @@
 import type { ServiceId } from '../../api/mockData';
+import type { ReunionReport } from '../reunion/types';
 
 export type ReportKind = 'comprehensive' | 'yearly' | 'love' | 'reunion' | 'marriage' | 'compatibility' | 'career' | 'wealth';
 type CardTone = 'default' | 'good' | 'warn';
@@ -238,5 +239,6 @@ export interface SajuReportData {
   actionPlan: ActionPlan;
   qualityAudit: ReportQualityAudit;
   engineMeta?: ReportEngineMeta;
+  reunionStrategy?: ReunionReport;
   pastLifeProfile?: PastLifeProfile;
 }

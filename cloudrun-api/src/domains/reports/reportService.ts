@@ -307,7 +307,7 @@ export class ReportService {
     try {
       const payload = await this.generateReport(reportBody);
 
-      if (payload.provider === 'deterministic-fallback') {
+      if (payload.provider === 'deterministic-fallback' && claims.productId !== 'love-reunion') {
         await this.fail(
           generation,
           new ReportRequestError(503, 'AI enhancement returned a retryable deterministic fallback.')

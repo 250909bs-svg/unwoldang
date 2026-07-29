@@ -1,0 +1,889 @@
+.reunion-report {
+  width: min(100%, 680px);
+  min-height: 100vh;
+  margin: 0 auto;
+  color: var(--rn-ivory);
+  background:
+    radial-gradient(circle at 50% 0, rgba(125,38,61,0.15), transparent 500px),
+    var(--rn-navy);
+}
+
+.reunion-report__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 66px;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  border-bottom: 1px solid var(--rn-line);
+  background: rgba(6,16,24,0.88);
+  backdrop-filter: blur(18px);
+}
+
+.reunion-report__topbar button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  background: transparent;
+}
+
+.reunion-report__topbar div {
+  text-align: center;
+}
+
+.reunion-report__topbar span,
+.reunion-report__topbar strong {
+  display: block;
+}
+
+.reunion-report__topbar span {
+  color: #a7828b;
+  font-size: 0.55rem;
+  letter-spacing: 0.13em;
+}
+
+.reunion-report__topbar strong {
+  margin-top: 2px;
+  font: 800 0.86rem 'Noto Serif KR', serif;
+}
+
+.reunion-report__toc {
+  position: sticky;
+  top: 66px;
+  z-index: 39;
+  padding: 9px 12px;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--rn-line);
+  background: rgba(7,19,28,0.93);
+}
+
+.reunion-report__toc::-webkit-scrollbar {
+  display: none;
+}
+
+.reunion-report__toc a {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  border: 1px solid rgba(244,234,216,0.1);
+  border-radius: 999px;
+  color: #9c9c96;
+  background: rgba(255,255,255,0.025);
+  font-size: 0.62rem;
+  text-decoration: none;
+}
+
+.reunion-report__hero {
+  position: relative;
+  min-height: 780px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.reunion-report__hero > img {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+.reunion-report__hero > span {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(180deg, rgba(4,10,15,0.12), rgba(4,10,15,0.64) 57%, #07131c 96%);
+}
+
+.reunion-report__hero > div {
+  padding: 320px 23px 48px;
+}
+
+.reunion-report__hero small {
+  color: #cf9aa5;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+}
+
+.reunion-report__hero h1 {
+  margin: 14px 0 22px;
+  font: 800 clamp(2.15rem, 9vw, 3.6rem) 'Noto Serif KR', serif;
+  line-height: 1.2;
+  letter-spacing: -0.06em;
+}
+
+.reunion-report__hero p {
+  margin: 0 0 14px;
+  color: #d9d1c5;
+  font: 700 1rem 'Noto Serif KR', serif;
+  line-height: 1.65;
+}
+
+.reunion-report__hero div > strong {
+  display: block;
+  padding: 17px;
+  border-left: 2px solid #aa3d57;
+  color: #d8b5bc;
+  background: rgba(6,16,24,0.56);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.reunion-report__hero em {
+  display: block;
+  margin-top: 18px;
+  color: #898d89;
+  font-size: 0.65rem;
+  font-style: normal;
+}
+
+.reunion-report__section {
+  scroll-margin-top: 112px;
+  padding: 74px 22px;
+  border-bottom: 1px solid var(--rn-line);
+}
+
+.reunion-report__section > header > span,
+.reunion-report__safety > span {
+  color: #c48e9a;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.reunion-report__section > header h2,
+.reunion-report__safety h2 {
+  margin: 11px 0 22px;
+  font: 800 clamp(1.85rem, 8vw, 2.9rem) 'Noto Serif KR', serif;
+  line-height: 1.25;
+  letter-spacing: -0.055em;
+}
+
+.reunion-report__section > header p {
+  margin: -8px 0 28px;
+  color: #8f9895;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.reunion-report__answers article {
+  padding: 24px 0;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 11px;
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-report__answers article > span {
+  color: #a9465e;
+  font: 800 0.7rem Georgia, serif;
+}
+
+.reunion-report__answers h3 {
+  margin: 0 0 9px;
+  font-size: 1.03rem;
+}
+
+.reunion-report__answers p {
+  margin: 0 0 12px;
+  color: #c2b8aa;
+  font-size: 0.82rem;
+  line-height: 1.8;
+}
+
+.reunion-report__answers article > div > strong {
+  color: #d3a9b2;
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+
+.reunion-report details {
+  margin-top: 14px;
+}
+
+.reunion-report summary {
+  color: #8ba5a1;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reunion-report__evidence-list {
+  margin-top: 13px;
+}
+
+.reunion-report__evidence-list > strong {
+  color: #c2c5bd;
+  font-size: 0.65rem;
+}
+
+.reunion-report__evidence-list article {
+  margin-top: 8px;
+  padding: 12px;
+  display: block;
+  border: 1px solid rgba(244,234,216,0.09);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-report__evidence-list article span {
+  color: #8eb0aa;
+  font-size: 0.54rem;
+  font-weight: 900;
+}
+
+.reunion-report__evidence-list article p {
+  margin: 5px 0;
+  color: #a8aaa5;
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.reunion-report__evidence-list article small {
+  color: #686f6d;
+  font-size: 0.52rem;
+}
+
+.reunion-report__safety {
+  margin: 30px 18px;
+  padding: 31px 22px;
+  border: 1px solid rgba(95,133,128,0.4);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 0 0, rgba(95,133,128,0.2), transparent 220px),
+    #0a1b22;
+}
+
+.reunion-report__safety.is-critical,
+.reunion-report__safety.is-high {
+  border-color: rgba(183,59,83,0.52);
+  background:
+    radial-gradient(circle at 0 0, rgba(125,38,61,0.28), transparent 220px),
+    #17141c;
+}
+
+.reunion-report__safety p,
+.reunion-report__safety li {
+  color: #b9b7b0;
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.reunion-report__safety > strong {
+  display: block;
+  margin: 15px 0;
+  color: #f0c5cc;
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.reunion-report__safety ul {
+  padding-left: 18px;
+}
+
+.reunion-report__chart {
+  padding: 15px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  border: 1px solid rgba(222,193,179,0.18);
+  border-radius: 22px;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-report__chart article {
+  min-width: 0;
+  min-height: 100px;
+  padding: 10px 4px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.04);
+}
+
+.reunion-report__chart span {
+  color: #737f7d;
+  font-size: 0.52rem;
+}
+
+.reunion-report__chart strong {
+  max-width: 100%;
+  font: 800 1.4rem 'Noto Serif KR', serif;
+  overflow-wrap: anywhere;
+}
+
+.reunion-report__compatibility {
+  margin-top: 14px;
+  padding: 18px;
+  border-left: 2px solid var(--rn-teal);
+  background: rgba(95,133,128,0.07);
+}
+
+.reunion-report__compatibility span {
+  color: #83aaa4;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.reunion-report__compatibility p {
+  color: #b8bbb4;
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.reunion-report__compatibility small {
+  color: #747d7a;
+  font-size: 0.58rem;
+  line-height: 1.5;
+}
+
+.reunion-metric-grid {
+  display: grid;
+  gap: 11px;
+}
+
+.reunion-metric-card {
+  padding: 18px;
+  border: 1px solid rgba(244,234,216,0.11);
+  border-radius: 19px;
+  background: rgba(255,255,255,0.026);
+}
+
+.reunion-metric-card.is-high,
+.reunion-metric-card.is-very-high {
+  border-color: rgba(95,133,128,0.38);
+}
+
+.reunion-metric-card.is-low,
+.reunion-metric-card.is-very-low,
+.reunion-metric-card.is-withheld {
+  border-color: rgba(125,38,61,0.4);
+}
+
+.reunion-metric-card header > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.reunion-metric-card header span {
+  color: #aca8a0;
+  font-size: 0.71rem;
+  font-weight: 800;
+}
+
+.reunion-metric-card header strong {
+  font: 800 1.35rem Georgia, serif;
+}
+
+.reunion-metric-card header i {
+  --metric-score: 0;
+  position: relative;
+  height: 3px;
+  margin-top: 11px;
+  display: block;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.reunion-metric-card header i::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--metric-score) * 1%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5f8580, #b34a63);
+}
+
+.reunion-metric-card > p {
+  margin: 13px 0 0;
+  color: #969a95;
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+.reunion-metric-card__rules {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-metric-card__rules strong {
+  display: block;
+  margin-top: 9px;
+  color: #b8b6ad;
+  font-size: 0.62rem;
+}
+
+.reunion-metric-card__rules p {
+  margin: 4px 0;
+  color: #868e8b;
+  font-size: 0.65rem;
+}
+
+.reunion-report__subheading {
+  margin: 42px 0 15px;
+  color: #d5cabe;
+  font: 800 1.12rem 'Noto Serif KR', serif;
+}
+
+.reunion-choice-comparison {
+  display: grid;
+  gap: 11px;
+}
+
+.reunion-choice-comparison article {
+  padding: 20px;
+  border: 1px solid var(--rn-line);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-choice-comparison article.is-primary,
+.reunion-choice-comparison article.is-required {
+  border-color: rgba(183,70,95,0.5);
+  background: rgba(125,38,61,0.12);
+}
+
+.reunion-choice-comparison article > span {
+  color: #ba7181;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.reunion-choice-comparison h3 {
+  margin: 7px 0 16px;
+  font: 800 1.2rem 'Noto Serif KR', serif;
+}
+
+.reunion-choice-comparison article > p {
+  margin: 8px 0;
+  color: #9da09b;
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+
+.reunion-choice-comparison p strong {
+  display: block;
+  color: #c9c0b4;
+  font-size: 0.6rem;
+}
+
+.reunion-choice-comparison details p {
+  margin: 4px 0;
+  color: #8d9693;
+  font-size: 0.65rem;
+}
+
+.reunion-window-list {
+  display: grid;
+}
+
+.reunion-window-list > article {
+  padding: 22px 0;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 10px;
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-window-list > article > span {
+  color: #a9445c;
+  font: 800 0.72rem Georgia, serif;
+}
+
+.reunion-window-list small {
+  color: #78938f;
+  font-size: 0.58rem;
+}
+
+.reunion-window-list h3 {
+  margin: 6px 0 14px;
+  font: 800 1.25rem 'Noto Serif KR', serif;
+}
+
+.reunion-window-list p {
+  margin: 8px 0;
+  color: #9fa39d;
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+
+.reunion-window-list p strong {
+  display: block;
+  color: #d2c7ba;
+  font-size: 0.59rem;
+}
+
+.reunion-window-list em {
+  display: block;
+  margin-top: 7px;
+  color: #757d7a;
+  font-size: 0.58rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.reunion-report__withheld {
+  padding: 26px 20px;
+  border: 1px solid rgba(125,38,61,0.38);
+  border-radius: 20px;
+  text-align: center;
+  background: rgba(125,38,61,0.08);
+}
+
+.reunion-report__withheld h3 {
+  font-family: 'Noto Serif KR', serif;
+}
+
+.reunion-report__withheld p {
+  color: #9e9393;
+  font-size: 0.74rem;
+  line-height: 1.65;
+}
+
+.reunion-message-card {
+  padding: 24px 20px;
+  border: 1px solid rgba(95,133,128,0.35);
+  border-radius: 20px 20px 20px 6px;
+  color: #202725;
+  background: #e5eee6;
+}
+
+.reunion-message-card small {
+  color: #64817b;
+  font-size: 0.57rem;
+}
+
+.reunion-message-card p {
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.75;
+}
+
+.reunion-message-risk {
+  margin-top: 11px;
+  padding: 12px;
+  border-radius: 12px;
+  color: #d9a8b2;
+  background: rgba(125,38,61,0.18);
+  font-size: 0.65rem;
+}
+
+.reunion-do-not-send {
+  margin-top: 13px;
+  display: grid;
+  gap: 7px;
+}
+
+.reunion-do-not-send span {
+  color: #9d888c;
+  font-size: 0.66rem;
+}
+
+.reunion-reply-tree {
+  margin-top: 44px;
+}
+
+.reunion-reply-tree h3 {
+  font: 800 1.15rem 'Noto Serif KR', serif;
+}
+
+.reunion-reply-tree article {
+  position: relative;
+  margin-left: 10px;
+  padding: 15px 15px 15px 22px;
+  border-left: 1px solid rgba(95,133,128,0.4);
+}
+
+.reunion-reply-tree article::before {
+  content: '';
+  position: absolute;
+  top: 21px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rn-teal);
+}
+
+.reunion-reply-tree article.is-stop {
+  border-left-color: rgba(170,58,80,0.45);
+}
+
+.reunion-reply-tree article.is-stop::before {
+  background: #a33c53;
+}
+
+.reunion-reply-tree span {
+  color: #d4cbc0;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.reunion-reply-tree p {
+  margin: 5px 0;
+  color: #8e9693;
+  font-size: 0.65rem;
+}
+
+.reunion-reply-tree strong {
+  display: block;
+  color: #b2bab6;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.reunion-reply-tree small {
+  color: #a14a60;
+  font-size: 0.55rem;
+}
+
+.reunion-plan-grid {
+  display: grid;
+  gap: 28px;
+}
+
+.reunion-plan-column > h3 {
+  margin: 0 0 14px;
+  color: #d8cec1;
+  font: 800 1.2rem 'Noto Serif KR', serif;
+}
+
+.reunion-plan-column > article {
+  padding: 18px 0;
+  border-top: 1px solid var(--rn-line);
+}
+
+.reunion-plan-column article > span {
+  color: #a94b61;
+  font-size: 0.6rem;
+  font-weight: 900;
+}
+
+.reunion-plan-column h4 {
+  margin: 6px 0 11px;
+}
+
+.reunion-plan-column ul {
+  padding-left: 17px;
+}
+
+.reunion-plan-column li,
+.reunion-plan-column details p {
+  color: #979d99;
+  font-size: 0.68rem;
+  line-height: 1.65;
+}
+
+.reunion-plan-column details strong {
+  display: block;
+  margin-top: 10px;
+  color: #c1bbb0;
+  font-size: 0.62rem;
+}
+
+.reunion-component-list {
+  display: grid;
+  gap: 9px;
+}
+
+.reunion-component-list article {
+  padding: 17px;
+  border: 1px solid var(--rn-line);
+  border-radius: 17px;
+  background: rgba(255,255,255,0.025);
+}
+
+.reunion-component-list span {
+  color: #78a39c;
+  font-size: 0.53rem;
+  font-weight: 900;
+}
+
+.reunion-component-list span.is-warn {
+  color: #c67486;
+}
+
+.reunion-component-list h3 {
+  margin: 6px 0;
+  font-size: 0.88rem;
+}
+
+.reunion-component-list p {
+  margin: 0 0 6px;
+  color: #939892;
+  font-size: 0.66rem;
+  line-height: 1.55;
+}
+
+.reunion-component-list small {
+  color: #656d6a;
+  font-size: 0.52rem;
+}
+
+.reunion-audit-checks {
+  margin-top: 25px;
+}
+
+.reunion-audit-checks > p {
+  margin: 7px 0;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  border-radius: 11px;
+  color: #a9b9b5;
+  background: rgba(95,133,128,0.08);
+  font-size: 0.66rem;
+}
+
+.reunion-audit-checks > p.is-fail {
+  color: #d19aa5;
+  background: rgba(125,38,61,0.11);
+}
+
+.reunion-audit-checks small {
+  grid-column: 2;
+  margin-top: 3px;
+  color: #6f7774;
+  font-size: 0.54rem;
+}
+
+.reunion-limitations,
+.reunion-confidence {
+  margin-top: 22px;
+  padding: 18px;
+  border-left: 2px solid #8b4658;
+  background: rgba(125,38,61,0.07);
+}
+
+.reunion-confidence {
+  border-left-color: var(--rn-teal);
+  background: rgba(95,133,128,0.07);
+}
+
+.reunion-limitations > strong,
+.reunion-confidence > span,
+.reunion-confidence > strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+}
+
+.reunion-limitations p,
+.reunion-confidence p {
+  margin: 5px 0;
+  color: #858d89;
+  font-size: 0.62rem;
+  line-height: 1.55;
+}
+
+.reunion-report__footer {
+  padding: 45px 22px calc(36px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 9px;
+  text-align: center;
+}
+
+.reunion-report__footer p {
+  color: #8d8881;
+  font-size: 0.65rem;
+}
+
+.reunion-report__footer button {
+  min-height: 45px;
+  border: 1px solid var(--rn-line);
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #c7beb2;
+  background: rgba(255,255,255,0.035);
+  font: inherit;
+  font-size: 0.68rem;
+}
+
+.reunion-report__footer > span {
+  color: #8eb1aa;
+  font-size: 0.62rem;
+}
+
+.reunion-report__footer small {
+  color: #606663;
+  font-size: 0.55rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 600px) {
+  .reunion-metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .reunion-choice-comparison {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .reunion-plan-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .reunion-report__section {
+    padding-inline: 36px;
+  }
+}
+
+@media print {
+  .reunion-report {
+    width: 100%;
+    max-width: none;
+    color: #111;
+    background: #fff;
+  }
+
+  .reunion-report__topbar,
+  .reunion-report__toc,
+  .reunion-report__footer button {
+    display: none !important;
+  }
+
+  .reunion-report__hero {
+    min-height: 520px;
+    break-after: page;
+  }
+
+  .reunion-report__section {
+    break-inside: avoid;
+    border-color: #ddd;
+  }
+
+  .reunion-metric-card,
+  .reunion-choice-comparison article,
+  .reunion-component-list article {
+    break-inside: avoid;
+    color: #111;
+    background: #fff;
+    border-color: #ccc;
+  }
+
+  .reunion-report p,
+  .reunion-report small,
+  .reunion-report li {
+    color: #333 !important;
+  }
+}

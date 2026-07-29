@@ -29,6 +29,9 @@ export const isLoopbackHostname = (hostname: string) => {
   return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1';
 };
 
+export const isLocalReportPreviewAllowed = (hostname: string, isDevelopment: boolean) =>
+  isDevelopment && isLoopbackHostname(hostname);
+
 export const isValidPaymentOrderId = (orderId: unknown): orderId is string =>
   typeof orderId === 'string' && PAYMENT_ORDER_ID_PATTERN.test(orderId.trim());
 
@@ -61,7 +64,7 @@ function inspectReportData(reportData: unknown, expectedServiceId: ServiceId) {
  * validated by the server that issues the report and accepts archive writes.
  */
 export function evaluateReportAccess(input: ReportAccessGateInput): ReportAccessGateResult {
-  const localPreviewAllowed = input.isDevelopment && isLoopbackHostname(input.hostname);
+  const localPreviewAllowed = isLocalReportPreviewAllowed(input.hostname, input.isDevelopment);
   const reportInspection = inspectReportData(input.reportData, input.expectedServiceId);
   const hasOrderId = isValidPaymentOrderId(input.orderId);
 

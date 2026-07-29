@@ -66,6 +66,11 @@ describe('retired detail page indexing', () => {
     ).toEqual(archivedDetailPaths);
     archivedDetailPaths.forEach((path) => {
       expect(getProductByRoute(path)?.status).toBe('archived');
+      expect(
+        vercelConfig.rewrites.some(
+          (rewrite) => rewrite.source === path && rewrite.destination.startsWith('/seo/')
+        )
+      ).toBe(false);
     });
     expect(vercelConfig.rewrites[archivedRewriteIndex]).toEqual({
       source: archivedDetailPattern,

@@ -33,6 +33,11 @@ const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
 const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
 const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
+const ReunionEntry = lazy(() => import('./pages/ReunionEntry'));
+const ReunionIntake = lazy(() => import('./pages/ReunionIntake'));
+const ReunionPreview = lazy(() => import('./pages/ReunionPreview'));
+const CompatibilityEntry = lazy(() => import('./pages/CompatibilityEntry'));
+const CompatibilityIntake = lazy(() => import('./pages/CompatibilityIntake'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -108,6 +113,22 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
               </ProductRouteBoundary>
             }
           />
+          <Route
+            path="/detail/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <ReunionEntry />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/detail/match-couple"
+            element={
+              <ProductRouteBoundary productId="match-couple">
+                <CompatibilityEntry serviceId="match-couple" />
+              </ProductRouteBoundary>
+            }
+          />
           <Route path="/detail/:id" element={<GenericProductDetail />} />
           <Route
             path="/form/love-reading"
@@ -122,6 +143,30 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
             element={
               <ProductRouteBoundary productId="love-reading">
                 <LoveReadingPreview />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/form/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <ReunionIntake />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/preview/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <ReunionPreview />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/form/match-couple"
+            element={
+              <ProductRouteBoundary productId="match-couple">
+                <CompatibilityIntake serviceId="match-couple" />
               </ProductRouteBoundary>
             }
           />
@@ -180,7 +225,25 @@ function AppShell() {
   const isLoveFormRoute = location.pathname === '/form/love-reading';
   const isLovePreviewRoute = location.pathname === '/preview/love-reading';
   const isLoveReportRoute = location.pathname === '/report/love-reading';
-  const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
+  const normalizedPathname = location.pathname.replace(/\/+$/, '') || '/';
+  const isReunionRoute = [
+    '/detail/love-reunion',
+    '/form/love-reunion',
+    '/preview/love-reunion',
+    '/report/love-reunion'
+  ].includes(normalizedPathname);
+  const isCompatibilityRoute = [
+    '/detail/match-couple',
+    '/form/match-couple',
+    '/report/match-couple'
+  ].includes(normalizedPathname);
+  const isImmersiveLoveRoute =
+    isLoveDetailRoute ||
+    isLoveFormRoute ||
+    isLovePreviewRoute ||
+    isLoveReportRoute ||
+    isReunionRoute ||
+    isCompatibilityRoute;
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
   const usesDarkAppShell =
     location.pathname === '/' ||
@@ -206,6 +269,8 @@ function AppShell() {
       className={
         isAdminRoute
           ? 'app-container admin-app-container'
+          : isReunionRoute
+            ? 'app-container reunion-app-container'
           : isGeneralDetailRoute
             ? 'app-container general-saju-app-container'
           : isLoveDetailRoute

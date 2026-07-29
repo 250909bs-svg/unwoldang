@@ -18,6 +18,7 @@ import {
   savePendingPayment
 } from '../lib/auth';
 import { requestPortOnePayment } from '../lib/portonePayments';
+import { isLocalReportPreviewAllowed } from '../lib/reportAccessGate';
 import {
   getPaymentMode,
   getPortOneConfirmEndpoint,
@@ -48,6 +49,11 @@ export default function Checkout() {
   const service = findServiceById(product.id);
   const isPastLifeProduct = product.flow.intakeVariant === 'past-life';
   const isLoveReadingProduct = product.flow.intakeVariant === 'love-reading';
+  const canOpenLocalProductReport =
+    (product.id === 'love-reading' || product.id === 'love-reunion') &&
+    Boolean(formData?.birthDate) &&
+    typeof window !== 'undefined' &&
+    isLocalReportPreviewAllowed(window.location.hostname, import.meta.env.DEV);
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
@@ -56,10 +62,22 @@ export default function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (canOpenLocalProductReport) {
+      navigate(product.routes.report, {
+        replace: true,
+        state: {
+          formData,
+          paymentMethod: 'local-preview'
+        }
+      });
+    }
+  }, [canOpenLocalProductReport, formData, navigate, product.routes.report]);
+
+  useEffect(() => {
+    if (!canOpenLocalProductReport && !isAuthenticated) {
       navigate('/login', { replace: true, state: { returnTo: '/checkout' } });
     }
-  }, [isAuthenticated, navigate]);
+  }, [canOpenLocalProductReport, isAuthenticated, navigate]);
 
   const orderId = useMemo(() => createOrderId(), []);
   const amount = product.price;
@@ -243,7 +261,7 @@ export default function Checkout() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (canOpenLocalProductReport || !isAuthenticated) {
     return null;
   }
 
