@@ -1,6 +1,7 @@
 import type { ServiceId, IntakeFormData } from '../api/mockData';
 import type { AiReportProvider } from './aiReport';
 import type { PaymentMethodType } from './auth';
+import { normalizeIntakeFormData } from './intakeDataContract';
 import { getAdminReportsEndpoint, getReportArchiveEndpoint } from './runtimeConfig';
 import type { SajuReportData } from './saju/report';
 
@@ -23,6 +24,10 @@ const REPORT_ARCHIVE_KEY_PREFIX = 'unwoldang.report.archive.v2';
 
 function getReportArchiveStorage(ownerId?: string) {
   return ownerId?.trim() ? window.localStorage : window.sessionStorage;
+}
+
+function normalizeArchiveEntry(entry: ReportArchiveEntry): ReportArchiveEntry {
+  return { ...entry, formData: entry.formData ? normalizeIntakeFormData(entry.formData) : undefined };
 }
 
 export function getReportArchiveStorageKey(ownerId?: string) {
@@ -75,7 +80,9 @@ export const readReportArchiveEntries = (ownerId?: string) => {
       return [] as ReportArchiveEntry[];
     }
 
-    return parsed as ReportArchiveEntry[];
+    return parsed
+      .filter((entry): entry is ReportArchiveEntry => Boolean(entry?.id && entry?.productId && entry?.reportData))
+      .map(normalizeArchiveEntry);
   } catch {
     storage.removeItem(storageKey);
     return [] as ReportArchiveEntry[];
@@ -88,7 +95,7 @@ export const saveReportArchiveEntry = (entry: ReportArchiveEntry, ownerId?: stri
   }
 
   const storage = getReportArchiveStorage(ownerId);
-  const next = mergeReportArchiveEntries([entry], readReportArchiveEntries(ownerId));
+  const next = mergeReportArchiveEntries([normalizeArchiveEntry(entry)], readReportArchiveEntries(ownerId));
   storage.setItem(getReportArchiveStorageKey(ownerId), JSON.stringify(next));
 };
 
@@ -98,7 +105,10 @@ export const writeReportArchiveEntries = (entries: ReportArchiveEntry[], ownerId
   }
 
   const storage = getReportArchiveStorage(ownerId);
-  storage.setItem(getReportArchiveStorageKey(ownerId), JSON.stringify(mergeReportArchiveEntries(entries)));
+  storage.setItem(
+    getReportArchiveStorageKey(ownerId),
+    JSON.stringify(mergeReportArchiveEntries(entries.map(normalizeArchiveEntry)))
+  );
 };
 
 async function readArchiveResponse(response: Response) {
@@ -108,7 +118,9 @@ async function readArchiveResponse(response: Response) {
     throw new Error(payload?.message || '리포트 보관함 API 요청에 실패했습니다.');
   }
 
-  return Array.isArray(payload?.entries) ? payload.entries : [];
+  return Array.isArray(payload?.entries)
+    ? payload.entries.map(normalizeArchiveEntry)
+    : [];
 }
 
 export async function fetchRemoteReportArchiveEntries(authToken?: string) {

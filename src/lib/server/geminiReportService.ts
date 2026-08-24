@@ -7,6 +7,7 @@ import type {
   ServiceId
 } from '../../api/mockData';
 import type { PastLifeAnalysisContext } from '../analysisPayload';
+import { normalizeIntakeFormData } from '../intakeDataContract';
 import { normalizeLoveFocus } from '../loveFocus';
 import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
 import { validateIntakeBirthInputs } from '../birthInputValidation';
@@ -29,6 +30,7 @@ import {
   type SajuReportData
 } from '../saju/report';
 import { buildSajuReport } from '../saju/reportBuilder';
+import { assertCustomerReportQuality, finalizeCustomerReport } from '../saju/reportPresentation';
 import {
   hasMalformedReportEvidenceReference,
   lockCommercialReportFacts,
@@ -42,6 +44,7 @@ type RelationshipDuration = IntakeFormData['relationshipDuration'] | null | unde
 export type ReportRequestBody = {
   serviceId?: ServiceId;
   payload?: {
+    contractVersion?: string;
     user?: {
       name?: string;
       gender?: 'male' | 'female';
@@ -55,6 +58,7 @@ export type ReportRequestBody = {
       precision?: BirthTimePrecision;
       dayBoundaryPolicy?: DayBoundaryPolicy;
       location?: BirthLocationData | null;
+      locationText?: string;
     };
     partner?: PartnerBirthData | null;
     relationship?: {
@@ -675,7 +679,7 @@ export class ReportRequestError extends Error {
 export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
   const pastLifeContext = body.payload?.pastLifeContext;
 
-  return {
+  return normalizeIntakeFormData({
     name: body.payload?.user?.name || '',
     gender: body.payload?.user?.gender,
     calendar: body.payload?.birth?.calendar,
@@ -686,6 +690,7 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     birthTimePrecision: body.payload?.birth?.precision,
     dayBoundaryPolicy: body.payload?.birth?.dayBoundaryPolicy,
     birthLocation: body.payload?.birth?.location || undefined,
+    location: body.payload?.birth?.locationText || body.payload?.birth?.location?.label || '',
     partner: body.payload?.partner || undefined,
     relationshipStatus: body.payload?.relationship?.status || '',
     relationshipDuration: body.payload?.relationship?.duration || '',
@@ -699,7 +704,7 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     readingTone: pastLifeContext?.readingTone || '',
     q1: body.payload?.questions?.[0] || '',
     q2: body.payload?.questions?.[1] || ''
-  };
+  });
 }
 
 function assertTextLength(value: string | undefined, label: string, maxLength: number) {
@@ -1244,12 +1249,15 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
 
   const mergedReport = mergeGeminiDraft(fallbackReport, draft);
   const guardedReport = lockCommercialReportFacts(fallbackReport, mergedReport);
+  const customerReport = finalizeCustomerReport(guardedReport);
+  assertCustomerReportQuality(customerReport);
+
 
   return {
     provider: 'gemini',
     reportMode: PREMIUM_SAJU_REPORT_MODE,
     promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
-    report: guardedReport,
+    report: customerReport,
     debug: undefined
   };
 }

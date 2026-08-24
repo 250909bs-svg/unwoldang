@@ -5,9 +5,10 @@ import {
   type PartnerBirthData,
   type ServiceId
 } from '../api/mockData';
+import { INTAKE_DATA_CONTRACT_VERSION, normalizeIntakeFormData } from './intakeDataContract';
 import { normalizeLoveFocus } from './loveFocus';
 import { normalizeLoveReaction } from './mz-love-fact/microChoice';
-import { getRelationshipDurationLabel, getRelationshipStatusLabel } from './relationshipIntake';
+import { getRelationshipSummary } from './relationshipIntake';
 
 export interface PastLifeAnalysisContext {
   topic: string;
@@ -19,6 +20,7 @@ export interface PastLifeAnalysisContext {
 }
 
 export interface AnalysisRequestPayload {
+  contractVersion: typeof INTAKE_DATA_CONTRACT_VERSION;
   serviceId: ServiceId;
   serviceLabel: string;
   timezone: string;
@@ -35,6 +37,7 @@ export interface AnalysisRequestPayload {
     precision: IntakeFormData['birthTimePrecision'];
     dayBoundaryPolicy: IntakeFormData['dayBoundaryPolicy'];
     location: BirthLocationData | null;
+    locationText: string;
   };
   partner: PartnerBirthData | null;
   relationship: {
@@ -49,71 +52,56 @@ export interface AnalysisRequestPayload {
 }
 
 export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Partial<IntakeFormData>): AnalysisRequestPayload {
+  const normalized = normalizeIntakeFormData(formData);
   const service = findServiceById(serviceId);
-  const statusLabel = getRelationshipStatusLabel(formData.relationshipStatus);
-  const durationLabel = getRelationshipDurationLabel(formData.relationshipDuration);
-  const relationshipSummary = durationLabel ? `${statusLabel} / ${durationLabel}` : statusLabel;
-  const partner = formData.partner
+  const relationshipSummary = getRelationshipSummary(normalized);
+  const partner = normalized.partner
     ? {
-        ...formData.partner,
-        name: formData.partner.name.trim(),
-        birthDate: formData.partner.birthDate.trim(),
-        birthTime: formData.partner.isUnknownTime ? '' : formData.partner.birthTime.trim(),
-        birthTimePrecision:
-          formData.partner.birthTimePrecision ||
-          (formData.partner.isUnknownTime
-            ? 'unknown'
-            : /^\d{1,2}:\d{2}$/.test(formData.partner.birthTime)
-              ? 'exact'
-              : 'branch-range'),
-        dayBoundaryPolicy: formData.partner.dayBoundaryPolicy || 'midnight'
+        ...normalized.partner,
+        name: normalized.partner.name.trim()
       }
     : null;
 
   return {
+    contractVersion: INTAKE_DATA_CONTRACT_VERSION,
     serviceId,
     serviceLabel: service.label,
-    timezone: formData.birthLocation?.timezone || 'Asia/Seoul',
+    timezone: normalized.birthLocation?.timezone || normalized.timezone || 'Asia/Seoul',
     user: {
-      name: formData.name?.trim() || '',
-      gender: formData.gender || 'female'
+      name: normalized.name?.trim() || '',
+      gender: normalized.gender || 'female'
     },
     birth: {
-      calendar: formData.calendar || 'solar',
-      isLeapMonth: Boolean(formData.isLeapMonth),
-      date: formData.birthDate || '',
-      time: formData.isUnknownTime ? null : formData.birthTime || null,
-      isUnknownTime: Boolean(formData.isUnknownTime),
-      precision:
-        formData.birthTimePrecision ||
-        (formData.isUnknownTime
-          ? 'unknown'
-          : /^\d{1,2}:\d{2}$/.test(formData.birthTime || '')
-            ? 'exact'
-            : 'branch-range'),
-      dayBoundaryPolicy: formData.dayBoundaryPolicy || 'midnight',
-      location: formData.birthLocation || null
+      calendar: normalized.calendar || 'solar',
+      isLeapMonth: Boolean(normalized.isLeapMonth),
+      date: normalized.birthDate || '',
+      time: normalized.isUnknownTime ? null : normalized.birthTime || null,
+      isUnknownTime: Boolean(normalized.isUnknownTime),
+      precision: normalized.birthTimePrecision,
+      dayBoundaryPolicy: normalized.dayBoundaryPolicy,
+      location: normalized.birthLocation || null,
+      locationText: normalized.location || ''
     },
     partner,
     relationship: {
-      status: formData.relationshipStatus || null,
-      duration: formData.relationshipDuration || null,
-      microChoice: normalizeLoveReaction(formData.loveReaction),
-      focus: normalizeLoveFocus(formData.loveFocus),
+      status: normalized.relationshipStatus || null,
+      duration: normalized.relationshipStatus === 'single' ? null : normalized.relationshipDuration || null,
+      microChoice: normalizeLoveReaction(normalized.loveReaction),
+      focus: normalizeLoveFocus(normalized.loveFocus),
       summary: relationshipSummary
     },
     pastLifeContext:
       serviceId === 'past-life-goblin'
         ? {
-            topic: formData.pastLifeTopic?.trim() || '',
-            repeatedScene: formData.repeatedScene?.trim() || '',
-            frequentEmotion: formData.frequentEmotion?.trim() || '',
-            hiddenDesire: formData.hiddenDesire?.trim() || '',
-            chosenSymbol: formData.chosenSymbol?.trim() || '',
-            readingTone: formData.readingTone?.trim() || ''
+            topic: normalized.pastLifeTopic?.trim() || '',
+            repeatedScene: normalized.repeatedScene?.trim() || '',
+            frequentEmotion: normalized.frequentEmotion?.trim() || '',
+            hiddenDesire: normalized.hiddenDesire?.trim() || '',
+            chosenSymbol: normalized.chosenSymbol?.trim() || '',
+            readingTone: normalized.readingTone?.trim() || ''
           }
         : null,
-    questions: [formData.q1, formData.q2]
+    questions: [normalized.q1, normalized.q2]
       .filter((question): question is string => Boolean(question?.trim()))
       .map((question) => question.trim())
   };

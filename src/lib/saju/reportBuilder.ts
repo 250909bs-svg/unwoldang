@@ -1,7 +1,7 @@
 import { findServiceById, type IntakeFormData, type ServiceId } from '../../api/mockData';
 import { getLoveFocusLabel, normalizeLoveFocus } from '../loveFocus';
 import { getReportCallName } from '../customerName';
-import { getRelationshipDurationLabel, getRelationshipStatusLabel } from '../relationshipIntake';
+import { getRelationshipStatusLabel, getRelationshipSummary } from '../relationshipIntake';
 import {
   buildDeterministicSajuBasis,
   selectCurrentDayun,
@@ -11,6 +11,7 @@ import { calcBazi, tenGod } from './baziCalcs';
 import { getSolarTermInstantForGregorianYear } from './sxtwl';
 import { BRANCH_ELEM, DZ, ELEMENT, TG, type EarthlyBranch, type HeavenlyStem } from './constants';
 import { scoreReportQuality } from './reportQuality';
+import { assertCustomerReportQuality, finalizeCustomerReport } from './reportPresentation';
 import type {
   ActionPlan,
   FortuneWindow,
@@ -449,10 +450,7 @@ function getTimeLabel(formData: Partial<IntakeFormData>) {
 }
 
 function getRelationshipLabel(formData: Partial<IntakeFormData>) {
-  const status = getRelationshipStatusLabel(formData.relationshipStatus);
-  const duration = getRelationshipDurationLabel(formData.relationshipDuration);
-
-  return duration ? `${status} / ${duration}` : status;
+  return getRelationshipSummary(formData);
 }
 
 function createSerialNumber() {
@@ -2786,7 +2784,9 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
   const basis = providedBasis || buildDeterministicSajuBasis(serviceId, formData);
   const createdAt = new Date().toISOString();
   const serialNumber = createSerialNumber();
-  const customerName = getReportCallName(formData.name);
+  const fullCustomerName = formData.name?.trim().replace(/\s+/g, ' ');
+  const customerName = serviceId === 'general-signature' && fullCustomerName
+    ? fullCustomerName : getReportCallName(formData.name);
   const questionPreview = [formData.q1, formData.q2].filter((item): item is string => Boolean(item?.trim())).join(' / ');
   const birthLabel = `${formData.birthDate || '미입력'} / ${getTimeLabel(formData)} / ${getCalendarLabel(formData)} / ${getGenderLabel(formData)}`;
   const relationshipLabel = getRelationshipLabel(formData);
@@ -2932,9 +2932,12 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
   };
 
   const polishedReport = diversifyRepeatedReportPhrases(report, cautionGuidance);
-
-  return {
-    ...polishedReport,
-    qualityAudit: scoreReportQuality(polishedReport)
+  const customerReport = finalizeCustomerReport(polishedReport);
+  const auditedReport = {
+    ...customerReport,
+    qualityAudit: scoreReportQuality(customerReport)
   };
+
+  assertCustomerReportQuality(auditedReport);
+  return auditedReport;
 }

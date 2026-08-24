@@ -33,3 +33,14 @@ export function getRelationshipDurationLabel(duration?: IntakeFormData['relation
 export function isRelationshipDurationRequired(status?: IntakeFormData['relationshipStatus']) {
   return status === 'dating' || status === 'married';
 }
+
+export function getRelationshipSummary(formData: Partial<IntakeFormData>) {
+  const status = getRelationshipStatusLabel(formData.relationshipStatus);
+
+  if (formData.relationshipStatus === 'single') {
+    return status;
+  }
+
+  const duration = getRelationshipDurationLabel(formData.relationshipDuration);
+  return duration ? `${status} / ${duration}` : status;
+}

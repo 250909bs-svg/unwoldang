@@ -32,7 +32,30 @@ const buildPayment = (sequence = 1): PendingPayment => ({
   productId: 'general-signature',
   paymentMethod: 'portone',
   amount: 79_000,
-  formData: { name: '개인정보' },
+  formData: {
+    name: '개인정보',
+    gender: 'female',
+    calendar: 'solar',
+    isLeapMonth: false,
+    birthDate: '1992-09-09',
+    birthTime: '09:36',
+    isUnknownTime: false,
+    birthTimePrecision: 'exact',
+    dayBoundaryPolicy: 'late-zi',
+    birthLocation: {
+      label: '서울특별시',
+      timezone: 'Asia/Seoul',
+      utcOffsetMinutes: 540,
+      latitude: 37.5665,
+      longitude: 126.978,
+      applySolarTimeCorrection: true
+    },
+    location: '서울특별시',
+    relationshipStatus: 'dating',
+    relationshipDuration: 'under1',
+    q1: '직업 흐름을 어떻게 바꿀까요?',
+    q2: '돈을 남기는 방법은 무엇인가요?'
+  },
   orderClaim: 'claim-that-must-stay-in-session-storage',
   reportAccessToken: 'token-that-must-stay-in-session-storage',
   createdAt: new Date(Date.UTC(2026, 6, sequence)).toISOString()
@@ -48,8 +71,19 @@ describe('pending payment storage compatibility', () => {
     const payment = buildPayment();
     savePendingPayment(payment);
 
-    expect(sessionStorage.getItem(APP_STORAGE_KEYS.pendingPayment.key)).toBe(JSON.stringify(payment));
-    expect(readPendingPayment()).toEqual(payment);
+    expect(sessionStorage.getItem(APP_STORAGE_KEYS.pendingPayment.key)).not.toBeNull();
+    const restored = readPendingPayment();
+    expect(restored).not.toBeNull();
+    expect(restored).toMatchObject({
+      orderId: payment.orderId,
+      productId: payment.productId,
+      amount: payment.amount,
+      formData: payment.formData
+    });
+    expect(restored?.formData).toMatchObject({
+      birthTimePrecision: 'exact', timezone: 'Asia/Seoul', utcOffsetMinutes: 540,
+      latitude: 37.5665, longitude: 126.978, applySolarTimeCorrection: true
+    });
     expect(JSON.parse(localStorage.getItem(APP_STORAGE_KEYS.paymentEntitlementReferences.key) || '[]')).toEqual([
       { orderId: payment.orderId, productId: payment.productId, createdAt: payment.createdAt }
     ]);

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
 import { validateIntakeBirthInputs } from '../lib/birthInputValidation';
+import { normalizeIntakeFormData } from '../lib/intakeDataContract';
 import {
   buildPortOneRedirectUrl,
   confirmAuthenticatedPortOnePayment,
@@ -42,7 +43,9 @@ export default function Checkout() {
   const requestedProductId = locationState?.product || restoredPayment?.productId;
   const product = getProductById(requestedProductId)!;
   const ownsLocationDraft = !locationState?.draftOwnerId || locationState.draftOwnerId === user?.id;
-  const formData = (ownsLocationDraft ? locationState?.formData : undefined) || restoredPayment?.formData;
+  const formData = normalizeIntakeFormData(
+    (ownsLocationDraft ? locationState?.formData : undefined) || restoredPayment?.formData
+  );
   const tabOrigin = locationState?.tabOrigin || restoredPayment?.tabOrigin || '/';
   const draftOwnerId = user?.id;
   const service = findServiceById(product.id);

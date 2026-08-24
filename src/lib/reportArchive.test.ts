@@ -29,6 +29,30 @@ function buildEntry(id: string, customerName: string): ReportArchiveEntry {
     title: '운월당 종합사주',
     subtitle: '테스트 리포트',
     createdAt: '2026-07-12T00:00:00.000Z',
+    formData: {
+      name: customerName,
+      gender: 'male',
+      calendar: 'solar',
+      isLeapMonth: false,
+      birthDate: '1992-09-09',
+      birthTime: '09:36',
+      isUnknownTime: false,
+      birthTimePrecision: 'exact',
+      dayBoundaryPolicy: 'late-zi',
+      birthLocation: {
+        label: '서울특별시',
+        timezone: 'Asia/Seoul',
+        utcOffsetMinutes: 540,
+        latitude: 37.5665,
+        longitude: 126.978,
+        applySolarTimeCorrection: true
+      },
+      location: '서울특별시',
+      relationshipStatus: 'single',
+      relationshipDuration: '',
+      q1: '직업 흐름은 어떤가요?',
+      q2: '돈을 남기려면 무엇을 할까요?'
+    },
     reportData: {} as ReportArchiveEntry['reportData']
   };
 }
@@ -68,5 +92,26 @@ describe('local report archive isolation', () => {
 
     expect(readReportArchiveEntries('new-user')).toEqual([]);
     expect(window.localStorage.getItem('unwoldang.report.archive')).toBeNull();
+  });
+
+  it('reopens the canonical birth input without losing exact-time fields', () => {
+    const entry = buildEntry('report-round-trip', '재열람 사용자');
+    saveReportArchiveEntry(entry, 'kakao-round-trip');
+
+    const reopened = readReportArchiveEntries('kakao-round-trip')[0];
+    expect(reopened?.formData).toMatchObject({
+      name: '재열람 사용자',
+      birthDate: '1992-09-09',
+      birthTime: '09:36',
+      birthTimePrecision: 'exact',
+      isUnknownTime: false,
+      dayBoundaryPolicy: 'late-zi',
+      location: '서울특별시',
+      timezone: 'Asia/Seoul',
+      utcOffsetMinutes: 540,
+      latitude: 37.5665,
+      longitude: 126.978,
+      applySolarTimeCorrection: true
+    });
   });
 });

@@ -1,3 +1,4 @@
+import { normalizeIntakeFormData } from '../../lib/intakeDataContract';
 import {
   APP_STORAGE_KEYS,
   defineStorage,
@@ -8,11 +9,16 @@ import {
 } from '../../shared/storage';
 import type { PaymentEntitlementReference, PendingPayment } from './model';
 
+const normalizePendingPayment = (value: PendingPayment): PendingPayment => ({
+  ...value,
+  formData: value.formData ? normalizeIntakeFormData(value.formData) : undefined
+});
+
 const pendingPaymentStorage = defineStorage<PendingPayment>(
   APP_STORAGE_KEYS.pendingPayment,
   versionedJsonStorageCodec(APP_STORAGE_KEYS.pendingPayment, {
     // v1 intentionally preserves the permissive legacy payload contract.
-    decode: (value) => value as PendingPayment
+    decode: (value) => normalizePendingPayment(value as PendingPayment)
   })
 );
 const entitlementReferenceStorage = defineStorage<unknown[]>(
@@ -74,8 +80,9 @@ export const savePendingPayment = (payment: PendingPayment) => {
     return;
   }
 
-  writeStorageValue(pendingPaymentStorage, payment);
-  rememberPaymentEntitlementReference(payment);
+  const normalized = normalizePendingPayment(payment);
+  writeStorageValue(pendingPaymentStorage, normalized);
+  rememberPaymentEntitlementReference(normalized);
 };
 
 export const readPendingPayment = () => readStorageValue(pendingPaymentStorage);

@@ -6,14 +6,18 @@ import PastLifeStoryReport from '../components/PastLifeStoryReport';
 import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
+import { normalizeIntakeFormData } from '../lib/intakeDataContract';
 import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
 import { evaluateReportAccess } from '../lib/reportAccessGate';
+import { getReportCharacterVideo } from '../lib/reportMedia';
 import { mapIntakeRelationshipStatus } from '../lib/mz-love-fact/relationshipStatusAdapter';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import { buildPastLifeProfile } from '../lib/saju/pastLifeProfile';
+import { finalizeCustomerReport } from '../lib/saju/reportPresentation';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
+import GeneralSignatureReportIntro from '../products/general-signature/GeneralSignatureReportIntro';
 import { canStartProduct, getProductById } from '../products/registry';
 import '../styles/past-life.css';
 
@@ -257,6 +261,9 @@ function SajuWonGukBoard({ report }: { report: SajuReportData }) {
             const value = report.pillars[pillar.key];
             const parsed = parsePillar(value);
             const isMissingHour = pillar.key === 'hour' && !value;
+            const tenGodReading = report.visibleTenGods.find((item) =>
+              item.pillar === pillar.label || item.pillar.startsWith(pillar.label[0])
+            );
 
             return (
               <section key={pillar.key} className="premium-wonguk-column">
@@ -296,6 +303,12 @@ function SajuWonGukBoard({ report }: { report: SajuReportData }) {
                     </div>
                   </>
                 )}
+
+                {tenGodReading ? (
+                  <p className="premium-wonguk-ten-god">
+                    십성 {tenGodReading.stemTenGod} · {tenGodReading.branchTenGod}
+                  </p>
+                ) : null}
 
                 <p>{isMissingHour ? '시간 미상 기준' : pillar.note}</p>
               </section>
@@ -373,12 +386,12 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
     <article className="premium-distribution-card premium-element-compass">
       <div className="premium-distribution-head">
         <span>五行</span>
-        <h3>오행 분포</h3>
+        <h3>사주팔자 겉글자 구성</h3>
       </div>
       <div className="premium-element-compass-core">
         <span>총 {totalValue}칸 기준</span>
         <strong>{balanceLabel}</strong>
-        <em>천간과 지지를 합산한 실제 분포입니다.</em>
+        <em>천간·지지 8글자의 단순 합계이며, 월령·지장간 가중 세력과는 구분합니다.</em>
       </div>
       <div className="premium-element-medallions">
         {report.fiveElements.map((item, index) => (
@@ -1143,18 +1156,25 @@ function SectionBlock({
   number: string;
   report: SajuReportData;
 }) {
-  const visibleDetails =
+  const visibleDetails = (
     section.id === 'element'
       ? section.details?.filter((detail) => detail.summary !== '오행 강약 보기')
-      : section.details;
-  const visibleTable = section.id === 'saju' ? null : section.table;
+      : section.details
+  )?.filter((detail) => detail.summary.trim() && detail.content.trim());
+  const visibleTable = section.id === 'saju' || !section.table?.headers.length || !section.table.rows.length
+    ? null
+    : {
+        ...section.table,
+        rows: section.table.rows.filter((row) => row.some((cell) => cell.trim()))
+      };
+  const visibleCards = section.cards?.filter((card) => card.title.trim() && card.body.trim());
   const pastLifeChapter = pastLifeChapters.find((chapter) => section.id === `pastlife-${chapter.id}`);
   const sectionClassName =
     section.id === 'love' ? 'premium-report-section premium-love-section' : 'premium-report-section';
   const cardGridClassName =
     section.id === 'love'
       ? 'premium-love-card-grid'
-      : section.cards?.length && section.cards.length >= 3
+      : visibleCards?.length && visibleCards.length >= 3
         ? 'premium-grid3'
         : 'premium-grid2';
 
@@ -1230,11 +1250,11 @@ function SectionBlock({
         </div>
       ) : null}
 
-      {section.cards?.length ? (
+      {visibleCards?.length ? (
         <div className={cardGridClassName}>
-          {section.cards.map((card, cardIndex) => (
+          {visibleCards.map((card, cardIndex) => (
             <article
-              key={`${section.id}-${card.title}`}
+              key={`${section.id}-${card.title}-${cardIndex}`}
               className={`premium-card ${section.id === 'love' ? 'premium-love-card' : ''} ${card.tone ? `tone-${card.tone}` : ''}`}
               style={
                 section.id === 'love'
@@ -1252,8 +1272,8 @@ function SectionBlock({
 
       {visibleDetails?.length ? (
         <div className="premium-accordion-group">
-          {visibleDetails.map((detail) => (
-            <details key={`${section.id}-${detail.summary}`} className="premium-accordion" open={detail.open}>
+          {visibleDetails.map((detail, detailIndex) => (
+            <details key={`${section.id}-${detail.summary}-${detailIndex}`} className="premium-accordion" open={detail.open}>
               <summary>
                 <span>{detail.summary}</span>
                 <span className="premium-details-hint">자세히 보기</span>
@@ -6326,22 +6346,24 @@ export default function Report() {
     reportData
   });
   const shouldBlockPreview = !reportAccess.canRender;
-  const reportInput = formData?.birthDate
-    ? formData
-    : reportAccess.usesPreviewData
-      ? service.id === 'love-reading'
-        ? LOVE_PREVIEW_FORM_DATA
-        : PREVIEW_FORM_DATA
-      : formData || {};
-  const reportCharacterVideo =
-    reportInput.gender === 'female' ? '/report-character-female.mp4' : '/report-character-male.mp4';
+  const reportInput = useMemo(
+    () => normalizeIntakeFormData(formData?.birthDate
+      ? formData
+      : reportAccess.usesPreviewData
+        ? service.id === 'love-reading'
+          ? LOVE_PREVIEW_FORM_DATA
+          : PREVIEW_FORM_DATA
+        : formData || {}),
+    [formData, reportAccess.usesPreviewData, service.id]
+  );
+  const reportCharacterVideo = getReportCharacterVideo(service.id, reportInput.gender);
   const baseReport = useMemo(() => reportData || buildSajuReport(service.id, reportInput), [reportInput, reportData, service.id]);
   const report = useMemo(() => {
     // Paid/server reports are canonical artifacts that already passed the
     // immutable-fact guard. Rewriting them again in the browser can reintroduce
     // preview-only sample prose, so client expansion is strictly preview-only.
     if (reportData) {
-      return reportData;
+      return finalizeCustomerReport(reportData);
     }
 
     const preserveAiQuestions = Boolean(reportData);
@@ -6383,6 +6405,7 @@ export default function Report() {
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
   const isLoveReadingShowcase = report.serviceId === 'love-reading';
+  const isGeneralSignature = report.serviceId === 'general-signature';
   const loveRelationshipStatus = mapIntakeRelationshipStatus(reportInput.relationshipStatus);
   const loveBirthTimeKnown = reportInput.isUnknownTime === true
       ? false
@@ -6763,14 +6786,18 @@ export default function Report() {
         ? 'premium-report-page yearly-premium-page export-html-page'
         : isPastLifeShowcase
           ? 'premium-report-page past-life-report-page export-html-page'
-          : 'premium-report-page export-html-page';
+          : isGeneralSignature
+            ? 'premium-report-page general-signature-report export-html-page'
+            : 'premium-report-page export-html-page';
       const shellClassName = isLoveReadingShowcase
         ? 'premium-report-shell mz-love-premium-shell export-html-shell'
         : isYearlyShowcase
         ? 'premium-report-shell yearly-report-shell export-html-shell'
         : isPastLifeShowcase
           ? 'premium-report-shell past-life-report-shell export-html-shell'
-          : 'premium-report-shell export-html-shell';
+          : isGeneralSignature
+            ? 'premium-report-shell general-signature-report-shell export-html-shell'
+            : 'premium-report-shell export-html-shell';
       const html = `<!doctype html>
 <html lang="ko">
 <head>
@@ -7046,7 +7073,9 @@ body {
         ? 'premium-report-page yearly-premium-page'
         : isPastLifeShowcase
           ? 'premium-report-page past-life-report-page'
-          : 'premium-report-page'
+          : isGeneralSignature
+            ? 'premium-report-page general-signature-report'
+            : 'premium-report-page'
     }>
       <header className="premium-report-topbar">
         <div className="premium-report-topbar-inner">
@@ -7073,14 +7102,18 @@ body {
           ? 'premium-report-shell yearly-report-shell'
           : isPastLifeShowcase
             ? 'premium-report-shell past-life-report-shell'
-            : 'premium-report-shell'
+            : isGeneralSignature
+              ? 'premium-report-shell general-signature-report-shell'
+              : 'premium-report-shell'
       }>
         <article className={
           isYearlyShowcase
             ? 'premium-report-paper yearly-report-paper'
             : isPastLifeShowcase
               ? 'premium-report-paper past-life-report-paper'
-              : 'premium-report-paper'
+              : isGeneralSignature
+                ? 'premium-report-paper general-signature-report-paper'
+                : 'premium-report-paper'
         }>
           {reportProvider === 'deterministic-fallback' ? (
             <section className="premium-report-section" aria-label="리포트 생성 상태">
@@ -7090,6 +7123,8 @@ body {
               </div>
             </section>
           ) : null}
+
+          {isGeneralSignature ? <GeneralSignatureReportIntro report={report} input={reportInput} /> : null}
 
           {isYearlyShowcase && yearlyLead ? (
             <section className="premium-report-cover yearly-report-cover">
@@ -7203,7 +7238,7 @@ body {
             </section>
           ) : null}
 
-          {['general-signature', 'concern-reading'].includes(report.serviceId) ? (
+          {reportCharacterVideo ? (
             <section className="premium-report-character" aria-label="운월당 사주 리포트 캐릭터">
               <video
                 ref={reportVideoRef}
@@ -7350,13 +7385,18 @@ body {
                       <h3>Q. {qa.question}</h3>
                     </div>
                     <div className="premium-card premium-answer-card">
-                      <h3>{qa.title}</h3>
+                      <h3>{isGeneralSignature ? `결론 · ${qa.title}` : qa.title}</h3>
+                      {isGeneralSignature ? <h4>왜 그렇게 읽는가</h4> : null}
                       <p>{qa.analysis}</p>
+                      {isGeneralSignature ? <h4>지금 해야 할 행동</h4> : null}
                       <ul className="premium-list">
                         {qa.advice.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
+                      {isGeneralSignature ? (
+                        <p className="gs-answer-evidence">명리 근거는 원국·십성·대운의 해당 장에서 교차 확인할 수 있습니다.</p>
+                      ) : null}
                     </div>
                   </div>
                 )
@@ -7393,11 +7433,18 @@ body {
           ).map((section, index) => (
                 <div key={section.id}>
                   <div className="premium-divider" />
-                  <SectionBlock
-                    section={section}
-                    number={isPastLifeShowcase ? `근거 ${index + 1}` : String(index + 3).padStart(2, '0')}
-                    report={report}
-                  />
+                  {isGeneralSignature && section.id.endsWith('-v2') ? (
+                    <details className="gs-expert-disclosure">
+                      <summary><span>명리 근거 자세히 보기</span><strong>{section.title}</strong></summary>
+                      <SectionBlock section={section} number={`근거 ${index + 1}`} report={report} />
+                    </details>
+                  ) : (
+                    <SectionBlock
+                      section={section}
+                      number={isPastLifeShowcase ? `근거 ${index + 1}` : String(index + 3).padStart(2, '0')}
+                      report={report}
+                    />
+                  )}
                 </div>
               ))}
 
@@ -7416,6 +7463,25 @@ body {
                 <span>우선순위 3가지</span>
                 <span className="premium-details-hint">자세히 보기</span>
               </summary>
+
+            {isGeneralSignature ? (
+              <div className="gs-action-horizons" aria-labelledby="gs-action-horizons-title">
+                <h3 id="gs-action-horizons-title">오늘부터 90일까지</h3>
+                <ol>
+                  {[
+                    ['오늘', report.actionPlan.dos[0] || report.actionPlan.priorities[0]],
+                    ['7일', report.actionPlan.priorities[0]],
+                    ['30일', report.actionPlan.priorities[1]],
+                    ['90일', report.actionPlan.priorities[2]]
+                  ].filter((item): item is [string, string] => Boolean(item[1])).map(([label, body]) => (
+                    <li key={label}>
+                      <strong>{label}</strong>
+                      <span>{body}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
               <div className="premium-accordion-body">
                 <ul className="premium-list">
                   {report.actionPlan.priorities.map((item) => (
@@ -7427,7 +7493,7 @@ body {
 
             <div className="premium-grid2">
               <article className="premium-card tone-good">
-                <h3>{isPastLifeShowcase ? '이번 생에서 시작할 것' : 'DO'}</h3>
+                <h3>{isPastLifeShowcase ? '이번 생에서 시작할 것' : isGeneralSignature ? '하면 좋은 것' : 'DO'}</h3>
                 <ul className="premium-list">
                   {report.actionPlan.dos.map((item) => (
                     <li key={item}>{item}</li>
@@ -7436,7 +7502,7 @@ body {
               </article>
 
               <article className="premium-card tone-warn">
-                <h3>{isPastLifeShowcase ? '이번 생에서 멈출 것' : 'AVOID'}</h3>
+                <h3>{isPastLifeShowcase ? '이번 생에서 멈출 것' : isGeneralSignature ? '피하면 좋은 것' : 'AVOID'}</h3>
                 <ul className="premium-list">
                   {report.actionPlan.avoids.map((item) => (
                     <li key={item}>{item}</li>

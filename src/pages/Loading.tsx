@@ -5,6 +5,11 @@ import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import { readPendingPayment, renewPaymentEntitlement, savePendingPayment } from '../lib/auth';
 import { getAiReportEndpoint, requestAiReport, type AiReportProvider } from '../lib/aiReport';
+import { validateIntakeBirthInputs } from '../lib/birthInputValidation';
+import {
+  getIntakeFlowDiagnostics,
+  normalizeIntakeFormData
+} from '../lib/intakeDataContract';
 import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
@@ -32,19 +37,6 @@ const LOADING_PILLARS = [
 
 const LOADING_PHASES = ['원국 계산', '오행 균형', '질문 해석', '리포트 완성'];
 
-const LOADING_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
-  name: '차민호',
-  gender: 'female',
-  calendar: 'solar',
-  isLeapMonth: false,
-  birthDate: '1992-09-09',
-  birthTime: '10:24',
-  isUnknownTime: false,
-  relationshipStatus: 'single',
-  q1: '올해 가장 크게 들어오는 기회는 어느 쪽인가요?',
-  q2: '재물운과 직업운 중 어떤 쪽에 집중해야 하나요?'
-};
-
 export default function Loading() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,8 +44,16 @@ export default function Loading() {
   const locationState = (location.state as LoadingLocationState | null) ?? null;
   const recoveredPayment = useMemo(() => readPendingPayment(), []);
   const product = locationState?.product || recoveredPayment?.productId;
-  const productDefinition = getProductById(product)!;
-  const formData = locationState?.formData || recoveredPayment?.formData;
+  const requestedProductDefinition = product ? getProductById(product) : undefined;
+  const productDefinition = requestedProductDefinition || getProductById('general-signature')!;
+  const isMissingProduct = !requestedProductDefinition;
+  const rawFormData = locationState?.formData || recoveredPayment?.formData;
+  const formData = useMemo(() => normalizeIntakeFormData(rawFormData), [rawFormData]);
+  const intakeValidation = useMemo(
+    () => validateIntakeBirthInputs(formData, { requirePartner: productDefinition.flow.requiresPartnerBirth }),
+    [formData, productDefinition.flow.requiresPartnerBirth]
+  );
+  const inputRecoveryRequired = !intakeValidation.self.valid;
   const paymentMethod = locationState?.paymentMethod || recoveredPayment?.paymentMethod;
   const orderId = locationState?.orderId || recoveredPayment?.orderId;
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
@@ -84,16 +84,16 @@ export default function Loading() {
       return reportData;
     }
 
-    if (!product) {
+    if (isMissingProduct || !intakeValidation.valid) {
       return null;
     }
 
     try {
-      return buildSajuReport(product || service.id, formData || LOADING_PREVIEW_FORM_DATA);
+      return buildSajuReport(product || service.id, formData);
     } catch {
       return null;
     }
-  }, [formData, product, reportData, service.id]);
+  }, [formData, intakeValidation.valid, isMissingProduct, product, reportData, service.id]);
   const elementTotal = Math.max(previewReport?.fiveElements.reduce((sum, item) => sum + item.value, 0) || 0, 1);
 
   const messages = useMemo(
@@ -127,7 +127,27 @@ export default function Loading() {
         return;
       }
 
-      if (!product || locationState?.reportData) {
+      if (locationState?.reportData) {
+        setAnalysisFinished(true);
+        return;
+      }
+
+      if (isMissingProduct || !product) {
+        setAnalysisFailed(true);
+        setAnalysisNotice('상품 정보를 불러오지 못했습니다. 홈에서 상품을 다시 선택해 주세요.');
+        setAnalysisFinished(true);
+        return;
+      }
+
+      if (!intakeValidation.valid) {
+        if (import.meta.env.DEV) {
+          console.warn('[report-flow] invalid intake', getIntakeFlowDiagnostics(formData));
+        }
+        setAnalysisFailed(true);
+        setAnalysisNotice(
+          intakeValidation.self.errors[0]?.message ||
+          '출생정보를 불러오지 못했습니다. 입력 정보를 다시 확인해 주세요.'
+        );
         setAnalysisFinished(true);
         return;
       }
@@ -139,7 +159,7 @@ export default function Loading() {
       }
 
       if (!canRequestAiReport) {
-        setReportData(buildSajuReport(product || service.id, formData || LOADING_PREVIEW_FORM_DATA));
+        setReportData(buildSajuReport(product || service.id, formData));
         setAnalysisFinished(true);
         return;
       }
@@ -170,7 +190,7 @@ export default function Loading() {
           throw new Error('결제 리포트 접근 권한을 갱신할 수 없습니다. 카카오 로그인 후 다시 시도해 주세요.');
         }
 
-        const generated = await requestAiReport(product, formData || {}, {
+        const generated = await requestAiReport(product, formData, {
           orderId: resolvedOrderId,
           reportAccessToken: resolvedReportAccessToken
         });
@@ -209,7 +229,7 @@ export default function Loading() {
     }
 
     void generationRunRef.current.promise;
-  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, isMissingLiveReportAccess, locationState?.reportData, orderId, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, service.id, user?.authToken]);
+  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, isMissingLiveReportAccess, isMissingProduct, locationState?.reportData, orderId, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, service.id, user?.authToken]);
 
   useEffect(() => {
     if (analysisFinished) {
@@ -358,8 +378,16 @@ export default function Loading() {
             {analysisNotice ? <p className="mobile-loading-notice">{analysisNotice}</p> : null}
             {analysisFailed ? (
               <div className="mobile-loading-actions">
-                <button type="button" className="app-black-button" onClick={() => window.location.reload()}>
-                  AI 분석 다시 시도
+                <button
+                  type="button"
+                  className="app-black-button"
+                  onClick={() => isMissingProduct
+                    ? navigate('/')
+                    : inputRecoveryRequired
+                      ? navigate(productDefinition.routes.intake, { state: { formData, tabOrigin } })
+                      : window.location.reload()}
+                >
+                  {isMissingProduct ? '상품 다시 선택' : inputRecoveryRequired ? '출생정보 다시 확인' : 'AI 분석 다시 시도'}
                 </button>
               </div>
             ) : null}

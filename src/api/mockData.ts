@@ -77,6 +77,12 @@ export interface IntakeFormData {
   birthTimePrecision?: BirthTimePrecision;
   dayBoundaryPolicy?: DayBoundaryPolicy;
   birthLocation?: BirthLocationData;
+  /** Redirect/storage compatibility mirrors. Canonical values live in birthLocation. */
+  timezone?: string;
+  utcOffsetMinutes?: number;
+  latitude?: number;
+  longitude?: number;
+  applySolarTimeCorrection?: boolean;
   partner?: PartnerBirthData;
   relationshipStatus: RelationshipStatus;
   relationshipDuration: '' | 'under1' | 'under3' | 'under5' | 'under10';

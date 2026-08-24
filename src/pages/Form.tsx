@@ -16,6 +16,7 @@ import {
   pastLifeTopicOptions
 } from '../content/pastLifeExperience';
 import { validateBirthInput } from '../lib/birthInputValidation';
+import { normalizeIntakeFormData } from '../lib/intakeDataContract';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
 import { getProductById } from '../products/registry';
@@ -249,7 +250,7 @@ const formatBirthDate = (digits: string) => {
   return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
 };
 
-const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormData => ({
+const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormData => normalizeIntakeFormData({
   ...initialState,
   ...source,
   name: source?.name ?? '',
@@ -277,7 +278,7 @@ const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormDat
   hiddenDesire: source?.hiddenDesire ?? '',
   chosenSymbol: source?.chosenSymbol ?? '',
   readingTone: source?.readingTone ?? '균형 있게'
-});
+}) as IntakeFormData;
 
 function getBirthTimeSelectValue(formData: IntakeFormData) {
   if (formData.isUnknownTime) {
@@ -376,7 +377,7 @@ export default function Form() {
       return;
     }
 
-    window.sessionStorage.setItem(draftKey, JSON.stringify(formData));
+    window.sessionStorage.setItem(draftKey, JSON.stringify(normalizeIntakeFormData(formData)));
   }, [draftKey, formData]);
 
   const updateField = <K extends keyof IntakeFormData>(name: K, value: IntakeFormData[K]) => {
@@ -571,10 +572,8 @@ export default function Form() {
     ? Boolean(formData.pastLifeTopic?.trim())
     : isCompatibilityFlow
       ? partnerBirthValidation.valid
-      : isLoveReadingFlow
-        ? Boolean(formData.relationshipStatus) &&
-          (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration))
-        : Boolean(formData.relationshipStatus) && Boolean(formData.relationshipDuration);
+      : Boolean(formData.relationshipStatus) &&
+        (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration));
   const step3Ready = isPastLifeFlow
     ? Boolean(formData.repeatedScene?.trim()) && Boolean(formData.frequentEmotion?.trim()) && Boolean(formData.hiddenDesire?.trim())
     : Boolean(formData.q1.trim());
@@ -665,13 +664,13 @@ export default function Form() {
       return;
     }
 
-    const submittedFormData = isPastLifeFlow
+    const submittedFormData = normalizeIntakeFormData(isPastLifeFlow
       ? {
           ...formData,
           q1: `전생사주에서 ${formData.pastLifeTopic} 주제와 연결된 반복 장면을 풀어주세요. 실제 반복 장면: ${formData.repeatedScene}`,
           q2: `자주 드는 감정은 ${formData.frequentEmotion}, 숨기기 어려운 욕심은 ${formData.hiddenDesire}입니다. ${formData.chosenSymbol} 상징을 선택했고 ${formData.readingTone} 말투로 현생 미션을 알려주세요.`
         }
-      : formData;
+      : formData);
 
     if (locationState?.recoveredEntitlement) {
       navigate('/loading', {
@@ -1205,11 +1204,11 @@ export default function Form() {
                 </div>
               </article>
 
-              <article className="intake-story-question-card">
+              <article className="intake-story-question-card" hidden={formData.relationshipStatus === 'single'}>
                 <div className="intake-story-question-head">
                   <strong>
                     기간은 얼마나 되나요?
-                    {isLoveReadingFlow && !isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
+                    {!isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
                   </strong>
                   <span className="intake-story-order-badge">PERIOD</span>
                 </div>

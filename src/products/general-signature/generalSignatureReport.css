@@ -1,0 +1,563 @@
+.general-signature-report {
+  --gs-paper: #fffdf7;
+  --gs-ivory: #f4efe3;
+  --gs-ink: #211d18;
+  --gs-muted: #71685d;
+  --gs-gold: #9d773b;
+  --gs-line: rgba(77, 62, 42, 0.2);
+  background: var(--gs-ivory);
+  color: var(--gs-ink);
+  overflow-x: clip;
+}
+
+.general-signature-report .premium-report-shell {
+  width: min(100%, 1120px);
+}
+
+.general-signature-report .premium-report-paper {
+  background: var(--gs-paper);
+  box-shadow: 0 18px 50px rgba(49, 40, 27, 0.08);
+}
+
+.gs-cover,
+.gs-briefing,
+.gs-timeline {
+  position: relative;
+  max-width: 880px;
+  margin-inline: auto;
+}
+
+.gs-cover {
+  min-height: min(860px, calc(100svh - 72px));
+  padding: clamp(56px, 9vw, 108px) clamp(20px, 6vw, 72px) 52px;
+  text-align: center;
+  border-bottom: 1px solid var(--gs-line);
+}
+
+.gs-cover::before {
+  content: '雲月堂';
+  position: absolute;
+  inset: 30px 0 auto;
+  color: rgba(157, 119, 59, 0.07);
+  font-family: serif;
+  font-size: clamp(48px, 11vw, 104px);
+  letter-spacing: 0.16em;
+  pointer-events: none;
+}
+
+.gs-eyebrow,
+.gs-section-heading > span {
+  position: relative;
+  margin: 0 0 18px;
+  color: var(--gs-gold);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.gs-cover h1 {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: clamp(2rem, 6.2vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+}
+
+.gs-pillar-mark {
+  display: inline-grid;
+  gap: 7px;
+  margin: 34px auto 24px;
+}
+
+.gs-pillar-mark span {
+  color: var(--gs-gold);
+  font-family: serif;
+  font-size: clamp(2.1rem, 6vw, 3.2rem);
+  letter-spacing: 0.16em;
+}
+
+.gs-pillar-mark strong {
+  font-size: 1rem;
+}
+
+.gs-cover blockquote {
+  max-width: 640px;
+  margin: 0 auto;
+  color: #3f382f;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: clamp(1.12rem, 3vw, 1.45rem);
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+.gs-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 25px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gs-keywords li {
+  padding: 9px 13px;
+  border: 1px solid rgba(157, 119, 59, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #654d29;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.gs-current-flow {
+  display: grid;
+  gap: 4px;
+  max-width: 360px;
+  margin: 32px auto 0;
+  padding: 20px;
+  border-block: 1px solid var(--gs-line);
+}
+
+.gs-current-flow span,
+.gs-current-flow p {
+  color: var(--gs-muted);
+  font-size: 0.94rem;
+}
+
+.gs-current-flow strong {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: 1.45rem;
+}
+
+.gs-current-flow p,
+.gs-precision-note p {
+  margin: 0;
+}
+
+.gs-precision-note {
+  max-width: 680px;
+  margin: 26px auto 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--gs-gold);
+  background: #f7f1e6;
+  text-align: left;
+}
+
+.gs-precision-note p {
+  color: #574e43;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.gs-important {
+  max-width: 720px;
+  margin: 42px auto 0;
+  text-align: left;
+}
+
+.gs-important h2,
+.gs-section-heading h2 {
+  margin: 0;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: clamp(1.55rem, 4.5vw, 2.2rem);
+  line-height: 1.4;
+}
+
+.gs-important ol {
+  display: grid;
+  gap: 0;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: gs-important;
+}
+
+.gs-important li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 3px 12px;
+  padding: 18px 0;
+  border-top: 1px solid var(--gs-line);
+  counter-increment: gs-important;
+}
+
+.gs-important li::before {
+  grid-row: 1 / 3;
+  content: counter(gs-important, decimal-leading-zero);
+  color: var(--gs-gold);
+  font-family: serif;
+  font-weight: 700;
+}
+
+.gs-important strong,
+.gs-important span {
+  min-width: 0;
+}
+
+.gs-important span {
+  color: #554d43;
+  font-size: 1rem;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.gs-cover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.gs-cover-actions a,
+.gs-inline-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid var(--gs-line);
+  border-radius: 3px;
+  color: var(--gs-ink);
+  font-size: 0.96rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.gs-cover-actions a:first-child {
+  border-color: #382f25;
+  background: #382f25;
+  color: #fffdf7;
+}
+
+.gs-cover-actions a:focus-visible,
+.gs-inline-link:focus-visible,
+.gs-briefing-item:focus-visible {
+  outline: 3px solid #c99a4f;
+  outline-offset: 3px;
+}
+
+.gs-briefing,
+.gs-timeline {
+  padding: clamp(52px, 8vw, 90px) clamp(20px, 6vw, 72px);
+  border-bottom: 1px solid var(--gs-line);
+  scroll-margin-top: 82px;
+}
+
+.gs-section-heading {
+  max-width: 680px;
+  margin-bottom: 30px;
+}
+
+.gs-section-heading p {
+  margin: 10px 0 0;
+  color: var(--gs-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.gs-briefing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--gs-line);
+}
+
+.gs-briefing-item {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 22px 18px;
+  border-bottom: 1px solid var(--gs-line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.gs-briefing-item:nth-child(odd) {
+  border-right: 1px solid var(--gs-line);
+}
+
+.gs-briefing-item strong {
+  color: #725628;
+  font-size: 0.96rem;
+}
+
+.gs-briefing-item span {
+  font-size: 1rem;
+  line-height: 1.72;
+  word-break: keep-all;
+}
+
+.gs-timeline ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 26px;
+  padding: 0;
+  border-top: 1px solid var(--gs-line);
+  list-style: none;
+}
+
+.gs-timeline li {
+  min-width: 0;
+  padding: 22px 16px;
+  border-bottom: 1px solid var(--gs-line);
+}
+
+.gs-timeline li + li {
+  border-left: 1px solid var(--gs-line);
+}
+
+.gs-timeline li > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--gs-gold);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.gs-timeline li strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.gs-timeline li p {
+  margin: 10px 0 0;
+  color: #5c5349;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 767px) {
+  .general-signature-report .premium-report-paper {
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .gs-cover {
+    min-height: auto;
+  }
+
+  .gs-cover::before {
+    inset-block-start: 22px;
+  }
+
+  .gs-briefing-grid,
+  .gs-timeline ol {
+    grid-template-columns: 1fr;
+  }
+
+  .gs-briefing-item:nth-child(odd),
+  .gs-timeline li + li {
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .gs-cover-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 359px) {
+  .gs-cover,
+  .gs-briefing,
+  .gs-timeline {
+    padding-inline: 16px;
+  }
+
+  .gs-important li {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 3px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .general-signature-report *,
+  .general-signature-report *::before,
+  .general-signature-report *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.general-signature-report .premium-wonguk-ten-god {
+  margin: 8px 0 0;
+  color: #73582f;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.gs-expert-disclosure {
+  max-width: 880px;
+  margin-inline: auto;
+  border-block: 1px solid var(--gs-line);
+}
+
+.gs-expert-disclosure > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 18px;
+  min-height: 56px;
+  align-items: center;
+  padding: 16px 4px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.gs-expert-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gs-expert-disclosure > summary::after {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  content: '+';
+  color: var(--gs-gold);
+  font-size: 1.4rem;
+}
+
+.gs-expert-disclosure[open] > summary::after {
+  content: '−';
+}
+
+.gs-expert-disclosure > summary span {
+  color: var(--gs-gold);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.gs-expert-disclosure > summary strong {
+  grid-column: 1;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: 1.08rem;
+  overflow-wrap: anywhere;
+}
+
+.gs-expert-disclosure > .premium-report-section {
+  padding-top: 24px;
+}
+
+.general-signature-report .premium-answer-card h4 {
+  margin: 24px 0 8px;
+  color: #765c31;
+  font-size: 1rem;
+}
+
+.gs-answer-evidence {
+  margin-top: 20px !important;
+  padding-top: 16px;
+  border-top: 1px solid var(--gs-line);
+  color: var(--gs-muted) !important;
+  font-size: 0.94rem !important;
+}
+
+.gs-action-horizons {
+  margin-bottom: 28px;
+}
+
+.gs-action-horizons h3 {
+  margin: 0 0 16px;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: 1.28rem;
+}
+
+.gs-action-horizons ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border-block: 1px solid var(--gs-line);
+  list-style: none;
+}
+
+.gs-action-horizons li {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px 14px;
+}
+
+.gs-action-horizons li + li {
+  border-left: 1px solid var(--gs-line);
+}
+
+.gs-action-horizons strong {
+  color: var(--gs-gold);
+}
+
+.gs-action-horizons span {
+  font-size: 1rem;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+@media (max-width: 767px) {
+  .gs-expert-disclosure > summary {
+    padding-inline: 0;
+  }
+
+  .gs-action-horizons ol {
+    grid-template-columns: 1fr;
+  }
+
+  .gs-action-horizons li + li {
+    border-top: 1px solid var(--gs-line);
+    border-left: 0;
+  }
+}
+
+/* Paid long-form reading: keep body copy readable on small screens. */
+.general-signature-report p,
+.general-signature-report li,
+.general-signature-report .premium-accordion-body {
+  font-size: max(1rem, 16px);
+  line-height: 1.75;
+}
+
+.general-signature-report .premium-icon-action,
+.general-signature-report .app-profile-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.general-signature-report .premium-report-brand {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+
+.general-signature-report button,
+.general-signature-report a,
+.general-signature-report summary {
+  -webkit-tap-highlight-color: rgba(157, 119, 59, 0.18);
+}
+
+.general-signature-report button:focus-visible,
+.general-signature-report a:focus-visible,
+.general-signature-report summary:focus-visible {
+  outline: 3px solid #b8822f;
+  outline-offset: 3px;
+}
+
+.general-signature-report .gs-answer-evidence,
+.general-signature-report .premium-wonguk-ten-god {
+  font-size: 1rem !important;
+}
+
+.general-signature-report .premium-report-brand {
+  width: auto !important;
+  min-width: 44px !important;
+  padding-inline: 4px;
+}
+
+.general-signature-report .premium-table-wrap {
+  overscroll-behavior-inline: contain;
+}
