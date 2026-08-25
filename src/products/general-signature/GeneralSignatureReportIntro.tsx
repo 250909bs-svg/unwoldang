@@ -27,8 +27,15 @@ function findSection(report: SajuReportData, keywords: string[]): ReportSection 
   });
 }
 
+function compactInsight(value: string, maxLength = 120) {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) return normalized;
+  const sentence = normalized.slice(0, maxLength).replace(/\s+\S*$/, '').trim();
+  return `${sentence}…`;
+}
+
 function firstSectionInsight(section: ReportSection | undefined, fallback: string) {
-  return section?.callout?.body || section?.cards?.[0]?.body || section?.paragraphs?.[0] || section?.bullets?.[0] || fallback;
+  return compactInsight(section?.callout?.body || section?.cards?.[0]?.body || section?.paragraphs?.[0] || section?.bullets?.[0] || fallback);
 }
 
 function getTimePrecision(input: Partial<IntakeFormData>, report: SajuReportData) {
@@ -38,6 +45,7 @@ function getTimePrecision(input: Partial<IntakeFormData>, report: SajuReportData
 }
 
 function buildBriefing(report: SajuReportData): BriefingItem[] {
+  const hasConfirmedYongsin = report.engineMeta?.yongsinConsensusStatus === 'confirmed';
   const personality = findSection(report, ['personality', '성향', '작동']);
   const career = findSection(report, ['career', '직업', '사업', '일']);
   const wealth = findSection(report, ['wealth', '재물', '돈']);
@@ -47,7 +55,7 @@ function buildBriefing(report: SajuReportData): BriefingItem[] {
   return [
     {
       label: '타고난 중심',
-      body: `${report.pillars.day} 일주와 ${report.pillars.month} 월령을 중심으로 읽습니다. ${report.heroNote}`,
+      body: compactInsight(`${report.pillars.day} 일주와 ${report.pillars.month} 월령을 중심으로 읽습니다. ${report.heroNote}`),
       anchor: 'glance'
     },
     {
@@ -57,12 +65,14 @@ function buildBriefing(report: SajuReportData): BriefingItem[] {
     },
     {
       label: '반복되는 약점',
-      body: report.keyTakeaways[1]?.body || `${report.cautiousElements.join('·')} 기운이 필요한 순간에는 속도를 늦추고 판단 근거를 확인하는 편이 좋습니다.`,
+      body: `${report.cautiousElements.join('·')} 흐름이 과해지는 순간에는 판단을 서두르거나 혼자 책임을 떠안을 수 있습니다. 결정 전에 범위와 역할을 확인해야 합니다.`,
       anchor: personality?.id || 'summary'
     },
     {
       label: '돈의 핵심',
-      body: firstSectionInsight(wealth, `${report.helpfulElements.join('·')} 기운이 살아나는 방식으로 수익 구조를 설계할 때 돈을 남기기 쉽습니다.`),
+      body: firstSectionInsight(wealth, hasConfirmedYongsin
+        ? `${report.helpfulElements.join('·')} 기운을 활용하되 계약 범위와 정산 기준을 먼저 세울 때 돈을 남기기 쉽습니다.`
+        : '월령·강약·현재 대운을 함께 보면, 수입의 크기보다 계약 범위와 정산 기준을 먼저 세우는 일이 중요합니다.'),
       anchor: wealth?.id || 'summary'
     },
     {
@@ -97,10 +107,13 @@ export default function GeneralSignatureReportIntro({
 }) {
   const dayPillarHanja = toHanja(report.pillars.day);
   const precision = getTimePrecision(input, report);
+  const hasConfirmedYongsin = report.engineMeta?.yongsinConsensusStatus === 'confirmed';
   const keywords = [
     `${report.dayMasterElement} 일간`,
     report.tenGods[0]?.label,
-    report.helpfulElements[0] ? `${report.helpfulElements[0]} 기운 활용` : undefined
+    hasConfirmedYongsin && report.helpfulElements[0]
+      ? `${report.helpfulElements[0]} 기운 활용`
+      : '월령·강약 종합'
   ].filter((keyword): keyword is string => Boolean(keyword));
   const briefing = buildBriefing(report);
   const currentYear = report.yearLuck[0];
@@ -134,7 +147,7 @@ export default function GeneralSignatureReportIntro({
           ) : precision === 'range' ? (
             <p><strong>출생시간 범위 기준</strong> — 안정적인 년주·월주·일주는 확정했고, 선택 범위에 따라 시주가 달라질 수 있는 부분만 조건부로 설명합니다.</p>
           ) : (
-            <p><strong>{input.birthTime} 정각 입력 기준</strong> — 입력한 분 단위 시간과 설정한 날짜 경계 정책을 계산에 반영했습니다.</p>
+            <p><strong>{input.birthTime} 분 단위 입력 기준</strong> — 입력한 시간과 설정한 날짜 경계 정책을 계산에 반영했습니다.</p>
           )}
         </div>
 
@@ -159,7 +172,7 @@ export default function GeneralSignatureReportIntro({
 
       <section className="gs-briefing" id="briefing" aria-labelledby="gs-briefing-title">
         <div className="gs-section-heading">
-          <span>30 SECOND BRIEFING</span>
+          <span>핵심 요약</span>
           <h2 id="gs-briefing-title">30초 핵심 브리핑</h2>
           <p>원국·월령·십성·대운에서 지금 가장 먼저 읽어야 할 결론만 모았습니다.</p>
         </div>
@@ -175,7 +188,7 @@ export default function GeneralSignatureReportIntro({
 
       <section className="gs-timeline" aria-labelledby="gs-timeline-title">
         <div className="gs-section-heading">
-          <span>TIME DESIGN</span>
+          <span>시간 흐름</span>
           <h2 id="gs-timeline-title">시간의 설계</h2>
           <p>지금에서 다음 대운까지, 먼저 방향을 잡고 뒤에서 상세 흐름을 확인하세요.</p>
         </div>

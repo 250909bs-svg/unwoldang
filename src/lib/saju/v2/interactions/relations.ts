@@ -65,9 +65,9 @@ const BRANCH_PAIR_RULES: readonly PairRule[] = [
   { pair: [5, 11], relation: 'clash', name: '지지충', subtype: '사해충', polarity: 'friction', confidence: 0.99 },
 
   { pair: [0, 3], relation: 'punishment', name: '지지형', subtype: '자묘 무례지형', polarity: 'friction', confidence: 0.98 },
-  { pair: [2, 5], relation: 'punishment', name: '지지형', subtype: '인사 무은지형', polarity: 'friction', confidence: 0.96, uncertainty: ['삼형의 완성 여부와 두 글자 사이의 형 작용 강도를 구분해 해석해야 합니다.'] },
-  { pair: [5, 8], relation: 'punishment', name: '지지형', subtype: '사신 무은지형', polarity: 'friction', confidence: 0.96, uncertainty: ['삼형의 완성 여부와 두 글자 사이의 형 작용 강도를 구분해 해석해야 합니다.'] },
-  { pair: [2, 8], relation: 'punishment', name: '지지형', subtype: '인신 무은지형', polarity: 'friction', confidence: 0.96, uncertainty: ['삼형의 완성 여부와 두 글자 사이의 형 작용 강도를 구분해 해석해야 합니다.'] },
+  { pair: [2, 5], relation: 'punishment', name: '지지형', subtype: '인·사 형 작용 후보', polarity: 'friction', confidence: 0.96, uncertainty: ['두 글자의 형 작용 후보와 인·사·신 세 글자가 모두 모인 구조를 구분해 해석해야 합니다.'] },
+  { pair: [5, 8], relation: 'punishment', name: '지지형', subtype: '사·신 형 작용 후보', polarity: 'friction', confidence: 0.96, uncertainty: ['두 글자의 형 작용 후보와 인·사·신 세 글자가 모두 모인 구조를 구분해 해석해야 합니다.'] },
+  { pair: [2, 8], relation: 'punishment', name: '지지형', subtype: '인·신 형 작용 후보', polarity: 'friction', confidence: 0.96, uncertainty: ['두 글자의 형 작용 후보와 인·사·신 세 글자가 모두 모인 구조를 구분해 해석해야 합니다.'] },
   { pair: [1, 10], relation: 'punishment', name: '지지형', subtype: '축술 지세지형', polarity: 'friction', confidence: 0.96, uncertainty: ['삼형의 완성 여부와 두 글자 사이의 형 작용 강도를 구분해 해석해야 합니다.'] },
   { pair: [10, 7], relation: 'punishment', name: '지지형', subtype: '술미 지세지형', polarity: 'friction', confidence: 0.96, uncertainty: ['삼형의 완성 여부와 두 글자 사이의 형 작용 강도를 구분해 해석해야 합니다.'] },
   { pair: [1, 7], relation: 'punishment', name: '지지형', subtype: '축미 지세지형', polarity: 'friction', confidence: 0.96, uncertainty: ['삼형의 완성 여부와 두 글자 사이의 형 작용 강도를 구분해 해석해야 합니다.'] },
@@ -103,7 +103,7 @@ const BRANCH_GROUP_RULES: readonly GroupRule[] = [
   { members: [5, 6, 7], relation: 'seasonal-harmony', name: '지지방합', subtype: '사오미 화방', polarity: 'integrative', transformedElement: '화', confidence: 0.97, uncertainty: [GROUP_UNCERTAINTY] },
   { members: [8, 9, 10], relation: 'seasonal-harmony', name: '지지방합', subtype: '신유술 금방', polarity: 'integrative', transformedElement: '금', confidence: 0.97, uncertainty: [GROUP_UNCERTAINTY] },
   { members: [11, 0, 1], relation: 'seasonal-harmony', name: '지지방합', subtype: '해자축 수방', polarity: 'integrative', transformedElement: '수', confidence: 0.97, uncertainty: [GROUP_UNCERTAINTY] },
-  { members: [2, 5, 8], relation: 'punishment', name: '지지삼형', subtype: '인사신 무은지형 완성', polarity: 'friction', confidence: 0.98 },
+  { members: [2, 5, 8], relation: 'punishment', name: '지지삼형', subtype: '인·사·신 삼형 구조 완성', polarity: 'friction', confidence: 0.98 },
   { members: [1, 7, 10], relation: 'punishment', name: '지지삼형', subtype: '축미술 지세지형 완성', polarity: 'friction', confidence: 0.98 }
 ] as const;
 

@@ -7,6 +7,7 @@ import {
   ReportRequestError
 } from '../contracts/errors.ts';
 import { readJsonBody } from './body.ts';
+import type { AdminLoginRateLimit } from '../middleware/adminLoginRateLimit.ts';
 import { sendJson } from '../middleware/error.ts';
 
 export const PUBLIC_ROUTES = Object.freeze([
@@ -33,6 +34,7 @@ type AuthMiddleware = {
 type RouterDependencies = {
   applyCors(req: IncomingMessage, res: ServerResponse): void;
   enforceReportRateLimit(req: IncomingMessage): void;
+  adminLoginRateLimit: AdminLoginRateLimit;
   auth: AuthMiddleware;
   health: { getStatus(): unknown };
   reports: {
@@ -197,9 +199,13 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     if (req.method === 'POST' && isPath(url.pathname, '/admin/login')) {
       try {
+        dependencies.adminLoginRateLimit.assertAllowed(req);
         const body = (await readJsonBody(req)) as Record<string, unknown>;
-        sendJson(res, 200, dependencies.admin.login(body));
+        const result = dependencies.admin.login(body);
+        dependencies.adminLoginRateLimit.reset(req);
+        sendJson(res, 200, result);
       } catch (error) {
+        if (error instanceof ReportRequestError && error.status === 401) dependencies.adminLoginRateLimit.recordFailure(req);
         const status = error instanceof ReportRequestError || error instanceof PaymentRequestError ? error.status : 500;
         sendJson(res, status, { message: errorMessage(error, '관리자 로그인 처리 중 오류가 발생했습니다.') });
       }

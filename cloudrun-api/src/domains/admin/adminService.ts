@@ -29,7 +29,7 @@ export class AdminService {
     const configuredHash = this.config.auth.adminCredentialHash;
 
     if (!configuredHash) {
-      throw new ReportRequestError(503, 'ADMIN_CREDENTIAL_HASH is not configured.');
+      throw new ReportRequestError(503, '관리자 로그인을 사용할 수 없습니다.');
     }
 
     this.tokens.ensureSecret('admin');
@@ -39,7 +39,7 @@ export class AdminService {
     const inputHash = createHash('sha256').update(`${adminId}:${password}`).digest('hex');
 
     if (!safeEqual(inputHash, configuredHash)) {
-      throw new ReportRequestError(401, 'Admin id or password is incorrect.');
+      throw new ReportRequestError(401, '아이디 또는 비밀번호가 올바르지 않습니다.');
     }
 
     return {

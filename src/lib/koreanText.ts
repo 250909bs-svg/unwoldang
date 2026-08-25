@@ -35,6 +35,10 @@ const INTERNAL_LABELS: ReadonlyArray<[RegExp, string]> = [
   [/\bbalanced\b/gi, '비교적 균형적인 편입니다'],
   [/\bweak\b/gi, '약한 편입니다'],
   [/\bstrong\b/gi, '강한 편입니다'],
+  [/\bcold\b/gi, '추운 편'],
+  [/\bhot\b/gi, '더운 편'],
+  [/\bdry\b/gi, '건조한 편'],
+  [/\bwet\b/gi, '습한 편'],
   [/\beokbu\b/gi, '억부 관점'],
   [/\btonggwan\b/gi, '통관 관점'],
   [/\bjohu\b/gi, '조후 관점'],
@@ -53,6 +57,11 @@ export function normalizeCustomerFacingText(input: string) {
     .replace(/님가/g, '님이')
     .replace(/미상로/g, '미상으로')
     .replace(/편인와/g, '편인과')
+    .replace(/겁재은/g, '겁재는')
+    .replace(/식신와/g, '식신과')
+    .replace(/정인가/g, '정인이')
+    .replace(/사은 사건/g, '사는 사건')
+    .replace(/태은 사건/g, '태는 사건')
     .replace(/\[object Object\]/g, '')
     .replace(/\bundefined\b/gi, '')
     .replace(/\bnull\b/gi, '');

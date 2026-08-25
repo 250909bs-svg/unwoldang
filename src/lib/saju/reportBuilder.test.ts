@@ -66,8 +66,9 @@ describe('saju report question answers', () => {
     expect(answer.title).toContain('직업·커리어');
     expect(answer.analysis).toContain('결론부터');
     expect(answer.analysis).toContain('겉으로 드러난 십성');
-    expect(answer.advice.join('\n')).toContain('추천 업종');
-    expect(answer.advice.join('\n')).toContain('수익 구조');
+    expect(answer.advice.join('\n')).toContain('비교할 역할 특성');
+    expect(answer.advice.join('\n')).toContain('책임과 보상');
+    expect(answer.advice.join('\n')).not.toMatch(/1인 브랜드|상담형 상품|개인 맞춤 리포트|디지털 리포트/);
     expect(answer.analysis.replace(/\s/g, '').length).toBeGreaterThanOrEqual(300);
     expect(answer.advice).toHaveLength(10);
     expect(answer.advice[0]).toMatch(/^1\./);
@@ -157,8 +158,10 @@ describe('saju report question answers', () => {
     expect(companyAnswer.analysis).toContain('바로 퇴사가 답은 아닙니다');
     expect(companyAnswer.advice.join('\n')).toContain('3개월 판단 기준');
     expect(companyAnswer.advice).toHaveLength(10);
-    expect(businessAnswer.analysis).toContain('대표 상품 1개');
-    expect(businessAnswer.advice.join('\n')).toContain('가격 구조');
+    expect(businessAnswer.analysis).toContain('실제 고객 문제');
+    expect(businessAnswer.advice.join('\n')).toContain('원가');
+    expect(businessAnswer.advice.join('\n')).toContain('시장 수요');
+    expect(businessAnswer.analysis + businessAnswer.advice.join('\n')).not.toMatch(/2,900원|9,900원|34,900원|후속 질문권/);
     expect(businessAnswer.advice).toHaveLength(10);
   });
 

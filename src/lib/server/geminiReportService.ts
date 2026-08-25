@@ -95,6 +95,14 @@ export type GeminiDraft = {
 
 const DEFAULT_GEMINI_REQUEST_TIMEOUT_MS = 22000;
 
+export type GeminiUsage = {
+  promptTokenCount: number;
+  candidatesTokenCount: number;
+  thoughtsTokenCount: number;
+  cachedContentTokenCount: number;
+  totalTokenCount: number;
+};
+
 export type ReportResponsePayload = {
   provider: 'gemini' | 'deterministic-fallback';
   reportMode: string;
@@ -103,6 +111,7 @@ export type ReportResponsePayload = {
   debug?: {
     deterministicBasis: ReturnType<typeof buildDeterministicSajuBasis>;
   };
+  usage?: GeminiUsage;
 };
 
 type EnvRecord = Record<string, string | undefined>;
@@ -1181,6 +1190,13 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
   const parsed = (await response.json()) as {
     error?: { message?: string };
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    usageMetadata?: {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+      thoughtsTokenCount?: number;
+      cachedContentTokenCount?: number;
+      totalTokenCount?: number;
+    };
   };
 
   if (!response.ok) {
@@ -1195,7 +1211,17 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
 
   const draft = sanitizeGeminiDraft(JSON.parse(text), baseReport);
   assertGeminiEvidenceReferences(draft, deterministicBasis, baseReport);
-  return stripGeminiEvidenceMetadata(draft);
+  const usage = parsed.usageMetadata;
+  return {
+    draft: stripGeminiEvidenceMetadata(draft),
+    usage: usage ? {
+      promptTokenCount: usage.promptTokenCount || 0,
+      candidatesTokenCount: usage.candidatesTokenCount || 0,
+      thoughtsTokenCount: usage.thoughtsTokenCount || 0,
+      cachedContentTokenCount: usage.cachedContentTokenCount || 0,
+      totalTokenCount: usage.totalTokenCount || 0
+    } : undefined
+  };
 }
 
 export async function generateGeminiSajuReport(body: ReportRequestBody): Promise<ReportResponsePayload> {
@@ -1230,9 +1256,14 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
       : builtReport;
 
   let draft: GeminiDraft | null = null;
+  let usage: GeminiUsage | undefined;
 
   try {
-    draft = await requestGeminiDraft(fallbackReport, deterministicBasis);
+    const result = await requestGeminiDraft(fallbackReport, deterministicBasis);
+    if (result) {
+      draft = result.draft;
+      usage = result.usage;
+    }
   } catch (geminiError) {
     console.error('Gemini report draft failed:', geminiError);
   }
@@ -1250,6 +1281,20 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
   const mergedReport = mergeGeminiDraft(fallbackReport, draft);
   const guardedReport = lockCommercialReportFacts(fallbackReport, mergedReport);
   const customerReport = finalizeCustomerReport(guardedReport);
+  const reportWithUsage = usage && customerReport.engineMeta
+    ? {
+        ...customerReport,
+        engineMeta: {
+          ...customerReport.engineMeta,
+          aiUsage: {
+            provider: 'gemini' as const,
+            model: getEnv().GEMINI_MODEL || 'gemini-2.5-flash',
+            ...usage
+          }
+        }
+      }
+    : customerReport;
+
   assertCustomerReportQuality(customerReport);
 
 
@@ -1257,7 +1302,8 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
     provider: 'gemini',
     reportMode: PREMIUM_SAJU_REPORT_MODE,
     promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
-    report: customerReport,
+    report: reportWithUsage,
+    usage,
     debug: undefined
   };
 }

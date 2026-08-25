@@ -178,6 +178,7 @@ describe('independent yongsin opinions and consensus', () => {
     expect(water?.opposing.some((item) => item.method === 'johu')).toBe(true);
     expect(waterConflict?.evidence.length).toBeGreaterThan(0);
     expect(result.consensus.value.unresolved).toBe(true);
+    expect(result.consensus.value.decisionStatus).toBe('mixed');
     expect(result.consensus.caveats.join(' ')).toContain('확정 용신');
   });
 

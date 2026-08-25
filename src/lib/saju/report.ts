@@ -188,7 +188,20 @@ export interface ReportEngineMeta {
     | 'failed';
   releaseBlockers: string[];
   reviewFlags: string[];
+  infoFlags: string[];
+  yongsinConsensusStatus: 'confirmed' | 'preferred' | 'mixed' | 'deferred';
+  climateTemperature: 'cold' | 'balanced' | 'hot' | null;
+  climateMoisture: 'dry' | 'balanced' | 'wet' | null;
   uncertainty: string[];
+  aiUsage?: {
+    provider: 'gemini';
+    model: string;
+    promptTokenCount: number;
+    candidatesTokenCount: number;
+    thoughtsTokenCount: number;
+    cachedContentTokenCount: number;
+    totalTokenCount: number;
+  };
   helpfulElementSource: 'expert-consensus' | 'legacy-fallback';
 }
 

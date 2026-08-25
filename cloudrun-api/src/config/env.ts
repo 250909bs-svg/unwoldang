@@ -14,6 +14,8 @@ export function loadConfig(env: RuntimeEnv = process.env) {
   const production = env.NODE_ENV === 'production' || Boolean(trimmed(env, 'K_SERVICE'));
   const configuredOrderClaimTtl = numeric(env, 'PAYMENT_ORDER_CLAIM_TTL_MS', 2 * 60 * 60 * 1000);
   const configuredGenerationLockTtl = numeric(env, 'REPORT_GENERATION_LOCK_TTL_MS', 2 * 60 * 1000);
+  const configuredAdminRateWindow = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000);
+  const configuredAdminRateMax = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_MAX', 5);
 
   return {
     port: numeric(env, 'PORT', 8080),
@@ -39,6 +41,12 @@ export function loadConfig(env: RuntimeEnv = process.env) {
     auth: {
       accessTokenTtlMs: numeric(env, 'AUTH_ACCESS_TOKEN_TTL_MS', 30 * 24 * 60 * 60 * 1000),
       adminAccessTokenTtlMs: numeric(env, 'ADMIN_ACCESS_TOKEN_TTL_MS', 12 * 60 * 60 * 1000),
+      adminLoginRateLimitWindowMs: Number.isFinite(configuredAdminRateWindow)
+        ? Math.min(60 * 60 * 1000, Math.max(60 * 1000, configuredAdminRateWindow))
+        : 15 * 60 * 1000,
+      adminLoginRateLimitMax: Number.isFinite(configuredAdminRateMax)
+        ? Math.min(20, Math.max(3, Math.floor(configuredAdminRateMax)))
+        : 5,
       reportAccessSecret: trimmed(env, 'REPORT_ACCESS_SECRET'),
       userAccessSecret: trimmed(env, 'USER_ACCESS_SECRET'),
       adminAccessSecret: trimmed(env, 'ADMIN_ACCESS_SECRET'),

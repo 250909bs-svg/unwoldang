@@ -426,7 +426,7 @@ function TenGodDistributionBoard({ report }: { report: SajuReportData }) {
     <article className="premium-distribution-card ten premium-tengod-board">
       <div className="premium-distribution-head">
         <span>十星</span>
-        <h3>십성 분포</h3>
+        <h3>지장간 포함 십성 구성</h3>
       </div>
       <div className="premium-tengod-lead">
         <span>상위 흐름</span>
@@ -1034,8 +1034,32 @@ function buildCautionSceneBank(report: SajuReportData) {
 
 function buildTenGodSceneDetail(label: string, report: SajuReportData) {
   const core = describeTenGodDepth(label);
+  const scene = label.includes('비견') || label.includes('겁재')
+    ? {
+        life: '협업할 때 역할과 소유권이 분명하면 추진력이 살아납니다. 반대로 책임 범위가 겹치면 양보보다 주도권을 먼저 확인하는 장면이 생깁니다.',
+        emotion: '가까운 사이에서도 존중받지 못한다고 느끼면 경쟁심이나 거리 두기로 반응할 수 있습니다. 감정을 쌓기 전에 결정권과 기대치를 말로 맞추는 편이 좋습니다.'
+      }
+    : label.includes('식신') || label.includes('상관')
+      ? {
+          life: '설명·제작·발표처럼 생각을 밖으로 꺼내는 일에서 강점이 보입니다. 다만 답답함이 쌓인 날에는 정확한 말이 날카로운 말로 들릴 수 있습니다.',
+          emotion: '좋고 싫음이 말투와 반응 속도에 드러납니다. 표현을 참다가 한 번에 쏟기보다 사실과 감정을 나눠 말할 때 관계 손실이 줄어듭니다.'
+        }
+      : label.includes('재')
+        ? {
+            life: '가격·일정·교환 조건이 분명한 자리에서 현실 감각이 살아납니다. 호의로 시작한 일을 계약 없이 늘리면 수익과 체력이 함께 새기 쉽습니다.',
+            emotion: '관계에서도 말보다 약속 이행과 생활 리듬을 봅니다. 상대의 마음을 비용과 효율만으로 판단하지 않도록 감정 확인을 따로 두는 것이 필요합니다.'
+          }
+        : label.includes('관')
+          ? {
+              life: '책임·규칙·평가 기준이 분명한 환경에서 신뢰를 얻습니다. 기준이 모호하면 스스로 더 엄격한 규칙을 만들어 과로하기 쉽습니다.',
+              emotion: '갈등이 생기면 옳고 그름을 먼저 정리하려는 경향이 있습니다. 결론 전에 상대가 느낀 압박을 확인하면 관계가 판정의 장으로 변하는 일을 막을 수 있습니다.'
+            }
+          : {
+              life: '자료를 읽고 패턴을 연결해 자기 방식으로 재해석할 때 집중력이 살아납니다. 준비가 길어지면 실행 시점을 놓칠 수 있어 마감 기준이 필요합니다.',
+              emotion: '마음을 바로 드러내기보다 혼자 의미를 해석하는 시간이 깁니다. 추측이 결론이 되기 전에 상대에게 확인하면 회복까지 오래 끌지 않을 수 있습니다.'
+            };
 
-  return `${core}\n\n생활 장면: 좋은 자리에서는 말이 많아지기보다 정리가 빨라집니다. “이건 여기까지, 이건 다음에”처럼 선을 그을 때 사람들이 ${report.customerName}님을 믿고 맡깁니다.\n\n감정 흐름: 좋아도 바로 표현하지 않고 먼저 관찰합니다. 마음이 식으면 다시 설득해도 회복이 오래 걸리지 않습니다. 겉으로는 차분해 보여도 속으로는 이미 결론을 내려놓는 편입니다.`;
+  return `${core}\n\n생활 장면: ${scene.life}\n\n감정 흐름: ${scene.emotion} ${report.customerName}님은 이 패턴을 알아차리고 한 번 더 확인할 때 십성의 장점을 안정적으로 쓸 수 있습니다.`;
 }
 
 function buildEmotionalFlowSection(report: SajuReportData): ReportSection {
@@ -4406,27 +4430,27 @@ function getSignatureCareerFields(report: SajuReportData) {
   const fields = new Set<string>();
 
   if (labels.some((label) => label.includes('식') || label.includes('상'))) {
-    fields.add('콘텐츠 기획·자료 제작·강의·교육');
+    fields.add('아이디어를 설명하고 결과물로 완성하는 역할');
   }
 
   if (labels.some((label) => label.includes('재'))) {
-    fields.add('상품 설계·영업 전략·고객관리·중개형 서비스');
+    fields.add('예산·일정·거래 조건을 조율하는 역할');
   }
 
   if (labels.some((label) => label.includes('관'))) {
-    fields.add('운영관리·PM·행정·프로세스 설계');
+    fields.add('운영·프로젝트·품질 책임이 분명한 역할');
   }
 
   if (labels.some((label) => label.includes('인'))) {
-    fields.add('상담·코칭·연구·문서화·지식 서비스');
+    fields.add('연구·문서화·교육·품질 검토 역할');
   }
 
   if (labels.some((label) => label.includes('비') || label.includes('겁'))) {
-    fields.add('1인 브랜드·독립 프로젝트·프리랜서형 업무');
+    fields.add('개별 책임 범위가 분명한 프로젝트 리드 역할');
   }
 
   if (!fields.size) {
-    fields.add('상담·분석·기획·운영처럼 기준을 세우고 문제를 정리해주는 일');
+    fields.add('기준을 세우고 문제를 분석·기획·운영하는 역할');
   }
 
   return Array.from(fields).slice(0, 4);
@@ -4521,10 +4545,10 @@ function getSignatureMoneyCareerVerdict(report: SajuReportData) {
 
 function getSignatureBestIncomeModel(report: SajuReportData, fields: string[]) {
   const topTenGod = report.tenGods[0]?.label || '';
-  const primaryField = fields[0] || '상담·분석·기획형 서비스';
+  const primaryField = fields[0] || '분석·기획·운영 역할';
 
   if (topTenGod.includes('식') || topTenGod.includes('상')) {
-    return `가장 잘 맞는 수입 방식은 ${withObjectParticle(fields[0] || '콘텐츠·상담·분석형 업무')} 눈에 보이는 결과물로 남기는 것입니다. 말로만 잘하는 사람보다 제안서, 포트폴리오, 강의안, 분석표, 운영 매뉴얼처럼 “이 사람이 뭘 해냈는지” 바로 보이는 형태가 돈으로 바뀝니다.`;
+    return `수입 안정성을 높이려면 ${withObjectParticle(fields[0] || '설명·기획·분석 역할')} 눈에 보이는 성과로 남겨야 합니다. 현재 직무의 제안서, 포트폴리오, 개선 전후 수치처럼 실제로 해낸 일을 증빙하면 보상 협상에 도움이 됩니다.`;
   }
 
   if (topTenGod.includes('재')) {
@@ -4535,7 +4559,7 @@ function getSignatureBestIncomeModel(report: SajuReportData, fields: string[]) {
     return `가장 잘 맞는 수입 방식은 책임, 검수, 운영, 관리 역할을 맡아 안정적인 자리나 장기 프로젝트로 가져가는 것입니다. 한 번 크게 버는 일보다 신뢰가 쌓여 반복적으로 맡기는 일이 맞습니다.`;
   }
 
-  return `가장 잘 맞는 수입 방식은 ${withObjectParticle(primaryField)} 자기 기준이 보이는 결과물로 만드는 것입니다. 회사 안에서는 보고서·기획안·운영표, 프리랜서나 사업에서는 포트폴리오·제안서·체크리스트가 돈을 부릅니다.`;
+  return `수입 안정성을 높이려면 ${withObjectParticle(primaryField)} 객관적인 성과로 연결해야 합니다. 소속 형태와 무관하게 맡은 책임, 개선한 지표, 완료한 결과를 기록해 보상 조건을 비교하세요.`;
 }
 
 function buildSignatureQuestionAnswer(
@@ -4628,13 +4652,13 @@ function buildSignatureQuestionAnswer(
       ...qa,
       title: '재물운보다 직업운을 먼저 잡아야 돈이 남습니다',
       analysis:
-        `${getSignatureMoneyCareerVerdict(report)} ${basisText} ${report.dayMaster} 일간은 판을 보고 기준을 세우는 쪽이고, ${report.pillars.month} 월령은 결과물, 말, 분석, 기획이 밖으로 드러나는 자리입니다. 여기에 ${dominantLabel} 흐름이 앞에 있으면 남 밑에서 시키는 대로 오래 버티는 것보다, 본인이 기준을 세워 “무엇을 해주고 얼마를 받을지”를 정할 때 돈이 붙습니다. ${sharpPattern}`,
+        `${getSignatureMoneyCareerVerdict(report)} ${basisText} ${report.dayMaster} 일간은 판을 보고 기준을 세우는 쪽이고, ${report.pillars.month} 월령은 결과물, 말, 분석, 기획이 밖으로 드러나는 자리입니다. 여기에 ${dominantLabel} 흐름이 앞에 있으면 지시만 따르는 자리보다 판단 기준과 성과 책임이 분명한 역할에서 강점이 드러납니다. ${sharpPattern}`,
       advice: [
-        `1순위는 직업운입니다. 단, 취업운이 아니라 “내 전문성을 돈 받는 형태로 고정하는 직업운”입니다. 추천 축은 ${fields.join(', ')}입니다.`,
+        `1순위는 직업운입니다. 특정 업종보다 현재 경력에서 검증할 역할 특성은 ${fields.join(', ')}입니다.`,
         incomeModel,
         `재물운은 투자 한 방보다 “내 일이 얼마짜리로 인정받는가”에서 갈립니다. 직장이라면 역할, 연봉 협상, 성과 기록을 분명히 남기고, 프리랜서나 사업이라면 단가, 제공 범위, 마감, 수정 횟수를 먼저 정해야 ${report.currentDayun.name} 대운의 ${getDayunPressureText(report)} 흐름이 실제 돈으로 남습니다.`,
-        '피해야 할 방식은 무한 수정, 말로만 정한 동업, 지인 할인, 감정노동 많은 저가 상담, 성과 기준 없는 반복 업무입니다. 이런 일은 바쁘게 만들지만 통장에 남기지 못합니다.',
-        `${bestMonthText}에는 내 실력이 보이는 결과물 하나를 밖으로 꺼내고, ${watchMonthText}에는 퇴사·투자·동업 같은 되돌리기 어려운 결정을 미루세요. 오늘은 “내가 돈을 받을 수 있는 역할” 1개를 정하고 대가, 범위, 마감, 책임선을 한 화면에 적는 게 먼저입니다.`
+        '피해야 할 방식은 책임만 늘고 권한은 없는 자리, 구두로만 정한 조건, 성과 기준이 없는 반복 업무입니다. 바쁘다는 느낌과 실제 보상은 따로 확인해야 합니다.',
+        `${bestMonthText}에는 증빙 가능한 성과 하나를 정리하고, ${watchMonthText}에는 퇴사·투자·동업 같은 되돌리기 어려운 결정을 미루세요. 오늘은 관심 역할 하나의 대가, 범위, 마감, 책임선을 실제 공고나 계약서에서 확인하는 게 먼저입니다.`
       ]
     };
   }
@@ -4647,13 +4671,13 @@ function buildSignatureQuestionAnswer(
       ...qa,
       title: '먹고사는 방식은 직업명이 아니라 결과물로 정해야 합니다',
       analysis:
-        `${basisText} 결론부터 말하면, ${report.customerName}님은 남이 정한 틀 안에서 오래 버티는 일보다 “기준을 세우고, 복잡한 문제를 정리해서, 결과물로 보여주는 일”이 맞습니다. ${report.dayMaster} 일간은 판을 보고 구조를 잡는 힘이 강하고, ${report.pillars.month} 월령과 ${dominantLabel} 흐름은 말·문서·분석·상담·운영으로 실력이 드러날 때 돈이 붙는 쪽입니다. 현재 ${report.currentDayun.name} 대운에서는 제안과 사람은 늘 수 있지만, 가격과 제공 범위가 흐리면 일만 많고 남는 돈이 적어집니다.`,
+        `${basisText} 결론부터 말하면, ${report.customerName}님은 지시만 오래 따르는 일보다 기준을 세우고 복잡한 문제를 정리해 결과로 보여주는 역할에서 강점이 드러납니다. ${report.dayMaster} 일간, ${report.pillars.month} 월령과 ${dominantLabel} 흐름은 설명·문서·분석·운영 역량을 시사하지만, 실제 적합성은 경력과 업무 환경을 함께 봐야 합니다. 현재 ${report.currentDayun.name} 대운에서는 제안이 늘어도 역할과 보상 조건이 흐리면 피로가 먼저 쌓일 수 있습니다.`,
       advice: [
-        `우선순위 업종은 ${fields.join(', ')}입니다. 직업명 하나보다 상담형, 분석형, 기획형, 콘텐츠형, 운영형 중 어디서 덜 지치고 오래 설명할 수 있는지 보세요.`,
+        `먼저 비교할 역할 특성은 ${fields.join(', ')}입니다. 업종 이름보다 지금까지 성과가 났고 오래 유지할 수 있었던 업무 장면과 대조하세요.`,
         incomeModel,
-        '피해야 할 일은 무한 수정, 감정노동이 많은 저가 서비스, 말로만 정한 동업, 급한 영업직, 성과 기준이 없는 반복 업무입니다.',
-        `${bestMonthText}에는 내 실력이 보이는 결과물 하나를 밖으로 꺼내고, ${watchMonthText}에는 퇴사·투자·동업 같은 큰 결정을 미루세요.`,
-        '오늘 할 일은 하나입니다. 내가 돈을 받을 수 있는 역할 1개를 정하고 대가, 범위, 마감 시간, 책임선을 한 화면에 적으세요.'
+        '피해야 할 일은 책임만 늘고 권한은 없는 자리, 구두 약속만 있는 협업, 성과 기준이 없는 반복 업무입니다.',
+        `${bestMonthText}에는 증빙 가능한 성과를 정리하고, ${watchMonthText}에는 퇴사·투자·동업 같은 큰 결정을 미루세요.`,
+        '오늘은 관심 역할 하나의 실제 채용 공고를 열어 대가, 범위, 근무시간, 책임선을 현재 자리와 비교하세요.'
       ]
     };
   }
@@ -4663,10 +4687,10 @@ function buildSignatureQuestionAnswer(
       ...qa,
       title: '돈은 들어오는 운보다 남는 구조가 먼저입니다',
       analysis:
-        `질문 "${question}"은 돈이 생기느냐보다 어디서 새느냐를 봐야 합니다. ${report.currentDayun.name} 대운에서는 사람, 제안, 결제, 이동이 같이 늘 수 있지만 기준이 없으면 수입보다 피로가 먼저 남습니다. ${dominantLabel} 흐름은 가격표, 정산일, 제공 범위가 분명할 때 돈으로 바뀝니다.`,
+        `질문 "${question}"은 돈이 생기느냐보다 어디서 새느냐를 봐야 합니다. ${report.currentDayun.name} 대운에서는 사람, 제안, 지출, 이동이 같이 늘 수 있지만 기준이 없으면 수입보다 피로가 먼저 남습니다. ${dominantLabel} 흐름은 예산, 정산일, 계약 조건이 분명할 때 안정적으로 활용할 수 있습니다.`,
       advice: [
         '가까운 사람 부탁, 급한 할인, 말로만 정한 정산은 돈을 새게 만듭니다.',
-        '투자보다 먼저 현금 방어, 고정비, 반복 매출, 환불 기준을 정리하세요.',
+        '투자보다 먼저 비상자금, 고정비, 부채, 세후 현금 흐름을 정리하세요.',
         `${helpfulText} 기운은 기록과 반복에서 살아납니다. 하루 지출을 감정 소비, 관계 지출, 일 지출로 나눠 적으세요.`,
         cautionText
       ]
@@ -6382,6 +6406,11 @@ export default function Report() {
       return { ...finalized, pastLifeProfile: buildPastLifeProfile(finalized, reportInput) };
     };
 
+    if (expandedReport.serviceId === 'general-signature') {
+      // Keep preview and paid reports on the same deterministic content path.
+      return finalizeCustomerReport(finalize(expandedReport));
+    }
+
     if (expandedReport.serviceId === 'concern-reading') {
       nextReport = buildConcernReadingReportV2(expandedReport, { preserveQuestionAnswers: preserveAiQuestions });
       return finalize(nextReport);
@@ -7469,10 +7498,10 @@ body {
                 <h3 id="gs-action-horizons-title">오늘부터 90일까지</h3>
                 <ol>
                   {[
-                    ['오늘', report.actionPlan.dos[0] || report.actionPlan.priorities[0]],
-                    ['7일', report.actionPlan.priorities[0]],
-                    ['30일', report.actionPlan.priorities[1]],
-                    ['90일', report.actionPlan.priorities[2]]
+                    ['오늘 안에', report.actionPlan.dos[0] || report.actionPlan.priorities[0]],
+                    ['7일 안에', report.actionPlan.priorities[0]],
+                    ['30일 안에', report.actionPlan.priorities[1]],
+                    ['90일 안에', report.actionPlan.priorities[2]]
                   ].filter((item): item is [string, string] => Boolean(item[1])).map(([label, body]) => (
                     <li key={label}>
                       <strong>{label}</strong>

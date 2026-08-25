@@ -22,6 +22,7 @@ import { createRouter } from './http/router.ts';
 import { createAuthMiddleware } from './middleware/auth.ts';
 import { createCorsMiddleware } from './middleware/cors.ts';
 import { createReportRateLimit } from './middleware/rateLimit.ts';
+import { createAdminLoginRateLimit } from './middleware/adminLoginRateLimit.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
@@ -99,10 +100,12 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
   const healthService = new HealthService(config);
   const applyCors = createCorsMiddleware(config);
   const enforceReportRateLimit = createReportRateLimit(config);
+  const adminLoginRateLimit = createAdminLoginRateLimit(config);
 
   return createRouter({
     applyCors,
     enforceReportRateLimit,
+    adminLoginRateLimit,
     auth,
     health: healthService,
     reports: reportService,

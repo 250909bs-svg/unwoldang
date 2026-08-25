@@ -143,9 +143,18 @@ export function buildYongsinConsensus(opinions: YongsinOpinion[]): RuleResult<Co
     : top && top.agreementCount >= 2 && directConflicts.length === 0
       ? 'supported'
       : 'conditional';
+  const decisionStatus = primaryCandidates.length === 0
+    ? 'deferred'
+    : directConflicts.length > 0 || narrowMargin || primaryCandidates.length > 1
+      ? 'mixed'
+      : top && top.agreementCount >= 2 && confidenceScore >= 0.65 && conflicts.length === 0
+        ? 'confirmed'
+        : 'preferred';
   const summary = primaryCandidates.length === 0
     ? '독립 용신법을 합성했으나 우선 후보를 정할 근거가 충분하지 않다.'
-    : `${primaryCandidates.join('·')}을(를) 우선 검토 후보로 제시하되${unresolved ? ' 충돌과 근접 점수를 함께 검토해야 한다.' : ' 복수 관점의 일치 근거가 있다.'}`;
+    : decisionStatus === 'confirmed'
+      ? `${primaryCandidates.join('·')} 기운은 복수 관점이 같은 방향을 가리켜 우선 활용 기준으로 볼 수 있다.`
+      : `${primaryCandidates.join('·')} 기운은 우선 검토 후보이며${unresolved ? ' 충돌과 근접 점수를 함께 살펴야 한다.' : ' 다른 관점과 함께 조건부로 활용한다.'}`;
   const aggregateEvidence = [
     makeEvidence(
       rule,
@@ -177,6 +186,7 @@ export function buildYongsinConsensus(opinions: YongsinOpinion[]): RuleResult<Co
     ...rule,
     status,
     value: {
+      decisionStatus,
       summary,
       ranking,
       primaryCandidates,

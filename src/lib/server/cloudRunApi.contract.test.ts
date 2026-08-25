@@ -1,4 +1,5 @@
 import { createServer, type Server } from 'node:http';
+import { createHash } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
@@ -243,7 +244,7 @@ describe('Cloud Run API HTTP contracts', () => {
         method: 'POST',
         paths: ['/admin/login', '/api/admin/login'],
         status: 503,
-        message: 'ADMIN_CREDENTIAL_HASH is not configured.'
+        message: '관리자 로그인을 사용할 수 없습니다.'
       },
       {
         method: 'GET',
@@ -267,6 +268,70 @@ describe('Cloud Run API HTTP contracts', () => {
       }
     }
   });
+  it('rate-limits failed admin logins independently by client IP and resets after success', async () => {
+    const adminId = 'release-admin';
+    const password = 'correct-password';
+    const credentialHash = createHash('sha256').update(`${adminId}:${password}`).digest('hex');
+    const config = loadConfig({
+      NODE_ENV: 'development',
+      ALLOW_UNVERIFIED_REPORTS: 'true',
+      ADMIN_ACCESS_SECRET: 'fixture-admin-secret',
+      ADMIN_CREDENTIAL_HASH: credentialHash,
+      ADMIN_LOGIN_RATE_LIMIT_MAX: '3',
+      ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS: '60000',
+      REPORT_RATE_LIMIT_MAX: '100'
+    });
+    const running = await startApp({
+      config,
+      fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
+      reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator']
+    });
+    const login = (ip: string, candidatePassword: string) => fetch(`${running.baseUrl}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': ip },
+      body: JSON.stringify({ adminId, password: candidatePassword })
+    });
+
+    try {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const failed = await login('198.51.100.10', 'wrong-password');
+        expect(failed.status).toBe(401);
+        expect(await readJson(failed)).toEqual({
+          message: '아이디 또는 비밀번호가 올바르지 않습니다.'
+        });
+      }
+
+      const limited = await login('198.51.100.10', 'wrong-password');
+      expect(limited.status).toBe(429);
+      expect(await readJson(limited)).toEqual({
+        message: '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+      });
+
+      const otherIp = await login('198.51.100.11', 'wrong-password');
+      expect(otherIp.status).toBe(401);
+
+      const resetIp = '198.51.100.12';
+      expect((await login(resetIp, 'wrong-password')).status).toBe(401);
+      expect((await login(resetIp, password)).status).toBe(200);
+      expect((await login(resetIp, 'wrong-password')).status).toBe(401);
+
+      const reportResponse = await fetch(`${running.baseUrl}/api/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Forwarded-For': '198.51.100.10'
+        },
+        body: JSON.stringify({
+          serviceId: 'general-signature',
+          payload: { fixture: true }
+        })
+      });
+      expect(reportResponse.status).toBe(200);
+    } finally {
+      await closeServer(running.server);
+    }
+  });
+
 
   it('rejects malformed JSON before route-specific processing', async () => {
     const response = await fetch(`${productionBaseUrl}/api/report`, {

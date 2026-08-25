@@ -189,7 +189,10 @@ export interface ConsensusConflict {
   evidence: Evidence[];
 }
 
+export type YongsinConsensusStatus = 'confirmed' | 'preferred' | 'mixed' | 'deferred';
+
 export interface ConsensusAssessment {
+  decisionStatus: YongsinConsensusStatus;
   summary: string;
   ranking: ConsensusElement[];
   primaryCandidates: FiveElement[];

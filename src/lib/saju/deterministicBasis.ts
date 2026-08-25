@@ -385,11 +385,10 @@ export function buildDeterministicSajuBasis(
   const consensus = expertInterpretation?.consensus;
   const promoteExpertConsensus = Boolean(
     consensus &&
+    consensus.value.decisionStatus === 'confirmed' &&
     consensus.status === 'supported' &&
     !consensus.value.unresolved &&
-    consensus.confidence.score >= 0.55 &&
-    consensus.value.primaryCandidates.length > 0 &&
-    consensus.value.primaryCandidates.length <= 2
+    consensus.value.primaryCandidates.length === 1
   );
   const expertCautiousElements = consensus?.value.ranking
     .filter((item) => item.netScore <= -0.12)
@@ -530,7 +529,7 @@ export function buildDeterministicSajuBasis(
     ...(dayunSelection.phase === 'pre-dayun'
       ? ['첫 대운 진입 전 구간이므로 현재 대운 없이 원국·세운·월운만 분석했습니다.']
       : []),
-    ...(expertInterpretation?.consensus.value.unresolved
+    ...(expertInterpretation?.consensus.value.decisionStatus !== 'confirmed'
       ? ['용신 학설 간 충돌 또는 근접 후보가 있어 합성 결과를 확정 용신으로 승격하지 않았습니다.']
       : []),
     ...(temporalAnalysis?.uncertainty || []),
@@ -597,8 +596,7 @@ export function buildDeterministicSajuBasis(
     calendarVerification,
     interpretationResolved: Boolean(
       expertInterpretation &&
-      expertInterpretation.consensus.status === 'supported' &&
-      !expertInterpretation.consensus.value.unresolved
+      expertInterpretation.consensus.value.decisionStatus === 'confirmed'
     ),
     helpfulElementSource: promoteExpertConsensus ? 'expert-consensus' : 'legacy-fallback',
     evidenceCount: evidenceTotal

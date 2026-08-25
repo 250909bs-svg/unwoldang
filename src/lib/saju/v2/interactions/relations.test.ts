@@ -177,4 +177,23 @@ describe('v2 relation evidence engine', () => {
     const reverse = relationNames([personB, personA]).sort();
     expect(reverse).toEqual(forward);
   });
+
+  it('distinguishes a two-branch punishment candidate from the complete three-branch structure', () => {
+    const pair = detectRelations([
+      component({ tg: 0, dz: 2 }, 'branch'),
+      component({ tg: 0, dz: 5 }, 'branch')
+    ]);
+    const pairPunishment = pair.find((relation) => relation.relation === 'punishment');
+    expect(pairPunishment?.subtype).toBe('인·사 형 작용 후보');
+    expect(pairPunishment?.uncertainty.join(' ')).toContain('세 글자');
+    expect(pairPunishment?.subtype).not.toContain('무은지형');
+
+    const complete = detectRelations([
+      component({ tg: 0, dz: 2 }, 'branch'),
+      component({ tg: 0, dz: 5 }, 'branch'),
+      component({ tg: 0, dz: 8 }, 'branch')
+    ]);
+    expect(complete.some((relation) => relation.subtype === '인·사·신 삼형 구조 완성')).toBe(true);
+    expect(complete.some((relation) => relation.subtype?.includes('무은지형'))).toBe(false);
+  });
 });

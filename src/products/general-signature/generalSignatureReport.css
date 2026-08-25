@@ -561,3 +561,91 @@
 .general-signature-report .premium-table-wrap {
   overscroll-behavior-inline: contain;
 }
+
+/* The four-pillar board is a compact data visualization, not body copy. */
+.general-signature-report .premium-wonguk-column > p {
+  min-width: 0;
+  margin-top: 4px;
+  color: #665f54;
+  font-size: clamp(0.69rem, 2.8vw, 0.8rem) !important;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  white-space: normal;
+}
+
+.general-signature-report .premium-wonguk-ten-god {
+  min-height: 2.9em;
+  align-content: center;
+  color: #73582f;
+}
+
+@media (max-width: 359px) {
+  .general-signature-report .premium-wonguk-board {
+    padding: 16px 10px 12px;
+    border-radius: 22px;
+  }
+
+  .general-signature-report .premium-wonguk-frame {
+    padding: 10px 6px;
+    border-radius: 18px;
+  }
+
+  .general-signature-report .premium-wonguk-columns {
+    gap: 4px;
+  }
+
+  .general-signature-report .premium-wonguk-chip {
+    min-height: 78px;
+    padding-inline: 2px;
+    border-radius: 16px;
+  }
+}
+
+.general-signature-report .premium-element-compass-core {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 320px;
+  padding-inline: 16px;
+}
+
+.general-signature-report .premium-element-compass-core strong,
+.general-signature-report .premium-element-compass-core em {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  white-space: normal;
+}
+
+@media (max-width: 430px) {
+  .general-signature-report .premium-element-compass .premium-element-medallions {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .general-signature-report .premium-element-compass .premium-element-medallion {
+    grid-column: span 2;
+    min-height: 108px;
+    padding-inline: 5px;
+    transform: none;
+  }
+
+  .general-signature-report .premium-element-compass .premium-element-medallion:nth-child(4) {
+    grid-column: 2 / span 2;
+  }
+
+  .general-signature-report .premium-element-compass .premium-element-medallion:nth-child(5) {
+    grid-column: 4 / span 2;
+  }
+
+  .general-signature-report .premium-element-compass .premium-element-medallion em,
+  .general-signature-report .premium-element-compass .premium-element-medallion small {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding-inline: 5px;
+    text-align: center;
+    white-space: normal;
+  }
+}

@@ -66,6 +66,7 @@ export interface CommercialReleaseAudit {
   externalCalendar: ExternalCalendarAudit;
   blockers: string[];
   reviewFlags: string[];
+  infoFlags: string[];
   passedChecks: string[];
   claimPolicy: 'reproducible-calculation-not-predictive-accuracy';
 }
@@ -195,6 +196,7 @@ export function buildCommercialReleaseAudit(
 ): CommercialReleaseAudit {
   const blockers: string[] = [];
   const reviewFlags: string[] = [];
+  const infoFlags: string[] = [];
   const passedChecks: string[] = [];
   const externalCalendar = auditExternalCalendar(input);
   const checks: boolean[] = [];
@@ -235,7 +237,7 @@ export function buildCommercialReleaseAudit(
   if (externalCalendar.status === 'mismatched') {
     blockers.push(externalCalendar.message);
   } else if (!externalVerified) {
-    reviewFlags.push(externalCalendar.message);
+    infoFlags.push(externalCalendar.message);
   }
 
   check(input.evidenceCount > 0, '해석 근거 레코드가 존재합니다.');
@@ -264,6 +266,7 @@ export function buildCommercialReleaseAudit(
     externalCalendar,
     blockers,
     reviewFlags,
+    infoFlags,
     passedChecks,
     claimPolicy: 'reproducible-calculation-not-predictive-accuracy'
   };

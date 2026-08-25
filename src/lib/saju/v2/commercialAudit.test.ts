@@ -62,11 +62,12 @@ describe('commercial release audit', () => {
     expect(audit.blockers.join(' ')).toContain('일치하지 않습니다');
   });
 
-  it('requires manual review when external verification is unavailable', () => {
+  it('records unavailable external verification as INFO without blocking a stable solar chart', () => {
     const audit = buildCommercialReleaseAudit(makeInput({ calendarVerification: undefined }));
 
     expect(audit.externalCalendar.status).toBe('not-configured');
-    expect(audit.decision).toBe('manual-review-required');
-    expect(audit.reviewFlags.length).toBeGreaterThan(0);
+    expect(audit.decision).toBe('eligible');
+    expect(audit.reviewFlags).toEqual([]);
+    expect(audit.infoFlags).toContain(audit.externalCalendar.message);
   });
 });

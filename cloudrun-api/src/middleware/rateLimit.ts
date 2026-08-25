@@ -5,8 +5,11 @@ import { ReportRequestError } from '../contracts/errors.ts';
 type RateLimitBucket = { count: number; resetAt: number };
 
 function getClientIp(req: IncomingMessage) {
-  const forwardedFor = String(req.headers['x-forwarded-for'] || '').split(',')[0]?.trim();
-  return forwardedFor || req.socket?.remoteAddress || 'unknown';
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',').map((value) => value.trim()).filter(Boolean);
+  const trustedClient = forwarded.length >= 2
+    ? forwarded[forwarded.length - 2]
+    : forwarded[0];
+  return trustedClient || req.socket?.remoteAddress || 'unknown';
 }
 
 export function createReportRateLimit(config: AppConfig) {
