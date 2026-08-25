@@ -10,6 +10,12 @@ export type KasiSolarTerm = {
   date: string;
 };
 
+export type KasiCapabilityVerification = {
+  enabled: boolean;
+  status: 'disabled' | 'verified' | 'failed' | 'skipped';
+  message: string;
+};
+
 export type KasiCalendarVerification = {
   provider: 'KASI';
   enabled: boolean;
@@ -20,6 +26,8 @@ export type KasiCalendarVerification = {
   originalIsLeapMonth: boolean;
   normalizedCalendar: Calendar;
   normalizedSolarDate?: string;
+  lunarCalendarVerification: KasiCapabilityVerification;
+  solarTermVerification: KasiCapabilityVerification;
   lunar?: {
     year?: string;
     month?: string;
@@ -46,9 +54,24 @@ function getEnv() {
   return maybeProcess.process?.env ?? {};
 }
 
-function getKasiServiceKey() {
-  const env = getEnv();
-  return env.KASI_SERVICE_KEY || env.DATA_GO_KR_SERVICE_KEY || env.PUBLIC_DATA_SERVICE_KEY || '';
+function firstConfiguredKey(...values: Array<string | undefined>) {
+  return values.map((value) => value?.trim() || '').find(Boolean) || '';
+}
+
+function getLegacyKasiServiceKey(env: EnvRecord) {
+  return firstConfiguredKey(
+    env.KASI_SERVICE_KEY,
+    env.DATA_GO_KR_SERVICE_KEY,
+    env.PUBLIC_DATA_SERVICE_KEY
+  );
+}
+
+function getKasiLunarServiceKey(env: EnvRecord) {
+  return firstConfiguredKey(env.KASI_LUNAR_SERVICE_KEY, getLegacyKasiServiceKey(env));
+}
+
+function getKasiSpecialDayServiceKey(env: EnvRecord) {
+  return firstConfiguredKey(env.KASI_SPECIALDAY_SERVICE_KEY, getLegacyKasiServiceKey(env));
 }
 
 function getKasiRequestTimeoutMs() {
@@ -95,6 +118,19 @@ function ymd(year: string | number | undefined, month: string | number | undefin
   return `${year}-${twoDigit(month)}-${twoDigit(day)}`;
 }
 
+function encodeServiceKeyForQuery(serviceKey: string) {
+  const trimmed = serviceKey.trim();
+
+  try {
+    // data.go.kr exposes both a decoded key and an already URL-encoded key.
+    // Canonicalizing one layer lets both forms produce the same query value
+    // without turning `%2B` into `%252B`.
+    return encodeURIComponent(decodeURIComponent(trimmed));
+  } catch {
+    return encodeURIComponent(trimmed);
+  }
+}
+
 function buildKasiUrl(endpoint: string, method: string, serviceKey: string, params: Record<string, string | number>) {
   const query = new URLSearchParams({
     ...Object.fromEntries(Object.entries(params).map(([key, value]) => [key, String(value)])),
@@ -102,8 +138,7 @@ function buildKasiUrl(endpoint: string, method: string, serviceKey: string, para
     numOfRows: '100'
   });
 
-  // Public data portal keys are often copied in an already encoded form.
-  const encodedKey = serviceKey.includes('%') ? serviceKey : encodeURIComponent(serviceKey);
+  const encodedKey = encodeServiceKeyForQuery(serviceKey);
   return `${endpoint}/${method}?ServiceKey=${encodedKey}&${query.toString()}`;
 }
 
@@ -127,7 +162,7 @@ function itemList(value: unknown): KasiApiItem[] {
   };
 
   const resultCode = response.response?.header?.resultCode;
-  if (resultCode && resultCode !== '00') {
+  if (resultCode && String(resultCode) !== '00') {
     throw new Error(response.response?.header?.resultMsg || `KASI API error ${resultCode}`);
   }
 
@@ -138,6 +173,69 @@ function itemList(value: unknown): KasiApiItem[] {
   }
 
   return Array.isArray(item) ? item : [item];
+}
+
+function decodeXmlText(value: string) {
+  return value
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .trim();
+}
+
+function xmlTagValue(xml: string, tag: string) {
+  const match = xml.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+  if (!match) {
+    return undefined;
+  }
+
+  const cdata = match[1].match(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/i);
+  return decodeXmlText(cdata ? cdata[1] : match[1]);
+}
+
+function xmlItemList(xml: string): KasiApiItem[] {
+  const resultCode = xmlTagValue(xml, 'resultCode') || xmlTagValue(xml, 'returnReasonCode');
+  const resultMessage = xmlTagValue(xml, 'resultMsg')
+    || xmlTagValue(xml, 'resultMag')
+    || xmlTagValue(xml, 'returnAuthMsg')
+    || xmlTagValue(xml, 'errMsg');
+
+  if (resultCode && resultCode !== '00' && resultCode !== '0') {
+    throw new Error(resultMessage || `KASI API error ${resultCode}`);
+  }
+
+  const blocks = xml.match(/<item(?:\s[^>]*)?>[\s\S]*?<\/item>/gi) || [];
+  return blocks.map((block) => {
+    const item: KasiApiItem = {};
+    const leafTag = /<([A-Za-z][\w.-]*)(?:\s[^>]*)?>(?:<!\[CDATA\[([\s\S]*?)\]\]>|([^<]*))<\/\1>/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = leafTag.exec(block)) !== null) {
+      item[match[1]] = decodeXmlText(match[2] ?? match[3] ?? '');
+    }
+
+    return item;
+  });
+}
+
+function parseKasiItems(text: string) {
+  const trimmed = text.replace(/^\uFEFF/, '').trim();
+
+  if (trimmed.startsWith('<')) {
+    return xmlItemList(trimmed);
+  }
+
+  try {
+    return itemList(JSON.parse(trimmed));
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error('KASI API returned an unsupported response. Check the service key, API approval, and response format.');
+    }
+
+    throw error;
+  }
 }
 
 async function requestKasiItems(endpoint: string, method: string, serviceKey: string, params: Record<string, string | number>) {
@@ -158,7 +256,7 @@ async function requestKasiItems(endpoint: string, method: string, serviceKey: st
       throw new Error('KASI API request timed out. Internal saju calendar engine was used.');
     }
 
-    throw error;
+    throw new Error('KASI API network request failed.');
   } finally {
     clearTimeout(timeoutId);
   }
@@ -169,15 +267,7 @@ async function requestKasiItems(endpoint: string, method: string, serviceKey: st
     throw new Error(`KASI API request failed: ${response.status}`);
   }
 
-  try {
-    return itemList(JSON.parse(text));
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error('KASI API returned a non-JSON response. Check the service key and API approval.');
-    }
-
-    throw error;
-  }
+  return parseKasiItems(text);
 }
 
 function isLeapMatch(item: KasiApiItem, expectedLeap: boolean) {
@@ -253,118 +343,213 @@ async function getSolarTermsForMonth(year: number, month: number, serviceKey: st
     .filter((item) => item.name && item.date);
 }
 
-function disabledVerification(formData: Partial<IntakeFormData>): KasiCalendarVerification {
-  return {
-    provider: 'KASI',
-    enabled: false,
-    status: 'disabled',
-    message: 'KASI_SERVICE_KEY is not configured. Internal saju calendar engine was used.',
-    originalCalendar: formData.calendar === 'lunar' ? 'lunar' : 'solar',
-    originalBirthDate: formData.birthDate || '',
-    originalIsLeapMonth: Boolean(formData.isLeapMonth),
-    normalizedCalendar: formData.calendar === 'lunar' ? 'lunar' : 'solar'
-  };
+function errorMessage(error: unknown, fallback: string, serviceKey: string) {
+  const raw = error instanceof Error ? error.message : fallback;
+  const encodedKey = encodeServiceKeyForQuery(serviceKey);
+  return [serviceKey.trim(), encodedKey]
+    .filter(Boolean)
+    .reduce((message, secret) => message.split(secret).join('[REDACTED]'), raw)
+    .replace(/([?&]ServiceKey=)[^&\s]+/gi, '$1[REDACTED]');
 }
 
-export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData>) {
-  const serviceKey = getKasiServiceKey();
+function disabledCapability(message: string): KasiCapabilityVerification {
+  return { enabled: false, status: 'disabled', message };
+}
 
+function skippedCapability(message: string): KasiCapabilityVerification {
+  return { enabled: true, status: 'skipped', message };
+}
+
+async function verifySolarTerms(
+  date: { year: number; month: number; day: number },
+  serviceKey: string
+): Promise<{ verification: KasiCapabilityVerification; solarTerms?: KasiSolarTerm[] }> {
   if (!serviceKey) {
     return {
-      formData,
-      verification: disabledVerification(formData)
+      verification: disabledCapability(
+        'KASI_SPECIALDAY_SERVICE_KEY is not configured. Internal sxtwl solar-term calculation remains active.'
+      )
     };
   }
 
+  try {
+    return {
+      verification: {
+        enabled: true,
+        status: 'verified',
+        message: 'KASI special-day API returned solar-term dates for the normalized solar month.'
+      },
+      solarTerms: await getSolarTermsForMonth(date.year, date.month, serviceKey)
+    };
+  } catch (error) {
+    return {
+      verification: {
+        enabled: true,
+        status: 'failed',
+        message: errorMessage(
+          error,
+          'KASI special-day verification failed. Internal sxtwl solar-term calculation remains active.',
+          serviceKey
+        )
+      }
+    };
+  }
+}
+
+export async function normalizeFormDataWithKasi(formData: Partial<IntakeFormData>) {
+  const env = getEnv();
+  const lunarServiceKey = getKasiLunarServiceKey(env);
+  const specialDayServiceKey = getKasiSpecialDayServiceKey(env);
   const originalCalendar = formData.calendar === 'lunar' ? 'lunar' : 'solar';
   const originalBirthDate = formData.birthDate || '';
   const originalIsLeapMonth = Boolean(formData.isLeapMonth);
   const parsedDate = parseBirthDate(originalBirthDate);
 
   if (!parsedDate) {
+    const lunarCalendarVerification: KasiCapabilityVerification = lunarServiceKey
+      ? { enabled: true, status: 'failed', message: 'Birth date could not be parsed.' }
+      : disabledCapability('KASI_LUNAR_SERVICE_KEY is not configured.');
     return {
       formData,
       verification: {
         provider: 'KASI',
-        enabled: true,
-        status: 'failed',
-        message: 'Birth date could not be parsed. Internal saju calendar engine was used.',
+        enabled: lunarCalendarVerification.enabled,
+        status: lunarCalendarVerification.status === 'failed' ? 'failed' : 'disabled',
+        message: lunarCalendarVerification.message,
         originalCalendar,
         originalBirthDate,
         originalIsLeapMonth,
-        normalizedCalendar: originalCalendar
+        normalizedCalendar: originalCalendar,
+        lunarCalendarVerification,
+        solarTermVerification: specialDayServiceKey
+          ? skippedCapability('Solar-term verification was skipped because the birth date is invalid.')
+          : disabledCapability('KASI_SPECIALDAY_SERVICE_KEY is not configured.')
       } satisfies KasiCalendarVerification
     };
   }
 
-  try {
-    if (originalCalendar === 'lunar') {
-      const solar = await getSolarFromLunar(parsedDate, originalIsLeapMonth, serviceKey);
+  if (originalCalendar === 'lunar') {
+    if (!lunarServiceKey) {
+      const lunarCalendarVerification = disabledCapability(
+        'KASI_LUNAR_SERVICE_KEY is not configured. Lunar-to-solar conversion is unavailable.'
+      );
+      return {
+        formData,
+        verification: {
+          provider: 'KASI', enabled: false, status: 'disabled',
+          message: lunarCalendarVerification.message,
+          originalCalendar, originalBirthDate, originalIsLeapMonth,
+          normalizedCalendar: originalCalendar,
+          lunarCalendarVerification,
+          solarTermVerification: specialDayServiceKey
+            ? skippedCapability('Solar-term verification requires a successful lunar-to-solar conversion first.')
+            : disabledCapability('KASI_SPECIALDAY_SERVICE_KEY is not configured.')
+        } satisfies KasiCalendarVerification
+      };
+    }
 
+    try {
+      const solar = await getSolarFromLunar(parsedDate, originalIsLeapMonth, lunarServiceKey);
       if (!solar.solarDate) {
         throw new Error('KASI lunar-to-solar conversion returned no solar date.');
       }
 
       const convertedDate = parseBirthDate(solar.solarDate);
-      const solarTerms = convertedDate
-        ? await getSolarTermsForMonth(convertedDate.year, convertedDate.month, serviceKey)
-        : [];
+      const solarTermResult = convertedDate
+        ? await verifySolarTerms(convertedDate, specialDayServiceKey)
+        : {
+            verification: specialDayServiceKey
+              ? skippedCapability('Solar-term verification requires a normalized solar date.')
+              : disabledCapability('KASI_SPECIALDAY_SERVICE_KEY is not configured.')
+          };
+      const lunarCalendarVerification: KasiCapabilityVerification = {
+        enabled: true,
+        status: 'verified',
+        message: 'Lunar birth date was normalized to a solar date with the KASI lunar-calendar API.'
+      };
 
       return {
         formData: {
-          ...formData,
-          calendar: 'solar' as const,
-          isLeapMonth: false,
-          birthDate: solar.solarDate
+          ...formData, calendar: 'solar' as const, isLeapMonth: false, birthDate: solar.solarDate
         },
         verification: {
-          provider: 'KASI',
-          enabled: true,
-          status: 'verified',
-          message: 'Lunar birth date was normalized to a solar date with KASI before saju calculation.',
-          originalCalendar,
-          originalBirthDate,
-          originalIsLeapMonth,
+          provider: 'KASI', enabled: true, status: 'verified',
+          message: lunarCalendarVerification.message,
+          originalCalendar, originalBirthDate, originalIsLeapMonth,
           normalizedCalendar: 'solar',
           normalizedSolarDate: solar.solarDate,
           lunar: solar.lunar,
-          solarTerms
+          lunarCalendarVerification,
+          solarTermVerification: solarTermResult.verification,
+          solarTerms: solarTermResult.solarTerms
+        } satisfies KasiCalendarVerification
+      };
+    } catch (error) {
+      const lunarCalendarVerification: KasiCapabilityVerification = {
+        enabled: true,
+        status: 'failed',
+        message: errorMessage(error, 'KASI lunar-to-solar conversion failed.', lunarServiceKey)
+      };
+      return {
+        formData,
+        verification: {
+          provider: 'KASI', enabled: true, status: 'failed',
+          message: lunarCalendarVerification.message,
+          originalCalendar, originalBirthDate, originalIsLeapMonth,
+          normalizedCalendar: originalCalendar,
+          lunarCalendarVerification,
+          solarTermVerification: specialDayServiceKey
+            ? skippedCapability('Solar-term verification requires a successful lunar-to-solar conversion first.')
+            : disabledCapability('KASI_SPECIALDAY_SERVICE_KEY is not configured.')
         } satisfies KasiCalendarVerification
       };
     }
+  }
 
-    const lunar = await getLunarFromSolar(parsedDate, serviceKey);
-    const solarTerms = await getSolarTermsForMonth(parsedDate.year, parsedDate.month, serviceKey);
-
-    return {
-      formData,
-      verification: {
-        provider: 'KASI',
+  let lunar: ReturnType<typeof lunarMetaFromItem>;
+  let lunarCalendarVerification: KasiCapabilityVerification;
+  if (!lunarServiceKey) {
+    lunarCalendarVerification = disabledCapability(
+      'KASI_LUNAR_SERVICE_KEY is not configured. Solar-to-lunar cross-check is unavailable.'
+    );
+  } else {
+    try {
+      lunar = await getLunarFromSolar(parsedDate, lunarServiceKey);
+      lunarCalendarVerification = {
         enabled: true,
         status: 'verified',
-        message: 'Solar birth date was cross-checked with KASI lunar calendar data.',
-        originalCalendar,
-        originalBirthDate,
-        originalIsLeapMonth,
-        normalizedCalendar: 'solar',
-        normalizedSolarDate: originalBirthDate,
-        lunar,
-        solarTerms
-      } satisfies KasiCalendarVerification
-    };
-  } catch (error) {
-    return {
-      formData,
-      verification: {
-        provider: 'KASI',
+        message: 'Solar birth date was cross-checked with the KASI lunar-calendar API.'
+      };
+    } catch (error) {
+      lunarCalendarVerification = {
         enabled: true,
         status: 'failed',
-        message: error instanceof Error ? error.message : 'KASI verification failed. Internal saju calendar engine was used.',
-        originalCalendar,
-        originalBirthDate,
-        originalIsLeapMonth,
-        normalizedCalendar: originalCalendar
-      } satisfies KasiCalendarVerification
-    };
+        message: errorMessage(error, 'KASI solar-to-lunar cross-check failed.', lunarServiceKey)
+      };
+    }
   }
+
+  const solarTermResult = await verifySolarTerms(parsedDate, specialDayServiceKey);
+  const status = lunarCalendarVerification.status === 'verified'
+    ? 'verified'
+    : lunarCalendarVerification.status === 'failed'
+      ? 'failed'
+      : 'disabled';
+
+  return {
+    formData,
+    verification: {
+      provider: 'KASI',
+      enabled: lunarCalendarVerification.enabled,
+      status,
+      message: lunarCalendarVerification.message,
+      originalCalendar, originalBirthDate, originalIsLeapMonth,
+      normalizedCalendar: 'solar',
+      normalizedSolarDate: originalBirthDate,
+      lunar,
+      lunarCalendarVerification,
+      solarTermVerification: solarTermResult.verification,
+      solarTerms: solarTermResult.solarTerms
+    } satisfies KasiCalendarVerification
+  };
 }

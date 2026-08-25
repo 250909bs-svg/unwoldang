@@ -10,6 +10,8 @@ param(
   [string]$GeminiModel = "gemini-2.5-flash",
   [string]$GeminiSecretName = "",
   [string]$GeminiRequestTimeoutMs = "22000",
+  [string]$KasiLunarSecretName = "",
+  [string]$KasiSpecialDaySecretName = "",
   [string]$KasiSecretName = "",
   [string]$KasiRequestTimeoutMs = "5000",
   [string]$PortOneSecretName = "",
@@ -52,6 +54,12 @@ Write-Host "Region  : $Region"
   $secretPairs = @()
   if ($GeminiSecretName.Trim()) {
     $secretPairs += "GEMINI_API_KEY=$($GeminiSecretName):latest"
+  }
+  if ($KasiLunarSecretName.Trim()) {
+    $secretPairs += "KASI_LUNAR_SERVICE_KEY=$($KasiLunarSecretName):latest"
+  }
+  if ($KasiSpecialDaySecretName.Trim()) {
+    $secretPairs += "KASI_SPECIALDAY_SERVICE_KEY=$($KasiSpecialDaySecretName):latest"
   }
   if ($KasiSecretName.Trim()) {
     $secretPairs += "KASI_SERVICE_KEY=$($KasiSecretName):latest"

@@ -16,6 +16,11 @@ export function loadConfig(env: RuntimeEnv = process.env) {
   const configuredGenerationLockTtl = numeric(env, 'REPORT_GENERATION_LOCK_TTL_MS', 2 * 60 * 1000);
   const configuredAdminRateWindow = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000);
   const configuredAdminRateMax = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_MAX', 5);
+  const legacyKasiKey = trimmed(env, 'KASI_SERVICE_KEY')
+    || trimmed(env, 'DATA_GO_KR_SERVICE_KEY')
+    || trimmed(env, 'PUBLIC_DATA_SERVICE_KEY');
+  const lunarKasiKey = trimmed(env, 'KASI_LUNAR_SERVICE_KEY') || legacyKasiKey;
+  const specialDayKasiKey = trimmed(env, 'KASI_SPECIALDAY_SERVICE_KEY') || legacyKasiKey;
 
   return {
     port: numeric(env, 'PORT', 8080),
@@ -78,6 +83,10 @@ export function loadConfig(env: RuntimeEnv = process.env) {
     gemini: {
       configured: Boolean(trimmed(env, 'GEMINI_API_KEY')),
       model: trimmed(env, 'GEMINI_MODEL') || 'gemini-2.5-flash'
+    },
+    kasi: {
+      lunarConfigured: Boolean(lunarKasiKey),
+      specialDayConfigured: Boolean(specialDayKasiKey)
     }
   };
 }

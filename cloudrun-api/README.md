@@ -68,11 +68,13 @@ Gemini and KASI are optional enhancements. With no Gemini key, or when Gemini fa
 GEMINI_API_KEY=...
 GEMINI_MODEL=gemini-2.5-flash
 GEMINI_REQUEST_TIMEOUT_MS=22000
-KASI_SERVICE_KEY=...
+KASI_LUNAR_SERVICE_KEY=...
+KASI_SPECIALDAY_SERVICE_KEY=...
+KASI_SERVICE_KEY=... # legacy fallback only
 KASI_REQUEST_TIMEOUT_MS=5000
 ```
 
-Store `PORTONE_API_SECRET`, the three access-token secrets, `ADMIN_CREDENTIAL_HASH`, `GEMINI_API_KEY`, `KASI_SERVICE_KEY`, and an enabled Kakao client secret in Secret Manager. The report, user, and admin signing secrets must be different high-entropy values. Route-specific production operations fail closed when their required secret or Firestore dependency is missing.
+Store `PORTONE_API_SECRET`, the three access-token secrets, `ADMIN_CREDENTIAL_HASH`, `GEMINI_API_KEY`, both dedicated KASI secrets, and an enabled Kakao client secret in Secret Manager. `KASI_SERVICE_KEY` remains a legacy fallback only. The report, user, and admin signing secrets must be different high-entropy values. Route-specific production operations fail closed when their required secret or Firestore dependency is missing.
 
 `ALLOW_UNVERIFIED_REPORTS=true` and `FIRESTORE_ACCESS_TOKEN` are local-development escape hatches only. Never enable or set them on Cloud Run.
 
@@ -85,7 +87,8 @@ Create the referenced Secret Manager secrets before deploying. Gemini, KASI, Kak
   -ProjectId YOUR_PROJECT_ID `
   -Region asia-northeast3 `
   -GeminiSecretName GEMINI_API_KEY `
-  -KasiSecretName KASI_SERVICE_KEY `
+  -KasiLunarSecretName KASI_LUNAR_SERVICE_KEY `
+  -KasiSpecialDaySecretName KASI_SPECIALDAY_SERVICE_KEY `
   -PortOneSecretName PORTONE_API_SECRET `
   -PortOneStoreId store-your-portone-store-id `
   -ReportAccessSecretName REPORT_ACCESS_SECRET `
@@ -131,3 +134,5 @@ The frontend derives `/order`, `/entitlements`, and `/entitlement/renew` from `V
 - `readyForAiEnhancement`: Gemini key is configured.
 - `readyForReportGeneration`: report signing and Firestore are configured; deterministic generation remains available.
 - `readyForPaymentConfirmation`: report/user signing, Firestore, and PortOne verification are configured.
+- `readyForLunarReportGeneration`: base report generation and the KASI lunar-calendar key are configured.
+- `readyForSolarTermDateVerification`: the KASI special-day key is configured; internal sxtwl calculation does not depend on it.

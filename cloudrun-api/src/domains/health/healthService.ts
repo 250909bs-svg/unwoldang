@@ -8,6 +8,8 @@ export class HealthService {
     const userSecretConfigured = Boolean(this.config.auth.userAccessSecret);
     const firestoreConfigured = this.config.firestore.enabled && Boolean(this.config.firestore.projectId);
     const paymentConfigured = Boolean(this.config.portOne.apiSecret && this.config.portOne.storeId);
+    const readyForReportGeneration = reportSecretConfigured && firestoreConfigured;
+    const readyForPaymentConfirmation = readyForReportGeneration && userSecretConfigured && paymentConfigured;
 
     return {
       ok: true,
@@ -15,9 +17,12 @@ export class HealthService {
       provider: 'gemini',
       providerConfigured: this.config.gemini.configured,
       readyForAiEnhancement: this.config.gemini.configured,
-      readyForReportGeneration: reportSecretConfigured && firestoreConfigured,
-      readyForPaymentConfirmation:
-        reportSecretConfigured && userSecretConfigured && firestoreConfigured && paymentConfigured,
+      readyForReportGeneration,
+      readyForPaymentConfirmation,
+      kasiLunarConfigured: this.config.kasi.lunarConfigured,
+      kasiSpecialDayConfigured: this.config.kasi.specialDayConfigured,
+      readyForLunarReportGeneration: readyForReportGeneration && this.config.kasi.lunarConfigured,
+      readyForSolarTermDateVerification: this.config.kasi.specialDayConfigured,
       model: this.config.gemini.model,
       timestamp: new Date().toISOString()
     };

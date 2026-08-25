@@ -42,6 +42,8 @@ const productionConfig = loadConfig({
   PORTONE_API_SECRET: 'fixture-portone-api-secret',
   PORTONE_STORE_ID: 'fixture-portone-store',
   GEMINI_MODEL: 'fixture-gemini-model',
+  KASI_LUNAR_SERVICE_KEY: 'fixture-lunar-key',
+  KASI_SPECIALDAY_SERVICE_KEY: 'fixture-specialday-key',
   REPORT_RATE_LIMIT_MAX: '100'
 });
 
@@ -124,6 +126,10 @@ describe('Cloud Run API HTTP contracts', () => {
       readyForAiEnhancement: false,
       readyForReportGeneration: true,
       readyForPaymentConfirmation: true,
+      kasiLunarConfigured: true,
+      kasiSpecialDayConfigured: true,
+      readyForLunarReportGeneration: true,
+      readyForSolarTermDateVerification: true,
       model: 'fixture-gemini-model',
       timestamp: expect.any(String)
     });

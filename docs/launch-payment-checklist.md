@@ -49,7 +49,8 @@ Optional enhancement/integration secrets:
 
 ```powershell
 gcloud secrets create GEMINI_API_KEY --data-file="C:\path\to\gemini-api-key.txt"
-gcloud secrets create KASI_SERVICE_KEY --data-file="C:\path\to\kasi-service-key.txt"
+gcloud secrets create KASI_LUNAR_SERVICE_KEY --data-file="C:\path\to\kasi-lunar-decoding-key.txt"
+gcloud secrets create KASI_SPECIALDAY_SERVICE_KEY --data-file="C:\path\to\kasi-specialday-decoding-key.txt"
 gcloud secrets create KAKAO_CLIENT_SECRET --data-file="C:\path\to\kakao-client-secret.txt"
 ```
 
@@ -73,7 +74,8 @@ Grant the Cloud Run runtime service account `roles/secretmanager.secretAccessor`
   -ProjectId YOUR_PROJECT_ID `
   -Region asia-northeast3 `
   -GeminiSecretName GEMINI_API_KEY `
-  -KasiSecretName KASI_SERVICE_KEY `
+  -KasiLunarSecretName KASI_LUNAR_SERVICE_KEY `
+  -KasiSpecialDaySecretName KASI_SPECIALDAY_SERVICE_KEY `
   -PortOneSecretName PORTONE_API_SECRET `
   -PortOneStoreId store-your-portone-store-id `
   -ReportAccessSecretName REPORT_ACCESS_SECRET `
@@ -109,6 +111,8 @@ The client derives PortOne `/order`, `/entitlements`, and `/entitlement/renew` U
 ## 7. Final Tests
 
 - `GET /health` reports payment/report readiness separately from Gemini enhancement readiness.
+- `GET /health` reports KASI lunar conversion and special-day verification readiness independently.
+- A special-day outage never disables the internal sxtwl solar-term calculation or a verified lunar conversion.
 - The live domain never runs with `VITE_PAYMENT_MODE=demo`.
 - Checkout obtains a server order and embeds its signed `orderClaim` before opening PortOne.
 - Cancel/fail returns safely to checkout.

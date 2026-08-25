@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:kasi:smoke": "node scripts/run-kasi-smoke.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

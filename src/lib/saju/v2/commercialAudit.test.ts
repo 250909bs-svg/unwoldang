@@ -28,6 +28,12 @@ function makeInput(overrides: Partial<CommercialReleaseAuditInput> = {}): Commer
       originalIsLeapMonth: false,
       normalizedCalendar: 'solar',
       normalizedSolarDate: '1992-09-09',
+      lunarCalendarVerification: {
+        enabled: true, status: 'verified', message: 'verified'
+      },
+      solarTermVerification: {
+        enabled: true, status: 'verified', message: 'verified'
+      },
       lunar: { dayGanji: '무자(戊子)' }
     },
     interpretationResolved: true,

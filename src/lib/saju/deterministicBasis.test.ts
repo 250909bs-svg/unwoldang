@@ -77,6 +77,12 @@ describe('deterministic saju basis', () => {
       normalizedCalendar: 'solar',
       normalizedSolarDate: '1990-01-01',
       message: 'verified',
+      lunarCalendarVerification: {
+        enabled: true, status: 'verified', message: 'verified'
+      },
+      solarTermVerification: {
+        enabled: true, status: 'verified', message: 'verified'
+      },
       solarTerms: []
     };
 
