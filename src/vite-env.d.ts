@@ -19,6 +19,7 @@ interface ImportMetaEnv {
   readonly VITE_REPORT_TIMEOUT_MS?: string;
   readonly VITE_OPENAI_REPORT_ENDPOINT?: string;
   readonly VITE_PAYMENT_MODE?: 'demo' | 'test' | 'live';
+  readonly VITE_PAYMENT_PROVIDER?: 'disabled' | 'hyphen' | 'legacy-portone';
 }
 
 interface ImportMeta {

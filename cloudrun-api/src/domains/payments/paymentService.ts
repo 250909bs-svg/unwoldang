@@ -15,7 +15,8 @@ import {
   getRequiredAmount,
   getRequiredString
 } from '../../http/validation.ts';
-import type { PortOnePayment, PortOnePaymentClient } from './portoneClient.ts';
+import type { PaymentProvider } from './paymentProvider.ts';
+import type { PortOnePayment } from './portoneClient.ts';
 
 export type PaymentServiceConfig = {
   storeId: string;
@@ -98,7 +99,7 @@ export interface PaymentLedgerRepository {
 
 export type PaymentServiceDependencies = {
   config: PaymentServiceConfig;
-  portOneClient: PortOnePaymentClient;
+  paymentProvider: PaymentProvider;
   ledgerRepository: PaymentLedgerRepository;
   tokenService: PaymentTokenService;
   now?: () => number;
@@ -109,6 +110,16 @@ function assertPaymentOrderId(orderId: string) {
   if (!/^UW-[A-Za-z0-9._-]{12,116}$/.test(orderId)) {
     throw new PaymentRequestError(400, 'orderId 형식이 올바르지 않습니다.');
   }
+}
+
+function assertPaymentProviderConfigured(provider: PaymentProvider) {
+  if (provider.configured) {
+    return;
+  }
+  const message = provider.name === 'hyphen'
+    ? '하이픈 결제 연동이 아직 구성되지 않았습니다.'
+    : '결제 시스템이 현재 비활성화되어 있습니다.';
+  throw new PaymentRequestError(503, message);
 }
 
 function readNestedString(source: unknown, paths: string[][]) {
@@ -185,6 +196,7 @@ export class PaymentService {
 
   createOrderIntent(user: AuthenticatedUser, body: Record<string, unknown>) {
     const productId = getRequiredString(body, 'productId');
+    assertPaymentProviderConfigured(this.dependencies.paymentProvider);
     const amount = getCatalogAmount(productId);
     assertProductAvailableForNewOrder(productId);
     const requestedAmount = body.amount === undefined ? amount : getRequiredAmount(body);
@@ -219,6 +231,7 @@ export class PaymentService {
 
   async confirmPayment(user: AuthenticatedUser, body: Record<string, unknown>) {
     const paymentId = getRequiredString(body, 'paymentId');
+    assertPaymentProviderConfigured(this.dependencies.paymentProvider);
     const orderId = getRequiredString(body, 'orderId');
     const amount = getRequiredAmount(body);
     const txId = getOptionalString(body, 'txId');
@@ -238,34 +251,19 @@ export class PaymentService {
     }
 
     const configuredStoreId = this.dependencies.config.storeId.trim();
-
-    if (!configuredStoreId) {
+    if (this.dependencies.paymentProvider.name === 'legacy-portone' && !configuredStoreId) {
       throw new PaymentRequestError(500, 'PORTONE_STORE_ID가 서버에 설정되지 않았습니다.');
     }
 
-    const payment = await this.dependencies.portOneClient.fetchPayment(paymentId);
-    const status = String(readNestedString(payment, [['status']]) || '').toUpperCase();
-    const portOnePaymentId = readNestedString(payment, [['id']]);
-    const storeId = readNestedString(payment, [['storeId']]);
-    const currency = readNestedString(payment, [['currency']]);
-    const paidAmountValue =
-      payment.amount && typeof payment.amount === 'object'
-        ? (payment.amount as Record<string, unknown>).total
-        : undefined;
-    const paidAmount =
-      typeof paidAmountValue === 'number' && Number.isSafeInteger(paidAmountValue)
-        ? paidAmountValue
-        : null;
-    const portOneTransactionId = readNestedString(payment, [['transactionId']]);
-    const customData = getCustomData(payment);
-    const paidProductId =
-      typeof customData?.productId === 'string' && customData.productId.trim()
-        ? customData.productId.trim()
-        : undefined;
-    const paidOrderClaim =
-      typeof customData?.orderClaim === 'string' && customData.orderClaim.trim()
-        ? customData.orderClaim.trim()
-        : undefined;
+    const payment = await this.dependencies.paymentProvider.verifyPayment(paymentId);
+    const status = payment.status;
+    const portOnePaymentId = payment.paymentId;
+    const storeId = payment.merchantId;
+    const currency = payment.currency;
+    const paidAmount = payment.amount;
+    const portOneTransactionId = payment.transactionId;
+    const paidProductId = payment.productId;
+    const paidOrderClaim = payment.orderClaim;
 
     if (!portOnePaymentId || portOnePaymentId !== paymentId) {
       throw new PaymentRequestError(
@@ -285,7 +283,7 @@ export class PaymentService {
       );
     }
 
-    if (!storeId || configuredStoreId !== storeId) {
+    if (!storeId || (configuredStoreId && configuredStoreId !== storeId)) {
       throw new PaymentRequestError(409, 'PortOne 상점 ID가 서버 설정과 일치하지 않습니다.');
     }
 
@@ -412,6 +410,7 @@ export class PaymentService {
 
   async renewEntitlement(user: AuthenticatedUser, body: Record<string, unknown>) {
     const orderId = getRequiredString(body, 'orderId');
+    assertPaymentProviderConfigured(this.dependencies.paymentProvider);
     assertPaymentOrderId(orderId);
     const documentId = getPaymentLedgerDocumentId(orderId);
     let ledger: PaymentLedgerRecord | null;

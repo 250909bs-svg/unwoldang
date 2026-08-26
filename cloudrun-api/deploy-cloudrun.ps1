@@ -9,6 +9,7 @@ param(
   [string]$AllowedOrigins = "https://unwoldang.com,https://www.unwoldang.com",
   [string]$GeminiModel = "gemini-2.5-flash",
   [string]$GeminiSecretName = "",
+  [string]$PaymentProvider = "disabled",
   [string]$GeminiRequestTimeoutMs = "22000",
   [string]$KasiLunarSecretName = "",
   [string]$KasiSpecialDaySecretName = "",
@@ -84,6 +85,7 @@ Write-Host "Region  : $Region"
   }
   $secretArg = $secretPairs -join ","
   $envVars = "ALLOWED_ORIGINS=$AllowedOrigins|GEMINI_MODEL=$GeminiModel|GEMINI_REQUEST_TIMEOUT_MS=$GeminiRequestTimeoutMs|KASI_REQUEST_TIMEOUT_MS=$KasiRequestTimeoutMs|PORTONE_API_BASE_URL=$PortOneApiBaseUrl|PORTONE_PAYMENT_LEDGER_COLLECTION=$PortOnePaymentLedgerCollection|REPORT_ACCESS_TOKEN_TTL_MS=$ReportAccessTokenTtlMs|PAYMENT_ORDER_CLAIM_TTL_MS=$PaymentOrderClaimTtlMs|REPORT_GENERATION_LOCK_TTL_MS=$ReportGenerationLockTtlMs|AUTH_ACCESS_TOKEN_TTL_MS=$AuthAccessTokenTtlMs|ADMIN_ACCESS_TOKEN_TTL_MS=$AdminAccessTokenTtlMs|REPORT_RATE_LIMIT_WINDOW_MS=$ReportRateLimitWindowMs|REPORT_RATE_LIMIT_MAX=$ReportRateLimitMax|ENABLE_FIRESTORE_ARCHIVE=$EnableFirestoreArchive|FIRESTORE_DATABASE_ID=$FirestoreDatabaseId|FIRESTORE_ARCHIVE_COLLECTION=$FirestoreArchiveCollection|REQUIRE_REPORT_TOKEN_FOR_ARCHIVE=$RequireReportTokenForArchive"
+  $envVars = "PAYMENT_PROVIDER=$PaymentProvider|$envVars"
   if ($PortOneStoreId.Trim()) {
     $envVars = "$envVars|PORTONE_STORE_ID=$PortOneStoreId"
   }

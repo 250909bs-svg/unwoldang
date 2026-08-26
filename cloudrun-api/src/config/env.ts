@@ -1,5 +1,7 @@
 export type RuntimeEnv = Record<string, string | undefined>;
 
+import type { PaymentProviderName } from '../domains/payments/paymentProvider.ts';
+
 export type AppConfig = ReturnType<typeof loadConfig>;
 
 function trimmed(env: RuntimeEnv, name: string) {
@@ -10,8 +12,17 @@ function numeric(env: RuntimeEnv, name: string, fallback: number) {
   return Number(env[name] || fallback);
 }
 
+function resolvePaymentProvider(env: RuntimeEnv, production: boolean): PaymentProviderName {
+  const requested = trimmed(env, 'PAYMENT_PROVIDER');
+  if (requested === 'disabled' || requested === 'hyphen' || requested === 'legacy-portone') {
+    return requested;
+  }
+  return production ? 'disabled' : 'legacy-portone';
+}
+
 export function loadConfig(env: RuntimeEnv = process.env) {
   const production = env.NODE_ENV === 'production' || Boolean(trimmed(env, 'K_SERVICE'));
+  const paymentProvider = resolvePaymentProvider(env, production);
   const configuredOrderClaimTtl = numeric(env, 'PAYMENT_ORDER_CLAIM_TTL_MS', 2 * 60 * 60 * 1000);
   const configuredGenerationLockTtl = numeric(env, 'REPORT_GENERATION_LOCK_TTL_MS', 2 * 60 * 1000);
   const configuredAdminRateWindow = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000);
@@ -42,6 +53,12 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       rateLimitWindowMs: numeric(env, 'REPORT_RATE_LIMIT_WINDOW_MS', 60 * 1000),
       rateLimitMax: numeric(env, 'REPORT_RATE_LIMIT_MAX', 12),
       requireTokenForArchive: env.REQUIRE_REPORT_TOKEN_FOR_ARCHIVE !== 'false'
+    },
+    payment: {
+      provider: paymentProvider,
+      configured: paymentProvider === 'legacy-portone'
+        ? Boolean(trimmed(env, 'PORTONE_API_SECRET') && trimmed(env, 'PORTONE_STORE_ID'))
+        : false
     },
     auth: {
       accessTokenTtlMs: numeric(env, 'AUTH_ACCESS_TOKEN_TTL_MS', 30 * 24 * 60 * 60 * 1000),

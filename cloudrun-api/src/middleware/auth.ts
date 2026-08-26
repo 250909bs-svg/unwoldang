@@ -55,6 +55,11 @@ export function assertReportAccess(
   config: AppConfig,
   tokenService: TokenService
 ): ReportAccessClaims | null {
+  const paymentUnavailable = config.payment.provider === 'disabled' || config.payment.provider === 'hyphen' || (config.production && !config.payment.configured);
+  if (paymentUnavailable) {
+    throw new ReportRequestError(503, '결제 시스템이 준비되지 않아 유료 리포트를 생성할 수 없습니다.');
+  }
+
   if (config.report.allowUnverified) {
     return null;
   }

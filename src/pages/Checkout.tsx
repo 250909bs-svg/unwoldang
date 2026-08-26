@@ -21,6 +21,7 @@ import {
 import { requestPortOnePayment } from '../lib/portonePayments';
 import {
   getPaymentMode,
+  getPaymentProvider,
   getPortOneConfirmEndpoint,
   hasPortOneRuntimeConfig,
   shouldUseDemoPayment
@@ -78,7 +79,8 @@ export default function Checkout() {
   const customerEmail = user?.email || import.meta.env.VITE_PORTONE_DEFAULT_EMAIL?.trim() || 'customer@unwoldang.com';
   const paymentMode = getPaymentMode();
   const isDemoPayment = shouldUseDemoPayment();
-  const canUsePortOneRuntime = Boolean(paymentMode === 'live' && hasPortOneRuntimeConfig());
+  const paymentProvider = getPaymentProvider();
+  const canUsePortOneRuntime = Boolean(paymentProvider === 'legacy-portone' && paymentMode === 'live' && hasPortOneRuntimeConfig());
   const requiresPartnerBirth = product.flow.requiresPartnerBirth;
   const birthInputValidation = useMemo(
     () => validateIntakeBirthInputs(formData || {}, { requirePartner: requiresPartnerBirth }),
@@ -88,7 +90,7 @@ export default function Checkout() {
   const hasRequiredPartnerBirth = !requiresPartnerBirth || Boolean(birthInputValidation.partner?.valid);
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());
-  const paymentReady = isDemoPayment || (canUsePortOneRuntime && Boolean(user?.authToken));
+  const paymentReady = paymentProvider !== 'disabled' && paymentProvider !== 'hyphen' && (isDemoPayment || (canUsePortOneRuntime && Boolean(user?.authToken)));
   const canSubmit = Boolean(
     agreeService &&
       agreePrivacy &&
@@ -131,7 +133,7 @@ export default function Checkout() {
               : !reportReady
                 ? '분석 API 연결을 확인해 주세요.'
                 : !paymentReady
-                  ? '결제 설정을 확인해 주세요.'
+                  ? paymentProvider === 'disabled' ? '현재 결제 시스템을 준비 중입니다.' : paymentProvider === 'hyphen' ? '하이픈 결제 연동이 아직 구성되지 않았습니다.' : '결제 설정을 확인해 주세요.'
                   : '필수 약관에 동의해 주세요.'
       );
       return;
@@ -388,11 +390,11 @@ export default function Checkout() {
 
           <div className="checkout-luxe-payments">
             <div className="checkout-luxe-pay-row">
-              <button type="button" className="checkout-luxe-easy-pay kakao" onClick={() => handleEasyPayPreview('카카오페이')}>
+              <button type="button" className="checkout-luxe-easy-pay kakao" disabled={paymentProvider !== 'legacy-portone'} onClick={() => handleEasyPayPreview('카카오페이')}>
                 <MessageCircle size={16} fill="currentColor" />
                 <strong>pay 결제</strong>
               </button>
-              <button type="button" className="checkout-luxe-easy-pay naver" onClick={() => handleEasyPayPreview('네이버페이')}>
+              <button type="button" className="checkout-luxe-easy-pay naver" disabled={paymentProvider !== 'legacy-portone'} onClick={() => handleEasyPayPreview('네이버페이')}>
                 <span>N</span>
                 <strong>pay 결제</strong>
               </button>
@@ -401,11 +403,11 @@ export default function Checkout() {
               type="button"
               className="checkout-luxe-general-pay"
               onClick={handlePayment}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !paymentReady}
               aria-disabled={!canSubmit && !isSubmitting}
             >
               <WalletCards size={17} />
-              <strong>{isSubmitting ? '처리 중' : isDemoPayment ? '일반 결제 데모' : '일반 결제'}</strong>
+              <strong>{isSubmitting ? '처리 중' : isDemoPayment ? '일반 결제 데모' : paymentProvider === 'disabled' ? '결제 준비 중' : paymentProvider === 'hyphen' ? '하이픈 결제 준비 중' : '일반 결제'}</strong>
             </button>
           </div>
 
@@ -453,9 +455,13 @@ export default function Checkout() {
           {error ? <div className="checkout-luxe-error">{error}</div> : null}
 
           <p className="checkout-luxe-safe-copy">
-            {isDemoPayment
-              ? '현재는 결제사 연동 전 데모 결제로 진행되며, 실제 결제 승인 없이 입력한 사주정보 기준 리포트를 확인할 수 있습니다.'
-              : '결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.'}
+            {paymentProvider === 'disabled'
+              ? '결제 시스템을 준비 중입니다. 현재는 결제 없이 유료 리포트를 생성할 수 없습니다.'
+              : paymentProvider === 'hyphen'
+                ? '하이픈 결제 연동 심사 및 운영 계약이 완료되면 결제를 활성화할 수 있습니다.'
+                : isDemoPayment
+                  ? '현재는 결제사 연동 전 데모 결제로 진행되며, 실제 결제 승인 없이 입력한 사주정보 기준 리포트를 확인할 수 있습니다.'
+                  : '결제 진행 시 이용약관 및 개인정보처리방침에 동의한 것으로 처리되며, 결제 완료 후 입력한 사주정보 기준으로 결과가 생성됩니다.'}
           </p>
         </section>
 

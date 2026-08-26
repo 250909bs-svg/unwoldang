@@ -30,6 +30,19 @@ export function getPortOneConfirmEndpoint() {
   return import.meta.env.VITE_PORTONE_CONFIRM_ENDPOINT?.trim() || '';
 }
 
+export type PaymentProviderName = 'disabled' | 'hyphen' | 'legacy-portone';
+
+export function resolvePaymentProvider(provider: string | undefined, isProduction: boolean): PaymentProviderName {
+  if (provider === 'disabled' || provider === 'hyphen' || provider === 'legacy-portone') {
+    return provider;
+  }
+  return isProduction ? 'disabled' : 'legacy-portone';
+}
+
+export function getPaymentProvider() {
+  return resolvePaymentProvider(import.meta.env.VITE_PAYMENT_PROVIDER, import.meta.env.PROD);
+}
+
 export type PaymentMode = 'live' | 'test' | 'demo' | 'disabled';
 
 export function resolvePaymentMode(mode: string | undefined, isProduction: boolean): PaymentMode {
@@ -59,5 +72,5 @@ export function hasPortOneRuntimeConfig() {
 export function shouldUseDemoPayment() {
   const mode = getPaymentMode();
 
-  return !import.meta.env.PROD && (mode === 'demo' || mode === 'test');
+  return getPaymentProvider() !== 'disabled' && !import.meta.env.PROD && (mode === 'demo' || mode === 'test');
 }

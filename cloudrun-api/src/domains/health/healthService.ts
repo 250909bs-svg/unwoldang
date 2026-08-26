@@ -7,7 +7,7 @@ export class HealthService {
     const reportSecretConfigured = Boolean(this.config.auth.reportAccessSecret);
     const userSecretConfigured = Boolean(this.config.auth.userAccessSecret);
     const firestoreConfigured = this.config.firestore.enabled && Boolean(this.config.firestore.projectId);
-    const paymentConfigured = Boolean(this.config.portOne.apiSecret && this.config.portOne.storeId);
+    const paymentConfigured = this.config.payment.configured;
     const readyForReportGeneration = reportSecretConfigured && firestoreConfigured;
     const readyForPaymentConfirmation = readyForReportGeneration && userSecretConfigured && paymentConfigured;
 
@@ -15,6 +15,7 @@ export class HealthService {
       ok: true,
       service: 'unwoldang-cloudrun-api',
       provider: 'gemini',
+      paymentProvider: this.config.payment.provider,
       providerConfigured: this.config.gemini.configured,
       readyForAiEnhancement: this.config.gemini.configured,
       readyForReportGeneration,

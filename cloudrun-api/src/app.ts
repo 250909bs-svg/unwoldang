@@ -17,6 +17,7 @@ import {
   type PaymentLedgerRepository as PaymentLedgerServiceRepository
 } from './domains/payments/paymentService.ts';
 import { PortOneClient } from './domains/payments/portoneClient.ts';
+import { createPaymentProvider } from './domains/payments/paymentProvider.ts';
 import { ReportService } from './domains/reports/reportService.ts';
 import { createRouter } from './http/router.ts';
 import { createAuthMiddleware } from './middleware/auth.ts';
@@ -42,6 +43,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
   const auth = createAuthMiddleware(config, tokenService);
   const kakaoService = new KakaoService(config, tokenService, fetchImplementation);
   const portOneClient = new PortOneClient(config.portOne, fetchImplementation);
+  const paymentProvider = createPaymentProvider(config, portOneClient);
   const firestoreRepository = new FirestoreRepository(config.firestore, fetchImplementation);
   const paymentLedgerRepository = new PaymentLedgerRepository(
     firestoreRepository,
@@ -82,7 +84,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
       orderClaimTtlMs: config.report.orderClaimTtlMs,
       reportAccessTokenTtlMs: config.report.accessTokenTtlMs
     },
-    portOneClient,
+    paymentProvider,
     ledgerRepository: paymentLedgerAdapter,
     tokenService
   });

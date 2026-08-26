@@ -9,6 +9,7 @@ import {
   type PaymentLedgerRecord,
   type PaymentLedgerRepository
 } from '../../../cloudrun-api/src/domains/payments/paymentService.ts';
+import { LegacyPortOnePaymentProvider } from '../../../cloudrun-api/src/domains/payments/paymentProvider.ts';
 import type {
   PortOnePayment,
   PortOnePaymentClient
@@ -62,6 +63,9 @@ class FakePaymentLedgerRepository implements PaymentLedgerRepository {
 
 function createHarness() {
   const config = loadConfig({
+    PAYMENT_PROVIDER: 'legacy-portone',
+    PORTONE_API_SECRET: 'fixture-portone-api-secret',
+    PORTONE_STORE_ID: STORE_ID,
     NODE_ENV: 'production',
     REPORT_ACCESS_SECRET: 'fixture-report-access-secret-not-for-production',
     USER_ACCESS_SECRET: 'fixture-user-access-secret-not-for-production',
@@ -71,6 +75,7 @@ function createHarness() {
   });
   const tokenService = new TokenService(config);
   const portOneClient = new FakePortOneClient();
+  const paymentProvider = new LegacyPortOnePaymentProvider({ apiSecret: 'fixture-portone-api-secret', storeId: STORE_ID }, portOneClient);
   const ledgerRepository = new FakePaymentLedgerRepository();
   const paymentService = new PaymentService({
     config: {
@@ -78,7 +83,7 @@ function createHarness() {
       orderClaimTtlMs: config.report.orderClaimTtlMs,
       reportAccessTokenTtlMs: config.report.accessTokenTtlMs
     },
-    portOneClient,
+    paymentProvider,
     ledgerRepository,
     tokenService,
     now: () => FIXED_NOW,

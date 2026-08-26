@@ -33,6 +33,7 @@ const EXPECTED_PUBLIC_ROUTES = [
 
 const productionConfig = loadConfig({
   NODE_ENV: 'production',
+  PAYMENT_PROVIDER: 'legacy-portone',
   ALLOWED_ORIGINS: ALLOWED_ORIGIN,
   REPORT_ACCESS_SECRET: 'fixture-report-access-secret',
   USER_ACCESS_SECRET: 'fixture-user-access-secret',
@@ -122,6 +123,7 @@ describe('Cloud Run API HTTP contracts', () => {
       ok: true,
       service: 'unwoldang-cloudrun-api',
       provider: 'gemini',
+      paymentProvider: 'legacy-portone',
       providerConfigured: false,
       readyForAiEnhancement: false,
       readyForReportGeneration: true,
@@ -407,6 +409,81 @@ describe('Cloud Run API HTTP contracts', () => {
         message: 'AI report request limit exceeded. Please try again shortly.'
       });
       expect(reportGenerator).toHaveBeenCalledTimes(1);
+    } finally {
+      await closeServer(running.server);
+    }
+  });
+
+  it('fails closed for every paid boundary when production payments are disabled', async () => {
+    const disabledConfig = loadConfig({
+      NODE_ENV: 'production',
+      PAYMENT_PROVIDER: 'disabled',
+      REPORT_ACCESS_SECRET: 'fixture-disabled-report-secret',
+      USER_ACCESS_SECRET: 'fixture-disabled-user-secret',
+      ENABLE_FIRESTORE_ARCHIVE: 'true',
+      FIRESTORE_PROJECT_ID: 'fixture-disabled-firestore-project',
+      REPORT_RATE_LIMIT_MAX: '100'
+    });
+    const tokens = new TokenService(disabledConfig);
+    const userToken = tokens.createUserAccessToken({
+      id: 'fixture-disabled-payment-user',
+      nickname: 'Disabled Payment User'
+    });
+    const generatorCallCountBefore = productionReportGenerator.mock.calls.length;
+    const running = await startApp({
+      config: disabledConfig,
+      fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
+      reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator']
+    });
+    const expected = {
+      message: '결제 시스템이 준비되지 않아 유료 리포트를 생성할 수 없습니다.'
+    };
+
+    try {
+      const paymentConfirm = await fetch(`${running.baseUrl}/api/payments/portone/confirm`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          paymentId: 'fixture-disabled-payment',
+          orderId: 'UW-disabled-payment-order-0001',
+          orderClaim: 'forged-order-claim'
+        })
+      });
+      expect(paymentConfirm.status).toBe(503);
+
+      const zeroAmountOrder = await fetch(`${running.baseUrl}/api/payments/portone/order`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId: 'general-signature', amount: 0 })
+      });
+      expect(zeroAmountOrder.status).toBe(503);
+
+      for (const body of [
+        { serviceId: 'general-signature', payload: { fixture: true } },
+        {
+          serviceId: 'general-signature',
+          payload: { fixture: true },
+          reportAccessToken: 'forged-entitlement',
+          paymentProvider: 'legacy-portone',
+          paymentMode: 'demo'
+        }
+      ]) {
+        const report = await fetch(`${running.baseUrl}/api/report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        expect(report.status).toBe(503);
+        expect(await readJson(report)).toEqual(expected);
+      }
+
+      expect(productionReportGenerator).toHaveBeenCalledTimes(generatorCallCountBefore);
     } finally {
       await closeServer(running.server);
     }
