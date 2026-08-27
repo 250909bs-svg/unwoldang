@@ -10,7 +10,7 @@ const CUSTOMER_FORBIDDEN_PATTERNS: ReadonlyArray<[RegExp, string]> = [
 ];
 
 const CUSTOMER_ADDITIONAL_FORBIDDEN_PATTERNS: ReadonlyArray<[RegExp, string]> = [
-  [/겁재은|식신와|정인가|사은 사건|태은 사건|무은지형/, '잘못된 한국어 조사'],
+  [/겁재은|식신와|정인가|사은 사건|태은 사건|무은지형|돈·사업 구조과|비교적 균형적인 편입니다로 판정했습니다/, '잘못된 한국어 조사'],
   [/\b(?:weak|strong|cold|hot|dry|wet|johu|byeongyak)\b/i, '내부 상태값'],
   [/\b(?:relation|natal|dayun|seun|wolyun|luck):|branch\+|fingerprint|engine version|rule id/i, '내부 근거 식별자'],
   [/고객 체감|읽는 사람이|상담받는 느낌|AI가|프롬프트|\bLLM\b/i, '제작 과정 메타 문구'],

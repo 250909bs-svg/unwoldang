@@ -1,6 +1,7 @@
 import { findServiceById, type IntakeFormData, type ServiceId } from '../../api/mockData';
 import { getLoveFocusLabel, normalizeLoveFocus } from '../loveFocus';
 import { getReportCallName } from '../customerName';
+import { withKoreanParticle } from '../koreanText';
 import { getRelationshipStatusLabel, getRelationshipSummary } from '../relationshipIntake';
 import {
   buildDeterministicSajuBasis,
@@ -414,22 +415,6 @@ function getKind(serviceId: ServiceId): ReportKind {
   return KIND_BY_SERVICE[serviceId] || 'comprehensive';
 }
 
-function parseBirthDate(value?: string) {
-  const fallback = { year: 1990, month: 1, day: 1 };
-  if (!value) return fallback;
-
-  const [yearText, monthText, dayText] = value.split('-');
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const day = Number(dayText);
-
-  if (!year || !month || !day) {
-    return fallback;
-  }
-
-  return { year, month, day };
-}
-
 function getCalendarLabel(formData: Partial<IntakeFormData>) {
   if (formData.calendar === 'lunar') {
     return formData.isLeapMonth ? '음력(윤달)' : '음력';
@@ -473,23 +458,6 @@ function buildMetaGrid(
     { label: '생성일', value: new Date(createdAt).toLocaleDateString('ko-KR') },
     { label: '질문 요약', value: questionPreview || '미입력' }
   ];
-}
-
-function computeCurrentAge(formData: Partial<IntakeFormData>) {
-  const { year } = parseBirthDate(formData.birthDate);
-  return new Date().getFullYear() - year + 1;
-}
-
-function parseAgeRange(ageLabel: string) {
-  const match = ageLabel.match(/(\d+)\D+(\d+)/);
-  if (!match) {
-    return { start: 0, end: 0 };
-  }
-
-  return {
-    start: Number(match[1]),
-    end: Number(match[2])
-  };
 }
 
 function scoreByElements(stemElement: FiveElement, branchElement: FiveElement, helpful: FiveElement[], cautious: FiveElement[]) {
@@ -1010,24 +978,8 @@ function buildCareerIndustryGuide(
 const PREMIUM_QUESTION_MIN_ANALYSIS_CHARS = 300;
 const PREMIUM_QUESTION_ADVICE_COUNT = 10;
 
-function getCurrentDayunName(
-  basis: DeterministicSajuBasis,
-  formData?: Partial<IntakeFormData>,
-  explicitDayunName?: string
-) {
-  if (explicitDayunName) {
-    return explicitDayunName;
-  }
-
-  const currentDayun = formData
-    ? basis.dayun.find((row) => {
-        const currentAge = computeCurrentAge(formData);
-        const range = parseAgeRange(row.age);
-        return currentAge >= range.start && currentAge <= range.end;
-      })
-    : undefined;
-
-  return currentDayun?.ganzhi || basis.dayun[0]?.ganzhi || '현재 대운';
+function getCurrentDayunName(basis: DeterministicSajuBasis) {
+  return basis.commercialV2.luckContext.currentDayun?.ganzhi || '대운 진입 전';
 }
 
 function getQuestionTextLength(text: string) {
@@ -1071,19 +1023,47 @@ function getQuestionIntent(question: string, category: QuestionCategory) {
   return '종합 고민 판단';
 }
 
-function extractQuestionOptions(question: string) {
-  const beforeMiddle = question.split(/중|중에|중에서|vs|VS|또는|아니면/)[0] || question;
-  const cleaned = beforeMiddle
+function cleanComparisonOption(value: string) {
+  return value
     .replace(/[?？!！.,]/g, ' ')
     .replace(/\b(Q|q)\b/g, ' ')
-    .replace(/나|저|내가|제가|이사|거주|동네|지역|어디|가는게|가면|할수있어|할 수 있어|좋을까|좋아|중/g, ' ');
+    .replace(/^(?:나|저|내가|제가)\s+/g, '')
+    .replace(/\s+(?:중(?:에|에서)?|어느\s*쪽|어떤\s*(?:것|쪽)이?\s*더|뭐가\s*더|어디가\s*더).*$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  const options = cleaned
-    .split(/\s+|,|\/|·|랑|하고|과|와|및/)
-    .map((item) => item.trim())
-    .filter((item) => item.length >= 2 && !/질문|고민|선택/.test(item));
+export function extractQuestionOptions(question: string) {
+  const source = question.trim();
+  const versus = source.split(/\s+vs\.?\s+/i);
+  const slash = source.split(/\s*\/\s*/);
+  const middle = source.match(/^(.+?)\s+중(?:에|에서)?(?:\s|$)/);
+  const side = source.match(/^(.+?)\s+(?:어느\s*쪽|어떤\s*(?:것|쪽)이?\s*더|뭐가\s*더)/);
+  let rawOptions: string[] = [];
 
-  return Array.from(new Set(options)).slice(0, 4);
+  if (versus.length === 2) {
+    rawOptions = versus;
+  } else if (slash.length === 2) {
+    rawOptions = slash;
+  } else {
+    const prefix = middle?.[1] || side?.[1];
+    if (!prefix) return [];
+
+    rawOptions = prefix.split(/\s*(?:이랑|랑|하고|과|와|또는|아니면|및)\s*/);
+    if (rawOptions.length < 2) {
+      rawOptions = prefix
+        .split(/\s+/)
+        .filter((item) => !/^(?:나|저|내가|제가|이사|거주|동네|지역)$/.test(item));
+    }
+  }
+
+  const options = rawOptions
+    .map(cleanComparisonOption)
+    .filter((item) => item.length >= 1 && !/^(?:둘|질문|고민|선택)$/.test(item));
+
+  return options.length >= 2
+    ? Array.from(new Set(options)).slice(0, 4)
+    : [];
 }
 
 function buildQuestionDirectAnswer(question: string, category: QuestionCategory, basis: DeterministicSajuBasis) {
@@ -1352,7 +1332,7 @@ function buildPremiumQuestionAnalysis(
   const options = extractQuestionOptions(answer.question);
   const optionLine = options.length >= 2
     ? `이번 질문의 핵심 선택지는 ${options.join('·')}로 보이므로, 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
-    : '이 질문은 막연한 운세가 아니라 실제 행동으로 확인해야 답이 선명해지는 유형입니다.';
+    : `이번 질문은 “${intent}”에 관한 열린 질문이므로 선택지를 억지로 나누지 않고, 질문의 원래 의미를 유지한 채 실제 행동으로 확인해야 답이 선명합니다.`;
   const basisLine = isSecondQuestion
     ? `${customerLabel}의 명식은 ${basis.pillars.day} 일주를 중심으로 보고, ${basis.pillars.month} 월령과 ${currentDayunName} 대운을 겹쳐 판단합니다.`
     : `${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다.`;
@@ -1459,7 +1439,7 @@ function getPremiumQuestionAdvice(
   return [
     '첫 판단은 결론보다 조건 분해입니다. 선택지를 돈, 사람, 시간, 체력 네 칸으로 나누면 답이 훨씬 빨리 좁혀집니다.',
     `${customerLabel}의 명리 근거는 ${basis.dayMaster.stem} 일간, ${basis.pillars.month} 월령, ${currentDayunName} 대운입니다. 이 조합은 감정적 확신보다 실제 유지 조건을 먼저 봐야 답이 안정됩니다.`,
-    `언제 움직일지: 오늘 바로 결론내리지 말고 7일 동안 ${intent}과 관련된 돈, 시간, 체력, 사람 반응을 하루 한 줄씩 기록하세요.`,
+    `언제 움직일지: 오늘 바로 결론내리지 말고 7일 동안 ${withKoreanParticle(intent, '과/와')} 관련된 돈, 시간, 체력, 사람 반응을 하루 한 줄씩 기록하세요.`,
     `어디서 확인할지: ${placeGuide}`,
     `어떻게 판단할지: 메모앱에 ${optionText}의 장점 3개, 단점 3개, 숨은 비용 3개를 적고 “한 달 뒤에도 버틸 수 있는가”로 비교하세요.`,
     `누구와 상의할지: 감정적으로 편드는 사람보다 실제 계약, 이동, 돈, 관계를 냉정하게 봐줄 사람 1명에게만 먼저 보여 주세요.`,
@@ -1486,7 +1466,7 @@ export function strengthenQuestionAnswerQuality(
   const cautious = options.cautious?.length ? options.cautious : basis.cautiousElements;
   const helpfulText = helpful.join(', ') || '보완 오행';
   const cautionGuidance = formatElementGuidance(cautious, basis);
-  const currentDayunName = getCurrentDayunName(basis, options.formData, options.currentDayunName);
+  const currentDayunName = getCurrentDayunName(basis);
   const premiumAnalysis = buildPremiumQuestionAnalysis(
     answer,
     basis,
@@ -1649,6 +1629,20 @@ function buildQuestionResponse(
   };
 }
 
+function assertQuestionDayunConsistency(answers: QuestionAnswerBlock[], basis: DeterministicSajuBasis) {
+  const canonicalCurrentDayun = getCurrentDayunName(basis);
+  const missingReference = answers.find((answer) => {
+    const generatedText = [answer.analysis, ...answer.advice].join('\n');
+    return !generatedText.includes(canonicalCurrentDayun);
+  });
+
+  if (missingReference) {
+    throw new Error(
+      `Question answer must cite canonical current dayun (${canonicalCurrentDayun}) from luckContext.currentDayun.`
+    );
+  }
+}
+
 function buildQuestionAnswers(
   formData: Partial<IntakeFormData>,
   basis: DeterministicSajuBasis,
@@ -1656,13 +1650,9 @@ function buildQuestionAnswers(
   cautious: FiveElement[]
 ): QuestionAnswerBlock[] {
   const relationshipLabel = getRelationshipLabel(formData);
-  const currentDayunName = basis.dayun.find((row) => {
-    const currentAge = computeCurrentAge(formData);
-    const range = parseAgeRange(row.age);
-    return currentAge >= range.start && currentAge <= range.end;
-  })?.ganzhi;
+  const currentDayunName = getCurrentDayunName(basis);
 
-  return [formData.q1, formData.q2]
+  const answers = [formData.q1, formData.q2]
     .filter((item): item is string => Boolean(item?.trim()))
     .map((question, index) => {
       const response = buildQuestionResponse(
@@ -1670,7 +1660,7 @@ function buildQuestionAnswers(
         getQuestionCategory(question),
         basis,
         relationshipLabel,
-        currentDayunName || basis.dayun[0]?.ganzhi || '현재 대운',
+        currentDayunName,
         helpful,
         cautious,
         index
@@ -1687,9 +1677,12 @@ function buildQuestionAnswers(
       formData,
       helpful,
       cautious,
-      currentDayunName: currentDayunName || basis.dayun[0]?.ganzhi || '현재 대운',
+      currentDayunName,
       questionIndex: index
     }));
+
+  assertQuestionDayunConsistency(answers, basis);
+  return answers;
 }
 
 function buildActionPlan(
@@ -2675,7 +2668,7 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
       subtitle: '다섯 용신법을 독립 계산하고 찬반 근거를 삭제하지 않은 합의 결과',
       paragraphs: [
         `${month.monthBranch}월의 사령 오행은 ${month.commandingElement}이며, 일간 ${month.dayMaster}은(는) ${month.obtainsCommand ? '득령' : month.receivesSeasonalSupport ? '계절 생조' : '계절 비득령'} 상태입니다.`,
-        `지장간 계절 가중까지 반영한 상대세력은 ${shareText}입니다. 한난은 ${climate.temperature}, 조습은 ${climate.moisture}로 판정했습니다.`,
+        `지장간 계절 가중까지 반영한 상대세력은 ${shareText}입니다. 한난은 ${{ cold: '추운 편', balanced: '비교적 균형적인 편', hot: '더운 편' }[climate.temperature]}, 조습은 ${{ dry: '건조한 편', balanced: '비교적 균형적인 편', wet: '습한 편' }[climate.moisture]}으로 판정했습니다.`,
         `천간 ${roots.filter((item) => item.rooted).length}개가 통근하고, 투간 연결은 ${exposures.visibleStems.filter((item) => item.exposedFromHidden).length}개 천간에서 확인했습니다.`,
         consensus.value.summary
       ],
