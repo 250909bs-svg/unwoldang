@@ -114,14 +114,40 @@ describe('auth storage compatibility', () => {
 
 describe('auth navigation compatibility', () => {
   it.each([
-    [undefined, '/my'],
-    ['https://attacker.example', '/my'],
-    ['//attacker.example', '/my'],
-    ['/auth/kakao/callback', '/my'],
-    ['/payment/portone/callback', '/my'],
-    ['/checkout', '/checkout']
-  ])('sanitizes returnTo=%s', (returnTo, expected) => {
-    expect(sanitizeAuthReturnTo(returnTo)).toBe(expected);
+    '/',
+    '/my',
+    '/detail/general-saju',
+    '/report/general-signature',
+    '/my?tab=archive#recent'
+  ])('allows same-origin returnTo=%s', (returnTo) => {
+    expect(sanitizeAuthReturnTo(returnTo)).toBe(returnTo);
+  });
+
+  it.each([
+    undefined,
+    '',
+    '//evil.example',
+    '/\\evil.example',
+    '\\evil.example',
+    'https://evil.example',
+    'http://evil.example',
+    'javascript:alert(1)',
+    '/%5Cevil.example',
+    '/%255Cevil.example',
+    decodeURIComponent('/%5Cevil.example'),
+    '%2F%2Fevil.example',
+    '/my\n//evil.example',
+    '/%0Aevil.example',
+    '/auth/kakao/callback',
+    '/payment/portone/callback',
+    '/safe/../auth/kakao/callback',
+    '/safe/../payment/portone/callback'
+  ])('rejects unsafe returnTo=%s', (returnTo) => {
+    expect(sanitizeAuthReturnTo(returnTo)).toBe('/my');
+  });
+
+  it('keeps the checkout return path used by the paid flow', () => {
+    expect(sanitizeAuthReturnTo('/checkout')).toBe('/checkout');
   });
 
   it('preserves payment callback precedence over an auth code query', () => {

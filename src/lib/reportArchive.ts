@@ -3,6 +3,7 @@ import type { AiReportProvider } from './aiReport';
 import type { PaymentMethodType } from './auth';
 import { normalizeIntakeFormData } from './intakeDataContract';
 import { getAdminReportsEndpoint, getReportArchiveEndpoint } from './runtimeConfig';
+import { getProductById } from '../products/registry';
 import type { SajuReportData } from './saju/report';
 
 export type ReportArchiveEntry = {
@@ -24,6 +25,22 @@ const REPORT_ARCHIVE_KEY_PREFIX = 'unwoldang.report.archive.v2';
 
 function getReportArchiveStorage(ownerId?: string) {
   return ownerId?.trim() ? window.localStorage : window.sessionStorage;
+}
+
+function isValidArchiveEntry(value: unknown): value is ReportArchiveEntry {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  const entry = value as Partial<ReportArchiveEntry>;
+  return Boolean(
+    typeof entry.id === 'string' &&
+    entry.id.trim() &&
+    typeof entry.productId === 'string' &&
+    getProductById(entry.productId) &&
+    entry.reportData &&
+    typeof entry.reportData === 'object'
+  );
 }
 
 function normalizeArchiveEntry(entry: ReportArchiveEntry): ReportArchiveEntry {
@@ -48,7 +65,7 @@ export const mergeReportArchiveEntries = (...groups: ReportArchiveEntry[][]) => 
   const map = new Map<string, ReportArchiveEntry>();
 
   groups.flat().forEach((entry) => {
-    if (!entry?.id) {
+    if (!isValidArchiveEntry(entry)) {
       return;
     }
 
@@ -81,7 +98,7 @@ export const readReportArchiveEntries = (ownerId?: string) => {
     }
 
     return parsed
-      .filter((entry): entry is ReportArchiveEntry => Boolean(entry?.id && entry?.productId && entry?.reportData))
+      .filter(isValidArchiveEntry)
       .map(normalizeArchiveEntry);
   } catch {
     storage.removeItem(storageKey);
@@ -119,7 +136,7 @@ async function readArchiveResponse(response: Response) {
   }
 
   return Array.isArray(payload?.entries)
-    ? payload.entries.map(normalizeArchiveEntry)
+    ? payload.entries.filter(isValidArchiveEntry).map(normalizeArchiveEntry)
     : [];
 }
 

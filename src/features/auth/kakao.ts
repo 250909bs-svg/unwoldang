@@ -1,6 +1,26 @@
 import type { AuthStatePayload } from './model';
 import { writePendingAuthState } from './storage';
 
+const AUTH_RETURN_TO_FALLBACK = '/my';
+const RETURN_TO_VALIDATION_ORIGIN = 'https://internal-navigation.invalid';
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]/;
+
+function decodeForNavigationValidation(value: string) {
+  let decoded = value;
+
+  for (let index = 0; index < 3; index += 1) {
+    try {
+      const next = decodeURIComponent(decoded);
+      if (next === decoded) return decoded;
+      decoded = next;
+    } catch {
+      return null;
+    }
+  }
+
+  return decoded;
+}
+
 export const getKakaoRedirectUri = () => {
   if (typeof window === 'undefined') {
     return '';
@@ -20,15 +40,40 @@ export const getKakaoRedirectUri = () => {
 };
 
 export const sanitizeAuthReturnTo = (returnTo?: string | null) => {
-  if (!returnTo || !returnTo.startsWith('/') || returnTo.startsWith('//')) {
-    return '/my';
+  if (!returnTo || returnTo !== returnTo.trim()) {
+    return AUTH_RETURN_TO_FALLBACK;
   }
 
-  if (returnTo.startsWith('/auth/') || returnTo.startsWith('/payment/')) {
-    return '/my';
+  const decoded = decodeForNavigationValidation(returnTo);
+  if (
+    !decoded ||
+    CONTROL_CHARACTER_PATTERN.test(returnTo) ||
+    CONTROL_CHARACTER_PATTERN.test(decoded) ||
+    returnTo.includes('\\') ||
+    decoded.includes('\\') ||
+    !decoded.startsWith('/') ||
+    decoded.startsWith('//')
+  ) {
+    return AUTH_RETURN_TO_FALLBACK;
   }
 
-  return returnTo;
+  try {
+    const decodedUrl = new URL(decoded, RETURN_TO_VALIDATION_ORIGIN);
+    const navigationUrl = new URL(returnTo, RETURN_TO_VALIDATION_ORIGIN);
+    const isCallbackReentry = /^\/(?:auth|payment)(?:\/|$)/i.test(decodedUrl.pathname);
+
+    if (
+      decodedUrl.origin !== RETURN_TO_VALIDATION_ORIGIN ||
+      navigationUrl.origin !== RETURN_TO_VALIDATION_ORIGIN ||
+      isCallbackReentry
+    ) {
+      return AUTH_RETURN_TO_FALLBACK;
+    }
+
+    return `${navigationUrl.pathname}${navigationUrl.search}${navigationUrl.hash}`;
+  } catch {
+    return AUTH_RETURN_TO_FALLBACK;
+  }
 };
 
 export const decodeAuthState = (rawState?: string | null): AuthStatePayload | null => {

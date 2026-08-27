@@ -114,4 +114,20 @@ describe('local report archive isolation', () => {
       applySolarTimeCorrection: true
     });
   });
+
+  it('drops an unregistered productId before it can become a report navigation target', () => {
+    const storageKey = getReportArchiveStorageKey('kakao-routing');
+    const valid = buildEntry('valid-report', '정상 사용자');
+    const malicious = {
+      ...buildEntry('malicious-report', '공격 입력'),
+      productId: '../\\evil.example'
+    };
+
+    window.localStorage.setItem(storageKey, JSON.stringify([valid, malicious]));
+
+    expect(readReportArchiveEntries('kakao-routing').map((entry) => ({
+      id: entry.id,
+      productId: entry.productId
+    }))).toEqual([{ id: 'valid-report', productId: 'general-signature' }]);
+  });
 });
