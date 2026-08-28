@@ -3,6 +3,8 @@ dist/
 cloudrun-api/dist/
 .zip_inspect/
 .tools/
+playwright-report/
+test-results/
 
 .env
 .env.*
