@@ -52,6 +52,31 @@ const policies: PolicyExpectation[] = [
     productId: 'life-flow'
   },
   {
+    pathname: '/checkout',
+    canonicalPath: '/',
+    shouldNoIndex: true
+  },
+  {
+    pathname: '/payment/portone/callback',
+    canonicalPath: '/',
+    shouldNoIndex: true
+  },
+  {
+    pathname: '/my',
+    canonicalPath: '/',
+    shouldNoIndex: true
+  },
+  {
+    pathname: '/admin',
+    canonicalPath: '/',
+    shouldNoIndex: true
+  },
+  {
+    pathname: '/admin/orders',
+    canonicalPath: '/',
+    shouldNoIndex: true
+  },
+  {
     pathname: '/detail/not-a-product',
     canonicalPath: '/',
     shouldNoIndex: true
