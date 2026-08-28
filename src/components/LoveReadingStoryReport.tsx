@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import type { IntakeFormData, LoveFocus, LoveInterest } from '../api/mockData';
+import type { IntakeFormData, LoveFocus, LoveInterest, LoveReaction } from '../api/mockData';
 import { getLoveFocusLabel, normalizeLoveFocus } from '../lib/loveFocus';
 import { buildPartnerAppearanceProfile } from '../lib/mz-love-fact/partnerAppearance';
 import { buildPartnerSpecificityProfile } from '../lib/mz-love-fact/partnerSpecificity';
@@ -28,11 +28,51 @@ import type {
 import { getRelationshipDurationLabel } from '../lib/relationshipIntake';
 import type { SajuReportData } from '../lib/saju/report';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
+import {
+  LOVE_REACTION_PROFILES,
+  getLoveReactionProfile
+} from '../products/love-reading/reactionProfiles';
+import {
+  LOVE_READING_CRISIS_SAFETY_COPY,
+  classifyLoveReadingQuestionSafety,
+  getLoveReadingQuestionSafety
+} from '../products/love-reading/questionSafety';
 import '../styles/mz-love-fact.css';
 import '../styles/mz-love-report.css';
 
 type LoveChapter = MzLoveChapterViewModel;
 type LoveViewModel = MzLoveReportViewModel;
+
+const SYMBOLIC_CHAPTER_TITLES: Partial<Record<MzLoveChapterId, string>> = {
+  'next-partner': '다음 인연에서 보일 수 있는 상징과 첫 신호',
+  'meeting-scenes': '만남이 시작될 수 있는 장면 후보'
+};
+
+function getLoveChapterTitle(chapter: LoveChapter) {
+  return SYMBOLIC_CHAPTER_TITLES[chapter.id] ?? chapter.title;
+}
+type LoveReadingShareNavigator = {
+  share?: unknown;
+  clipboard?: { writeText?: unknown };
+};
+
+export function canAutomaticallyShareLoveReading(
+  navigatorLike: LoveReadingShareNavigator | undefined
+): boolean {
+  return Boolean(
+    navigatorLike
+    && (
+      typeof navigatorLike.share === 'function'
+      || typeof navigatorLike.clipboard?.writeText === 'function'
+    )
+  );
+}
+
+export function getLoveReadingManualShareMessage(origin?: string): string {
+  const { url } = createLoveReadingProductShareData(origin);
+  return `이 브라우저에서는 자동 공유를 지원하지 않아요. 아래 상품 주소를 길게 눌러 복사해 주세요: ${url}`;
+}
+
 
 type ChecklistItem = {
   id: string;
@@ -50,6 +90,7 @@ export type LoveReadingStoryReportProps = {
   birthTimeKnown?: boolean;
   interestedIn?: LoveInterest;
   loveFocus?: LoveFocus;
+  loveReaction?: LoveReaction;
   customerQuestions?: readonly string[];
   onFinalCta?: (completedMissionIds: string[]) => void;
   onShare?: () => void | Promise<void>;
@@ -99,24 +140,6 @@ const CHAPTER_SUPPORT_SCENES: Partial<Record<MzLoveChapterId, readonly MzLoveSce
   'action-plan': ['action-plan-calendar'],
   'final-fact': ['report-seal-final']
 };
-
-const MESSAGE_CHOICES = [
-  {
-    id: 'ask-now',
-    text: '“왜 답장 안 해?”라고 바로 확인한다',
-    response: '답을 빨리 받는 것보다, 내가 원하는 연락과 관계의 기준을 차분하게 한 번 말하는 게 먼저야.'
-  },
-  {
-    id: 'act-fine',
-    text: '“괜찮아, 바빴나 보네.”라고 넘긴다',
-    response: '괜찮은 척이 배려가 되는 날도 있지만, 서운함을 계속 숨기면 상대는 네 기준을 배울 기회가 없어.'
-  },
-  {
-    id: 'delay-back',
-    text: '나도 일부러 답장을 늦춘다',
-    response: '속도를 맞추는 것과 밀당은 달라. 감정을 시험하지 말고 다음 약속을 실제로 잡는지 확인해.'
-  }
-] as const;
 
 const DEFAULT_RED_FLAGS = [
   '관계에 대한 질문은 피하면서 필요할 때만 연락한다',
@@ -248,7 +271,7 @@ function ChapterStoryPanels({ chapter }: { chapter: LoveChapter }) {
 
   if (scenes.length === 0) {
     return (
-      <div className="mz-love-report__dialogue-pair" aria-label={`${chapter.title} 현실 대화`}>
+      <div className="mz-love-report__dialogue-pair" aria-label={`${getLoveChapterTitle(chapter)} 현실 대화`}>
         <blockquote className="mz-love-report__bubble mz-love-report__bubble--right">
           <span>내 현실 장면</span>
           <p>{chapter.realLifeScene}</p>
@@ -262,7 +285,7 @@ function ChapterStoryPanels({ chapter }: { chapter: LoveChapter }) {
   }
 
   return (
-    <div className="mz-love-report__story-panels" aria-label={`${chapter.title} 웹툰 장면`}>
+    <div className="mz-love-report__story-panels" aria-label={`${getLoveChapterTitle(chapter)} 웹툰 장면`}>
       {scenes.map((scene, index) => (
         <SupportScenePanel key={scene.key} scene={scene} chapter={chapter} index={index} />
       ))}
@@ -274,15 +297,18 @@ function ConsultationDocket({
   report,
   viewModel,
   focus,
-  relationshipDuration
+  relationshipDuration,
+  loveReaction
 }: {
   report: SajuReportData;
   viewModel: LoveViewModel;
   focus: LoveFocus | null;
   relationshipDuration?: IntakeFormData['relationshipDuration'];
+  loveReaction?: LoveReaction;
 }) {
   const route = focus ? LOVE_FOCUS_STORY_ROUTES[focus] : null;
   const durationLabel = getRelationshipDurationLabel(relationshipDuration);
+  const reactionProfile = getLoveReactionProfile(loveReaction);
   const pillars = [
     { label: '시주', value: report.pillars.hour || '시간 미상' },
     { label: '일주', value: report.pillars.day },
@@ -319,6 +345,11 @@ function ConsultationDocket({
         <div><dt>도움 기운</dt><dd>{report.helpfulElements.join(' · ') || '균형 확인 중'}</dd></div>
         <div><dt>주의 기운</dt><dd>{report.cautiousElements.join(' · ') || '균형 확인 중'}</dd></div>
         <div><dt>현재 관계</dt><dd>{viewModel.cover.relationshipLabel}{durationLabel ? ` · ${durationLabel}` : ''}</dd></div>
+        {reactionProfile ? (
+          <div className="mz-love-report__reaction-fact">
+            <dt>내가 고른 연애 반응</dt><dd>{reactionProfile.id} · {reactionProfile.label}</dd>
+          </div>
+        ) : null}
       </dl>
 
       <article className="mz-love-report__focus-card" data-focus={focus || 'overall'}>
@@ -334,6 +365,15 @@ function ConsultationDocket({
     </section>
   );
 }
+type LoveQuestionAnswer = SajuReportData['questionAnswers'][number];
+
+function isLegacyGeneratedCrisisAnswer(answer: LoveQuestionAnswer | undefined): boolean {
+  if (!answer) return false;
+
+  const narrative = [answer.title, answer.analysis, ...answer.advice].join(' ');
+  return /자살예방 상담전화\s*109|나 혼자 있으면 위험해|안전이 먼저|119나 112/.test(narrative);
+}
+
 
 function CustomerQuestionAnswers({
   report,
@@ -357,8 +397,30 @@ function CustomerQuestionAnswers({
     const matchedAnswer = requestedQuestion
       ? report.questionAnswers.find((answer) => answer.question.trim() === requestedQuestion)
       : undefined;
-    const source = matchedAnswer ?? sourceAnswers[index];
-    const question = requestedQuestion || source?.question || `연애 질문 ${index + 1}`;
+    const sourceCandidate = matchedAnswer ?? sourceAnswers[index];
+    const question = requestedQuestion || sourceCandidate?.question || `연애 질문 ${index + 1}`;
+    const safetyClassification = classifyLoveReadingQuestionSafety(question);
+    const legacyCrisisAnswer = isLegacyGeneratedCrisisAnswer(sourceCandidate);
+    const safety = getLoveReadingQuestionSafety(question) ?? (
+      safetyClassification === 'unknown' && legacyCrisisAnswer
+        ? LOVE_READING_CRISIS_SAFETY_COPY
+        : null
+    );
+    const source = safetyClassification === 'relationship-decision'
+      && legacyCrisisAnswer
+      ? undefined
+      : sourceCandidate;
+
+    if (safety) {
+      return {
+        question,
+        title: safety.title,
+        analysis: safety.message,
+        advice: safety.actions,
+        isSafety: true
+      };
+    }
+
     const analysisFallback = `${focusChapter.interpretation} ${focusChapter.checkSignal}`;
     const analysis = mzLoveLongCustomerNarrativeOrFallback(source?.analysis, analysisFallback);
     const advice = (source?.advice ?? [])
@@ -370,7 +432,8 @@ function CustomerQuestionAnswers({
       question,
       title: mzLoveCustomerNarrativeOrFallback(source?.title, `질문 ${index + 1}의 핵심 답변`),
       analysis,
-      advice: advice.length > 0 ? advice : [focusChapter.action]
+      advice: advice.length > 0 ? advice : [focusChapter.action],
+      isSafety: false
     };
   });
 
@@ -387,16 +450,16 @@ function CustomerQuestionAnswers({
       />
       <div className="mz-love-report__qa-list">
         {answers.map((answer, index) => (
-          <article key={`${answer.question}-${index}`} className="mz-love-report__qa-card">
+          <article key={`${answer.question}-${index}`} className={`mz-love-report__qa-card${answer.isSafety ? ' mz-love-report__qa-card--safety' : ''}`}>
             <div className="mz-love-report__qa-question">
               <span>내 질문 {index + 1}</span>
               <p>“{answer.question}”</p>
             </div>
             <div className="mz-love-report__qa-answer">
-              <span>MZ무당의 답</span>
+              <span>{answer.isSafety ? '안전을 먼저 확인하는 답' : 'MZ무당의 답'}</span>
               <h3>{answer.title}</h3>
               <p>{answer.analysis}</p>
-              <strong>지금 확인할 행동</strong>
+              <strong>{answer.isSafety ? '지금 바로 할 일' : '지금 확인할 행동'}</strong>
               <ul>
                 {answer.advice.map((item) => <li key={item}>{item}</li>)}
               </ul>
@@ -415,8 +478,8 @@ function PremiumAnswerDeck({ report, interestedIn }: { report: SajuReportData; i
     <section className="mz-love-report__premium-answer-deck" id="mz-love-premium-answers" aria-labelledby="mz-love-premium-answers-title">
       <header>
         <span>9 PREMIUM ANSWERS</span>
-        <h2 id="mz-love-premium-answers-title">결론부터 찾는 사람을 위한<br />연애운 핵심 답변 9가지</h2>
-        <p>누구·외모·시기·장소·생활·연락·결혼·주의·행동을 먼저 답하고, 뒤의 13개 장에서 왜 그런지 풀어 드려요.</p>
+        <h2 id="mz-love-premium-answers-title">상징 후보부터 행동 기준까지<br />연애운 참고 답변 9가지</h2>
+        <p>인연상·분위기·시기·만남 장면·생활·연락·결혼·주의·행동의 후보를 먼저 보고, 뒤의 13개 장에서 계산 입력과 현실 확인 기준을 풀어 드려요.</p>
       </header>
       <ol>
         {answers.map((answer, index) => (
@@ -431,8 +494,8 @@ function PremiumAnswerDeck({ report, interestedIn }: { report: SajuReportData; i
         ))}
       </ol>
       <footer>
-        <strong>판정 기준</strong>
-        <p>판정축은 {getPortraitEvidenceLabel(report)}입니다. 원국·대운·월운·현재 관계 입력을 함께 교차했습니다.</p>
+        <strong>해석 참고축</strong>
+        <p>참고축은 {getPortraitEvidenceLabel(report)}입니다. 원국·대운·월운·현재 관계 입력을 함께 살폈으며, 특정 인물이나 미래를 확정하지 않습니다.</p>
       </footer>
     </section>
   );
@@ -450,13 +513,15 @@ function FuturePartnerPortrait({
   const portraits = getPartnerPortraits(interestedIn, appearanceProfile);
   const answers = getPremiumLoveAnswers(report, interestedIn);
   const whoAnswer = answers.find((answer) => answer.id === 'who');
+  const symbolicFaceLabel = specificity.face.label.replace('1순위', '주요 상징');
+  const symbolicDisclosure = specificity.disclosure.replace('대표 범위와 1순위 사례', '상징 범위와 후보 사례');
 
   return (
     <section className="mz-love-report__partner-reveal" aria-labelledby="mz-love-partner-title">
       <header>
-        <span>FUTURE PARTNER REVEAL</span>
-        <h3 id="mz-love-partner-title">다음 인연의 얼굴과 분위기</h3>
-        <p>{getPartnerInterestLabel(interestedIn)} · {appearanceProfile.primaryArchetype.label}에 {appearanceProfile.secondaryArchetype.label}이 겹친 상징 인연상이에요.</p>
+        <span>SYMBOLIC PARTNER CANDIDATES</span>
+        <h3 id="mz-love-partner-title">상징으로 보는 다음 인연 후보</h3>
+        <p>{getPartnerInterestLabel(interestedIn)} · {appearanceProfile.primaryArchetype.label}에 {appearanceProfile.secondaryArchetype.label}이 겹친 참고 이미지예요. 실제 인물의 외모를 확정하지 않아요.</p>
       </header>
       <div className={`mz-love-report__partner-portraits ${portraits.length > 1 ? 'is-pair' : ''}`}>
         {portraits.map((portrait) => (
@@ -483,12 +548,12 @@ function FuturePartnerPortrait({
       <article className="mz-love-report__appearance-signature">
         <span>FIRST IMPRESSION MIX</span>
         <h4>{appearanceProfile.primaryArchetype.label}<i>+</i>{appearanceProfile.secondaryArchetype.label}</h4>
-        <p>{specificity.height.label} · {specificity.face.label}</p>
+        <p>키감 후보 {specificity.height.label} · 얼굴 인상 후보 {symbolicFaceLabel}</p>
       </article>
-      <dl className="mz-love-report__appearance-traits" aria-label="다음 인연상 외모 정밀 분석">
+      <dl className="mz-love-report__appearance-traits" aria-label="상징 인연 후보의 외모 참고 항목">
         {[
           ['키감', appearanceProfile.height],
-          ['대표 키 범위', specificity.height.label],
+          ['상징 키감 후보', specificity.height.label],
           ['체형', appearanceProfile.build],
           ['얼굴형', appearanceProfile.faceShape],
           ['눈매', appearanceProfile.eyes],
@@ -518,22 +583,22 @@ function FuturePartnerPortrait({
         <p>배우자궁은 주 인상, 일간·도움 오행은 체형과 질감, 상위 십성은 눈썹·표정·스타일의 보조 결로 반영했습니다.</p>
       </details>
       <article className="mz-love-report__partner-profile">
-        <span>이 얼굴 뒤에서 꼭 확인할 성향</span>
+        <span>이 상징 이미지와 함께 확인할 성향</span>
         <p>{whoAnswer?.answer}</p>
         <dl>
           <div><dt>배우자궁</dt><dd>{appearanceProfile.spousePalace.pillar} · {appearanceProfile.spousePalace.branch}({appearanceProfile.spousePalace.element})</dd></div>
           {specificity.professions.map((profession) => (
             <div key={profession.id}>
-              <dt>직업 {profession.rank}순위</dt>
-              <dd>{profession.label} · {profession.relatedRoles}<br /><small>명리 근거: {profession.evidence.join(' · ')}</small></dd>
+              <dt>직업 환경 후보 {profession.rank}</dt>
+              <dd>{profession.label} · {profession.relatedRoles}<br /><small>해석 참고 입력: {profession.evidence.join(' · ')}</small></dd>
             </div>
           ))}
-          <div><dt>만남 1순위</dt><dd>{specificity.meeting.primaryLocation}</dd></div>
+          <div><dt>만날 수 있는 장면 후보</dt><dd>{specificity.meeting.primaryLocation}</dd></div>
           <div><dt>알아볼 신호</dt><dd>{specificity.meeting.recognitionSignal}</dd></div>
           <div><dt>이미지 서명</dt><dd>{appearanceProfile.signatureKey}</dd></div>
         </dl>
       </article>
-      <p className="mz-love-report__partner-disclosure">{SYMBOLIC_PARTNER_DISCLOSURE} {specificity.disclosure}</p>
+      <p className="mz-love-report__partner-disclosure">{SYMBOLIC_PARTNER_DISCLOSURE} {symbolicDisclosure}</p>
     </section>
   );
 }
@@ -579,6 +644,46 @@ export function EvidenceDisclosure({ evidence }: { evidence: readonly EvidenceTa
   );
 }
 
+export function CalculationBasisDisclosure({
+  calculationBasis
+}: {
+  calculationBasis: LoveChapter['calculationBasis'] | undefined;
+}) {
+  if (!calculationBasis?.length) {
+    return null;
+  }
+
+  return (
+    <details className="mz-love-report__calculation-disclosure">
+      <summary>
+        <span>계산 입력</span>
+        이 개인화 해석에 사용한 계산 입력 보기
+      </summary>
+      <div className="mz-love-report__calculation-body">
+        <p>
+          아래 항목은 개인화 문구를 고를 때 참고한 계산 입력의 요약입니다.
+          원문을 그대로 인용한 직접 근거 목록이 아니며, 관계 성공 확률이나 미래 확정을 뜻하지 않습니다.
+        </p>
+        <dl>
+          {calculationBasis.map((item) => (
+            <div key={item.id}>
+              <dt>{item.label}</dt>
+              <dd>
+                <strong>{item.value}</strong>
+                <span>{item.description}</span>
+                <small>
+                  입력 종류: {item.kind === 'chart' ? '원국' : item.kind === 'timing' ? '시기' : '상담 입력'}
+                  {' · '}계산 입력 위치: {item.sourcePath}
+                </small>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </details>
+  );
+}
+
 function ReadingFormula({ chapter }: { chapter: LoveChapter }) {
   const steps = [
     { label: chapter.evidence.length > 0 ? '명리 해석' : '관계 패턴 해석', value: chapter.interpretation },
@@ -594,7 +699,7 @@ function ReadingFormula({ chapter }: { chapter: LoveChapter }) {
         <span>팩폭</span>
         <p>{chapter.factBomb}</p>
       </blockquote>
-      <ol className="mz-love-report__formula" aria-label={`${chapter.title} 상세 해석`}>
+      <ol className="mz-love-report__formula" aria-label={`${getLoveChapterTitle(chapter)} 상세 해석`}>
         {steps.map((step, index) => (
           <li key={step.label}>
             <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
@@ -606,6 +711,7 @@ function ReadingFormula({ chapter }: { chapter: LoveChapter }) {
           </li>
         ))}
       </ol>
+      <CalculationBasisDisclosure calculationBasis={chapter.calculationBasis} />
     </div>
   );
 }
@@ -698,7 +804,7 @@ function MonthTimeline({ report }: { report: SajuReportData }) {
       <header>
         <span>12 MONTH SIGNAL</span>
         <h3 id="love-timeline-title">붉은 구슬을 눌러 월별 흐름을 확인해</h3>
-        <p>정확한 사건 날짜가 아니라, 관계가 움직이기 쉬운 온도와 조건을 보여줍니다.</p>
+        <p>원국과 해당 월 간지의 균형을 참고 온도로 보여줍니다. 특정 사건 날짜나 관계 성공 확률이 아닙니다.</p>
       </header>
       <div className="mz-love-report__month-tabs" role="tablist" aria-label="12개월 연애 흐름" data-export-remove="true">
         {months.map((month, index) => (
@@ -745,9 +851,12 @@ function MonthTimeline({ report }: { report: SajuReportData }) {
             data-export-reveal="true"
           >
             <div className="mz-love-report__temperature">
-              <span>{month.year}년 {month.month}월 · {temperatureLabel}</span>
-              <strong>{month.score}°</strong>
-              <meter min="0" max="100" value={month.score} aria-label={`연애운 온도 ${month.score}점`} />
+              <span>{month.year}년 {month.month}월 · {month.ganzhi}월 · {temperatureLabel}</span>
+              <strong><small>원국 균형 참고 온도</small>{month.score}°</strong>
+              <meter min="0" max="100" value={month.score} aria-label={`원국 균형 참고 온도 ${month.score}점`} />
+              <p className="mz-love-report__temperature-note">
+                이 수치는 관계의 성공 가능성을 백분율로 계산한 값이 아니라, 원국과 월운 균형을 비교해 행동 속도를 조절하기 위한 참고값입니다.
+              </p>
             </div>
             <dl>
               <div>
@@ -774,9 +883,9 @@ function MonthTimeline({ report }: { report: SajuReportData }) {
   );
 }
 
-function MessageChoice({ chapter }: { chapter: LoveChapter }) {
-  const [selectedId, setSelectedId] = useState<(typeof MESSAGE_CHOICES)[number]['id'] | null>(null);
-  const selected = MESSAGE_CHOICES.find((choice) => choice.id === selectedId);
+function MessageChoice({ chapter, loveReaction }: { chapter: LoveChapter; loveReaction?: LoveReaction }) {
+  const [selectedId, setSelectedId] = useState<LoveReaction | null>(() => getLoveReactionProfile(loveReaction)?.id ?? null);
+  const selected = getLoveReactionProfile(selectedId);
 
   return (
     <section className="mz-love-report__message-choice" aria-labelledby="message-choice-title">
@@ -785,14 +894,14 @@ function MessageChoice({ chapter }: { chapter: LoveChapter }) {
         <h3 id="message-choice-title">답장이 늦을 때, 네가 제일 자주 하는 반응은?</h3>
       </header>
       <div className="mz-love-report__message-options" data-export-remove="true">
-        {MESSAGE_CHOICES.map((choice) => (
+        {LOVE_REACTION_PROFILES.map((choice) => (
           <button
             type="button"
             key={choice.id}
             aria-pressed={selectedId === choice.id}
             onClick={() => setSelectedId(choice.id)}
           >
-            {choice.text}
+            {choice.id}. {choice.label}
           </button>
         ))}
       </div>
@@ -808,9 +917,9 @@ function MessageChoice({ chapter }: { chapter: LoveChapter }) {
       )}
       <div className="mz-love-report__export-message-list" data-export-only="true" aria-hidden="true">
         <h4>메시지 반응별 해설</h4>
-        {MESSAGE_CHOICES.map((choice) => (
+        {LOVE_REACTION_PROFILES.map((choice) => (
           <article key={choice.id}>
-            <strong>{choice.text}</strong>
+            <strong>{choice.id}. {choice.label}</strong>
             <p>{choice.response}</p>
           </article>
         ))}
@@ -829,8 +938,8 @@ function FlagBoard({
   greenFlags: readonly string[];
   chapter: LoveChapter;
 }) {
-  const redFlags = compactList([...reportRedFlags], DEFAULT_RED_FLAGS);
-  const greenFlags = compactList([...reportGreenFlags], DEFAULT_GREEN_FLAGS);
+  const redFlags = compactList([...reportRedFlags], DEFAULT_RED_FLAGS, Math.min(4, Math.max(3, reportRedFlags.length)));
+  const greenFlags = compactList([...reportGreenFlags], DEFAULT_GREEN_FLAGS, Math.min(4, Math.max(3, reportGreenFlags.length)));
 
   return (
     <section className="mz-love-report__flag-board" aria-labelledby="flag-board-title">
@@ -952,17 +1061,19 @@ function ChapterSection({
   heroExtra?: ReactNode;
   isFocus?: boolean;
 }) {
+  const presentationTitle = getLoveChapterTitle(chapter);
+
   return (
     <section
       className={`mz-love-report__chapter mz-love-report__chapter--${chapter.layout || 'story'}${isFocus ? ' is-focus' : ''}`}
       id={`mz-love-chapter-${chapter.order}`}
       aria-labelledby={`mz-love-chapter-title-${chapter.order}`}
-      aria-label={isFocus ? `내가 고른 1순위 해석 · ${chapter.title}` : undefined}
+      aria-label={isFocus ? `내가 고른 1순위 해석 · ${presentationTitle}` : undefined}
       data-scene={chapter.scene?.key}
     >
       <header className="mz-love-report__chapter-heading">
         <span>{isFocus ? `★ 내가 고른 1순위 · ${chapter.eyebrow}` : chapter.eyebrow}</span>
-        <h2 id={`mz-love-chapter-title-${chapter.order}`}>{chapter.title}</h2>
+        <h2 id={`mz-love-chapter-title-${chapter.order}`}>{presentationTitle}</h2>
         {chapter.subtitle ? <p>{chapter.subtitle}</p> : null}
       </header>
       {chapter.scene ? <SceneFigure scene={chapter.scene} quote={chapter.characterLine} /> : (
@@ -973,7 +1084,7 @@ function ChapterSection({
       <details className="mz-love-report__analysis-disclosure">
         <summary>
           <span>왜 이렇게 읽었는지</span>
-          명리·현실 근거 5단계 펼쳐보기
+          해석 5단계와 계산 입력 펼쳐보기
         </summary>
         <ReadingFormula chapter={chapter} />
       </details>
@@ -997,16 +1108,28 @@ export default function LoveReadingStoryReport({
   birthTimeKnown,
   interestedIn,
   loveFocus,
+  loveReaction,
   customerQuestions = [],
   onFinalCta,
   onShare,
   onChecklistChange
 }: LoveReadingStoryReportProps) {
-  const viewModel = useMemo(
-    () => buildMzLoveViewModel(report, { relationshipStatus, birthTimeKnown, interestedIn }),
-    [birthTimeKnown, interestedIn, relationshipStatus, report]
-  );
   const normalizedFocus = normalizeLoveFocus(loveFocus);
+  const primaryQuestion = customerQuestions
+    .map((question) => question.trim())
+    .find(Boolean) || report.questionPreview;
+  const viewModel = useMemo(
+    () => buildMzLoveViewModel(report, {
+      relationshipStatus,
+      relationshipDuration,
+      birthTimeKnown,
+      interestedIn,
+      loveReaction,
+      loveFocus: normalizedFocus ?? undefined,
+      primaryQuestion
+    }),
+    [birthTimeKnown, interestedIn, loveReaction, normalizedFocus, primaryQuestion, relationshipDuration, relationshipStatus, report]
+  );
   const focusRoute = normalizedFocus ? LOVE_FOCUS_STORY_ROUTES[normalizedFocus] : null;
   const focusChapter = viewModel.chapters.find((chapter) => chapter.id === focusRoute?.chapterId) ?? viewModel.chapters[0];
   const focusLabel = normalizedFocus ? getLoveFocusLabel(normalizedFocus) : '';
@@ -1039,15 +1162,21 @@ export default function LoveReadingStoryReport({
   };
 
   const handleShare = async () => {
+    const browserNavigator = typeof navigator !== 'undefined' ? navigator : undefined;
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const shareData = createLoveReadingProductShareData(origin);
+    if (!canAutomaticallyShareLoveReading(browserNavigator)) {
+      setShareStatus(getLoveReadingManualShareMessage(origin));
+      return;
+    }
+
     try {
       if (onShare) {
         await onShare();
-      } else if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share(createLoveReadingProductShareData(
-          typeof window !== 'undefined' ? window.location.origin : undefined
-        ));
-      } else if (typeof navigator !== 'undefined' && navigator.clipboard && typeof window !== 'undefined') {
-        await navigator.clipboard.writeText(createLoveReadingProductShareData(window.location.origin).url);
+      } else if (browserNavigator?.share) {
+        await browserNavigator.share(shareData);
+      } else if (browserNavigator?.clipboard) {
+        await browserNavigator.clipboard.writeText(shareData.url);
       }
       setShareStatus('상품 링크를 공유할 준비가 됐어요. 개인 결과는 포함되지 않아요.');
     } catch (error) {
@@ -1102,14 +1231,14 @@ export default function LoveReadingStoryReport({
             <li>
               <a href="#mz-love-premium-answers">
                 <span>핵심</span>
-                누구·얼굴·시기·장소 9개 직답
+                상징 인연·시기·장면 9개 참고 답변
               </a>
             </li>
             {viewModel.chapters.map((chapter) => (
               <li key={chapter.id}>
                 <a href={`#mz-love-chapter-${chapter.order}`}>
                   <span>{String(chapter.order).padStart(2, '0')}</span>
-                  {chapter.title}{focusRoute?.chapterId === chapter.id ? ' · 나의 1순위' : ''}
+                  {getLoveChapterTitle(chapter)}{focusRoute?.chapterId === chapter.id ? ' · 나의 1순위' : ''}
                 </a>
               </li>
             ))}
@@ -1122,6 +1251,7 @@ export default function LoveReadingStoryReport({
         viewModel={viewModel}
         focus={normalizedFocus}
         relationshipDuration={relationshipDuration}
+        loveReaction={loveReaction}
       />
 
       {focusChapter ? (
@@ -1144,7 +1274,7 @@ export default function LoveReadingStoryReport({
           >
             {chapter.order === 5 ? <AttractionComparison attraction={attraction} lasting={lasting} /> : null}
             {chapter.order === 8 ? <MonthTimeline report={report} /> : null}
-            {chapter.order === 9 && messageChapter ? <MessageChoice chapter={messageChapter} /> : null}
+            {chapter.order === 9 && messageChapter ? <MessageChoice chapter={messageChapter} loveReaction={loveReaction} /> : null}
             {chapter.order === 11 && flagChapter ? (
               <FlagBoard redFlags={viewModel.redFlags} greenFlags={viewModel.greenFlags} chapter={flagChapter} />
             ) : null}

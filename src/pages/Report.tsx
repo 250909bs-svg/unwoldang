@@ -7056,6 +7056,7 @@ body {
                 birthTimeKnown={loveBirthTimeKnown}
                 interestedIn={reportInput.interestedIn}
                 loveFocus={reportInput.loveFocus}
+                loveReaction={reportInput.loveReaction}
                 customerQuestions={loveCustomerQuestions}
                 onShare={handleShareReport}
                 shareLabel="이 상품 공유하기"
