@@ -86,15 +86,15 @@ describe('intake data preservation contract', () => {
     });
   });
 
-  it('does not pair a single status with a meaningless relationship duration', () => {
+  it('preserves a single-period answer in the canonical relationship summary', () => {
     const result = normalizeIntakeFormData({
       ...base,
       relationshipStatus: 'single',
       relationshipDuration: 'under1'
     });
 
-    expect(result.relationshipDuration).toBe('');
-    expect(getRelationshipSummary(result)).toBe('솔로');
+    expect(result.relationshipDuration).toBe('under1');
+    expect(getRelationshipSummary(result)).toBe('솔로 / 솔로 기간 1년 미만');
     expect(getRelationshipSummary(base)).toBe('연애 중 / 1년 이상 3년 이하');
   });
 });

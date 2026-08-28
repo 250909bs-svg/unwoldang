@@ -7,7 +7,7 @@ import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { normalizeIntakeFormData } from '../lib/intakeDataContract';
-import { saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
+import { readReportArchiveEntries, saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
 import { evaluateReportAccess } from '../lib/reportAccessGate';
 import { getReportCharacterVideo } from '../lib/reportMedia';
@@ -18,6 +18,11 @@ import { finalizeCustomerReport } from '../lib/saju/reportPresentation';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 import GeneralSignatureReportIntro from '../products/general-signature/GeneralSignatureReportIntro';
+import {
+  isRecoverableGeneralSignatureInput,
+  readGeneralSignatureDraft,
+  selectLatestGeneralSignatureArchive
+} from '../products/general-signature/generalSignatureReportRecovery';
 import { canStartProduct, getProductById } from '../products/registry';
 import '../styles/past-life.css';
 
@@ -6353,12 +6358,49 @@ function drawWrappedCanvasText(
   });
 }
 
+function MissingGeneralSignatureReport() {
+  return (
+    <main className="mobile-page-shell">
+      <div className="mobile-page-card">
+        <section className="mobile-page-content centered">
+          <div className="mobile-loading-card" role="status" aria-live="polite">
+            <span className="mobile-chip">REPORT NOT FOUND</span>
+            <h1>불러올 종합사주 결과를 찾지 못했습니다.</h1>
+            <p>입력 중이던 정보나 보관함의 결과가 확인되지 않았습니다.</p>
+            <Link className="mobile-primary-button" to="/form/general-signature">내 종합사주 다시 시작하기</Link>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const incomingState = (location.state as ReportLocationState | null) || {};
+  const product = getProductById(id)!;
+  const service = findServiceById(product.id);
+  const resolvedState = useMemo<ReportLocationState>(() => {
+    if (service.id !== 'general-signature' || incomingState.reportData) return incomingState;
+    const authUser = readStoredAuthUser();
+    const archive = selectLatestGeneralSignatureArchive(readReportArchiveEntries(authUser?.id));
+    if (archive) {
+      return { formData: archive.formData, paymentMethod: archive.paymentMethod, orderId: archive.orderId, reportData: archive.reportData, reportProvider: archive.reportProvider };
+    }
+    const previewAccess = evaluateReportAccess({ hostname: typeof window === 'undefined' ? '' : window.location.hostname, isDevelopment: import.meta.env.DEV, expectedServiceId: service.id });
+    const draft = previewAccess.usesPreviewData && typeof window !== 'undefined' ? readGeneralSignatureDraft(window.sessionStorage) : null;
+    return draft ? { ...incomingState, formData: draft } : incomingState;
+  }, [incomingState, service.id]);
+  if (service.id === 'general-signature' && !resolvedState.reportData && !isRecoverableGeneralSignatureInput(resolvedState.formData)) {
+    return <MissingGeneralSignatureReport />;
+  }
+  return <ReportContent id={id!} locationState={resolvedState} />;
+}
+
+function ReportContent({ id, locationState }: { id: string; locationState: ReportLocationState }) {
   const navigate = useNavigate();
-  const { formData, paymentMethod, orderId, reportAccessToken, reportData, reportProvider } =
-    (location.state as ReportLocationState) || {};
+  const { formData, paymentMethod, orderId, reportAccessToken, reportData, reportProvider } = locationState;
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
   const reportAccess = evaluateReportAccess({
@@ -6376,7 +6418,9 @@ export default function Report() {
       : reportAccess.usesPreviewData
         ? service.id === 'love-reading'
           ? LOVE_PREVIEW_FORM_DATA
-          : PREVIEW_FORM_DATA
+          : service.id === 'general-signature'
+            ? {}
+            : PREVIEW_FORM_DATA
         : formData || {}),
     [formData, reportAccess.usesPreviewData, service.id]
   );

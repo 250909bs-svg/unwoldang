@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { buildAnalysisRequestPayload } from './analysisPayload';
 
 describe('analysis request payload', () => {
+  it('sends a single-period answer as relationship context without changing saju facts', () => {
+    const payload = buildAnalysisRequestPayload('general-signature', {
+      gender: 'male',
+      relationshipStatus: 'single',
+      relationshipDuration: 'under1'
+    });
+
+    expect(payload.relationship).toMatchObject({
+      status: 'single',
+      duration: 'under1',
+      summary: '솔로 / 솔로 기간 1년 미만'
+    });
+  });
+
   it('keeps the canonical love micro choice and every expanded relationship branch', () => {
     const expectedLabels = {
       situationship: '썸 타는 중',
@@ -11,6 +25,7 @@ describe('analysis request payload', () => {
 
     Object.entries(expectedLabels).forEach(([relationshipStatus, expectedLabel]) => {
       const payload = buildAnalysisRequestPayload('love-reading', {
+        gender: 'female',
         relationshipStatus: relationshipStatus as keyof typeof expectedLabels,
         relationshipDuration: '',
         loveReaction: 'D',

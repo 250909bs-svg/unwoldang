@@ -51,7 +51,10 @@ export interface IntakeBirthValidationResult {
   errors: BirthInputValidationError[];
 }
 
-type BirthInput = Partial<PartnerBirthData> & Pick<Partial<IntakeFormData>, 'location'>;
+type BirthInput = Partial<Omit<PartnerBirthData, 'gender'>> & {
+  gender?: IntakeFormData['gender'];
+  location?: IntakeFormData['location'];
+};
 
 const EXACT_TIME = /^(?:[01]?\d|2[0-3]):[0-5]\d$/;
 const RANGE_TIME = /(?:[01]?\d|2[0-3]):[0-5]\d\s*(?:-|–|—|~|～)\s*(?:[01]?\d|2[0-3]):[0-5]\d/;

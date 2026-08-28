@@ -67,7 +67,7 @@ export interface PartnerBirthData {
 
 export interface IntakeFormData {
   name: string;
-  gender: 'male' | 'female';
+  gender: 'male' | 'female' | '';
   interestedIn?: LoveInterest;
   calendar: 'solar' | 'lunar';
   isLeapMonth: boolean;

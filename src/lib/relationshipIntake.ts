@@ -36,11 +36,11 @@ export function isRelationshipDurationRequired(status?: IntakeFormData['relation
 
 export function getRelationshipSummary(formData: Partial<IntakeFormData>) {
   const status = getRelationshipStatusLabel(formData.relationshipStatus);
+  const duration = getRelationshipDurationLabel(formData.relationshipDuration);
 
-  if (formData.relationshipStatus === 'single') {
-    return status;
+  if (formData.relationshipStatus === 'single' && duration) {
+    return `${status} / 솔로 기간 ${duration}`;
   }
 
-  const duration = getRelationshipDurationLabel(formData.relationshipDuration);
   return duration ? `${status} / ${duration}` : status;
 }

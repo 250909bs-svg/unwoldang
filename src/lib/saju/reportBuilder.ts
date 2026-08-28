@@ -3,6 +3,7 @@ import { getLoveFocusLabel, normalizeLoveFocus } from '../loveFocus';
 import { getReportCallName } from '../customerName';
 import { withKoreanParticle } from '../koreanText';
 import { getRelationshipStatusLabel, getRelationshipSummary } from '../relationshipIntake';
+import { buildQuestionContext, buildRelationshipPersonalizationContext } from '../personalizationContext';
 import {
   buildDeterministicSajuBasis,
   selectCurrentDayun,
@@ -407,8 +408,11 @@ function buildRelationDetails(basis: DeterministicSajuBasis) {
   ];
 }
 
-function getRelationshipContextSentence(relationshipLabel: string) {
-  return `현재 관계 맥락은 "${relationshipLabel}"입니다.`;
+function getRelationshipContextSentence(relationshipLabel: string, variant: number) {
+  if (variant === 0) return `현재 관계 맥락은 "${relationshipLabel}"입니다.`;
+  if (variant === 1) return `두 번째 질문에는 "${relationshipLabel}"의 생활 조건을 함께 반영했습니다.`;
+  if (variant === 2) return `연애 해석에는 "${relationshipLabel}"에서 중요한 생활 과제를 반영했습니다.`;
+  return `핵심 관계 배경은 "${relationshipLabel}"입니다.`;
 }
 
 function getKind(serviceId: ServiceId): ReportKind {
@@ -424,7 +428,9 @@ function getCalendarLabel(formData: Partial<IntakeFormData>) {
 }
 
 function getGenderLabel(formData: Partial<IntakeFormData>) {
-  return formData.gender === 'male' ? '남성' : '여성';
+  if (formData.gender === 'male') return '남성';
+  if (formData.gender === 'female') return '여성';
+  return '성별 미입력';
 }
 
 function getTimeLabel(formData: Partial<IntakeFormData>) {
@@ -827,12 +833,11 @@ function isExistentialCrisisQuestion(question: string) {
 
 function getQuestionCategory(question: string): QuestionCategory {
   const normalized = question.replace(/\s/g, '');
-  if (/살기싫|죽고싶|자살|극단|사라지고싶|끝내고싶|죽어버|못살겠|포기하고싶|목숨|해치고싶|왜살|살이유|사는이유|살아야할이유/.test(normalized)) {
-    return 'crisis';
-  }
-  if (/연애|결혼|재회|상대|인연|배우자|궁합|썸|애정|관계|호감|연락|마음에걸|사람.*신호|행동신호/.test(normalized)) return 'relationship';
-  if (/돈|재물|수익|매출|사업|투자|가격|결제|고가|상품|월급|부업|벌이|빚|대출/.test(normalized)) return 'money';
-  if (/뭐먹고살|먹고살|벌어먹|돈벌|일|직업|커리어|이직|퇴사|취업|직무|업종|창업|브랜드|콘텐츠|회사|진로|적성|뭘해야|뭐해야/.test(normalized)) return 'career';
+  if (/살기싫|죽고싶|자살|극단|사라지고싶|끝내고싶|죽어버|못살겠|포기하고싶|목숨|해치고싶|왜살|살이유|사는이유|살아야할이유/.test(normalized)) return 'crisis';
+  const context = buildQuestionContext(question);
+  if (['love', 'dating', 'breakup', 'reunion', 'marriage', 'relationship', 'family'].includes(context.domain)) return 'relationship';
+  if (['business', 'business_operation', 'wealth', 'spending', 'investment'].includes(context.domain)) return 'money';
+  if (['career', 'job_change'].includes(context.domain)) return 'career';
   if (/언제|시기|올해|내년|2026|2027|타이밍|기회/.test(normalized)) return 'timing';
   if (/조심|주의|위험|피해야|선택|고민|불안/.test(normalized)) return 'caution';
   if (/건강|잠|수면|체력|피로|몸|컨디션/.test(normalized)) return 'health';
@@ -1004,6 +1009,11 @@ function getTopTenGodsForQuestion(basis: DeterministicSajuBasis) {
 
 function getQuestionIntent(question: string, category: QuestionCategory) {
   const normalized = question.replace(/\s/g, '');
+  const context = buildQuestionContext(question);
+
+  if (context.domain !== 'general') {
+    return `${context.currentSituation} · ${context.requestedDecision}`;
+  }
 
   if (/이사|거주|동네|지역|역세권|강남|독산|집|방|오피스텔|아파트/.test(normalized)) {
     return '이동·거주 선택';
@@ -1070,6 +1080,17 @@ function buildQuestionDirectAnswer(question: string, category: QuestionCategory,
   const normalized = question.replace(/\s/g, '');
   const options = extractQuestionOptions(question);
   const careerFits = getCareerFitByTenGods(basis);
+  const context = buildQuestionContext(question);
+
+  if (context.domain === 'business_operation' && context.stage === 'operating-profitability') {
+    return '결론부터 말하면 이 질문은 창업 여부가 아니라 현재 사업의 매출 증가가 실제 이익으로 남지 않는 비용 구조에 관한 것입니다. 사주만으로 광고비와 인건비 중 어느 항목을 줄여야 하는지 재무 사실처럼 단정할 수는 없으므로, 확장보다 고정비·변동비·광고 효율·인건비 대비 매출을 먼저 비교해야 합니다.';
+  }
+  if (context.domain === 'business' && context.stage === 'pre-start') {
+    return '결론부터 말하면 사업을 시작할 수 있는지보다 어떤 실제 고객 문제를 어느 비용과 책임 범위로 작게 검증할지가 먼저입니다. 퇴사나 큰 투자보다 유료 수요와 손익분기점을 확인한 뒤 진입 시점을 정하세요.';
+  }
+  if (context.domain === 'job_change') {
+    return `결론부터 말하면 ${context.requestedDecision}은 감정적인 선호보다 현재 성과, 실제 제안 조건, 생활비 안전망을 나란히 비교해야 합니다. 승진 가능성과 이직 시장 반응을 동시에 확인한 뒤 되돌리기 어려운 선택을 하세요.`;
+  }
 
   if (/회사|퇴사|이직|직장|계속다녀|계속다닐|다녀도|그만둘|그만둬/.test(normalized)) {
     return '결론부터 말하면 바로 퇴사가 답은 아닙니다. 현재 자리에서 성과와 강점을 기록하고, 관심 역할의 실제 업무·보상·근무 조건을 확인한 뒤 이동 여부를 판단하는 순서가 안전합니다.';
@@ -1153,6 +1174,8 @@ type LoveQuestionIntent = 'timing' | 'meeting-place' | 'current-relation' | 'par
 
 function getLoveQuestionIntent(question: string): LoveQuestionIntent {
   const normalized = question.replace(/\s/g, '');
+  const context = buildQuestionContext(question);
+  if (['prolonged-ambiguity', 'post-breakup-contact', 'considering-commitment'].includes(context.stage)) return 'current-relation';
   if (/어디.*연애|연애.*어디|어디.*만나|만날곳|만남장소|소개받|인연.*어디/.test(normalized)) return 'meeting-place';
   if (/언제|시기|다음연애|몇월|몇년/.test(normalized)) return 'timing';
   if (/놓치|신호|특징|어떤사람|오래갈/.test(normalized)) return 'partner-signal';
@@ -1184,6 +1207,7 @@ function buildPremiumLoveQuestionAnalysis(
   const basisSentence = questionIndex % 2 === 0
     ? `${address}의 원국은 ${basis.pillars.day} 일주와 ${basis.pillars.month} 월령, ${basis.dayMaster.stem} 일간을 중심으로 보고, 지장간을 포함한 주요 십성 ${dominantTenGodText}와 ${currentDayunName} 대운을 함께 겹쳤습니다.`
     : `${address}의 두 번째 질문은 같은 원국이라도 다른 장면을 봅니다. ${basis.pillars.day} 일주가 관계에서 반응하는 방식과 ${currentDayunName} 대운의 생활 압력, ${helpfulText} 기운을 쓸 때 마음이 안정되는 조건을 중심으로 읽었습니다.`;
+  const questionContext = buildQuestionContext(answer.question);
   const directAnswer: Record<LoveQuestionIntent, string> = {
     timing: `결론부터 말하면 다음 사랑은 특정 날짜에 자동으로 생기는 사건이 아닙니다. ${currentDayunName} 대운 안에서 만남과 대화의 접점을 넓혔을 때, 다음 약속까지 구체적으로 이어지는 구간을 실제 시작점으로 봐야 합니다.`,
     'meeting-place': '결론부터 말하면 완전히 낯선 헌팅식 만남보다 지인 소개, 반복 방문하는 취미 공간, 일과 연결된 모임처럼 같은 사람과 다시 대화할 이유가 있는 곳이 더 잘 맞습니다.',
@@ -1203,7 +1227,15 @@ function buildPremiumLoveQuestionAnalysis(
     general: `${statusGuide} ${profile.fitPoint} 이 조건이 실제 생활 장면에서 반복될 때 관계의 가능성을 높게 볼 수 있습니다.`
   };
 
-  return `${directAnswer[intent]} ${basisSentence} ${focusSentence} ${realityAnswer[intent]} 이 해석은 상대의 마음이나 미래 사건을 확정하는 예언이 아니라, 지금 확인할 행동과 기다릴 기준을 좁히는 상담 답변입니다.`;
+  const contextualDirectAnswer = questionContext.stage === 'prolonged-ambiguity'
+    ? '결론부터 말하면 이 질문은 호감의 유무보다 오래 이어진 썸을 실제 관계로 정의할 의사와 기한을 확인하는 문제입니다. 다음 만남에서 원하는 관계 방향을 묻고, 답변 뒤 행동 변화가 있는지를 기준으로 보세요.'
+    : questionContext.stage === 'post-breakup-contact'
+      ? '결론부터 말하면 먼저 연락할지는 재회 가능성을 점치는 문제가 아니라 이별 원인이 바뀌었는지와 답이 없을 때 멈출 경계를 정하는 문제입니다. 안부 한 번은 가능하지만 설득이나 반복 연락으로 이어가면 안 됩니다.'
+      : questionContext.stage === 'considering-commitment'
+        ? '결론부터 말하면 결혼 여부는 감정의 크기만으로 결정하지 말고 재정·주거·일·가족 경계와 갈등 회복 방식을 실제 대화로 확인해야 합니다.'
+        : directAnswer[intent];
+
+  return `${contextualDirectAnswer} ${basisSentence} ${focusSentence} ${realityAnswer[intent]} 이 해석은 상대의 마음이나 미래 사건을 확정하는 예언이 아니라, 지금 확인할 행동과 기다릴 기준을 좁히는 상담 답변입니다.`;
 }
 
 function getPremiumLoveQuestionAdvice(
@@ -1214,6 +1246,7 @@ function getPremiumLoveQuestionAdvice(
   formData: Partial<IntakeFormData> = {}
 ) {
   const intent = getLoveQuestionIntent(answer.question);
+  const relationshipContext = buildRelationshipPersonalizationContext(formData);
   const profile = getElementLoveSignature(basis.dayMaster.element as FiveElement);
   const byIntent: Record<LoveQuestionIntent, string[]> = {
     timing: [
@@ -1296,7 +1329,7 @@ function getPremiumLoveQuestionAdvice(
     `최종 판단은 ${currentDayunName} 대운의 이름보다 3주 동안 반복된 약속, 연락, 회복, 경계 존중 네 항목으로 내리세요.`
   ];
 
-  return [...byIntent[intent], ...common]
+  return [...(relationshipContext?.actionGuides || []), ...byIntent[intent], ...common]
     .slice(0, PREMIUM_QUESTION_ADVICE_COUNT)
     .map((item, index) => `${index + 1}. ${item.replace(/^\d+[\).]\s*/, '')}`);
 }
@@ -1323,6 +1356,7 @@ function buildPremiumQuestionAnalysis(
   }
 
   const customerLabel = getPremiumCustomerLabel(basis);
+  const questionContext = buildQuestionContext(answer.question);
   const intent = getQuestionIntent(answer.question, category);
   const directAnswer = buildQuestionDirectAnswer(answer.question, category, basis);
   const fiveElementText = summarizeFiveElementsForQuestion(basis);
@@ -1349,7 +1383,9 @@ function buildPremiumQuestionAnalysis(
     ? '따라서 이 해석은 정해진 미래가 아니라 선택지를 좁히는 상담 기준입니다. 현장 확인, 지출 기록, 7일 관찰을 붙이면 답이 훨씬 현실적으로 정리됩니다.'
     : '이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.';
 
-  return `${directAnswer} ${basisLine} ${elementLine} ${visibleLine} 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${cautionLine} ${closingLine}`;
+  const contextLine = `질문을 “${questionContext.currentSituation}”으로 이해했습니다. 핵심 판단은 ${questionContext.requestedDecision}입니다.`;
+
+  return `${contextLine} ${directAnswer} ${basisLine} ${elementLine} ${visibleLine} 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${cautionLine} ${closingLine}`;
 }
 
 function buildCrisisSafetyAnalysis(answer: QuestionAnswerBlock, basis: DeterministicSajuBasis, currentDayunName: string) {
@@ -1399,6 +1435,22 @@ function getPremiumQuestionAdvice(
   const isMoving = /이사|거주|동네|지역|역세권|집|방/.test(question.replace(/\s/g, ''));
   const isCompanyQuestion = /회사|퇴사|이직|직장|계속다녀|계속다닐|다녀도|그만둘|그만둬/.test(question.replace(/\s/g, ''));
   const isBusinessQuestion = /사업|창업|부업|브랜드|상품|팔아|판매|런칭|론칭/.test(question.replace(/\s/g, ''));
+  const questionContext = buildQuestionContext(question);
+
+  if (questionContext.domain === 'business_operation' && questionContext.stage === 'operating-profitability') {
+    return [
+      '이 질문은 창업 여부가 아니라 매출이 이익으로 남지 않는 현재 비용 구조의 문제입니다. 먼저 최근 3개월 손익을 같은 기준으로 맞추세요.',
+      '고정비·변동비·일회성 지출을 분리하고, 매출이 없어도 나가는 비용부터 표시하세요.',
+      '상품별 매출에서 직접 원가와 결제·배송·외주 비용을 뺀 공헌이익을 비교하세요.',
+      '광고비는 총액이 아니라 채널별 신규 고객 획득비와 재구매 매출을 함께 확인하세요.',
+      '인건비는 사람을 바로 줄이기보다 역할별 투입 시간과 그 역할이 만든 매출·절감 효과를 먼저 비교하세요.',
+      '구독·툴·임대·대행비처럼 자동 갱신되는 항목은 사용 빈도와 해지 비용을 적어 우선순위를 정하세요.',
+      '매출 발생 시점과 실제 입금 시점이 다르면 이익이 있어도 현금이 부족할 수 있으니 현금 전환 주기를 확인하세요.',
+      `명리 해석에서는 ${currentDayunName} 대운과 ${basis.dayMaster.stem} 일간의 흐름을 확장보다 관리·회수의 우선순위로 사용하되, 실제 삭감 항목은 장부 숫자로 결정하세요.`,
+      '7일 안에는 비용 분류표를 만들고, 30일 안에는 한 항목씩 줄였을 때 매출과 고객 경험이 어떻게 변하는지 검증하세요.',
+      '매출·원가·세금 자료가 복잡하면 무작정 비용을 끊지 말고 세무·회계 전문가와 손익 구조를 함께 확인하세요.'
+    ].map((item, index) => `${index + 1}. ${item}`);
+  }
 
   const placeGuide = isDatingPlace
     ? '장소는 지인 소개, 반복 수업, 운동·스터디, 동네 카페, 업무권 모임처럼 같은 사람을 여러 번 볼 수 있는 곳으로 잡으세요.'
@@ -1520,7 +1572,9 @@ function buildQuestionResponse(
   const dayMaster = basis.dayMaster.stem;
   const helpfulText = helpful.join(', ') || '보완 오행';
   const cautionGuidance = formatElementGuidance(cautious, basis);
-  const context = getRelationshipContextSentence(relationshipLabel);
+  const context = category === 'relationship'
+    ? getRelationshipContextSentence(relationshipLabel, questionIndex)
+    : '';
 
   if (category === 'crisis') {
     const address = getCasualAddressParts(basis.input.name || '');
@@ -1882,6 +1936,13 @@ function getElementLoveSignature(element: FiveElement) {
 }
 
 function getRelationshipStageGuide(formData: Partial<IntakeFormData>, relationshipLabel: string) {
+  const context = buildRelationshipPersonalizationContext(formData);
+  if (context) {
+    const priorities = `${withKoreanParticle(context.priorities[0], '과/와')} ${withKoreanParticle(context.priorities[1], '을/를')}`;
+    const concerns = `${withKoreanParticle(context.likelyConcerns[0], '과/와')} ${withKoreanParticle(context.likelyConcerns[1], '을/를')}`;
+    const actions = `${withKoreanParticle(context.actionGuides[0], '과/와')} ${context.actionGuides[1]}`;
+    return `${withKoreanParticle(context.summary, '은/는')} ${context.stage}입니다. 지금은 ${priorities} 우선하고, ${concerns} 주의해야 합니다. 실행은 ${actions}부터 시작하세요.`;
+  }
   if (formData.relationshipStatus === 'dating') {
     return `${relationshipLabel} 흐름에서는 새 인연을 찾는 것보다 현재 관계가 결혼 생활로 확장될 수 있는지 보는 것이 중요합니다. 감정 확인보다 돈, 시간, 가족, 일의 우선순위를 실제로 맞춰보는 단계입니다.`;
   }
@@ -2230,7 +2291,7 @@ function buildSections(
         body: `연애운은 “좋은 사람을 만난다”로 끝내면 체감이 약합니다. 이번 파트는 ${basis.pillars.day} 일주, ${basis.pillars.month} 월령, ${loveProfile.currentDayunName} 대운, ${loveProfile.dominantTenGods} 성향을 함께 보며 내가 왜 특정 타입에게 끌리고, 어떤 사람과 오래 가는지까지 현실 언어로 풀어냅니다.`
       },
       paragraphs: [
-        `${getRelationshipContextSentence(relationshipLabel)} 이 맥락은 단순한 상태 표시가 아니라 감정 속도, 연락 리듬, 결혼 현실성, 상대를 검증하는 방식에 직접 반영됩니다.`,
+        `${getRelationshipContextSentence(relationshipLabel, 2)} 이 맥락은 단순한 상태 표시가 아니라 감정 속도, 연락 리듬, 결혼 현실성, 상대를 검증하는 방식에 직접 반영됩니다.`,
         loveProfile.stageGuide,
         `이 사주의 연애는 감정의 크기보다 “생활에서 신뢰가 반복되는가”가 중요합니다. 좋아하는 마음이 있어도 연락, 돈, 시간, 가족과의 거리, 갈등 후 회복 방식이 맞지 않으면 오래 끌고 가기 어렵습니다.`,
         `앞으로 ${loveProfile.marriageWindow}년 흐름에서는 설렘만 보는 연애보다, 함께 일상을 운영할 수 있는 사람을 고르는 눈이 훨씬 중요해집니다.`
@@ -2772,6 +2833,9 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
 }
 
 export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFormData>, providedBasis?: DeterministicSajuBasis): SajuReportData {
+  if (serviceId === 'general-signature' && formData.gender !== 'male' && formData.gender !== 'female') {
+    throw new Error('종합사주 리포트를 만들려면 성별을 선택해야 합니다.');
+  }
   const service = findServiceById(serviceId);
   const kind = getKind(serviceId);
   const meta = KIND_META[kind];
@@ -2869,7 +2933,7 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
       },
       {
         title: '인연',
-        body: `${getRelationshipContextSentence(relationshipLabel)} ${reportLoveProfile.archetype} 인연과 잘 맞으며, ${reportLoveProfile.meetingRoute}`
+        body: `${getRelationshipContextSentence(relationshipLabel, 3)} ${reportLoveProfile.archetype} 인연과 잘 맞으며, ${reportLoveProfile.meetingRoute}`
       },
       {
         title: '건강',

@@ -87,9 +87,7 @@ export function normalizeIntakeFormData(
       ? normalizeExactTime(source.birthTime?.trim() || '')
       : source.birthTime?.trim() || '';
   const birthLocation = normalizeLocation(source);
-  const relationshipDuration = source.relationshipStatus === 'single'
-    ? ''
-    : source.relationshipDuration || '';
+  const relationshipDuration = source.relationshipDuration || '';
 
   return {
     ...source,

@@ -53,6 +53,9 @@ export interface AnalysisRequestPayload {
 
 export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Partial<IntakeFormData>): AnalysisRequestPayload {
   const normalized = normalizeIntakeFormData(formData);
+  if (normalized.gender !== 'male' && normalized.gender !== 'female') {
+    throw new Error('성별을 선택해 주세요.');
+  }
   const service = findServiceById(serviceId);
   const relationshipSummary = getRelationshipSummary(normalized);
   const partner = normalized.partner
@@ -69,7 +72,7 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
     timezone: normalized.birthLocation?.timezone || normalized.timezone || 'Asia/Seoul',
     user: {
       name: normalized.name?.trim() || '',
-      gender: normalized.gender || 'female'
+      gender: normalized.gender
     },
     birth: {
       calendar: normalized.calendar || 'solar',
@@ -85,7 +88,7 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
     partner,
     relationship: {
       status: normalized.relationshipStatus || null,
-      duration: normalized.relationshipStatus === 'single' ? null : normalized.relationshipDuration || null,
+      duration: normalized.relationshipDuration || null,
       microChoice: normalizeLoveReaction(normalized.loveReaction),
       focus: normalizeLoveFocus(normalized.loveFocus),
       summary: relationshipSummary
