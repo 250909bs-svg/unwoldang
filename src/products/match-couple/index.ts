@@ -10,6 +10,7 @@ export const matchCoupleProduct = {
     intake: '/form/match-couple',
     checkout: '/checkout',
     loading: '/loading',
+    preview: '/preview/match-couple',
     report: '/report/match-couple'
   },
   discovery: {

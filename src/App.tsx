@@ -33,6 +33,10 @@ const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
 const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
 const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
+const MatchCoupleDetail = lazy(() => import('./products/match-couple/Detail'));
+const MatchCoupleIntake = lazy(() => import('./products/match-couple/Intake'));
+const MatchCouplePreview = lazy(() => import('./products/match-couple/Preview'));
+const MatchCoupleReportRoute = lazy(() => import('./products/match-couple/ReportRoute'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -108,6 +112,14 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
               </ProductRouteBoundary>
             }
           />
+          <Route
+            path="/detail/match-couple"
+            element={
+              <ProductRouteBoundary productId="match-couple">
+                <MatchCoupleDetail />
+              </ProductRouteBoundary>
+            }
+          />
           <Route path="/detail/:id" element={<GenericProductDetail />} />
           <Route
             path="/form/love-reading"
@@ -122,6 +134,23 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
             element={
               <ProductRouteBoundary productId="love-reading">
                 <LoveReadingPreview />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/preview/match-couple"
+            element={
+              <ProductRouteBoundary productId="match-couple">
+                <MatchCouplePreview />
+              </ProductRouteBoundary>
+            }
+          />
+
+          <Route
+            path="/form/match-couple"
+            element={
+              <ProductRouteBoundary productId="match-couple">
+                <MatchCoupleIntake />
               </ProductRouteBoundary>
             }
           />
@@ -147,6 +176,14 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
               <ProductLoadingRouteBoundary>
                 <Loading />
               </ProductLoadingRouteBoundary>
+            }
+          />
+          <Route
+            path="/report/match-couple"
+            element={
+              <HistoricalReportRouteBoundary>
+                <MatchCoupleReportRoute />
+              </HistoricalReportRouteBoundary>
             }
           />
           <Route
@@ -180,6 +217,12 @@ function AppShell() {
   const isLoveFormRoute = location.pathname === '/form/love-reading';
   const isLovePreviewRoute = location.pathname === '/preview/love-reading';
   const isLoveReportRoute = location.pathname === '/report/love-reading';
+  const isMatchCoupleRoute = [
+    '/detail/match-couple',
+    '/form/match-couple',
+    '/preview/match-couple',
+    '/report/match-couple'
+  ].includes(location.pathname);
   const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
   const usesDarkAppShell =
@@ -191,6 +234,7 @@ function AppShell() {
     isPastLifeLandingRoute ||
     isGeneralDetailRoute ||
     isImmersiveLoveRoute ||
+    isMatchCoupleRoute ||
     isLegalRoute;
 
   useLayoutEffect(() => {
@@ -214,6 +258,8 @@ function AppShell() {
               ? 'app-container mz-love-intake-app-container'
               : isLoveReportRoute
                 ? 'app-container mz-love-report-app-container'
+                : isMatchCoupleRoute
+                  ? 'app-container match-couple-app-container'
           : isPastLifeLandingRoute
             ? 'app-container past-life-app-container'
             : isPastLifeReportRoute
@@ -221,7 +267,7 @@ function AppShell() {
             : 'app-container'
       }
     >
-      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute} />
+      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute || isMatchCoupleRoute} />
     </div>
   );
 }
