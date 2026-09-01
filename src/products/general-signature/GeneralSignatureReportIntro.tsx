@@ -125,6 +125,7 @@ export default function GeneralSignatureReportIntro({
       <section className="gs-cover" aria-labelledby="gs-cover-title">
         <p className="gs-eyebrow">운월당 정통 종합사주 · 개인 인생 설계서</p>
         <h1 id="gs-cover-title">{report.customerName}님의 운월당 인생 설계서</h1>
+        <p className="gs-input-summary" aria-label="분석에 사용한 출생정보">{report.birthLabel}</p>
         <div className="gs-pillar-mark" aria-label={`${report.pillars.day} 일주`}>
           <span aria-hidden="true">{dayPillarHanja}</span>
           <strong>{report.pillars.day} 일주</strong>
@@ -220,6 +221,16 @@ export default function GeneralSignatureReportIntro({
         </ol>
         <a className="gs-inline-link" href="#fortune">대운·세운·월운 자세히 보기</a>
       </section>
+
+      <div className="gs-reading-nav-shell">
+        <nav className="gs-reading-nav" aria-label="리포트 주요 장 이동">
+          <a href="#summary">핵심 결론</a>
+          <a href="#glance">원국 지표</a>
+          <a href="#fortune">운의 흐름</a>
+          <a href="#qa">질문 답변</a>
+          <a href="#plan">실행 전략</a>
+        </nav>
+      </div>
     </>
   );
 }

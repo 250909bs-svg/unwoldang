@@ -131,11 +131,16 @@ describe('general-signature comparison question classifier', () => {
     const { report } = buildWithBasis(makeInput({ q1: question, q2: '' }));
     expect(report.questionAnswers[0]?.question).toBe(question);
     expect(questionAnswerText(report)).not.toContain('앞으로·돈을·남기려면·무엇을');
+    expect(questionAnswerText(report)).not.toContain('판단 순서으로');
   });
 
   it('recognizes explicit Korean comparison wording', () => {
     expect(extractQuestionOptions('직장과 사업 중 어느 쪽이 더 맞나요?')).toEqual(['직장', '사업']);
     expect(extractQuestionOptions('서울과 부산 중 어디가 더 맞나요?')).toEqual(['서울', '부산']);
+
+    const { report } = buildWithBasis(makeInput());
+    expect(questionAnswerText(report)).not.toContain('고려하면로 보이므로');
+    expect(questionAnswerText(report)).not.toContain('"직장과 사업 중 어느 쪽이 더 맞나요?"은');
   });
 
   it('recognizes slash and VS comparison formats', () => {
@@ -150,5 +155,12 @@ describe('general-signature comparison question classifier', () => {
     expect(text).toContain(`${basis.pillars.day} 일주`);
     expect(text).toContain(`${basis.pillars.month} 월령`);
     assertCanonicalDayun(report, basis);
+  });
+
+  it('rejects duplicate paid questions after punctuation and whitespace normalization', () => {
+    expect(() => buildWithBasis(makeInput({
+      q1: '앞으로 돈을 남기려면 무엇을 주의해야 하나요?',
+      q2: '앞으로 돈을 남기려면 무엇을 주의해야 하나요 !'
+    }))).toThrow(/중복된 사용자 질문/);
   });
 });

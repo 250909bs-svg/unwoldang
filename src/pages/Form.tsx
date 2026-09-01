@@ -20,6 +20,11 @@ import { normalizeIntakeFormData } from '../lib/intakeDataContract';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
 import { getProductById } from '../products/registry';
+import {
+  isGeneralSignatureGenderSelected,
+  isGeneralSignatureQuestionReady,
+  isGeneralSignatureRelationshipReady
+} from '../products/general-signature/generalSignatureIntakeContract';
 import '../styles/mz-love-fact.css';
 import '../styles/past-life.css';
 
@@ -250,11 +255,14 @@ const formatBirthDate = (digits: string) => {
   return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
 };
 
-const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormData => normalizeIntakeFormData({
+const hydrateFormData = (
+  source?: Partial<IntakeFormData> | null,
+  genderFallback: IntakeFormData['gender'] = 'female'
+): IntakeFormData => normalizeIntakeFormData({
   ...initialState,
   ...source,
   name: source?.name ?? '',
-  gender: source?.gender ?? 'female',
+  gender: source?.gender ?? genderFallback,
   calendar: source?.calendar ?? 'solar',
   isLeapMonth: Boolean(source?.isLeapMonth),
   birthDate: source?.birthDate ?? '',
@@ -320,6 +328,7 @@ export default function Form() {
   const service = findServiceById(product.id);
   const isPastLifeFlow = product.flow.intakeVariant === 'past-life';
   const isCompatibilityFlow = product.flow.intakeVariant === 'compatibility';
+  const isGeneralSignatureFlow = service.id === 'general-signature';
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -327,7 +336,9 @@ export default function Form() {
   const tabOrigin = locationState?.tabOrigin || '/';
   const draftKey = useMemo(() => `unwoldang.intake.${service.id}`, [service.id]);
   const [step, setStep] = useState<IntakeStep>(1);
-  const [formData, setFormData] = useState<IntakeFormData>(initialState);
+  const [formData, setFormData] = useState<IntakeFormData>(() => (
+    isGeneralSignatureFlow ? { ...initialState, gender: '' } : initialState
+  ));
   const [birthDigits, setBirthDigits] = useState('');
   const [partnerBirthDigits, setPartnerBirthDigits] = useState('');
   const partnerData = formData.partner || emptyPartnerBirthData;
@@ -358,19 +369,22 @@ export default function Form() {
     const storedLoveReaction = service.id === 'love-reading'
       ? window.sessionStorage.getItem(MZ_LOVE_CHOICE_STORAGE_KEY)
       : null;
-    const hydrated = hydrateFormData({
-      ...source,
-      loveReaction:
-        normalizeLoveReaction(locationState?.loveReaction) ??
-        normalizeLoveReaction(source?.loveReaction) ??
-        normalizeLoveReaction(storedLoveReaction) ??
-        undefined
-    });
+    const hydrated = hydrateFormData(
+      {
+        ...source,
+        loveReaction:
+          normalizeLoveReaction(locationState?.loveReaction) ??
+          normalizeLoveReaction(source?.loveReaction) ??
+          normalizeLoveReaction(storedLoveReaction) ??
+          undefined
+      },
+      isGeneralSignatureFlow ? '' : 'female'
+    );
 
     setFormData(hydrated);
     setBirthDigits(parseDateDigits(hydrated.birthDate));
     setPartnerBirthDigits(parseDateDigits(hydrated.partner?.birthDate));
-  }, [draftKey, locationState?.formData, locationState?.loveReaction, service.id]);
+  }, [draftKey, isGeneralSignatureFlow, locationState?.formData, locationState?.loveReaction, service.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -388,7 +402,10 @@ export default function Form() {
     setFormData((prev) => ({
       ...prev,
       relationshipStatus,
-      relationshipDuration: relationshipStatus === 'single' ? '' : prev.relationshipDuration
+      relationshipDuration:
+        isGeneralSignatureFlow || relationshipStatus !== 'single'
+          ? prev.relationshipDuration
+          : ''
     }));
   };
 
@@ -566,20 +583,31 @@ export default function Form() {
     [partnerData]
   );
   const birthDateReady = Boolean(formData.birthDate);
-  const step1Ready = selfBirthValidation.valid;
+  const step1Ready = selfBirthValidation.valid && (
+    !isGeneralSignatureFlow || isGeneralSignatureGenderSelected(formData.gender)
+  );
   const isLoveReadingFlow = product.flow.intakeVariant === 'love-reading';
   const step2Ready = isPastLifeFlow
     ? Boolean(formData.pastLifeTopic?.trim())
     : isCompatibilityFlow
       ? partnerBirthValidation.valid
-      : Boolean(formData.relationshipStatus) &&
-        (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration));
+      : isGeneralSignatureFlow
+        ? isGeneralSignatureRelationshipReady(
+            formData.relationshipStatus,
+            formData.relationshipDuration
+          )
+        : Boolean(formData.relationshipStatus) &&
+          (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration));
   const step3Ready = isPastLifeFlow
     ? Boolean(formData.repeatedScene?.trim()) && Boolean(formData.frequentEmotion?.trim()) && Boolean(formData.hiddenDesire?.trim())
-    : Boolean(formData.q1.trim());
+    : isGeneralSignatureFlow
+      ? isGeneralSignatureQuestionReady(formData.q1)
+      : Boolean(formData.q1.trim());
   const step4Ready = isPastLifeFlow
     ? Boolean(formData.chosenSymbol?.trim()) && Boolean(formData.readingTone?.trim())
-    : Boolean(formData.q2.trim());
+    : isGeneralSignatureFlow
+      ? isGeneralSignatureQuestionReady(formData.q2)
+      : Boolean(formData.q2.trim());
   const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;
   const isYearlyFlow = false;
   const isCinematicFlow = true;
@@ -1204,11 +1232,22 @@ export default function Form() {
                 </div>
               </article>
 
-              <article className="intake-story-question-card" hidden={formData.relationshipStatus === 'single'}>
+              <article
+                className="intake-story-question-card"
+                hidden={
+                  isGeneralSignatureFlow
+                    ? !formData.relationshipStatus
+                    : formData.relationshipStatus === 'single'
+                }
+              >
                 <div className="intake-story-question-head">
                   <strong>
-                    기간은 얼마나 되나요?
-                    {!isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
+                    {isGeneralSignatureFlow && formData.relationshipStatus === 'single'
+                      ? '마지막 연애 이후 얼마나 지났나요?'
+                      : '기간은 얼마나 되나요?'}
+                    {!isGeneralSignatureFlow && !isRelationshipDurationRequired(formData.relationshipStatus)
+                      ? ' (선택)'
+                      : ''}
                   </strong>
                   <span className="intake-story-order-badge">PERIOD</span>
                 </div>
@@ -1229,7 +1268,9 @@ export default function Form() {
                   ))}
                 </div>
                 <p className="intake-story-caption">
-                  연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.
+                  {isGeneralSignatureFlow && formData.relationshipStatus === 'single'
+                    ? '솔로로 지낸 기간을 골라주세요. 관계 진입 기준과 반복 패턴을 해석하는 상황 정보로 사용합니다.'
+                    : '연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.'}
                 </p>
               </article>
             </div>

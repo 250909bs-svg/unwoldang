@@ -43,6 +43,9 @@ const INTERNAL_LABELS: ReadonlyArray<[RegExp, string]> = [
   [/\btonggwan\b/gi, '통관 관점'],
   [/\bjohu\b/gi, '조후 관점'],
   [/\bbyeongyak\b/gi, '병약 관점'],
+  [/\blatent-tension\b/gi, '잠재적 조정 필요'],
+  [/\bintegration\b/gi, '조화·결합 흐름'],
+  [/\bactivation\b/gi, '활성화 흐름'],
   [/\bMRE-V2-[A-Z0-9-]+\b/g, '내부 검증 규칙'],
   [/\bunwoldang-myeongri-v[\w.-]+\b/gi, '운월당 정밀 명리 엔진']
 ];
@@ -62,6 +65,10 @@ export function normalizeCustomerFacingText(input: string) {
     .replace(/정인가/g, '정인이')
     .replace(/사은 사건/g, '사는 사건')
     .replace(/태은 사건/g, '태는 사건')
+    .replace(/관계의 역할 배치을/g, '관계의 역할 배치를')
+    .replace(/판단 순서으로/g, '판단 순서로')
+    .replace(/대운 진입 전 대운/g, '첫 대운 진입 전')
+    .replace(/고려하면로 보이므로/g, '고려하는 비교로 보이므로')
     .replace(/\[object Object\]/g, '')
     .replace(/\bundefined\b/gi, '')
     .replace(/\bnull\b/gi, '');

@@ -2,6 +2,24 @@ import { describe, expect, it } from 'vitest';
 import { buildAnalysisRequestPayload } from './analysisPayload';
 
 describe('analysis request payload', () => {
+  it.each(['single', 'situationship', 'dating'] as const)(
+    'preserves every canonical duration in the %s analysis payload',
+    (relationshipStatus) => {
+      (['under1', 'under3', 'under5', 'under10'] as const).forEach((relationshipDuration) => {
+        const payload = buildAnalysisRequestPayload('general-signature', {
+          gender: 'male',
+          relationshipStatus,
+          relationshipDuration
+        });
+
+        expect(payload.relationship).toMatchObject({
+          status: relationshipStatus,
+          duration: relationshipDuration
+        });
+      });
+    }
+  );
+
   it('sends a single-period answer as relationship context without changing saju facts', () => {
     const payload = buildAnalysisRequestPayload('general-signature', {
       gender: 'male',

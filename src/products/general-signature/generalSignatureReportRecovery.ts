@@ -4,6 +4,8 @@ import { normalizeIntakeFormData } from '../../lib/intakeDataContract';
 import type { ReportArchiveEntry } from '../../lib/reportArchive';
 import {
   GENERAL_SIGNATURE_DRAFT_KEY,
+  isGeneralSignatureGenderSelected,
+  isGeneralSignatureRelationshipReady,
   isGeneralSignatureQuestionReady
 } from './generalSignatureIntakeContract';
 
@@ -13,11 +15,13 @@ export function isRecoverableGeneralSignatureInput(
   const normalized = normalizeIntakeFormData(value);
   return Boolean(
     normalized.name?.trim() &&
-    (normalized.gender === 'male' || normalized.gender === 'female') &&
+    isGeneralSignatureGenderSelected(normalized.gender) &&
     normalized.birthDate &&
     validateBirthInput(normalized, { subjectLabel: '본인' }).valid &&
-    normalized.relationshipStatus &&
-    normalized.relationshipDuration &&
+    isGeneralSignatureRelationshipReady(
+      normalized.relationshipStatus,
+      normalized.relationshipDuration
+    ) &&
     isGeneralSignatureQuestionReady(normalized.q1 || '') &&
     isGeneralSignatureQuestionReady(normalized.q2 || '')
   );

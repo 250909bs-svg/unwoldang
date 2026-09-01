@@ -210,6 +210,8 @@ export const PREMIUM_SAJU_BACKEND_NOTES = {
 export function buildPremiumSajuPromptContext(args: {
   customerInput: unknown;
   deterministicBasis?: unknown;
+  relationshipContext?: unknown;
+  questionContexts?: unknown;
   debug?: boolean;
 }) {
   return {
@@ -217,6 +219,8 @@ export function buildPremiumSajuPromptContext(args: {
     promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
     customerInput: args.customerInput,
     deterministicBasis: args.deterministicBasis ?? null,
+    relationshipContext: args.relationshipContext ?? null,
+    questionContexts: args.questionContexts ?? [],
     debug: Boolean(args.debug),
     instructions: {
       output: 'SajuReportData JSON only',

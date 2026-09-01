@@ -31,6 +31,25 @@ describe('general-signature report recovery', () => {
     expect(parseGeneralSignatureDraft(JSON.stringify({ ...maleFixture, gender: '' }))).toBeNull();
   });
 
+  it('preserves an explicitly selected female gender', () => {
+    const restored = parseGeneralSignatureDraft(JSON.stringify({ ...maleFixture, gender: 'female' }));
+    expect(restored?.gender).toBe('female');
+  });
+
+  it.each(['single', 'situationship', 'dating'] as const)(
+    'recovers all four duration variants for %s',
+    (relationshipStatus) => {
+      (['under1', 'under3', 'under5', 'under10'] as const).forEach((relationshipDuration) => {
+        const restored = parseGeneralSignatureDraft(JSON.stringify({
+          ...maleFixture,
+          relationshipStatus,
+          relationshipDuration
+        }));
+        expect(restored).toMatchObject({ relationshipStatus, relationshipDuration });
+      });
+    }
+  );
+
   it('selects the latest real general-signature archive for refresh recovery', () => {
     const makeEntry = (createdAt: string, name: string): ReportArchiveEntry => ({
       id: `general-signature:${createdAt}`,

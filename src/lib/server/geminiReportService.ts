@@ -12,6 +12,7 @@ import { normalizeLoveFocus } from '../loveFocus';
 import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
 import { validateIntakeBirthInputs } from '../birthInputValidation';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from '../saju/deterministicBasis';
+import { buildQuestionContext, buildRelationshipPersonalizationContext } from '../personalizationContext';
 import { buildPastLifeProfile } from '../saju/pastLifeProfile';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
 import {
@@ -921,6 +922,11 @@ function mergeGeminiDraft(base: SajuReportData, draft?: GeminiDraft | null): Saj
 }
 
 function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: DeterministicSajuBasis) {
+  const relationshipContext = buildRelationshipPersonalizationContext({
+    relationshipStatus: deterministicBasis.input.relationshipStatus || '',
+    relationshipDuration: deterministicBasis.input.relationshipDuration || ''
+  });
+  const questionContexts = deterministicBasis.input.questions.map(buildQuestionContext);
   const partialSchema = {
     type: 'OBJECT',
     properties: {
@@ -1061,6 +1067,8 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
               context: buildPremiumSajuPromptContext({
                 customerInput: deterministicBasis.input,
                 deterministicBasis,
+                relationshipContext,
+                questionContexts,
                 debug: false
               }),
               evidenceIdCatalog: serializeEvidenceCatalog(deterministicBasis),
@@ -1104,6 +1112,7 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Keep each customer question exactly as provided, and answer only that question. If the customer compares named options, compare those exact options by money, commute, relationships, fatigue, and opportunity. If the customer asks where to meet love, give concrete meeting routes and places, not only relationship attitude advice.',
                   'For location, moving, career-choice, dating-place, school, work, or neighborhood questions, never answer with abstract four-box advice only. Give a conditional recommendation first, then the saju basis, then a real-life checklist.',
                   'Question answers must be different for each person. Use deterministicBasis, currentDayun, yearLuck/monthLuck, relationship status, and the exact words in customerInput.questions. Do not reuse a stock answer across users.',
+                  'Use relationshipContext and questionContexts to understand the exact user situation. The deterministic baseReport already contains the approved personalized answer, so do not replace its FACT or situation meaning.',
                   'If the exact question cannot be answered deterministically, say what can be read from the chart and what must be verified in reality. Still answer the practical choice directly with conditions.',
                   'Add life-graph style interpretation in the wording: year-by-year likely themes, why the timing appears, and what the customer should do in that period.',
                   'If baseReport.serviceId is life-flow, structure the yearly report as: opening, natal core analysis, yearly map, 12 monthly readings, money, love, career, relationships, health, luck actions, closing. Each month must include total luck, money, love, relationships, health, action tip, avoid action, and key point.',

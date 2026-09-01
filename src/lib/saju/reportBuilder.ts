@@ -561,7 +561,7 @@ function buildDayunPracticalTheme(
 
   return {
     summary: `${emphasis}이 더 중요해지는 시기입니다. 이 구간은 우연한 사건보다 선택의 순서, 사람을 쓰는 방식, 돈이 남는 구조가 결과 차이를 크게 만듭니다.`,
-    focus: `${isCurrent ? '현재 진행 중인 일의 책임과 보상, 관계의 역할 배치' : '다음 단계의 생활 기반과 수입 조건'}을 눈에 보이는 기준으로 다듬는 편이 정확합니다. ${basis.helpfulElements.join(', ')} 흐름은 추상적인 운보다 반복 가능한 생활 기준에서 체감됩니다.`,
+    focus: `${withKoreanParticle(isCurrent ? '현재 진행 중인 일의 책임과 보상, 관계의 역할 배치' : '다음 단계의 생활 기반과 수입 조건', '을/를')} 눈에 보이는 기준으로 다듬는 편이 정확합니다. ${basis.helpfulElements.join(', ')} 흐름은 추상적인 운보다 반복 가능한 생활 기준에서 체감됩니다.`,
     caution: `${caution}가 이번 대운 해석의 핵심 주의점입니다. 특히 감정이 앞선 약속, 검증 없는 확장, 문서 없는 금전 관계는 한 번 더 멈춰서 확인해야 합니다.`
   };
 }
@@ -1365,7 +1365,7 @@ function buildPremiumQuestionAnalysis(
   const isSecondQuestion = questionIndex % 2 === 1;
   const options = extractQuestionOptions(answer.question);
   const optionLine = options.length >= 2
-    ? `이번 질문의 핵심 선택지는 ${options.join('·')}로 보이므로, 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
+    ? `이번 질문은 ${options.join('·')} 가운데 현실 조건을 비교하는 질문입니다. 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
     : `이번 질문은 “${intent}”에 관한 열린 질문이므로 선택지를 억지로 나누지 않고, 질문의 원래 의미를 유지한 채 실제 행동으로 확인해야 답이 선명합니다.`;
   const basisLine = isSecondQuestion
     ? `${customerLabel}의 명식은 ${basis.pillars.day} 일주를 중심으로 보고, ${basis.pillars.month} 월령과 ${currentDayunName} 대운을 겹쳐 판단합니다.`
@@ -1384,8 +1384,11 @@ function buildPremiumQuestionAnalysis(
     : '이 답은 확정 예언이 아니라 사주 구조로 좁힌 우선순위이므로, 실제 현장 확인과 7일 기록을 같이 두면 고객 입장에서 훨씬 덜 흔들립니다.';
 
   const contextLine = `질문을 “${questionContext.currentSituation}”으로 이해했습니다. 핵심 판단은 ${questionContext.requestedDecision}입니다.`;
+  const decisionRiskLine = isSecondQuestion
+    ? '두 번째 질문은 첫 답변의 결론을 반복하기보다, 실제 비용과 피로, 관계 부담이 어디에서 생기는지 별도로 확인해야 합니다.'
+    : '감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다.';
 
-  return `${contextLine} ${directAnswer} ${basisLine} ${elementLine} ${visibleLine} 그래서 "${answer.question}"은 ${intent}으로 읽어야 하고, 감정만으로 고르면 처음에는 시원해도 뒤에서 비용, 피로, 관계 부담이 따라올 수 있습니다. ${optionLine} ${cautionLine} ${closingLine}`;
+  return `${contextLine} ${directAnswer} ${basisLine} ${elementLine} ${visibleLine} 이 질문의 핵심은 ${intent}입니다. ${decisionRiskLine} ${optionLine} ${cautionLine} ${closingLine}`;
 }
 
 function buildCrisisSafetyAnalysis(answer: QuestionAnswerBlock, basis: DeterministicSajuBasis, currentDayunName: string) {
