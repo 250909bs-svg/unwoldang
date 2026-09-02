@@ -258,6 +258,8 @@ describe('deterministic saju basis', () => {
     expect(toHanjaGanzhi(basis.pillars.month)).toBe('己酉');
     expect(toHanjaGanzhi(basis.pillars.day)).toBe('戊子');
     expect(toHanjaGanzhi(basis.pillars.hour)).toBe('丁巳');
+    expect(basis.commercialV2.calendar.version).toBe('calendar-v2.1.0');
+    expect(basis.commercialV2.releaseAudit.reproducibilityFingerprint).toMatch(/^uw-[a-f0-9]{16}$/);
     expect(Object.fromEntries(basis.fiveElements.map((item) => [item.label, item.value]))).toEqual({
       목: 0,
       화: 2,

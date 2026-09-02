@@ -189,6 +189,18 @@ describe('general-signature release preflight', () => {
     expect(new Set([base, lunar, leap, range]).size).toBe(4);
   });
 
+  it('invalidates the calculation fingerprint when the calendar policy version changes', () => {
+    const previous = buildCommercialReleaseAudit(
+      makeAuditInput({ calendarVersion: 'calendar-v2.0.0' })
+    );
+    const current = buildCommercialReleaseAudit(
+      makeAuditInput({ calendarVersion: 'calendar-v2.1.0' })
+    );
+
+    expect(previous.decision).toBe(current.decision);
+    expect(previous.reproducibilityFingerprint).not.toBe(current.reproducibilityFingerprint);
+  });
+
   it('keeps the verified 1992-09-09 10:24 FACT on the shared preparation path', async () => {
     const prepared = await prepareCommercialReportRequest(requestBody);
 

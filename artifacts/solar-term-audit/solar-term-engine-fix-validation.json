@@ -1,0 +1,6777 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-02T04:44:48.423Z",
+  "productionEngine": "astronomy-engine-2.1.19",
+  "currentEngineUsedAsExpected": false,
+  "canonicalLongitudes": [
+    {
+      "name": "춘분",
+      "longitude": 0
+    },
+    {
+      "name": "청명",
+      "longitude": 15
+    },
+    {
+      "name": "곡우",
+      "longitude": 30
+    },
+    {
+      "name": "입하",
+      "longitude": 45
+    },
+    {
+      "name": "소만",
+      "longitude": 60
+    },
+    {
+      "name": "망종",
+      "longitude": 75
+    },
+    {
+      "name": "하지",
+      "longitude": 90
+    },
+    {
+      "name": "소서",
+      "longitude": 105
+    },
+    {
+      "name": "대서",
+      "longitude": 120
+    },
+    {
+      "name": "입추",
+      "longitude": 135
+    },
+    {
+      "name": "처서",
+      "longitude": 150
+    },
+    {
+      "name": "백로",
+      "longitude": 165
+    },
+    {
+      "name": "추분",
+      "longitude": 180
+    },
+    {
+      "name": "한로",
+      "longitude": 195
+    },
+    {
+      "name": "상강",
+      "longitude": 210
+    },
+    {
+      "name": "입동",
+      "longitude": 225
+    },
+    {
+      "name": "소설",
+      "longitude": 240
+    },
+    {
+      "name": "대설",
+      "longitude": 255
+    },
+    {
+      "name": "동지",
+      "longitude": 270
+    },
+    {
+      "name": "소한",
+      "longitude": 285
+    },
+    {
+      "name": "대한",
+      "longitude": 300
+    },
+    {
+      "name": "입춘",
+      "longitude": 315
+    },
+    {
+      "name": "우수",
+      "longitude": 330
+    },
+    {
+      "name": "경칩",
+      "longitude": 345
+    }
+  ],
+  "jpl240": {
+    "statistics": {
+      "count": 240,
+      "maximumAbsoluteSeconds": 41.48,
+      "meanAbsoluteSeconds": 9.913570833333337,
+      "p50AbsoluteSeconds": 8.976,
+      "p95AbsoluteSeconds": 24.864,
+      "p99AbsoluteSeconds": 31.3,
+      "signedBiasSeconds": 1.9073541666666682
+    },
+    "rows": [
+      {
+        "year": 1989,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "1989-03-20T15:28:17.528Z",
+        "jplUtc": "1989-03-20T15:28:14.898Z",
+        "deltaSeconds": 2.63
+      },
+      {
+        "year": 1989,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "1989-04-04T19:29:43.803Z",
+        "jplUtc": "1989-04-04T19:29:54.499Z",
+        "deltaSeconds": -10.696
+      },
+      {
+        "year": 1989,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "1989-04-20T02:38:58.257Z",
+        "jplUtc": "1989-04-20T02:38:55.210Z",
+        "deltaSeconds": 3.047
+      },
+      {
+        "year": 1989,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "1989-05-05T12:53:48.929Z",
+        "jplUtc": "1989-05-05T12:53:55.739Z",
+        "deltaSeconds": -6.81
+      },
+      {
+        "year": 1989,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "1989-05-21T01:53:32.192Z",
+        "jplUtc": "1989-05-21T01:53:31.872Z",
+        "deltaSeconds": 0.32
+      },
+      {
+        "year": 1989,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "1989-06-05T17:05:08.913Z",
+        "jplUtc": "1989-06-05T17:05:13.914Z",
+        "deltaSeconds": -5.001
+      },
+      {
+        "year": 1989,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "1989-06-21T09:52:51.360Z",
+        "jplUtc": "1989-06-21T09:53:00.887Z",
+        "deltaSeconds": -9.527
+      },
+      {
+        "year": 1989,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "1989-07-07T03:19:10.974Z",
+        "jplUtc": "1989-07-07T03:19:26.182Z",
+        "deltaSeconds": -15.208
+      },
+      {
+        "year": 1989,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "1989-07-22T20:45:11.990Z",
+        "jplUtc": "1989-07-22T20:45:28.983Z",
+        "deltaSeconds": -16.993
+      },
+      {
+        "year": 1989,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "1989-08-07T13:03:36.119Z",
+        "jplUtc": "1989-08-07T13:03:53.575Z",
+        "deltaSeconds": -17.456
+      },
+      {
+        "year": 1989,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "1989-08-23T03:46:02.885Z",
+        "jplUtc": "1989-08-23T03:46:12.682Z",
+        "deltaSeconds": -9.797
+      },
+      {
+        "year": 1989,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "1989-09-07T15:53:45.473Z",
+        "jplUtc": "1989-09-07T15:53:55.083Z",
+        "deltaSeconds": -9.61
+      },
+      {
+        "year": 1989,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "1989-09-23T01:19:40.724Z",
+        "jplUtc": "1989-09-23T01:19:36.186Z",
+        "deltaSeconds": 4.538
+      },
+      {
+        "year": 1989,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "1989-10-08T07:27:17.692Z",
+        "jplUtc": "1989-10-08T07:27:20.229Z",
+        "deltaSeconds": -2.537
+      },
+      {
+        "year": 1989,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "1989-10-23T10:35:12.907Z",
+        "jplUtc": "1989-10-23T10:35:08.338Z",
+        "deltaSeconds": 4.569
+      },
+      {
+        "year": 1989,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "1989-11-07T10:33:32.873Z",
+        "jplUtc": "1989-11-07T10:33:32.410Z",
+        "deltaSeconds": 0.463
+      },
+      {
+        "year": 1989,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "1989-11-22T08:04:39.804Z",
+        "jplUtc": "1989-11-22T08:04:37.238Z",
+        "deltaSeconds": 2.566
+      },
+      {
+        "year": 1989,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "1989-12-07T03:21:04.507Z",
+        "jplUtc": "1989-12-07T03:20:57.636Z",
+        "deltaSeconds": 6.871
+      },
+      {
+        "year": 1989,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "1989-12-21T21:22:08.561Z",
+        "jplUtc": "1989-12-21T21:22:00.983Z",
+        "deltaSeconds": 7.578
+      },
+      {
+        "year": 1989,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "1989-01-05T08:46:10.537Z",
+        "jplUtc": "1989-01-05T08:45:55.950Z",
+        "deltaSeconds": 14.587
+      },
+      {
+        "year": 1989,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "1989-01-20T02:07:20.048Z",
+        "jplUtc": "1989-01-20T02:06:58.492Z",
+        "deltaSeconds": 21.556
+      },
+      {
+        "year": 1989,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "1989-02-03T20:27:15.360Z",
+        "jplUtc": "1989-02-03T20:27:09.806Z",
+        "deltaSeconds": 5.554
+      },
+      {
+        "year": 1989,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "1989-02-18T16:20:41.279Z",
+        "jplUtc": "1989-02-18T16:20:29.913Z",
+        "deltaSeconds": 11.366
+      },
+      {
+        "year": 1989,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "1989-03-05T14:34:01.967Z",
+        "jplUtc": "1989-03-05T14:34:08.646Z",
+        "deltaSeconds": -6.679
+      },
+      {
+        "year": 1990,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "1990-03-20T21:19:00.660Z",
+        "jplUtc": "1990-03-20T21:19:15.252Z",
+        "deltaSeconds": -14.592
+      },
+      {
+        "year": 1990,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "1990-04-05T01:12:55.307Z",
+        "jplUtc": "1990-04-05T01:12:54.619Z",
+        "deltaSeconds": 0.688
+      },
+      {
+        "year": 1990,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "1990-04-20T08:26:30.190Z",
+        "jplUtc": "1990-04-20T08:26:31.897Z",
+        "deltaSeconds": -1.707
+      },
+      {
+        "year": 1990,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "1990-05-05T18:35:35.727Z",
+        "jplUtc": "1990-05-05T18:35:25.976Z",
+        "deltaSeconds": 9.751
+      },
+      {
+        "year": 1990,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "1990-05-21T07:37:27.997Z",
+        "jplUtc": "1990-05-21T07:37:23.826Z",
+        "deltaSeconds": 4.171
+      },
+      {
+        "year": 1990,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "1990-06-05T22:46:26.955Z",
+        "jplUtc": "1990-06-05T22:46:18.010Z",
+        "deltaSeconds": 8.945
+      },
+      {
+        "year": 1990,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "1990-06-21T15:32:50.331Z",
+        "jplUtc": "1990-06-21T15:32:47.282Z",
+        "deltaSeconds": 3.049
+      },
+      {
+        "year": 1990,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "1990-07-07T09:00:26.289Z",
+        "jplUtc": "1990-07-07T09:00:28.618Z",
+        "deltaSeconds": -2.329
+      },
+      {
+        "year": 1990,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "1990-07-23T02:21:31.435Z",
+        "jplUtc": "1990-07-23T02:21:30.826Z",
+        "deltaSeconds": 0.609
+      },
+      {
+        "year": 1990,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "1990-08-07T18:45:24.889Z",
+        "jplUtc": "1990-08-07T18:45:31.450Z",
+        "deltaSeconds": -6.561
+      },
+      {
+        "year": 1990,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "1990-08-23T09:20:52.319Z",
+        "jplUtc": "1990-08-23T09:20:49.550Z",
+        "deltaSeconds": 2.769
+      },
+      {
+        "year": 1990,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "1990-09-07T21:37:29.076Z",
+        "jplUtc": "1990-09-07T21:37:27.547Z",
+        "deltaSeconds": 1.529
+      },
+      {
+        "year": 1990,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "1990-09-23T06:55:47.452Z",
+        "jplUtc": "1990-09-23T06:55:29.747Z",
+        "deltaSeconds": 17.705
+      },
+      {
+        "year": 1990,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "1990-10-08T13:14:02.574Z",
+        "jplUtc": "1990-10-08T13:13:47.629Z",
+        "deltaSeconds": 14.945
+      },
+      {
+        "year": 1990,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "1990-10-23T16:14:19.071Z",
+        "jplUtc": "1990-10-23T16:13:56.989Z",
+        "deltaSeconds": 22.082
+      },
+      {
+        "year": 1990,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "1990-11-07T16:23:42.097Z",
+        "jplUtc": "1990-11-07T16:23:28.651Z",
+        "deltaSeconds": 13.446
+      },
+      {
+        "year": 1990,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "1990-11-22T13:47:04.477Z",
+        "jplUtc": "1990-11-22T13:46:55.242Z",
+        "deltaSeconds": 9.235
+      },
+      {
+        "year": 1990,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "1990-12-07T09:14:08.912Z",
+        "jplUtc": "1990-12-07T09:14:09.695Z",
+        "deltaSeconds": -0.783
+      },
+      {
+        "year": 1990,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "1990-12-22T03:06:57.279Z",
+        "jplUtc": "1990-12-22T03:06:59.340Z",
+        "deltaSeconds": -2.061
+      },
+      {
+        "year": 1990,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "1990-01-05T14:33:24.851Z",
+        "jplUtc": "1990-01-05T14:33:13.740Z",
+        "deltaSeconds": 11.111
+      },
+      {
+        "year": 1990,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "1990-01-20T08:01:33.365Z",
+        "jplUtc": "1990-01-20T08:01:32.787Z",
+        "deltaSeconds": 0.578
+      },
+      {
+        "year": 1990,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "1990-02-04T02:13:58.005Z",
+        "jplUtc": "1990-02-04T02:13:59.979Z",
+        "deltaSeconds": -1.974
+      },
+      {
+        "year": 1990,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "1990-02-18T22:13:46.239Z",
+        "jplUtc": "1990-02-18T22:14:01.192Z",
+        "deltaSeconds": -14.953
+      },
+      {
+        "year": 1990,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "1990-03-05T20:19:09.711Z",
+        "jplUtc": "1990-03-05T20:19:16.684Z",
+        "deltaSeconds": -6.973
+      },
+      {
+        "year": 1992,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "1992-03-20T08:48:09.270Z",
+        "jplUtc": "1992-03-20T08:48:02.706Z",
+        "deltaSeconds": 6.564
+      },
+      {
+        "year": 1992,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "1992-04-04T12:45:05.080Z",
+        "jplUtc": "1992-04-04T12:45:07.827Z",
+        "deltaSeconds": -2.747
+      },
+      {
+        "year": 1992,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "1992-04-19T19:57:05.531Z",
+        "jplUtc": "1992-04-19T19:56:53.150Z",
+        "deltaSeconds": 12.381
+      },
+      {
+        "year": 1992,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "1992-05-05T06:08:40.730Z",
+        "jplUtc": "1992-05-05T06:08:40.016Z",
+        "deltaSeconds": 0.714
+      },
+      {
+        "year": 1992,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "1992-05-20T19:12:19.935Z",
+        "jplUtc": "1992-05-20T19:12:08.271Z",
+        "deltaSeconds": 11.664
+      },
+      {
+        "year": 1992,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "1992-06-05T10:22:24.804Z",
+        "jplUtc": "1992-06-05T10:22:20.058Z",
+        "deltaSeconds": 4.746
+      },
+      {
+        "year": 1992,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "1992-06-21T03:14:19.262Z",
+        "jplUtc": "1992-06-21T03:14:09.124Z",
+        "deltaSeconds": 10.138
+      },
+      {
+        "year": 1992,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "1992-07-06T20:40:21.919Z",
+        "jplUtc": "1992-07-06T20:40:14.991Z",
+        "deltaSeconds": 6.928
+      },
+      {
+        "year": 1992,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "1992-07-22T14:09:01.641Z",
+        "jplUtc": "1992-07-22T14:08:49.487Z",
+        "deltaSeconds": 12.154
+      },
+      {
+        "year": 1992,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "1992-08-07T06:27:32.134Z",
+        "jplUtc": "1992-08-07T06:27:22.438Z",
+        "deltaSeconds": 9.696
+      },
+      {
+        "year": 1992,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "1992-08-22T21:10:15.085Z",
+        "jplUtc": "1992-08-22T21:10:06.305Z",
+        "deltaSeconds": 8.78
+      },
+      {
+        "year": 1992,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "1992-09-07T09:18:22.479Z",
+        "jplUtc": "1992-09-07T09:18:18.366Z",
+        "deltaSeconds": 4.113
+      },
+      {
+        "year": 1992,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "1992-09-22T18:42:51.787Z",
+        "jplUtc": "1992-09-22T18:42:45.763Z",
+        "deltaSeconds": 6.024
+      },
+      {
+        "year": 1992,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "1992-10-08T00:51:23.276Z",
+        "jplUtc": "1992-10-08T00:51:26.749Z",
+        "deltaSeconds": -3.473
+      },
+      {
+        "year": 1992,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "1992-10-23T03:57:08.700Z",
+        "jplUtc": "1992-10-23T03:57:06.865Z",
+        "deltaSeconds": 1.835
+      },
+      {
+        "year": 1992,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "1992-11-07T03:56:55.166Z",
+        "jplUtc": "1992-11-07T03:57:01.216Z",
+        "deltaSeconds": -6.05
+      },
+      {
+        "year": 1992,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "1992-11-22T01:25:51.136Z",
+        "jplUtc": "1992-11-22T01:25:51.250Z",
+        "deltaSeconds": -0.114
+      },
+      {
+        "year": 1992,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "1992-12-06T20:44:08.233Z",
+        "jplUtc": "1992-12-06T20:44:11.528Z",
+        "deltaSeconds": -3.295
+      },
+      {
+        "year": 1992,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "1992-12-21T14:43:15.945Z",
+        "jplUtc": "1992-12-21T14:43:13.286Z",
+        "deltaSeconds": 2.659
+      },
+      {
+        "year": 1992,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "1992-01-06T02:08:39.726Z",
+        "jplUtc": "1992-01-06T02:08:30.750Z",
+        "deltaSeconds": 8.976
+      },
+      {
+        "year": 1992,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "1992-01-20T19:32:34.614Z",
+        "jplUtc": "1992-01-20T19:32:29.007Z",
+        "deltaSeconds": 5.607
+      },
+      {
+        "year": 1992,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "1992-02-04T13:48:12.361Z",
+        "jplUtc": "1992-02-04T13:48:16.185Z",
+        "deltaSeconds": -3.824
+      },
+      {
+        "year": 1992,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "1992-02-19T09:43:31.617Z",
+        "jplUtc": "1992-02-19T09:43:29.085Z",
+        "deltaSeconds": 2.532
+      },
+      {
+        "year": 1992,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "1992-03-05T07:52:00.693Z",
+        "jplUtc": "1992-03-05T07:52:07.051Z",
+        "deltaSeconds": -6.358
+      },
+      {
+        "year": 2000,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2000-03-20T07:35:15.576Z",
+        "jplUtc": "2000-03-20T07:35:14.347Z",
+        "deltaSeconds": 1.229
+      },
+      {
+        "year": 2000,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2000-04-04T11:31:47.158Z",
+        "jplUtc": "2000-04-04T11:31:57.498Z",
+        "deltaSeconds": -10.34
+      },
+      {
+        "year": 2000,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2000-04-19T18:39:33.200Z",
+        "jplUtc": "2000-04-19T18:39:30.124Z",
+        "deltaSeconds": 3.076
+      },
+      {
+        "year": 2000,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2000-05-05T04:49:58.986Z",
+        "jplUtc": "2000-05-05T04:50:09.238Z",
+        "deltaSeconds": -10.252
+      },
+      {
+        "year": 2000,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2000-05-20T17:49:22.498Z",
+        "jplUtc": "2000-05-20T17:49:24.712Z",
+        "deltaSeconds": -2.214
+      },
+      {
+        "year": 2000,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2000-06-05T08:58:25.647Z",
+        "jplUtc": "2000-06-05T08:58:33.485Z",
+        "deltaSeconds": -7.838
+      },
+      {
+        "year": 2000,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2000-06-21T01:47:39.260Z",
+        "jplUtc": "2000-06-21T01:47:42.057Z",
+        "deltaSeconds": -2.797
+      },
+      {
+        "year": 2000,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2000-07-06T19:13:56.127Z",
+        "jplUtc": "2000-07-06T19:13:56.252Z",
+        "deltaSeconds": -0.125
+      },
+      {
+        "year": 2000,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2000-07-22T12:42:51.297Z",
+        "jplUtc": "2000-07-22T12:42:40.909Z",
+        "deltaSeconds": 10.388
+      },
+      {
+        "year": 2000,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2000-08-07T05:03:12.928Z",
+        "jplUtc": "2000-08-07T05:02:59.354Z",
+        "deltaSeconds": 13.574
+      },
+      {
+        "year": 2000,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2000-08-22T19:48:50.384Z",
+        "jplUtc": "2000-08-22T19:48:31.073Z",
+        "deltaSeconds": 19.311
+      },
+      {
+        "year": 2000,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2000-09-07T07:59:29.080Z",
+        "jplUtc": "2000-09-07T07:59:09.447Z",
+        "deltaSeconds": 19.633
+      },
+      {
+        "year": 2000,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2000-09-22T17:27:57.187Z",
+        "jplUtc": "2000-09-22T17:27:35.339Z",
+        "deltaSeconds": 21.848
+      },
+      {
+        "year": 2000,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2000-10-07T23:38:26.706Z",
+        "jplUtc": "2000-10-07T23:38:11.826Z",
+        "deltaSeconds": 14.88
+      },
+      {
+        "year": 2000,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2000-10-23T02:47:46.654Z",
+        "jplUtc": "2000-10-23T02:47:28.585Z",
+        "deltaSeconds": 18.069
+      },
+      {
+        "year": 2000,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2000-11-07T02:48:15.845Z",
+        "jplUtc": "2000-11-07T02:48:03.218Z",
+        "deltaSeconds": 12.627
+      },
+      {
+        "year": 2000,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2000-11-22T00:19:39.078Z",
+        "jplUtc": "2000-11-22T00:19:20.623Z",
+        "deltaSeconds": 18.455
+      },
+      {
+        "year": 2000,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2000-12-06T19:37:21.901Z",
+        "jplUtc": "2000-12-06T19:37:01.590Z",
+        "deltaSeconds": 20.311
+      },
+      {
+        "year": 2000,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2000-12-21T13:37:52.025Z",
+        "jplUtc": "2000-12-21T13:37:25.472Z",
+        "deltaSeconds": 26.553
+      },
+      {
+        "year": 2000,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2000-01-06T01:00:55.938Z",
+        "jplUtc": "2000-01-06T01:00:40.862Z",
+        "deltaSeconds": 15.076
+      },
+      {
+        "year": 2000,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2000-01-20T18:23:12.153Z",
+        "jplUtc": "2000-01-20T18:23:01.759Z",
+        "deltaSeconds": 10.394
+      },
+      {
+        "year": 2000,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2000-02-04T12:40:18.090Z",
+        "jplUtc": "2000-02-04T12:40:22.680Z",
+        "deltaSeconds": -4.59
+      },
+      {
+        "year": 2000,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2000-02-19T08:33:18.750Z",
+        "jplUtc": "2000-02-19T08:33:17.241Z",
+        "deltaSeconds": 1.509
+      },
+      {
+        "year": 2000,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2000-03-05T06:42:26.331Z",
+        "jplUtc": "2000-03-05T06:42:38.657Z",
+        "deltaSeconds": -12.326
+      },
+      {
+        "year": 2010,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2010-03-20T17:31:55.418Z",
+        "jplUtc": "2010-03-20T17:32:11.990Z",
+        "deltaSeconds": -16.572
+      },
+      {
+        "year": 2010,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2010-04-04T21:30:26.453Z",
+        "jplUtc": "2010-04-04T21:30:28.099Z",
+        "deltaSeconds": -1.646
+      },
+      {
+        "year": 2010,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2010-04-20T04:29:44.933Z",
+        "jplUtc": "2010-04-20T04:29:47.881Z",
+        "deltaSeconds": -2.948
+      },
+      {
+        "year": 2010,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2010-05-05T14:44:09.901Z",
+        "jplUtc": "2010-05-05T14:44:00.735Z",
+        "deltaSeconds": 9.166
+      },
+      {
+        "year": 2010,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2010-05-21T03:34:02.673Z",
+        "jplUtc": "2010-05-21T03:33:53.828Z",
+        "deltaSeconds": 8.845
+      },
+      {
+        "year": 2010,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2010-06-05T18:49:34.120Z",
+        "jplUtc": "2010-06-05T18:49:23.443Z",
+        "deltaSeconds": 10.677
+      },
+      {
+        "year": 2010,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2010-06-21T11:28:27.339Z",
+        "jplUtc": "2010-06-21T11:28:24.510Z",
+        "deltaSeconds": 2.829
+      },
+      {
+        "year": 2010,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2010-07-07T05:02:22.776Z",
+        "jplUtc": "2010-07-07T05:02:24.213Z",
+        "deltaSeconds": -1.437
+      },
+      {
+        "year": 2010,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2010-07-22T22:21:06.469Z",
+        "jplUtc": "2010-07-22T22:21:12.641Z",
+        "deltaSeconds": -6.172
+      },
+      {
+        "year": 2010,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2010-08-07T14:49:04.776Z",
+        "jplUtc": "2010-08-07T14:49:08.813Z",
+        "deltaSeconds": -4.037
+      },
+      {
+        "year": 2010,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2010-08-23T05:26:55.442Z",
+        "jplUtc": "2010-08-23T05:26:57.069Z",
+        "deltaSeconds": -1.627
+      },
+      {
+        "year": 2010,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2010-09-07T17:45:00.683Z",
+        "jplUtc": "2010-09-07T17:44:41.037Z",
+        "deltaSeconds": 19.646
+      },
+      {
+        "year": 2010,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2010-09-23T03:09:23.987Z",
+        "jplUtc": "2010-09-23T03:09:01.733Z",
+        "deltaSeconds": 22.254
+      },
+      {
+        "year": 2010,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2010-10-08T09:27:10.241Z",
+        "jplUtc": "2010-10-08T09:26:28.761Z",
+        "deltaSeconds": 41.48
+      },
+      {
+        "year": 2010,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2010-10-23T12:35:29.002Z",
+        "jplUtc": "2010-10-23T12:35:03.110Z",
+        "deltaSeconds": 25.892
+      },
+      {
+        "year": 2010,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2010-11-07T12:42:58.725Z",
+        "jplUtc": "2010-11-07T12:42:29.829Z",
+        "deltaSeconds": 28.896
+      },
+      {
+        "year": 2010,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2010-11-22T10:14:36.964Z",
+        "jplUtc": "2010-11-22T10:14:33.783Z",
+        "deltaSeconds": 3.181
+      },
+      {
+        "year": 2010,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2010-12-07T05:38:30.859Z",
+        "jplUtc": "2010-12-07T05:38:23.343Z",
+        "deltaSeconds": 7.516
+      },
+      {
+        "year": 2010,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2010-12-21T23:38:23.021Z",
+        "jplUtc": "2010-12-21T23:38:27.425Z",
+        "deltaSeconds": -4.404
+      },
+      {
+        "year": 2010,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2010-01-05T11:08:37.485Z",
+        "jplUtc": "2010-01-05T11:08:47.135Z",
+        "deltaSeconds": -9.65
+      },
+      {
+        "year": 2010,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2010-01-20T04:27:31.553Z",
+        "jplUtc": "2010-01-20T04:27:41.713Z",
+        "deltaSeconds": -10.16
+      },
+      {
+        "year": 2010,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2010-02-03T22:47:38.705Z",
+        "jplUtc": "2010-02-03T22:47:50.705Z",
+        "deltaSeconds": -12
+      },
+      {
+        "year": 2010,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2010-02-18T18:35:20.685Z",
+        "jplUtc": "2010-02-18T18:35:37.197Z",
+        "deltaSeconds": -16.512
+      },
+      {
+        "year": 2010,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2010-03-05T16:46:09.514Z",
+        "jplUtc": "2010-03-05T16:46:20.073Z",
+        "deltaSeconds": -10.559
+      },
+      {
+        "year": 2012,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2012-03-20T05:14:15.516Z",
+        "jplUtc": "2012-03-20T05:14:25.667Z",
+        "deltaSeconds": -10.151
+      },
+      {
+        "year": 2012,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2012-04-04T09:05:38.739Z",
+        "jplUtc": "2012-04-04T09:05:35.786Z",
+        "deltaSeconds": 2.953
+      },
+      {
+        "year": 2012,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2012-04-19T16:12:01.724Z",
+        "jplUtc": "2012-04-19T16:12:04.846Z",
+        "deltaSeconds": -3.122
+      },
+      {
+        "year": 2012,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2012-05-05T02:19:44.088Z",
+        "jplUtc": "2012-05-05T02:19:40.815Z",
+        "deltaSeconds": 3.273
+      },
+      {
+        "year": 2012,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2012-05-20T15:15:19.677Z",
+        "jplUtc": "2012-05-20T15:15:32.075Z",
+        "deltaSeconds": -12.398
+      },
+      {
+        "year": 2012,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2012-06-05T06:25:37.037Z",
+        "jplUtc": "2012-06-05T06:25:54.458Z",
+        "deltaSeconds": -17.421
+      },
+      {
+        "year": 2012,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2012-06-20T23:08:11.518Z",
+        "jplUtc": "2012-06-20T23:08:49.049Z",
+        "deltaSeconds": -37.531
+      },
+      {
+        "year": 2012,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2012-07-06T16:40:12.083Z",
+        "jplUtc": "2012-07-06T16:40:43.383Z",
+        "deltaSeconds": -31.3
+      },
+      {
+        "year": 2012,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2012-07-22T10:00:23.734Z",
+        "jplUtc": "2012-07-22T10:00:51.853Z",
+        "deltaSeconds": -28.119
+      },
+      {
+        "year": 2012,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2012-08-07T02:30:18.367Z",
+        "jplUtc": "2012-08-07T02:30:32.746Z",
+        "deltaSeconds": -14.379
+      },
+      {
+        "year": 2012,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2012-08-22T17:06:44.675Z",
+        "jplUtc": "2012-08-22T17:06:49.441Z",
+        "deltaSeconds": -4.766
+      },
+      {
+        "year": 2012,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2012-09-07T05:28:59.535Z",
+        "jplUtc": "2012-09-07T05:29:00.233Z",
+        "deltaSeconds": -0.698
+      },
+      {
+        "year": 2012,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2012-09-22T14:48:57.705Z",
+        "jplUtc": "2012-09-22T14:48:58.076Z",
+        "deltaSeconds": -0.371
+      },
+      {
+        "year": 2012,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2012-10-07T21:11:32.333Z",
+        "jplUtc": "2012-10-07T21:11:42.308Z",
+        "deltaSeconds": -9.975
+      },
+      {
+        "year": 2012,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2012-10-23T00:13:21.392Z",
+        "jplUtc": "2012-10-23T00:13:33.669Z",
+        "deltaSeconds": -12.277
+      },
+      {
+        "year": 2012,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2012-11-07T00:25:39.264Z",
+        "jplUtc": "2012-11-07T00:25:57.363Z",
+        "deltaSeconds": -18.099
+      },
+      {
+        "year": 2012,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2012-11-21T21:49:56.565Z",
+        "jplUtc": "2012-11-21T21:50:08.916Z",
+        "deltaSeconds": -12.351
+      },
+      {
+        "year": 2012,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2012-12-06T17:18:47.108Z",
+        "jplUtc": "2012-12-06T17:18:56.194Z",
+        "deltaSeconds": -9.086
+      },
+      {
+        "year": 2012,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2012-12-21T11:11:39.854Z",
+        "jplUtc": "2012-12-21T11:11:36.526Z",
+        "deltaSeconds": 3.328
+      },
+      {
+        "year": 2012,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2012-01-05T22:44:10.616Z",
+        "jplUtc": "2012-01-05T22:43:55.624Z",
+        "deltaSeconds": 14.992
+      },
+      {
+        "year": 2012,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2012-01-20T16:09:54.718Z",
+        "jplUtc": "2012-01-20T16:09:50.748Z",
+        "deltaSeconds": 3.97
+      },
+      {
+        "year": 2012,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2012-02-04T10:22:24.876Z",
+        "jplUtc": "2012-02-04T10:22:23.884Z",
+        "deltaSeconds": 0.992
+      },
+      {
+        "year": 2012,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2012-02-19T06:17:27.550Z",
+        "jplUtc": "2012-02-19T06:17:36.980Z",
+        "deltaSeconds": -9.43
+      },
+      {
+        "year": 2012,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2012-03-05T04:20:58.388Z",
+        "jplUtc": "2012-03-05T04:21:02.840Z",
+        "deltaSeconds": -4.452
+      },
+      {
+        "year": 2020,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2020-03-20T03:49:56.290Z",
+        "jplUtc": "2020-03-20T03:49:37.120Z",
+        "deltaSeconds": 19.17
+      },
+      {
+        "year": 2020,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2020-04-04T07:38:37.900Z",
+        "jplUtc": "2020-04-04T07:38:10.212Z",
+        "deltaSeconds": 27.688
+      },
+      {
+        "year": 2020,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2020-04-19T14:45:49.981Z",
+        "jplUtc": "2020-04-19T14:45:28.970Z",
+        "deltaSeconds": 21.011
+      },
+      {
+        "year": 2020,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2020-05-05T00:51:48.482Z",
+        "jplUtc": "2020-05-05T00:51:23.317Z",
+        "deltaSeconds": 25.165
+      },
+      {
+        "year": 2020,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2020-05-20T13:49:26.788Z",
+        "jplUtc": "2020-05-20T13:49:17.192Z",
+        "deltaSeconds": 9.596
+      },
+      {
+        "year": 2020,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2020-06-05T04:58:30.149Z",
+        "jplUtc": "2020-06-05T04:58:25.892Z",
+        "deltaSeconds": 4.257
+      },
+      {
+        "year": 2020,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2020-06-20T21:43:31.283Z",
+        "jplUtc": "2020-06-20T21:43:40.926Z",
+        "deltaSeconds": -9.643
+      },
+      {
+        "year": 2020,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2020-07-06T15:14:26.501Z",
+        "jplUtc": "2020-07-06T15:14:27.478Z",
+        "deltaSeconds": -0.977
+      },
+      {
+        "year": 2020,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2020-07-22T08:36:57.872Z",
+        "jplUtc": "2020-07-22T08:36:52.596Z",
+        "deltaSeconds": 5.276
+      },
+      {
+        "year": 2020,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2020-08-07T01:06:25.469Z",
+        "jplUtc": "2020-08-07T01:06:11.569Z",
+        "deltaSeconds": 13.9
+      },
+      {
+        "year": 2020,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2020-08-22T15:45:18.135Z",
+        "jplUtc": "2020-08-22T15:44:56.103Z",
+        "deltaSeconds": 22.032
+      },
+      {
+        "year": 2020,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2020-09-07T04:08:20.114Z",
+        "jplUtc": "2020-09-07T04:08:03.132Z",
+        "deltaSeconds": 16.982
+      },
+      {
+        "year": 2020,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2020-09-22T13:30:59.379Z",
+        "jplUtc": "2020-09-22T13:30:39.264Z",
+        "deltaSeconds": 20.115
+      },
+      {
+        "year": 2020,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2020-10-07T19:55:22.326Z",
+        "jplUtc": "2020-10-07T19:55:15.974Z",
+        "deltaSeconds": 6.352
+      },
+      {
+        "year": 2020,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2020-10-22T22:59:45.836Z",
+        "jplUtc": "2020-10-22T22:59:32.502Z",
+        "deltaSeconds": 13.334
+      },
+      {
+        "year": 2020,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2020-11-06T23:13:57.976Z",
+        "jplUtc": "2020-11-06T23:13:55.402Z",
+        "deltaSeconds": 2.574
+      },
+      {
+        "year": 2020,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2020-11-21T20:39:58.898Z",
+        "jplUtc": "2020-11-21T20:39:45.553Z",
+        "deltaSeconds": 13.345
+      },
+      {
+        "year": 2020,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2020-12-06T16:09:40.949Z",
+        "jplUtc": "2020-12-06T16:09:30.404Z",
+        "deltaSeconds": 10.545
+      },
+      {
+        "year": 2020,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2020-12-21T10:02:42.334Z",
+        "jplUtc": "2020-12-21T10:02:20.437Z",
+        "deltaSeconds": 21.897
+      },
+      {
+        "year": 2020,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2020-01-05T21:30:19.573Z",
+        "jplUtc": "2020-01-05T21:30:06.500Z",
+        "deltaSeconds": 13.073
+      },
+      {
+        "year": 2020,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2020-01-20T14:54:54.521Z",
+        "jplUtc": "2020-01-20T14:54:40.207Z",
+        "deltaSeconds": 14.314
+      },
+      {
+        "year": 2020,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2020-02-04T09:03:38.336Z",
+        "jplUtc": "2020-02-04T09:03:19.936Z",
+        "deltaSeconds": 18.4
+      },
+      {
+        "year": 2020,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2020-02-19T04:57:17.701Z",
+        "jplUtc": "2020-02-19T04:57:00.201Z",
+        "deltaSeconds": 17.5
+      },
+      {
+        "year": 2020,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2020-03-05T02:57:14.433Z",
+        "jplUtc": "2020-03-05T02:56:53.288Z",
+        "deltaSeconds": 21.145
+      },
+      {
+        "year": 2024,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2024-03-20T03:06:24.047Z",
+        "jplUtc": "2024-03-20T03:06:24.155Z",
+        "deltaSeconds": -0.108
+      },
+      {
+        "year": 2024,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "deltaSeconds": -2.971
+      },
+      {
+        "year": 2024,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2024-04-19T13:59:55.070Z",
+        "jplUtc": "2024-04-19T13:59:45.462Z",
+        "deltaSeconds": 9.608
+      },
+      {
+        "year": 2024,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "deltaSeconds": 3.406
+      },
+      {
+        "year": 2024,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2024-05-20T12:59:38.197Z",
+        "jplUtc": "2024-05-20T12:59:30.365Z",
+        "deltaSeconds": 7.832
+      },
+      {
+        "year": 2024,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "deltaSeconds": 0.421
+      },
+      {
+        "year": 2024,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2024-06-20T20:50:58.360Z",
+        "jplUtc": "2024-06-20T20:50:59.805Z",
+        "deltaSeconds": -1.445
+      },
+      {
+        "year": 2024,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "deltaSeconds": 3.694
+      },
+      {
+        "year": 2024,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2024-07-22T07:44:29.225Z",
+        "jplUtc": "2024-07-22T07:44:25.736Z",
+        "deltaSeconds": 3.489
+      },
+      {
+        "year": 2024,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "deltaSeconds": 13.682
+      },
+      {
+        "year": 2024,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2024-08-22T14:55:15.989Z",
+        "jplUtc": "2024-08-22T14:55:02.965Z",
+        "deltaSeconds": 13.024
+      },
+      {
+        "year": 2024,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "deltaSeconds": 21.074
+      },
+      {
+        "year": 2024,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2024-09-22T12:43:55.451Z",
+        "jplUtc": "2024-09-22T12:43:39.559Z",
+        "deltaSeconds": 15.892
+      },
+      {
+        "year": 2024,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "deltaSeconds": 9.638
+      },
+      {
+        "year": 2024,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2024-10-22T22:14:46.498Z",
+        "jplUtc": "2024-10-22T22:14:44.425Z",
+        "deltaSeconds": 2.073
+      },
+      {
+        "year": 2024,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "deltaSeconds": -9.001
+      },
+      {
+        "year": 2024,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2024-11-21T19:56:14.256Z",
+        "jplUtc": "2024-11-21T19:56:29.753Z",
+        "deltaSeconds": -15.497
+      },
+      {
+        "year": 2024,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "deltaSeconds": -13.946
+      },
+      {
+        "year": 2024,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2024-12-21T09:20:18.673Z",
+        "jplUtc": "2024-12-21T09:20:34.194Z",
+        "deltaSeconds": -15.521
+      },
+      {
+        "year": 2024,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "deltaSeconds": -2.781
+      },
+      {
+        "year": 2024,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2024-01-20T14:07:19.331Z",
+        "jplUtc": "2024-01-20T14:07:20.733Z",
+        "deltaSeconds": -1.402
+      },
+      {
+        "year": 2024,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "deltaSeconds": -17.962
+      },
+      {
+        "year": 2024,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2024-02-19T04:13:03.396Z",
+        "jplUtc": "2024-02-19T04:13:10.323Z",
+        "deltaSeconds": -6.927
+      },
+      {
+        "year": 2024,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "deltaSeconds": -17.259
+      },
+      {
+        "year": 2025,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2025-03-20T09:01:26.759Z",
+        "jplUtc": "2025-03-20T09:01:28.934Z",
+        "deltaSeconds": -2.175
+      },
+      {
+        "year": 2025,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2025-04-04T12:48:34.186Z",
+        "jplUtc": "2025-04-04T12:48:33.765Z",
+        "deltaSeconds": 0.421
+      },
+      {
+        "year": 2025,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2025-04-19T19:56:03.322Z",
+        "jplUtc": "2025-04-19T19:56:01.140Z",
+        "deltaSeconds": 2.182
+      },
+      {
+        "year": 2025,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2025-05-05T05:57:21.708Z",
+        "jplUtc": "2025-05-05T05:57:11.435Z",
+        "deltaSeconds": 10.273
+      },
+      {
+        "year": 2025,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2025-05-20T18:54:51.046Z",
+        "jplUtc": "2025-05-20T18:54:38.162Z",
+        "deltaSeconds": 12.884
+      },
+      {
+        "year": 2025,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2025-06-05T09:56:40.819Z",
+        "jplUtc": "2025-06-05T09:56:31.172Z",
+        "deltaSeconds": 9.647
+      },
+      {
+        "year": 2025,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2025-06-21T02:42:17.883Z",
+        "jplUtc": "2025-06-21T02:42:15.680Z",
+        "deltaSeconds": 2.203
+      },
+      {
+        "year": 2025,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2025-07-06T20:04:51.895Z",
+        "jplUtc": "2025-07-06T20:04:59.097Z",
+        "deltaSeconds": -7.202
+      },
+      {
+        "year": 2025,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2025-07-22T13:29:20.778Z",
+        "jplUtc": "2025-07-22T13:29:27.116Z",
+        "deltaSeconds": -6.338
+      },
+      {
+        "year": 2025,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2025-08-07T05:51:16.773Z",
+        "jplUtc": "2025-08-07T05:51:34.714Z",
+        "deltaSeconds": -17.941
+      },
+      {
+        "year": 2025,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2025-08-22T20:33:49.605Z",
+        "jplUtc": "2025-08-22T20:33:51.474Z",
+        "deltaSeconds": -1.869
+      },
+      {
+        "year": 2025,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2025-09-07T08:51:50.124Z",
+        "jplUtc": "2025-09-07T08:51:56.684Z",
+        "deltaSeconds": -6.56
+      },
+      {
+        "year": 2025,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2025-09-22T18:19:34.559Z",
+        "jplUtc": "2025-09-22T18:19:20.502Z",
+        "deltaSeconds": 14.057
+      },
+      {
+        "year": 2025,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2025-10-08T00:41:21.049Z",
+        "jplUtc": "2025-10-08T00:41:12.108Z",
+        "deltaSeconds": 8.941
+      },
+      {
+        "year": 2025,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2025-10-23T03:51:20.321Z",
+        "jplUtc": "2025-10-23T03:50:55.457Z",
+        "deltaSeconds": 24.864
+      },
+      {
+        "year": 2025,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2025-11-07T04:04:15.490Z",
+        "jplUtc": "2025-11-07T04:04:02.744Z",
+        "deltaSeconds": 12.746
+      },
+      {
+        "year": 2025,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2025-11-22T01:35:50.103Z",
+        "jplUtc": "2025-11-22T01:35:34.562Z",
+        "deltaSeconds": 15.541
+      },
+      {
+        "year": 2025,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2025-12-06T21:04:38.611Z",
+        "jplUtc": "2025-12-06T21:04:34.935Z",
+        "deltaSeconds": 3.676
+      },
+      {
+        "year": 2025,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2025-12-21T15:03:03.907Z",
+        "jplUtc": "2025-12-21T15:03:05.152Z",
+        "deltaSeconds": -1.245
+      },
+      {
+        "year": 2025,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2025-01-05T02:32:41.099Z",
+        "jplUtc": "2025-01-05T02:32:46.354Z",
+        "deltaSeconds": -5.255
+      },
+      {
+        "year": 2025,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2025-01-19T20:00:02.568Z",
+        "jplUtc": "2025-01-19T20:00:07.452Z",
+        "deltaSeconds": -4.884
+      },
+      {
+        "year": 2025,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2025-02-03T14:10:29.634Z",
+        "jplUtc": "2025-02-03T14:10:28.122Z",
+        "deltaSeconds": 1.512
+      },
+      {
+        "year": 2025,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2025-02-18T10:06:35.157Z",
+        "jplUtc": "2025-02-18T10:06:34.264Z",
+        "deltaSeconds": 0.893
+      },
+      {
+        "year": 2025,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2025-03-05T08:07:17.119Z",
+        "jplUtc": "2025-03-05T08:07:16.177Z",
+        "deltaSeconds": 0.942
+      },
+      {
+        "year": 2030,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2030-03-20T13:51:42.425Z",
+        "jplUtc": "2030-03-20T13:52:05.710Z",
+        "deltaSeconds": -23.285
+      },
+      {
+        "year": 2030,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2030-04-04T17:40:29.200Z",
+        "jplUtc": "2030-04-04T17:41:00.327Z",
+        "deltaSeconds": -31.127
+      },
+      {
+        "year": 2030,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2030-04-20T00:43:14.772Z",
+        "jplUtc": "2030-04-20T00:43:34.976Z",
+        "deltaSeconds": -20.204
+      },
+      {
+        "year": 2030,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2030-05-05T10:45:51.570Z",
+        "jplUtc": "2030-05-05T10:46:18.187Z",
+        "deltaSeconds": -26.617
+      },
+      {
+        "year": 2030,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2030-05-20T23:40:53.869Z",
+        "jplUtc": "2030-05-20T23:41:05.093Z",
+        "deltaSeconds": -11.224
+      },
+      {
+        "year": 2030,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2030-06-05T14:44:09.589Z",
+        "jplUtc": "2030-06-05T14:44:29.975Z",
+        "deltaSeconds": -20.386
+      },
+      {
+        "year": 2030,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2030-06-21T07:31:13.263Z",
+        "jplUtc": "2030-06-21T07:31:18.812Z",
+        "deltaSeconds": -5.549
+      },
+      {
+        "year": 2030,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2030-07-07T00:55:20.744Z",
+        "jplUtc": "2030-07-07T00:55:29.302Z",
+        "deltaSeconds": -8.558
+      },
+      {
+        "year": 2030,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2030-07-22T18:25:00.466Z",
+        "jplUtc": "2030-07-22T18:24:53.766Z",
+        "deltaSeconds": 6.7
+      },
+      {
+        "year": 2030,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2030-08-07T10:47:25.924Z",
+        "jplUtc": "2030-08-07T10:47:19.891Z",
+        "deltaSeconds": 6.033
+      },
+      {
+        "year": 2030,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2030-08-23T01:36:41.433Z",
+        "jplUtc": "2030-08-23T01:36:23.923Z",
+        "deltaSeconds": 17.51
+      },
+      {
+        "year": 2030,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2030-09-07T13:53:05.645Z",
+        "jplUtc": "2030-09-07T13:52:50.001Z",
+        "deltaSeconds": 15.644
+      },
+      {
+        "year": 2030,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2030-09-22T23:27:13.152Z",
+        "jplUtc": "2030-09-22T23:26:53.285Z",
+        "deltaSeconds": 19.867
+      },
+      {
+        "year": 2030,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2030-10-08T05:45:27.502Z",
+        "jplUtc": "2030-10-08T05:45:16.405Z",
+        "deltaSeconds": 11.097
+      },
+      {
+        "year": 2030,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2030-10-23T09:00:46.801Z",
+        "jplUtc": "2030-10-23T09:00:33.907Z",
+        "deltaSeconds": 12.894
+      },
+      {
+        "year": 2030,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2030-11-07T09:08:46.114Z",
+        "jplUtc": "2030-11-07T09:08:44.023Z",
+        "deltaSeconds": 2.091
+      },
+      {
+        "year": 2030,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2030-11-22T06:44:37.289Z",
+        "jplUtc": "2030-11-22T06:44:36.187Z",
+        "deltaSeconds": 1.102
+      },
+      {
+        "year": 2030,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2030-12-07T02:07:37.300Z",
+        "jplUtc": "2030-12-07T02:07:37.312Z",
+        "deltaSeconds": -0.012
+      },
+      {
+        "year": 2030,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2030-12-21T20:09:35.689Z",
+        "jplUtc": "2030-12-21T20:09:37.931Z",
+        "deltaSeconds": -2.242
+      },
+      {
+        "year": 2030,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2030-01-05T07:30:38.863Z",
+        "jplUtc": "2030-01-05T07:30:34.168Z",
+        "deltaSeconds": 4.695
+      },
+      {
+        "year": 2030,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2030-01-20T00:54:16.936Z",
+        "jplUtc": "2030-01-20T00:54:23.356Z",
+        "deltaSeconds": -6.42
+      },
+      {
+        "year": 2030,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2030-02-03T19:08:11.578Z",
+        "jplUtc": "2030-02-03T19:08:28.309Z",
+        "deltaSeconds": -16.731
+      },
+      {
+        "year": 2030,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2030-02-18T14:59:38.516Z",
+        "jplUtc": "2030-02-18T14:59:56.359Z",
+        "deltaSeconds": -17.843
+      },
+      {
+        "year": 2030,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2030-03-05T13:02:48.866Z",
+        "jplUtc": "2030-03-05T13:03:18.265Z",
+        "deltaSeconds": -29.399
+      }
+    ]
+  },
+  "naoj120": {
+    "statistics": {
+      "count": 120,
+      "maximumAbsoluteSeconds": 70.241,
+      "meanAbsoluteSeconds": 20.056475000000002,
+      "p50AbsoluteSeconds": 19.573,
+      "p95AbsoluteSeconds": 43.227,
+      "p99AbsoluteSeconds": 58.725,
+      "signedBiasSeconds": 2.9910750000000017
+    },
+    "roundedMinuteMatches": 95,
+    "withinMinuteSourceTolerance": 120,
+    "rows": [
+      {
+        "year": 2010,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2010-03-20T17:31:55.418Z",
+        "naojMinuteUtc": "2010-03-20T17:32:00.000Z",
+        "deltaSeconds": -4.582,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2010-04-04T21:30:26.453Z",
+        "naojMinuteUtc": "2010-04-04T21:30:00.000Z",
+        "deltaSeconds": 26.453,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2010-04-20T04:29:44.933Z",
+        "naojMinuteUtc": "2010-04-20T04:30:00.000Z",
+        "deltaSeconds": -15.067,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2010-05-05T14:44:09.901Z",
+        "naojMinuteUtc": "2010-05-05T14:44:00.000Z",
+        "deltaSeconds": 9.901,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2010-05-21T03:34:02.673Z",
+        "naojMinuteUtc": "2010-05-21T03:34:00.000Z",
+        "deltaSeconds": 2.673,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2010-06-05T18:49:34.120Z",
+        "naojMinuteUtc": "2010-06-05T18:49:00.000Z",
+        "deltaSeconds": 34.12,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2010,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2010-06-21T11:28:27.339Z",
+        "naojMinuteUtc": "2010-06-21T11:28:00.000Z",
+        "deltaSeconds": 27.339,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2010-07-07T05:02:22.776Z",
+        "naojMinuteUtc": "2010-07-07T05:02:00.000Z",
+        "deltaSeconds": 22.776,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2010-07-22T22:21:06.469Z",
+        "naojMinuteUtc": "2010-07-22T22:21:00.000Z",
+        "deltaSeconds": 6.469,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2010-08-07T14:49:04.776Z",
+        "naojMinuteUtc": "2010-08-07T14:49:00.000Z",
+        "deltaSeconds": 4.776,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2010-08-23T05:26:55.442Z",
+        "naojMinuteUtc": "2010-08-23T05:27:00.000Z",
+        "deltaSeconds": -4.558,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2010-09-07T17:45:00.683Z",
+        "naojMinuteUtc": "2010-09-07T17:45:00.000Z",
+        "deltaSeconds": 0.683,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2010-09-23T03:09:23.987Z",
+        "naojMinuteUtc": "2010-09-23T03:09:00.000Z",
+        "deltaSeconds": 23.987,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2010-10-08T09:27:10.241Z",
+        "naojMinuteUtc": "2010-10-08T09:26:00.000Z",
+        "deltaSeconds": 70.241,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2010,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2010-10-23T12:35:29.002Z",
+        "naojMinuteUtc": "2010-10-23T12:35:00.000Z",
+        "deltaSeconds": 29.002,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2010-11-07T12:42:58.725Z",
+        "naojMinuteUtc": "2010-11-07T12:42:00.000Z",
+        "deltaSeconds": 58.725,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2010,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2010-11-22T10:14:36.964Z",
+        "naojMinuteUtc": "2010-11-22T10:15:00.000Z",
+        "deltaSeconds": -23.036,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2010-12-07T05:38:30.859Z",
+        "naojMinuteUtc": "2010-12-07T05:38:00.000Z",
+        "deltaSeconds": 30.859,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2010,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2010-12-21T23:38:23.021Z",
+        "naojMinuteUtc": "2010-12-21T23:38:00.000Z",
+        "deltaSeconds": 23.021,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2010-01-05T11:08:37.485Z",
+        "naojMinuteUtc": "2010-01-05T11:09:00.000Z",
+        "deltaSeconds": -22.515,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2010-01-20T04:27:31.553Z",
+        "naojMinuteUtc": "2010-01-20T04:28:00.000Z",
+        "deltaSeconds": -28.447,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2010-02-03T22:47:38.705Z",
+        "naojMinuteUtc": "2010-02-03T22:48:00.000Z",
+        "deltaSeconds": -21.295,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2010,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2010-02-18T18:35:20.685Z",
+        "naojMinuteUtc": "2010-02-18T18:36:00.000Z",
+        "deltaSeconds": -39.315,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2010,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2010-03-05T16:46:09.514Z",
+        "naojMinuteUtc": "2010-03-05T16:46:00.000Z",
+        "deltaSeconds": 9.514,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2012-03-20T05:14:15.516Z",
+        "naojMinuteUtc": "2012-03-20T05:14:00.000Z",
+        "deltaSeconds": 15.516,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2012-04-04T09:05:38.739Z",
+        "naojMinuteUtc": "2012-04-04T09:06:00.000Z",
+        "deltaSeconds": -21.261,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2012-04-19T16:12:01.724Z",
+        "naojMinuteUtc": "2012-04-19T16:12:00.000Z",
+        "deltaSeconds": 1.724,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2012-05-05T02:19:44.088Z",
+        "naojMinuteUtc": "2012-05-05T02:20:00.000Z",
+        "deltaSeconds": -15.912,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2012-05-20T15:15:19.677Z",
+        "naojMinuteUtc": "2012-05-20T15:16:00.000Z",
+        "deltaSeconds": -40.323,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2012-06-05T06:25:37.037Z",
+        "naojMinuteUtc": "2012-06-05T06:26:00.000Z",
+        "deltaSeconds": -22.963,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2012-06-20T23:08:11.518Z",
+        "naojMinuteUtc": "2012-06-20T23:09:00.000Z",
+        "deltaSeconds": -48.482,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2012-07-06T16:40:12.083Z",
+        "naojMinuteUtc": "2012-07-06T16:41:00.000Z",
+        "deltaSeconds": -47.917,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2012-07-22T10:00:23.734Z",
+        "naojMinuteUtc": "2012-07-22T10:01:00.000Z",
+        "deltaSeconds": -36.266,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2012-08-07T02:30:18.367Z",
+        "naojMinuteUtc": "2012-08-07T02:31:00.000Z",
+        "deltaSeconds": -41.633,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2012-08-22T17:06:44.675Z",
+        "naojMinuteUtc": "2012-08-22T17:07:00.000Z",
+        "deltaSeconds": -15.325,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2012-09-07T05:28:59.535Z",
+        "naojMinuteUtc": "2012-09-07T05:29:00.000Z",
+        "deltaSeconds": -0.465,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2012-09-22T14:48:57.705Z",
+        "naojMinuteUtc": "2012-09-22T14:49:00.000Z",
+        "deltaSeconds": -2.295,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2012-10-07T21:11:32.333Z",
+        "naojMinuteUtc": "2012-10-07T21:12:00.000Z",
+        "deltaSeconds": -27.667,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2012-10-23T00:13:21.392Z",
+        "naojMinuteUtc": "2012-10-23T00:14:00.000Z",
+        "deltaSeconds": -38.608,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2012-11-07T00:25:39.264Z",
+        "naojMinuteUtc": "2012-11-07T00:26:00.000Z",
+        "deltaSeconds": -20.736,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2012-11-21T21:49:56.565Z",
+        "naojMinuteUtc": "2012-11-21T21:50:00.000Z",
+        "deltaSeconds": -3.435,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2012-12-06T17:18:47.108Z",
+        "naojMinuteUtc": "2012-12-06T17:19:00.000Z",
+        "deltaSeconds": -12.892,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2012-12-21T11:11:39.854Z",
+        "naojMinuteUtc": "2012-12-21T11:12:00.000Z",
+        "deltaSeconds": -20.146,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2012-01-05T22:44:10.616Z",
+        "naojMinuteUtc": "2012-01-05T22:44:00.000Z",
+        "deltaSeconds": 10.616,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2012-01-20T16:09:54.718Z",
+        "naojMinuteUtc": "2012-01-20T16:10:00.000Z",
+        "deltaSeconds": -5.282,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2012-02-04T10:22:24.876Z",
+        "naojMinuteUtc": "2012-02-04T10:22:00.000Z",
+        "deltaSeconds": 24.876,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2012,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2012-02-19T06:17:27.550Z",
+        "naojMinuteUtc": "2012-02-19T06:18:00.000Z",
+        "deltaSeconds": -32.45,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2012,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2012-03-05T04:20:58.388Z",
+        "naojMinuteUtc": "2012-03-05T04:21:00.000Z",
+        "deltaSeconds": -1.612,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2020-03-20T03:49:56.290Z",
+        "naojMinuteUtc": "2020-03-20T03:50:00.000Z",
+        "deltaSeconds": -3.71,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2020-04-04T07:38:37.900Z",
+        "naojMinuteUtc": "2020-04-04T07:38:00.000Z",
+        "deltaSeconds": 37.9,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2020-04-19T14:45:49.981Z",
+        "naojMinuteUtc": "2020-04-19T14:45:00.000Z",
+        "deltaSeconds": 49.981,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2020-05-05T00:51:48.482Z",
+        "naojMinuteUtc": "2020-05-05T00:51:00.000Z",
+        "deltaSeconds": 48.482,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2020-05-20T13:49:26.788Z",
+        "naojMinuteUtc": "2020-05-20T13:49:00.000Z",
+        "deltaSeconds": 26.788,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2020-06-05T04:58:30.149Z",
+        "naojMinuteUtc": "2020-06-05T04:58:00.000Z",
+        "deltaSeconds": 30.149,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2020-06-20T21:43:31.283Z",
+        "naojMinuteUtc": "2020-06-20T21:44:00.000Z",
+        "deltaSeconds": -28.717,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2020-07-06T15:14:26.501Z",
+        "naojMinuteUtc": "2020-07-06T15:14:00.000Z",
+        "deltaSeconds": 26.501,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2020-07-22T08:36:57.872Z",
+        "naojMinuteUtc": "2020-07-22T08:37:00.000Z",
+        "deltaSeconds": -2.128,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2020-08-07T01:06:25.469Z",
+        "naojMinuteUtc": "2020-08-07T01:06:00.000Z",
+        "deltaSeconds": 25.469,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2020-08-22T15:45:18.135Z",
+        "naojMinuteUtc": "2020-08-22T15:45:00.000Z",
+        "deltaSeconds": 18.135,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2020-09-07T04:08:20.114Z",
+        "naojMinuteUtc": "2020-09-07T04:08:00.000Z",
+        "deltaSeconds": 20.114,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2020-09-22T13:30:59.379Z",
+        "naojMinuteUtc": "2020-09-22T13:31:00.000Z",
+        "deltaSeconds": -0.621,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2020-10-07T19:55:22.326Z",
+        "naojMinuteUtc": "2020-10-07T19:55:00.000Z",
+        "deltaSeconds": 22.326,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2020-10-22T22:59:45.836Z",
+        "naojMinuteUtc": "2020-10-22T23:00:00.000Z",
+        "deltaSeconds": -14.164,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2020-11-06T23:13:57.976Z",
+        "naojMinuteUtc": "2020-11-06T23:14:00.000Z",
+        "deltaSeconds": -2.024,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2020-11-21T20:39:58.898Z",
+        "naojMinuteUtc": "2020-11-21T20:40:00.000Z",
+        "deltaSeconds": -1.102,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2020-12-06T16:09:40.949Z",
+        "naojMinuteUtc": "2020-12-06T16:09:00.000Z",
+        "deltaSeconds": 40.949,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2020-12-21T10:02:42.334Z",
+        "naojMinuteUtc": "2020-12-21T10:02:00.000Z",
+        "deltaSeconds": 42.334,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2020-01-05T21:30:19.573Z",
+        "naojMinuteUtc": "2020-01-05T21:30:00.000Z",
+        "deltaSeconds": 19.573,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2020-01-20T14:54:54.521Z",
+        "naojMinuteUtc": "2020-01-20T14:55:00.000Z",
+        "deltaSeconds": -5.479,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2020-02-04T09:03:38.336Z",
+        "naojMinuteUtc": "2020-02-04T09:03:00.000Z",
+        "deltaSeconds": 38.336,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2020,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2020-02-19T04:57:17.701Z",
+        "naojMinuteUtc": "2020-02-19T04:57:00.000Z",
+        "deltaSeconds": 17.701,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2020,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2020-03-05T02:57:14.433Z",
+        "naojMinuteUtc": "2020-03-05T02:57:00.000Z",
+        "deltaSeconds": 14.433,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2024-03-20T03:06:24.047Z",
+        "naojMinuteUtc": "2024-03-20T03:06:00.000Z",
+        "deltaSeconds": 24.047,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "naojMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "deltaSeconds": 14.725,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2024-04-19T13:59:55.070Z",
+        "naojMinuteUtc": "2024-04-19T14:00:00.000Z",
+        "deltaSeconds": -4.93,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "naojMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "deltaSeconds": 8.464,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2024-05-20T12:59:38.197Z",
+        "naojMinuteUtc": "2024-05-20T13:00:00.000Z",
+        "deltaSeconds": -21.803,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "naojMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "deltaSeconds": -5.908,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2024-06-20T20:50:58.360Z",
+        "naojMinuteUtc": "2024-06-20T20:51:00.000Z",
+        "deltaSeconds": -1.64,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "naojMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "deltaSeconds": 7.101,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2024-07-22T07:44:29.225Z",
+        "naojMinuteUtc": "2024-07-22T07:44:00.000Z",
+        "deltaSeconds": 29.225,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "naojMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "deltaSeconds": 30.136,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2024,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2024-08-22T14:55:15.989Z",
+        "naojMinuteUtc": "2024-08-22T14:55:00.000Z",
+        "deltaSeconds": 15.989,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "naojMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "deltaSeconds": 41.91,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2024,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2024-09-22T12:43:55.451Z",
+        "naojMinuteUtc": "2024-09-22T12:44:00.000Z",
+        "deltaSeconds": -4.549,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "naojMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "deltaSeconds": 6.976,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2024-10-22T22:14:46.498Z",
+        "naojMinuteUtc": "2024-10-22T22:15:00.000Z",
+        "deltaSeconds": -13.502,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "naojMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "deltaSeconds": -4.45,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2024-11-21T19:56:14.256Z",
+        "naojMinuteUtc": "2024-11-21T19:56:00.000Z",
+        "deltaSeconds": 14.256,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "naojMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "deltaSeconds": -11.31,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2024-12-21T09:20:18.673Z",
+        "naojMinuteUtc": "2024-12-21T09:21:00.000Z",
+        "deltaSeconds": -41.327,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2024,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "naojMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "deltaSeconds": 19.758,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2024-01-20T14:07:19.331Z",
+        "naojMinuteUtc": "2024-01-20T14:07:00.000Z",
+        "deltaSeconds": 19.331,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "naojMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "deltaSeconds": -10.37,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2024-02-19T04:13:03.396Z",
+        "naojMinuteUtc": "2024-02-19T04:13:00.000Z",
+        "deltaSeconds": 3.396,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2024,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "naojMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "deltaSeconds": -31.123,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2025,
+        "term": "춘분",
+        "targetLongitude": 0,
+        "productionUtc": "2025-03-20T09:01:26.759Z",
+        "naojMinuteUtc": "2025-03-20T09:01:00.000Z",
+        "deltaSeconds": 26.759,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "청명",
+        "targetLongitude": 15,
+        "productionUtc": "2025-04-04T12:48:34.186Z",
+        "naojMinuteUtc": "2025-04-04T12:49:00.000Z",
+        "deltaSeconds": -25.814,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "곡우",
+        "targetLongitude": 30,
+        "productionUtc": "2025-04-19T19:56:03.322Z",
+        "naojMinuteUtc": "2025-04-19T19:56:00.000Z",
+        "deltaSeconds": 3.322,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "입하",
+        "targetLongitude": 45,
+        "productionUtc": "2025-05-05T05:57:21.708Z",
+        "naojMinuteUtc": "2025-05-05T05:57:00.000Z",
+        "deltaSeconds": 21.708,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "소만",
+        "targetLongitude": 60,
+        "productionUtc": "2025-05-20T18:54:51.046Z",
+        "naojMinuteUtc": "2025-05-20T18:55:00.000Z",
+        "deltaSeconds": -8.954,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "망종",
+        "targetLongitude": 75,
+        "productionUtc": "2025-06-05T09:56:40.819Z",
+        "naojMinuteUtc": "2025-06-05T09:57:00.000Z",
+        "deltaSeconds": -19.181,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "하지",
+        "targetLongitude": 90,
+        "productionUtc": "2025-06-21T02:42:17.883Z",
+        "naojMinuteUtc": "2025-06-21T02:42:00.000Z",
+        "deltaSeconds": 17.883,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "소서",
+        "targetLongitude": 105,
+        "productionUtc": "2025-07-06T20:04:51.895Z",
+        "naojMinuteUtc": "2025-07-06T20:05:00.000Z",
+        "deltaSeconds": -8.105,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "대서",
+        "targetLongitude": 120,
+        "productionUtc": "2025-07-22T13:29:20.778Z",
+        "naojMinuteUtc": "2025-07-22T13:29:00.000Z",
+        "deltaSeconds": 20.778,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "입추",
+        "targetLongitude": 135,
+        "productionUtc": "2025-08-07T05:51:16.773Z",
+        "naojMinuteUtc": "2025-08-07T05:52:00.000Z",
+        "deltaSeconds": -43.227,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2025,
+        "term": "처서",
+        "targetLongitude": 150,
+        "productionUtc": "2025-08-22T20:33:49.605Z",
+        "naojMinuteUtc": "2025-08-22T20:34:00.000Z",
+        "deltaSeconds": -10.395,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "백로",
+        "targetLongitude": 165,
+        "productionUtc": "2025-09-07T08:51:50.124Z",
+        "naojMinuteUtc": "2025-09-07T08:52:00.000Z",
+        "deltaSeconds": -9.876,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "추분",
+        "targetLongitude": 180,
+        "productionUtc": "2025-09-22T18:19:34.559Z",
+        "naojMinuteUtc": "2025-09-22T18:19:00.000Z",
+        "deltaSeconds": 34.559,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": false
+      },
+      {
+        "year": 2025,
+        "term": "한로",
+        "targetLongitude": 195,
+        "productionUtc": "2025-10-08T00:41:21.049Z",
+        "naojMinuteUtc": "2025-10-08T00:41:00.000Z",
+        "deltaSeconds": 21.049,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "상강",
+        "targetLongitude": 210,
+        "productionUtc": "2025-10-23T03:51:20.321Z",
+        "naojMinuteUtc": "2025-10-23T03:51:00.000Z",
+        "deltaSeconds": 20.321,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "입동",
+        "targetLongitude": 225,
+        "productionUtc": "2025-11-07T04:04:15.490Z",
+        "naojMinuteUtc": "2025-11-07T04:04:00.000Z",
+        "deltaSeconds": 15.49,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "소설",
+        "targetLongitude": 240,
+        "productionUtc": "2025-11-22T01:35:50.103Z",
+        "naojMinuteUtc": "2025-11-22T01:36:00.000Z",
+        "deltaSeconds": -9.897,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "대설",
+        "targetLongitude": 255,
+        "productionUtc": "2025-12-06T21:04:38.611Z",
+        "naojMinuteUtc": "2025-12-06T21:05:00.000Z",
+        "deltaSeconds": -21.389,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "동지",
+        "targetLongitude": 270,
+        "productionUtc": "2025-12-21T15:03:03.907Z",
+        "naojMinuteUtc": "2025-12-21T15:03:00.000Z",
+        "deltaSeconds": 3.907,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "소한",
+        "targetLongitude": 285,
+        "productionUtc": "2025-01-05T02:32:41.099Z",
+        "naojMinuteUtc": "2025-01-05T02:33:00.000Z",
+        "deltaSeconds": -18.901,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "대한",
+        "targetLongitude": 300,
+        "productionUtc": "2025-01-19T20:00:02.568Z",
+        "naojMinuteUtc": "2025-01-19T20:00:00.000Z",
+        "deltaSeconds": 2.568,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "입춘",
+        "targetLongitude": 315,
+        "productionUtc": "2025-02-03T14:10:29.634Z",
+        "naojMinuteUtc": "2025-02-03T14:10:00.000Z",
+        "deltaSeconds": 29.634,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "우수",
+        "targetLongitude": 330,
+        "productionUtc": "2025-02-18T10:06:35.157Z",
+        "naojMinuteUtc": "2025-02-18T10:07:00.000Z",
+        "deltaSeconds": -24.843,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      },
+      {
+        "year": 2025,
+        "term": "경칩",
+        "targetLongitude": 345,
+        "productionUtc": "2025-03-05T08:07:17.119Z",
+        "naojMinuteUtc": "2025-03-05T08:07:00.000Z",
+        "deltaSeconds": 17.119,
+        "withinMinuteSourceTolerance": true,
+        "roundedMinuteMatch": true
+      }
+    ]
+  },
+  "terms2024": [
+    {
+      "year": 2024,
+      "term": "춘분",
+      "targetLongitude": 0,
+      "productionUtc": "2024-03-20T03:06:24.047Z",
+      "jplUtc": "2024-03-20T03:06:24.155Z",
+      "deltaSeconds": -0.108,
+      "naojMinuteUtc": "2024-03-20T03:06:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "청명",
+      "targetLongitude": 15,
+      "productionUtc": "2024-04-04T07:02:14.725Z",
+      "jplUtc": "2024-04-04T07:02:17.696Z",
+      "deltaSeconds": -2.971,
+      "naojMinuteUtc": "2024-04-04T07:02:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "곡우",
+      "targetLongitude": 30,
+      "productionUtc": "2024-04-19T13:59:55.070Z",
+      "jplUtc": "2024-04-19T13:59:45.462Z",
+      "deltaSeconds": 9.608,
+      "naojMinuteUtc": "2024-04-19T14:00:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "입하",
+      "targetLongitude": 45,
+      "productionUtc": "2024-05-05T00:10:08.464Z",
+      "jplUtc": "2024-05-05T00:10:05.058Z",
+      "deltaSeconds": 3.406,
+      "naojMinuteUtc": "2024-05-05T00:10:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "소만",
+      "targetLongitude": 60,
+      "productionUtc": "2024-05-20T12:59:38.197Z",
+      "jplUtc": "2024-05-20T12:59:30.365Z",
+      "deltaSeconds": 7.832,
+      "naojMinuteUtc": "2024-05-20T13:00:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "망종",
+      "targetLongitude": 75,
+      "productionUtc": "2024-06-05T04:09:54.092Z",
+      "jplUtc": "2024-06-05T04:09:53.671Z",
+      "deltaSeconds": 0.421,
+      "naojMinuteUtc": "2024-06-05T04:10:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "하지",
+      "targetLongitude": 90,
+      "productionUtc": "2024-06-20T20:50:58.360Z",
+      "jplUtc": "2024-06-20T20:50:59.805Z",
+      "deltaSeconds": -1.445,
+      "naojMinuteUtc": "2024-06-20T20:51:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "소서",
+      "targetLongitude": 105,
+      "productionUtc": "2024-07-06T14:20:07.101Z",
+      "jplUtc": "2024-07-06T14:20:03.407Z",
+      "deltaSeconds": 3.694,
+      "naojMinuteUtc": "2024-07-06T14:20:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "대서",
+      "targetLongitude": 120,
+      "productionUtc": "2024-07-22T07:44:29.225Z",
+      "jplUtc": "2024-07-22T07:44:25.736Z",
+      "deltaSeconds": 3.489,
+      "naojMinuteUtc": "2024-07-22T07:44:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "입추",
+      "targetLongitude": 135,
+      "productionUtc": "2024-08-07T00:09:30.136Z",
+      "jplUtc": "2024-08-07T00:09:16.454Z",
+      "deltaSeconds": 13.682,
+      "naojMinuteUtc": "2024-08-07T00:09:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "처서",
+      "targetLongitude": 150,
+      "productionUtc": "2024-08-22T14:55:15.989Z",
+      "jplUtc": "2024-08-22T14:55:02.965Z",
+      "deltaSeconds": 13.024,
+      "naojMinuteUtc": "2024-08-22T14:55:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "백로",
+      "targetLongitude": 165,
+      "productionUtc": "2024-09-07T03:11:41.910Z",
+      "jplUtc": "2024-09-07T03:11:20.836Z",
+      "deltaSeconds": 21.074,
+      "naojMinuteUtc": "2024-09-07T03:11:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "추분",
+      "targetLongitude": 180,
+      "productionUtc": "2024-09-22T12:43:55.451Z",
+      "jplUtc": "2024-09-22T12:43:39.559Z",
+      "deltaSeconds": 15.892,
+      "naojMinuteUtc": "2024-09-22T12:44:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "한로",
+      "targetLongitude": 195,
+      "productionUtc": "2024-10-07T19:00:06.976Z",
+      "jplUtc": "2024-10-07T18:59:57.338Z",
+      "deltaSeconds": 9.638,
+      "naojMinuteUtc": "2024-10-07T19:00:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "상강",
+      "targetLongitude": 210,
+      "productionUtc": "2024-10-22T22:14:46.498Z",
+      "jplUtc": "2024-10-22T22:14:44.425Z",
+      "deltaSeconds": 2.073,
+      "naojMinuteUtc": "2024-10-22T22:15:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "입동",
+      "targetLongitude": 225,
+      "productionUtc": "2024-11-06T22:19:55.550Z",
+      "jplUtc": "2024-11-06T22:20:04.551Z",
+      "deltaSeconds": -9.001,
+      "naojMinuteUtc": "2024-11-06T22:20:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "소설",
+      "targetLongitude": 240,
+      "productionUtc": "2024-11-21T19:56:14.256Z",
+      "jplUtc": "2024-11-21T19:56:29.753Z",
+      "deltaSeconds": -15.497,
+      "naojMinuteUtc": "2024-11-21T19:56:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "대설",
+      "targetLongitude": 255,
+      "productionUtc": "2024-12-06T15:16:48.690Z",
+      "jplUtc": "2024-12-06T15:17:02.636Z",
+      "deltaSeconds": -13.946,
+      "naojMinuteUtc": "2024-12-06T15:17:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "동지",
+      "targetLongitude": 270,
+      "productionUtc": "2024-12-21T09:20:18.673Z",
+      "jplUtc": "2024-12-21T09:20:34.194Z",
+      "deltaSeconds": -15.521,
+      "naojMinuteUtc": "2024-12-21T09:21:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "소한",
+      "targetLongitude": 285,
+      "productionUtc": "2024-01-05T20:49:19.758Z",
+      "jplUtc": "2024-01-05T20:49:22.539Z",
+      "deltaSeconds": -2.781,
+      "naojMinuteUtc": "2024-01-05T20:49:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "대한",
+      "targetLongitude": 300,
+      "productionUtc": "2024-01-20T14:07:19.331Z",
+      "jplUtc": "2024-01-20T14:07:20.733Z",
+      "deltaSeconds": -1.402,
+      "naojMinuteUtc": "2024-01-20T14:07:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "입춘",
+      "targetLongitude": 315,
+      "productionUtc": "2024-02-04T08:26:49.630Z",
+      "jplUtc": "2024-02-04T08:27:07.592Z",
+      "deltaSeconds": -17.962,
+      "naojMinuteUtc": "2024-02-04T08:27:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "우수",
+      "targetLongitude": 330,
+      "productionUtc": "2024-02-19T04:13:03.396Z",
+      "jplUtc": "2024-02-19T04:13:10.323Z",
+      "deltaSeconds": -6.927,
+      "naojMinuteUtc": "2024-02-19T04:13:00.000Z"
+    },
+    {
+      "year": 2024,
+      "term": "경칩",
+      "targetLongitude": 345,
+      "productionUtc": "2024-03-05T02:22:28.877Z",
+      "jplUtc": "2024-03-05T02:22:46.136Z",
+      "deltaSeconds": -17.259,
+      "naojMinuteUtc": "2024-03-05T02:23:00.000Z"
+    }
+  ],
+  "boundary108": {
+    "before": {
+      "yearMismatches": 2,
+      "monthMismatches": 15,
+      "fingerprintsAffected": 15
+    },
+    "after": {
+      "cases": 108,
+      "decisiveCases": 96,
+      "minuteRoundedExactAmbiguous": 12,
+      "yearMismatches": 0,
+      "monthMismatches": 0
+    },
+    "rows": [
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "갑자"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "officialMinuteUtc": "2024-01-05T20:49:00.000Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "actual": {
+          "year": "계묘",
+          "month": "을축"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "officialMinuteUtc": "2024-02-04T08:27:00.000Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병인"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "officialMinuteUtc": "2024-03-05T02:23:00.000Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "정묘"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "officialMinuteUtc": "2024-04-04T07:02:00.000Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "무진"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "officialMinuteUtc": "2024-05-05T00:10:00.000Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "기사"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "officialMinuteUtc": "2024-06-05T04:10:00.000Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "경오"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "officialMinuteUtc": "2024-07-06T14:20:00.000Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "신미"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "officialMinuteUtc": "2024-08-07T00:09:00.000Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "임신"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "officialMinuteUtc": "2024-09-07T03:11:00.000Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "계유"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "officialMinuteUtc": "2024-10-07T19:00:00.000Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "갑술"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "officialMinuteUtc": "2024-11-06T22:20:00.000Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": -10,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": -7,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": -5,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": -1,
+        "expected": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "을해"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": 0,
+        "expected": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "exactMinuteIsAmbiguous": true,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": 1,
+        "expected": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": 5,
+        "expected": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": 7,
+        "expected": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "officialMinuteUtc": "2024-12-06T15:17:00.000Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "offsetMinutes": 10,
+        "expected": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "actual": {
+          "year": "갑진",
+          "month": "병자"
+        },
+        "exactMinuteIsAmbiguous": false,
+        "yearMismatch": false,
+        "monthMismatch": false
+      }
+    ]
+  },
+  "exactBoundaryOffsets": {
+    "cases": 132,
+    "exactReferenceDifferences": 6,
+    "decisiveSideMismatches": 0,
+    "rows": [
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소한",
+        "targetLongitude": 285,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-01-05T20:49:22.539Z",
+        "productionUtc": "2024-01-05T20:49:19.758Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입춘",
+        "targetLongitude": 315,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-02-04T08:27:07.592Z",
+        "productionUtc": "2024-02-04T08:26:49.630Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "경칩",
+        "targetLongitude": 345,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-03-05T02:22:46.136Z",
+        "productionUtc": "2024-03-05T02:22:28.877Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "청명",
+        "targetLongitude": 15,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-04-04T07:02:17.696Z",
+        "productionUtc": "2024-04-04T07:02:14.725Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "before"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입하",
+        "targetLongitude": 45,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-05-05T00:10:05.058Z",
+        "productionUtc": "2024-05-05T00:10:08.464Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "before"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "망종",
+        "targetLongitude": 75,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-06-05T04:09:53.671Z",
+        "productionUtc": "2024-06-05T04:09:54.092Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "before"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "소서",
+        "targetLongitude": 105,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-07-06T14:20:03.407Z",
+        "productionUtc": "2024-07-06T14:20:07.101Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "before"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입추",
+        "targetLongitude": 135,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-08-07T00:09:16.454Z",
+        "productionUtc": "2024-08-07T00:09:30.136Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "before"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "백로",
+        "targetLongitude": 165,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-09-07T03:11:20.836Z",
+        "productionUtc": "2024-09-07T03:11:41.910Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "before"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "한로",
+        "targetLongitude": 195,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-10-07T18:59:57.338Z",
+        "productionUtc": "2024-10-07T19:00:06.976Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "입동",
+        "targetLongitude": 225,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-11-06T22:20:04.551Z",
+        "productionUtc": "2024-11-06T22:19:55.550Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": -600,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": -420,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": -300,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": -60,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": -30,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "before",
+        "productionSide": "before"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": 0,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": 30,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": 60,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": 300,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": 420,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      },
+      {
+        "term": "대설",
+        "targetLongitude": 255,
+        "offsetSeconds": 600,
+        "jplUtc": "2024-12-06T15:17:02.636Z",
+        "productionUtc": "2024-12-06T15:16:48.690Z",
+        "expectedSide": "at-or-after",
+        "productionSide": "at-or-after"
+      }
+    ]
+  },
+  "dayunImpact": {
+    "fixtures": 10,
+    "maxAbsoluteDeltaSeconds": 45839.96580590821,
+    "meanAbsoluteDeltaSeconds": 23963.577266247557,
+    "productionPolicyMatches": 10,
+    "rows": [
+      {
+        "birthDate": "1990-01-01",
+        "birthTime": "12:30",
+        "gender": "male",
+        "forward": false,
+        "oldSolarTermUtc": "1989-12-07T03:19:30.767Z",
+        "newSolarTermUtc": "1989-12-07T03:21:04.507Z",
+        "oldStartsAt": "1998-05-03T17:13:11.481Z",
+        "newStartsAt": "1998-05-03T14:02:58.880Z",
+        "productionStartsAt": "1998-05-03T14:02:58.880Z",
+        "deltaSeconds": -11412.601275878906,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "1990-01-01",
+        "birthTime": "12:30",
+        "gender": "female",
+        "forward": true,
+        "oldSolarTermUtc": "1990-01-05T14:31:37.836Z",
+        "newSolarTermUtc": "1990-01-05T14:33:24.851Z",
+        "oldStartsAt": "1991-06-28T01:46:49.758Z",
+        "newStartsAt": "1991-06-28T05:23:58.556Z",
+        "productionStartsAt": "1991-06-28T05:23:58.556Z",
+        "deltaSeconds": 13028.798010986327,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "1992-09-09",
+        "birthTime": "10:24",
+        "gender": "male",
+        "forward": true,
+        "oldSolarTermUtc": "1992-10-08T00:50:31.913Z",
+        "newSolarTermUtc": "1992-10-08T00:51:23.276Z",
+        "oldStartsAt": "2002-05-07T21:40:46.068Z",
+        "newStartsAt": "2002-05-07T23:24:59.380Z",
+        "productionStartsAt": "2002-05-07T23:24:59.380Z",
+        "deltaSeconds": 6253.3117062988285,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "1992-09-09",
+        "birthTime": "10:24",
+        "gender": "female",
+        "forward": false,
+        "oldSolarTermUtc": "1992-09-07T09:16:15.156Z",
+        "newSolarTermUtc": "1992-09-07T09:18:22.479Z",
+        "oldStartsAt": "1993-03-31T15:00:59.148Z",
+        "newStartsAt": "1993-03-31T10:42:37.904Z",
+        "productionStartsAt": "1993-03-31T10:42:37.904Z",
+        "deltaSeconds": -15501.244210205077,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "2000-02-29",
+        "birthTime": "23:30",
+        "gender": "male",
+        "forward": true,
+        "oldSolarTermUtc": "2000-03-05T06:38:50.062Z",
+        "newSolarTermUtc": "2000-03-05T06:42:26.331Z",
+        "oldStartsAt": "2001-09-20T12:08:05.350Z",
+        "newStartsAt": "2001-09-20T19:26:55.538Z",
+        "productionStartsAt": "2001-09-20T19:26:55.538Z",
+        "deltaSeconds": 26330.188450561523,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "2000-02-29",
+        "birthTime": "23:30",
+        "gender": "female",
+        "forward": false,
+        "oldSolarTermUtc": "2000-02-04T12:36:58.491Z",
+        "newSolarTermUtc": "2000-02-04T12:40:18.090Z",
+        "oldStartsAt": "2008-07-09T20:16:55.088Z",
+        "newStartsAt": "2008-07-09T13:31:54.429Z",
+        "productionStartsAt": "2008-07-09T13:31:54.429Z",
+        "deltaSeconds": -24300.65929272461,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "2012-06-21",
+        "birthTime": "06:45",
+        "gender": "male",
+        "forward": true,
+        "oldSolarTermUtc": "2012-07-06T16:36:13.277Z",
+        "newSolarTermUtc": "2012-07-06T16:40:12.083Z",
+        "oldStartsAt": "2017-09-24T18:12:05.404Z",
+        "newStartsAt": "2017-09-25T02:16:39.413Z",
+        "productionStartsAt": "2017-09-25T02:16:39.413Z",
+        "deltaSeconds": 29074.00960449219,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "2012-06-21",
+        "birthTime": "06:45",
+        "gender": "female",
+        "forward": false,
+        "oldSolarTermUtc": "2012-06-05T06:21:43.214Z",
+        "newSolarTermUtc": "2012-06-05T06:25:37.037Z",
+        "oldStartsAt": "2017-09-07T04:15:45.063Z",
+        "newStartsAt": "2017-09-06T20:21:17.721Z",
+        "productionStartsAt": "2017-09-06T20:21:17.721Z",
+        "deltaSeconds": -28467.342310302734,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "2024-02-04",
+        "birthTime": "17:28",
+        "gender": "male",
+        "forward": true,
+        "oldSolarTermUtc": "2024-03-05T02:16:12.360Z",
+        "newSolarTermUtc": "2024-03-05T02:22:28.877Z",
+        "oldStartsAt": "2034-01-03T08:10:43.629Z",
+        "newStartsAt": "2034-01-03T20:54:43.595Z",
+        "productionStartsAt": "2034-01-03T20:54:43.595Z",
+        "deltaSeconds": 45839.96580590821,
+        "productionMatchesPrecisePolicy": true
+      },
+      {
+        "birthDate": "2024-02-04",
+        "birthTime": "17:28",
+        "gender": "female",
+        "forward": false,
+        "oldSolarTermUtc": "2024-02-04T08:21:25.782Z",
+        "newSolarTermUtc": "2024-02-04T08:26:49.630Z",
+        "oldStartsAt": "2024-02-04T21:47:55.016Z",
+        "newStartsAt": "2024-02-04T10:50:47.364Z",
+        "productionStartsAt": "2024-02-04T10:50:47.364Z",
+        "deltaSeconds": -39427.65199511719,
+        "productionMatchesPrecisePolicy": true
+      }
+    ]
+  },
+  "performance": {
+    "unit": "milliseconds per 24-term year",
+    "coldish": {
+      "legacy": 0.08109999999999218,
+      "precise": 0.2954000000000008,
+      "delta": 0.2143000000000086
+    },
+    "iterations": 100,
+    "warmAverage": {
+      "legacy": 0.018648000000000026,
+      "precise": 0.3159220000000002,
+      "delta": 0.29727400000000015
+    }
+  }
+}

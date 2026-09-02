@@ -1,10 +1,10 @@
-// This is a high-precision Saju (Four Pillars) calculation engine.
-// It replaces the previous faulty implementation with accurate astronomical algorithms
-// for solar terms, lunar-to-solar calendar conversions, and Ganzhi calculations.
-// It uses a compact apparent-solar-longitude model for 1900-2099. Commercial
-// boundary cases still require an external ephemeris cross-check.
+// Saju calendar facade for solar/lunar conversion and Ganzhi calculations.
+// Solar-term instants come from the dedicated production astronomical engine.
 
 import type { GZ } from './types';
+import { getSolarTermInstantForGregorianYear } from './solarTerms';
+
+export { getSolarTermInstantForGregorianYear } from './solarTerms';
 
 // Data for lunar calendar (1900-2099)
 const LUNAR_INFO = [
@@ -31,88 +31,6 @@ const LUNAR_INFO = [
 ];
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const J2000 = 2451545.0; // Julian day for 2000-01-01 12:00:00 UT
-
-/**
- * Calculates the Julian Day number from a UTC Date object.
- */
-function toJD(date: Date): number {
-    return date.getTime() / 86400000.0 + 2440587.5;
-}
-
-/**
- * Normalizes an angle to be within [0, 360).
- */
-function normalizeAngle(angle: number): number {
-    return angle - Math.floor(angle / 360) * 360;
-}
-
-/**
- * Calculates the solar longitude for a given Julian Day.
- * Uses the Sun's apparent geocentric longitude. Returning true longitude here
- * moves solar-term boundaries by roughly 10-20 minutes because nutation and
- * aberration are omitted, which is large enough to flip year/month pillars.
- */
-function getSolarLongitude(jd: number): number {
-    const t = (jd - J2000) / 36525.0; // Julian centuries since J2000
-
-    // Mean longitude of the Sun
-    const L = 280.46646 + 36000.76983 * t + 0.0003032 * t * t;
-    
-    // Mean anomaly of the Sun
-    const M = 357.52911 + 35999.05029 * t - 0.0001537 * t * t;
-    
-    // Equation of Center
-    const C = (1.914602 - 0.004817 * t - 0.000014 * t * t) * Math.sin(M * Math.PI / 180) +
-              (0.019993 - 0.000101 * t) * Math.sin(2 * M * Math.PI / 180) +
-              0.000289 * Math.sin(3 * M * Math.PI / 180);
-
-    // True longitude
-    const theta = L + C;
-
-    // Apparent longitude correction (nutation + aberration approximation).
-    // This is the same compact correction used by standard solar-position
-    // algorithms and is materially safer at minute-level solar-term edges.
-    const omega = 125.04 - 1934.136 * t;
-    const apparent = theta - 0.00569 - 0.00478 * Math.sin(omega * Math.PI / 180);
-    return normalizeAngle(apparent);
-}
-
-/**
- * Finds the Julian Day for a given solar longitude (solar term) in a specific year.
- * Uses Newton's method to find the root.
- */
-function getJDofSolarTerm(year: number, termAngle: number): number {
-    // Estimate the time of the solar term to start iteration
-    const estJd = toJD(new Date(Date.UTC(year, 0, 1))) + (termAngle - getSolarLongitude(toJD(new Date(Date.UTC(year, 0, 1))))) * 365.25 / 360;
-
-    let jd = estJd;
-    for (let i = 0; i < 5; i++) { // Iterate a few times for precision
-        const omega = getSolarLongitude(jd);
-        const diff = termAngle - omega;
-        // Adjust for angle wrapping
-        const angleDiff = diff < -180 ? diff + 360 : (diff > 180 ? diff - 360 : diff);
-        jd += angleDiff / 0.9856; // 0.9856 is approx degrees sun moves per day
-    }
-    return jd;
-}
-
-/** Returns the UTC instant of a solar term occurring in a Gregorian year. */
-export function getSolarTermInstantForGregorianYear(year: number, termAngle: number): Date {
-    if (!Number.isInteger(year) || year < 1900 || year > 2099) {
-        throw new Error('절기 계산은 1900년부터 2099년까지 지원합니다.');
-    }
-    if (!Number.isFinite(termAngle) || termAngle < 0 || termAngle >= 360) {
-        throw new Error('절기 황경은 0도 이상 360도 미만이어야 합니다.');
-    }
-
-    // The solver's year anchor is January 1 (solar longitude ≈280°). Angles
-    // below that point need the following anchor year to land in this
-    // Gregorian year rather than the previous one.
-    const calculationYear = termAngle < 280 ? year + 1 : year;
-    const jd = getJDofSolarTerm(calculationYear, termAngle);
-    return new Date((jd - 2440587.5) * 86400000);
-}
 
 
 export class DayUtil {
@@ -153,8 +71,7 @@ export class DayUtil {
         const calendarYearForIpchun = new Date(correctedKstTimestamp).getUTCFullYear();
         
         // 5. Calculate Ipchun date in UTC.
-        const ipchunJD = getJDofSolarTerm(calendarYearForIpchun, 315);
-        this.ipchunDate = new Date((ipchunJD - 2440587.5) * 86400000);
+        this.ipchunDate = getSolarTermInstantForGregorianYear(calendarYearForIpchun, 315);
         
         // 6. Compare the absolute birth time (UTC) with the absolute Ipchun time (UTC).
         if (this.birthDate < this.ipchunDate) {
@@ -174,10 +91,11 @@ export class DayUtil {
         ];
 
         for (const angle of termAngles) {
-            // For angles < 315, they occur in the next calendar year
-            const calculationYear = (angle < 315) ? year + 1 : year;
-            const termJD = getJDofSolarTerm(calculationYear, angle);
-            terms.push(new Date((termJD - 2440587.5) * 86400000.0));
+            // An astrological year starts at Lichun. Xiaohan/Daehan therefore
+            // fall in the following Gregorian year; every other term belongs
+            // to the Gregorian year in which this Lichun occurred.
+            const calculationYear = (angle >= 285 && angle < 315) ? year + 1 : year;
+            terms.push(getSolarTermInstantForGregorianYear(calculationYear, angle));
         }
         return terms;
     }

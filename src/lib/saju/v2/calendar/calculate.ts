@@ -19,7 +19,7 @@ import type {
   CivilDateTime
 } from './types';
 
-export const CALENDAR_ENGINE_VERSION = 'calendar-v2.0.0' as const;
+export const CALENDAR_ENGINE_VERSION = 'calendar-v2.1.0' as const;
 
 export interface BirthCalculationResult {
   version: typeof CALENDAR_ENGINE_VERSION;

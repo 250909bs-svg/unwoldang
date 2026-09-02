@@ -80,7 +80,7 @@ describe('normalizeIntakeFormToBirthContext', () => {
 describe('buildBirthCalculation', () => {
   it('returns a primary chart and audit trace for exact time', () => {
     const result = buildBirthCalculation(intake());
-    expect(result.version).toBe('calendar-v2.0.0');
+    expect(result.version).toBe('calendar-v2.1.0');
     expect(result.primary).not.toBeNull();
     expect(result.scenarios).toHaveLength(1);
     expect(result.trace).toBe(result.primary?.trace);
