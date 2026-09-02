@@ -12880,6 +12880,25 @@ body {
   margin-top: 20px;
 }
 
+.intake-release-preflight-status {
+  margin: 14px 0 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(14, 21, 32, 0.72);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.intake-release-preflight-status.is-manual-review-required,
+.intake-release-preflight-status.is-blocked,
+.intake-release-preflight-status.is-error {
+  border-color: rgba(244, 202, 125, 0.48);
+  background: rgba(50, 36, 21, 0.78);
+}
+
 .intake-story-secondary,
 .intake-story-primary {
   display: inline-flex;
@@ -12914,6 +12933,11 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.intake-story-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 @keyframes intakeBackdropFloat {

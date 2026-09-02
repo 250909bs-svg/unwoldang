@@ -12,6 +12,8 @@ import { sendJson } from '../middleware/error.ts';
 
 export const PUBLIC_ROUTES = Object.freeze([
   'GET /health',
+  'POST /api/report/preflight',
+  'POST /report/preflight',
   'POST /api/report',
   'POST /report',
   'POST /api/payments/portone/order',
@@ -39,6 +41,9 @@ type RouterDependencies = {
   health: { getStatus(): unknown };
   reports: {
     generate(reportAccess: ReportAccessClaims | null, reportBody: Record<string, unknown>): Promise<unknown>;
+  };
+  releasePreflight: {
+    evaluate(body: Record<string, unknown>): Promise<unknown>;
   };
   payments: {
     createOrder(user: AuthenticatedUser, body: Record<string, unknown>): unknown;
@@ -76,6 +81,20 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     if (req.method === 'GET' && url.pathname === '/health') {
       sendJson(res, 200, dependencies.health.getStatus());
+      return;
+    }
+
+    if (req.method === 'POST' && isPath(url.pathname, '/report/preflight')) {
+      try {
+        dependencies.enforceReportRateLimit(req);
+        const body = (await readJsonBody(req)) as Record<string, unknown>;
+        sendJson(res, 200, await dependencies.releasePreflight.evaluate(body));
+      } catch (error) {
+        const status = error instanceof ReportRequestError ? error.status : 500;
+        sendJson(res, status, {
+          message: errorMessage(error, '종합사주 자동 발행 가능 여부를 확인하지 못했습니다.')
+        });
+      }
       return;
     }
 

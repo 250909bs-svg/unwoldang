@@ -18,6 +18,8 @@ const ALLOWED_ORIGIN = 'https://contract.example';
 
 const EXPECTED_PUBLIC_ROUTES = [
   'GET /health',
+  'POST /api/report/preflight',
+  'POST /report/preflight',
   'POST /api/report',
   'POST /report',
   'POST /api/payments/portone/order',
@@ -54,6 +56,14 @@ const unexpectedExternalFetch = vi.fn(async () => {
 
 const productionReportGenerator = vi.fn(async () => ({
   provider: 'fixture-report-generator'
+}));
+const productionReleasePreflightEvaluator = vi.fn(async () => ({
+  serviceId: 'general-signature',
+  status: 'auto-eligible',
+  reasons: [],
+  policyVersion: 'fixture-policy-v1',
+  inputFingerprint: 'uwi-fixture-input',
+  calculationFingerprint: 'uw-fixture-calculation'
 }));
 
 let productionServer: Server;
@@ -102,7 +112,9 @@ beforeAll(async () => {
   const running = await startApp({
     config: productionConfig,
     fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
-    reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator']
+    reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator'],
+    releasePreflightEvaluator:
+      productionReleasePreflightEvaluator as unknown as CreateAppOptions['releasePreflightEvaluator']
   });
   productionServer = running.server;
   productionBaseUrl = running.baseUrl;
@@ -275,6 +287,36 @@ describe('Cloud Run API HTTP contracts', () => {
         expect(await readJson(response)).toEqual({ message: contract.message });
       }
     }
+  });
+
+  it('serves release preflight through both public aliases without report entitlement', async () => {
+    for (const path of ['/report/preflight', '/api/report/preflight']) {
+      const response = await fetch(`${productionBaseUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: 'general-signature',
+          status: 'blocked',
+          payload: { fixture: true }
+        })
+      });
+
+      expect(response.status).toBe(200);
+      expect(await readJson(response)).toEqual({
+        serviceId: 'general-signature',
+        status: 'auto-eligible',
+        reasons: [],
+        policyVersion: 'fixture-policy-v1',
+        inputFingerprint: 'uwi-fixture-input',
+        calculationFingerprint: 'uw-fixture-calculation'
+      });
+    }
+
+    expect(productionReleasePreflightEvaluator).toHaveBeenCalledTimes(2);
+    expect(productionReleasePreflightEvaluator.mock.calls[0][0]).toMatchObject({
+      serviceId: 'general-signature',
+      status: 'blocked'
+    });
   });
   it('rate-limits failed admin logins independently by client IP and resets after success', async () => {
     const adminId = 'release-admin';

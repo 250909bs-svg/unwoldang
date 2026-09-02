@@ -44,8 +44,10 @@ type RelationshipDuration = IntakeFormData['relationshipDuration'] | null | unde
 
 export type ReportRequestBody = {
   serviceId?: ServiceId;
+  productId?: string;
   payload?: {
     contractVersion?: string;
+    serviceId?: ServiceId;
     user?: {
       name?: string;
       gender?: 'male' | 'female';
@@ -742,7 +744,8 @@ function hasInvariantDay(calculation: NonNullable<ReturnType<typeof validateInta
 /** Server-side release gate. Client validation is convenience, never authority. */
 export function assertCommercialReportRequest(
   serviceId: ServiceId,
-  formData: Partial<IntakeFormData>
+  formData: Partial<IntakeFormData>,
+  options: { allowUnstableDay?: boolean } = {}
 ) {
   const requirePartner = serviceId === 'match-couple' || serviceId === 'match-destiny';
   const validation = validateIntakeBirthInputs(formData, { requirePartner });
@@ -764,7 +767,10 @@ export function assertCommercialReportRequest(
     throw new ReportRequestError(422, '유료 리포트는 개인화 질문 두 가지를 모두 입력해야 합니다.');
   }
 
-  if (!validation.self.calculation || !hasInvariantDay(validation.self.calculation)) {
+  if (
+    !validation.self.calculation ||
+    (!options.allowUnstableDay && !hasInvariantDay(validation.self.calculation))
+  ) {
     throw new ReportRequestError(
       422,
       '출생시간 시나리오에 따라 일주가 달라 단일 유료 리포트를 만들 수 없습니다. 출생시간 또는 자시 경계 정책을 확인해 주세요.'
@@ -783,6 +789,49 @@ export function assertCommercialReportRequest(
       '상대방 출생시간 시나리오에 따라 일주가 달라 정밀 궁합을 만들 수 없습니다. 상대방 출생시간을 확인해 주세요.'
     );
   }
+}
+
+export type PreparedCommercialReportRequest = {
+  serviceId: ServiceId;
+  inputFormData: Partial<IntakeFormData>;
+  formData: Partial<IntakeFormData>;
+  verification: Awaited<ReturnType<typeof normalizeFormDataWithKasi>>['verification'];
+  deterministicBasis: DeterministicSajuBasis;
+};
+
+/**
+ * Canonical server-side preparation shared by release preflight and report generation.
+ * The caller may allow an unstable day only so the existing release audit can return
+ * its canonical `blocked` decision; paid report generation remains strict by default.
+ */
+export async function prepareCommercialReportRequest(
+  body: ReportRequestBody,
+  options: { allowUnstableDay?: boolean } = {}
+): Promise<PreparedCommercialReportRequest> {
+  const serviceId = body.serviceId;
+
+  if (!serviceId) {
+    throw new ReportRequestError(400, 'serviceId는 필수입니다.');
+  }
+
+  const inputFormData = toFormData(body);
+  assertCommercialReportRequest(serviceId, inputFormData, options);
+  const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
+
+  if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
+    throw new ReportRequestError(
+      503,
+      '한국 음력 생일은 KASI 교차 검증이 완료되어야 유료 리포트를 생성할 수 있습니다. 잠시 후 다시 시도해 주세요.'
+    );
+  }
+
+  return {
+    serviceId,
+    inputFormData,
+    formData,
+    verification,
+    deterministicBasis: buildDeterministicSajuBasis(serviceId, formData, verification)
+  };
 }
 
 function mergeCards(baseCards: ReportCard[], draftCards?: Partial<ReportCard>[]) {
@@ -1234,24 +1283,11 @@ async function requestGeminiDraft(baseReport: SajuReportData, deterministicBasis
 }
 
 export async function generateGeminiSajuReport(body: ReportRequestBody): Promise<ReportResponsePayload> {
-  const serviceId = body.serviceId;
-
-  if (!serviceId) {
-    throw new ReportRequestError(400, 'serviceId는 필수입니다.');
-  }
-
-  const inputFormData = toFormData(body);
-  assertCommercialReportRequest(serviceId, inputFormData);
-  const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
-
-  if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
-    throw new ReportRequestError(
-      503,
-      '한국 음력 생일은 KASI 교차 검증이 완료되어야 유료 리포트를 생성할 수 있습니다. 잠시 후 다시 시도해 주세요.'
-    );
-  }
-
-  const deterministicBasis = buildDeterministicSajuBasis(serviceId, formData, verification);
+  const {
+    serviceId,
+    formData,
+    deterministicBasis
+  } = await prepareCommercialReportRequest(body);
   if (deterministicBasis.commercialV2.releaseAudit.decision === 'blocked') {
     throw new ReportRequestError(
       422,

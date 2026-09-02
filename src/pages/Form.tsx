@@ -19,6 +19,7 @@ import { validateBirthInput } from '../lib/birthInputValidation';
 import { normalizeIntakeFormData } from '../lib/intakeDataContract';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
+import { requestGeneralSignatureReleasePreflight } from '../lib/releasePreflight';
 import { getProductById } from '../products/registry';
 import {
   isGeneralSignatureGenderSelected,
@@ -64,6 +65,11 @@ const emptyPartnerBirthData: PartnerBirthData = {
 };
 
 type IntakeStep = 1 | 2 | 3 | 4;
+
+type ReleasePreflightUiState = {
+  status: 'idle' | 'checking' | 'manual-review-required' | 'blocked' | 'error';
+  message: string;
+};
 
 const pastLifeGuideStepCopy: Record<IntakeStep, { eyebrow: string; line: string }> = {
   1: {
@@ -341,7 +347,14 @@ export default function Form() {
   ));
   const [birthDigits, setBirthDigits] = useState('');
   const [partnerBirthDigits, setPartnerBirthDigits] = useState('');
+  const [releasePreflightState, setReleasePreflightState] = useState<ReleasePreflightUiState>({
+    status: 'idle',
+    message: ''
+  });
   const partnerData = formData.partner || emptyPartnerBirthData;
+  const resetReleasePreflightState = () => {
+    setReleasePreflightState({ status: 'idle', message: '' });
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -395,10 +408,12 @@ export default function Form() {
   }, [draftKey, formData]);
 
   const updateField = <K extends keyof IntakeFormData>(name: K, value: IntakeFormData[K]) => {
+    resetReleasePreflightState();
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const selectRelationshipStatus = (relationshipStatus: Exclude<RelationshipStatus, ''>) => {
+    resetReleasePreflightState();
     setFormData((prev) => ({
       ...prev,
       relationshipStatus,
@@ -446,6 +461,7 @@ export default function Form() {
   const updateBirthLocation = (label: string) => {
     const selected = birthLocationOptions.find((option) => option.label === label);
 
+    resetReleasePreflightState();
     setFormData((prev) => ({
       ...prev,
       location: selected?.latitude === undefined ? '' : selected.label,
@@ -679,6 +695,11 @@ export default function Form() {
       : '태어난 시간 구간을 눌러 선택해 주세요.';
 
   const handleBack = () => {
+    if (releasePreflightState.status === 'checking') {
+      return;
+    }
+
+    resetReleasePreflightState();
     if (step === 1) {
       navigate(tabOrigin, { state: { tabOrigin } });
       return;
@@ -687,8 +708,8 @@ export default function Form() {
     setStep((prev) => (prev === 4 ? 3 : prev === 3 ? 2 : 1));
   };
 
-  const submitForm = () => {
-    if (!canSubmit) {
+  const submitForm = async () => {
+    if (!canSubmit || releasePreflightState.status === 'checking') {
       return;
     }
 
@@ -712,6 +733,43 @@ export default function Form() {
         }
       });
       return;
+    }
+
+    if (isGeneralSignatureFlow) {
+      setReleasePreflightState({
+        status: 'checking',
+        message: '정확한 자동 분석이 가능한 명식인지 확인하고 있습니다.'
+      });
+
+      try {
+        const preflight = await requestGeneralSignatureReleasePreflight(submittedFormData);
+
+        if (preflight.status === 'manual-review-required') {
+          setReleasePreflightState({
+            status: 'manual-review-required',
+            message: '이 명식은 자동 해석보다 추가 검토가 필요합니다.'
+          });
+          return;
+        }
+
+        if (preflight.status === 'blocked') {
+          setReleasePreflightState({
+            status: 'blocked',
+            message: '현재 입력으로는 정확한 자동 분석을 진행하기 어렵습니다.'
+          });
+          return;
+        }
+
+        setReleasePreflightState({ status: 'idle', message: '' });
+      } catch (error) {
+        setReleasePreflightState({
+          status: 'error',
+          message: error instanceof Error
+            ? error.message
+            : '종합사주 자동 발행 가능 여부를 확인하지 못했습니다.'
+        });
+        return;
+      }
     }
 
     navigate('/checkout', {
@@ -751,7 +809,7 @@ export default function Form() {
       return;
     }
 
-    submitForm();
+    void submitForm();
   };
 
   const applyQuestionSuggestion = (key: 'q1' | 'q2', value: string) => {
@@ -1448,8 +1506,23 @@ export default function Form() {
             )
           ) : null}
 
+          {isGeneralSignatureFlow && releasePreflightState.message ? (
+            <p
+              className={`intake-release-preflight-status is-${releasePreflightState.status}`}
+              role={releasePreflightState.status === 'checking' ? 'status' : 'alert'}
+              aria-live="polite"
+            >
+              {releasePreflightState.message}
+            </p>
+          ) : null}
+
           <footer className="intake-story-actions">
-            <button type="button" className="intake-story-secondary" onClick={handleBack}>
+            <button
+              type="button"
+              className="intake-story-secondary"
+              onClick={handleBack}
+              disabled={releasePreflightState.status === 'checking'}
+            >
               이전
             </button>
             <button
@@ -1460,10 +1533,13 @@ export default function Form() {
                 (step === 1 && !step1Ready) ||
                 (step === 2 && !step2Ready) ||
                 (step === 3 && !step3Ready) ||
-                (step === 4 && !step4Ready)
+                (step === 4 && !step4Ready) ||
+                releasePreflightState.status === 'checking'
               }
             >
-              {step === 4
+              {step === 4 && releasePreflightState.status === 'checking'
+                ? '자동 분석 가능 여부 확인 중…'
+                : step === 4
                 ? isPastLifeFlow
                   ? '49,000원 · 내 전생장부 열기'
                   : isYearlyFlow

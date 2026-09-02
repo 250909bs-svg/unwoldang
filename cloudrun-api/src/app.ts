@@ -3,6 +3,7 @@ import {
   generateGeminiSajuReport,
   type ReportRequestBody
 } from '../../src/lib/server/geminiReportService.ts';
+import { evaluateGeneralSignatureReleasePreflight } from '../../src/lib/server/releasePreflightService.ts';
 import { loadConfig, type AppConfig } from './config/env.ts';
 import { AdminService } from './domains/admin/adminService.ts';
 import {
@@ -32,12 +33,14 @@ export type CreateAppOptions = {
   config?: AppConfig;
   fetchImplementation?: typeof fetch;
   reportGenerator?: typeof generateGeminiSajuReport;
+  releasePreflightEvaluator?: typeof evaluateGeneralSignatureReleasePreflight;
 };
 
 export function createApp(options: CreateAppOptions = {}): RequestListener {
   const config = options.config || loadConfig();
   const fetchImplementation = options.fetchImplementation || globalThis.fetch;
   const reportGenerator = options.reportGenerator || generateGeminiSajuReport;
+  const releasePreflightEvaluator = options.releasePreflightEvaluator || evaluateGeneralSignatureReleasePreflight;
 
   const tokenService = new TokenService(config);
   const auth = createAuthMiddleware(config, tokenService);
@@ -111,6 +114,9 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     auth,
     health: healthService,
     reports: reportService,
+    releasePreflight: {
+      evaluate: (body) => releasePreflightEvaluator(body as ReportRequestBody)
+    },
     payments: {
       createOrder: (user, body) => paymentService.createOrderIntent(user, body),
       confirm: (user, body) => paymentService.confirmPayment(user, body),
