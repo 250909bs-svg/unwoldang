@@ -5,10 +5,11 @@ import type {
   GoldenFixtureInput,
   GoldenLocationInput
 } from './schema';
+import { applyIndependentEvidence } from './evidenceRegistry';
 
 const KASI_LUNAR_API = 'https://www.data.go.kr/data/15012679/openapi.do';
 const KASI_LIVE_RECORD = 'docs/KASI_LOCAL_LIVE_VERIFICATION.md';
-const HKO_SOLAR_TERMS = 'https://www.hko.gov.hk/en/gts/astronomy/Solar_Term.htm';
+const NAOJ_SOLAR_TERMS_2024 = 'https://eco.mtk.nao.ac.jp/koyomi/yoko/2024/rekiyou242.html.en';
 const DATE_DB_1992 = 'https://datedb.net/tool/saju-worksheet/19920909/';
 const MANSAENYANG_1992 = 'https://www.mansaenyang.com/saju/1992-09-09';
 const INDEPENDENT_HOUR_TABLE_1992 =
@@ -178,8 +179,8 @@ const lunarRegularFixtures = lunarRegularSeeds.map(([birthDate, birthTime, gende
 
 const lunarLeapSeeds: Array<[string, string, 'male' | 'female']> = [
   ['2023-02-01', '09:36', 'female'], ['2020-04-01', '13:20', 'male'],
-  ['2017-05-10', '18:05', 'female'], ['2014-09-05', '03:15', 'male'],
-  ['2012-03-12', '22:40', 'female'], ['2009-05-08', '06:30', 'male'],
+  ['2017-06-10', '18:05', 'female'], ['2014-09-05', '03:15', 'male'],
+  ['2012-04-12', '22:40', 'female'], ['2009-05-08', '06:30', 'male'],
   ['2006-07-15', '15:45', 'female'], ['2004-02-14', '11:10', 'male'],
   ['2001-04-09', '20:25', 'female'], ['1998-05-03', '01:50', 'male']
 ];
@@ -219,7 +220,7 @@ const solarTermPairs: Array<{
   { name: '소서', instant: '2024-07-06T23:20:00+09:00', before: ['2024-07-06', '23:19'], after: ['2024-07-06', '23:21'] },
   { name: '입추', instant: '2024-08-07T09:09:00+09:00', before: ['2024-08-07', '09:08'], after: ['2024-08-07', '09:10'] },
   { name: '백로', instant: '2024-09-07T12:11:00+09:00', before: ['2024-09-07', '12:10'], after: ['2024-09-07', '12:12'] },
-  { name: '한로', instant: '2024-10-08T03:00:00+09:00', before: ['2024-10-08', '02:59'], after: ['2024-10-08', '03:01'] },
+  { name: '한로', instant: '2024-10-08T04:00:00+09:00', before: ['2024-10-08', '03:59'], after: ['2024-10-08', '04:01'] },
   { name: '입동', instant: '2024-11-07T07:20:00+09:00', before: ['2024-11-07', '07:19'], after: ['2024-11-07', '07:21'] }
 ];
 
@@ -239,11 +240,11 @@ const solarTermBoundaryFixtures = solarTermPairs.flatMap((term, index) =>
           label: term.name,
           referenceInstant: term.instant,
           relativeMinutes,
-          sourceReference: HKO_SOLAR_TERMS,
+          sourceReference: NAOJ_SOLAR_TERMS_2024,
           status: 'pending-independent-confirmation'
         },
         reviewNotes: [
-          'HKO 공개 시각(HKT)을 KST로 변환한 설계값이며, fixture verified 전 원자료 분 단위 재확인이 필요하다.',
+          'NAOJ 2024 역요의 JST 시각을 동일한 UTC+09:00 KST 경계로 사용했다.',
           'KASI 특일 API는 절기 날짜만 교차 확인하며 분 단위 expected를 대신하지 않는다.'
         ]
       }
@@ -372,7 +373,7 @@ const dayunFixtures = dayunPairSeeds.flatMap(([birthDate, birthTime], pairIndex)
   ))
 );
 
-export const generalSignatureGoldenFixtures: GoldenFixture[] = [
+const baseGeneralSignatureGoldenFixtures: GoldenFixture[] = [
   ...solarGeneralFixtures,
   ...lunarRegularFixtures,
   ...lunarLeapFixtures,
@@ -382,6 +383,10 @@ export const generalSignatureGoldenFixtures: GoldenFixture[] = [
   ...timezoneFixtures,
   ...dayunFixtures
 ];
+
+export const generalSignatureGoldenFixtures: GoldenFixture[] = applyIndependentEvidence(
+  baseGeneralSignatureGoldenFixtures
+);
 
 export const expectedGoldenCategoryCounts: Record<GoldenFixtureCategory, number> = {
   'solar-general': 40,

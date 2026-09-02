@@ -20,7 +20,9 @@ export const goldenProvenanceTypes = [
 ] as const;
 
 export type GoldenProvenanceType = (typeof goldenProvenanceTypes)[number];
-export type GoldenVerificationStatus = 'verified' | 'partial' | 'pending';
+export type GoldenVerificationStatus = 'verified' | 'partial' | 'pending' | 'conflicting';
+export type GoldenFieldVerificationStatus = 'verified' | 'conflicting' | 'pending' | 'not-applicable';
+export type GoldenSourceTier = 'A' | 'B' | 'C' | 'D' | 'E';
 export type GoldenConfidence = 'high' | 'medium' | 'low' | 'unknown';
 
 export interface GoldenLocationInput {
@@ -55,12 +57,18 @@ export interface GoldenExpectedFacts {
   dayunDirection?: 'forward' | 'reverse';
   dayunStartsAt?: string;
   firstDayun?: string;
+  solarTermBoundaryInstant?: string;
+  boundaryRelativeMinutes?: number;
+  utcOffsetMinutes?: number;
+  normalizedInstant?: string;
   otherFact?: Record<string, string | number | boolean | null>;
 }
 
 export type GoldenFactField = keyof GoldenExpectedFacts;
 
 export interface GoldenFactProvenance {
+  sourceId?: string;
+  sourceTier?: GoldenSourceTier;
   sourceType: GoldenProvenanceType;
   sourceName: string;
   sourceReference: string;
@@ -86,10 +94,25 @@ export interface GoldenFixture {
   input: GoldenFixtureInput;
   expected: GoldenExpectedFacts;
   provenance: Partial<Record<GoldenFactField, GoldenFactProvenance>>;
+  targetFields?: GoldenFactField[];
+  fieldVerification?: Partial<Record<GoldenFactField, GoldenFieldVerificationStatus>>;
   verificationStatus: GoldenVerificationStatus;
   boundaryReference?: GoldenBoundaryReference;
   comparisonGroup?: string;
   reviewNotes?: string[];
+}
+
+export function deriveGoldenFixtureStatus(
+  targetFields: GoldenFactField[],
+  fieldVerification: Partial<Record<GoldenFactField, GoldenFieldVerificationStatus>>
+): GoldenVerificationStatus {
+  const statuses = targetFields
+    .map((field) => fieldVerification[field] || 'pending')
+    .filter((status) => status !== 'not-applicable');
+  if (statuses.some((status) => status === 'conflicting')) return 'conflicting';
+  if (statuses.length > 0 && statuses.every((status) => status === 'verified')) return 'verified';
+  if (statuses.some((status) => status === 'verified')) return 'partial';
+  return 'pending';
 }
 
 export function hasIndependentProvenance(source: GoldenFactProvenance | undefined) {

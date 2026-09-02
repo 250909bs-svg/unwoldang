@@ -32,37 +32,59 @@ describe('general signature independent golden FACT matrix', () => {
   });
 
   it('does not import or execute the current engine while defining expected fixtures', () => {
-    const fixtureSource = readFileSync(new URL('./fixtures.ts', import.meta.url), 'utf8');
-    expect(fixtureSource).not.toMatch(/deterministicBasis|buildDeterministic|calcBazi|buildBirthCalculation/);
+    const expectedDefinitionSources = [
+      './fixtures.ts',
+      './evidenceRegistry.ts',
+      './independentTables.ts'
+    ].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8')).join('\n');
+    expect(expectedDefinitionSources).not.toMatch(
+      /deterministicBasis|buildDeterministic|calcBazi|getTwelveYunseong|\btenGod\b|buildBirthCalculation/
+    );
   });
 
-  it('compares only source-backed expected values and keeps pending out of PASS totals', () => {
+  it('derives fixture coverage from field provenance and never counts pending as PASS', () => {
     const report = evaluateGoldenMatrix(generalSignatureGoldenFixtures);
 
     expect(report.summary).toMatchObject({
       total: 140,
-      verified: 1,
-      partial: 2,
-      pending: 137,
-      comparedFixtures: 3,
-      fixtureMatches: 3,
-      fixtureMismatches: 0,
-      factMatches: 11,
-      factMismatches: 0,
+      verified: 0,
+      partial: 106,
+      pending: 34,
+      conflicting: 0,
+      verifiedFactFields: 286,
+      conflictingFactFields: 0,
+      releaseGate: 'NO-GO',
       provenanceWarnings: 0
     });
     expect(report.summary.fixtureMatches).not.toBe(report.summary.total);
-    expect(report.fixtures.filter((fixture) => fixture.result === 'pending')).toHaveLength(137);
+    expect(report.fixtures.filter((fixture) => fixture.result === 'pending')).toHaveLength(34);
+    expect(report.fixtures.filter((fixture) => fixture.result === 'source-conflict')).toHaveLength(0);
+    expect(report.summary.fixtureMismatches).toBeGreaterThan(0);
+    expect(report.summary.sourceChecks.independentManse).toBe(0);
+    expect(report.summary.sourceTierCounts.E).toBe(0);
+    expect(
+      report.fixtures
+        .filter((fixture) => fixture.category === 'solar-term-boundary')
+        .flatMap((fixture) => fixture.fields)
+        .filter((field) => field.result === 'mismatch')
+        .every((field) => field.classification === 'INSUFFICIENT_EVIDENCE')
+    ).toBe(true);
+    expect(
+      report.fixtures
+        .flatMap((fixture) => fixture.fields)
+        .filter((field) => field.result === 'mismatch')
+        .every((field) => Boolean(field.expectedSource?.sourceTier && field.classification))
+    ).toBe(true);
   });
 
   it('matches the independently sourced 1992-09-09 10:24 representative FACT', () => {
     const fixture = generalSignatureGoldenFixtures.find((item) => item.id === 'solar-general-001');
     expect(fixture).toBeDefined();
+    expect(fixture?.expected.leapMonth).toBe(false);
 
     const actual = runCurrentDeterministicFacts(fixture!);
     expect(actual).toMatchObject({
       normalizedSolarDate: '1992-09-09',
-      leapMonth: false,
       yearPillar: '임신',
       monthPillar: '기유',
       dayPillar: '무자',

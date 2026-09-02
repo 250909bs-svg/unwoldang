@@ -12,17 +12,17 @@
 
 ## Matrix 상태
 
-| category | 계획 수 | 현재 verified | 현재 partial | 현재 pending |
-| --- | ---: | ---: | ---: | ---: |
-| solar-general | 40 | 1 | 0 | 39 |
-| lunar-regular | 20 | 0 | 1 | 19 |
-| lunar-leap | 10 | 0 | 1 | 9 |
-| solar-term-boundary | 20 | 0 | 0 | 20 |
-| day-boundary | 16 | 0 | 0 | 16 |
-| time-uncertainty | 8 | 0 | 0 | 8 |
-| timezone-solar-time | 16 | 0 | 0 | 16 |
-| dayun-boundary | 10 | 0 | 0 | 10 |
-| **TOTAL** | **140** | **1** | **2** | **137** |
+| category | 계획 수 | verified | partial | pending | conflicting |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| solar-general | 40 | 0 | 40 | 0 | 0 |
+| lunar-regular | 20 | 0 | 20 | 0 | 0 |
+| lunar-leap | 10 | 0 | 8 | 0 | 2 |
+| solar-term-boundary | 20 | 0 | 18 | 0 | 2 |
+| day-boundary | 16 | 0 | 0 | 16 | 0 |
+| time-uncertainty | 8 | 0 | 0 | 8 | 0 |
+| timezone-solar-time | 16 | 0 | 16 | 0 | 0 |
+| dayun-boundary | 10 | 0 | 0 | 10 | 0 |
+| **TOTAL** | **140** | **0** | **102** | **34** | **4** |
 
 정확한 140개 ID와 입력은 `src/lib/saju/golden/fixtures.ts`가 단일 목록이다. 테스트는 총수, category별 수, ID 중복, verified provenance를 모두 검사한다.
 
@@ -77,8 +77,8 @@
 | yearPillar | 임신 | KASI `lunSecha` |
 | monthPillar | 기유 | KASI `lunWolgeon` |
 | dayPillar | 무자 | KASI `lunIljin` + 독립 계산 자료 |
-| hourPillar | 정사 | 독립 시진표 2곳 교차 확인 |
-| dayMaster | 무 | 독립 무자 일주 자료 |
+| hourPillar | pending | 승인된 시간 포함 독립 만세력 provider 없음 |
+| dayMaster | 무 | verified 무자 일주의 천간 정의 |
 
 KASI live smoke 기록은 `docs/KASI_LOCAL_LIVE_VERIFICATION.md`에 있다. 독립 교차자료는 다음과 같다.
 
@@ -86,11 +86,11 @@ KASI live smoke 기록은 `docs/KASI_LOCAL_LIVE_VERIFICATION.md`에 있다. 독�
 - https://www.mansaenyang.com/saju/1992-09-09
 - https://calendar.8s8s.net/ganzhichaxun.php?d=9&m=9&y=1992
 
-외부 독립 구현은 정책 차이가 있을 수 있으므로 경계 fixture에서는 단일 사이트 결과만으로 verified 처리하지 않는다.
+외부 계산 사이트 3곳은 버전·시간대·야자시·대운 정책이 충분히 문서화되지 않아 승인하지 않았다. 정사시는 current 결과와 참고 출력이 일치하더라도 독립 Golden expected로 승격하지 않는다.
 
 ## Boundary 설계 주의
 
-2024년 월 절입 pair의 입력 시각은 HKO 공개 astronomical time을 HKT에서 KST로 변환한 검수 후보값이다. 각 pair는 `-1분/+1분`으로 설계했지만 `boundaryReference.status`는 `pending-independent-confirmation`이다. 원본 연감의 해당 minor solar term 시각과 KST 변환을 다시 확인하기 전 expected 기둥을 입력하지 않는다.
+2024년 월 절입 시각은 NAOJ 공식 연감의 JST 시각을 사용한다. JST와 KST는 모두 UTC+09:00이다. 10개 중 한로 fixture의 기존 03:00 reference는 공식 04:00과 달라 두 fixture를 conflicting으로 유지했다. current 절기 계산은 입추만 분 단위 일치했고 나머지 9개 절기에서 1~7분 차이가 확인됐다. 상세는 `GENERAL_SIGNATURE_INDEPENDENT_GOLDEN_AUDIT_2026-09-02.md`를 참조한다.
 
 자시 fixture는 `civil-midnight`와 `late-zi-next-day`를 별도 정책으로 유지한다. 둘의 결과 차이는 버그로 단정하지 않고 정책 차이로 보고한다.
 
@@ -100,10 +100,11 @@ KASI live smoke 기록은 `docs/KASI_LOCAL_LIVE_VERIFICATION.md`에 있다. 독�
 
 `evaluateGoldenMatrix()`는 다음을 별도로 집계한다.
 
-- `TOTAL`, `VERIFIED`, `PARTIAL`, `PENDING`
+- `TOTAL`, `VERIFIED`, `PARTIAL`, `PENDING`, `CONFLICTING`
 - 비교한 fixture와 fixture match/mismatch
 - field 단위 FACT match/mismatch
-- provenance warning
+- verified/conflicting field와 provenance warning
+- 설명된 mismatch와 unexplained mismatch
 - category별 total/status/comparison 통계
 
 mismatch 보고에는 fixture의 provenance에서 `EXPECTED_SOURCE`, actual field에서 `CURRENT_ENGINE_RESULT`, 비교 항목의 `DIFFERING_FIELD`, input의 `lateZiPolicy`/`trueSolarTimePolicy`, provenance의 `confidence`를 함께 사용한다. mismatch가 발견되어도 FACT 엔진은 이 단계에서 수정하지 않는다.

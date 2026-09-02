@@ -1,0 +1,2443 @@
+{
+  "generatedAt": "2026-09-02T04:10:44.906Z",
+  "source": "NAOJ minute-rounded boundary for UI inputs; JPL DE440s/Skyfield for Dayun impact",
+  "offsetsMinutes": [
+    -10,
+    -7,
+    -5,
+    -1,
+    0,
+    1,
+    5,
+    7,
+    10
+  ],
+  "boundarySummary": {
+    "terms": 12,
+    "cases": 108,
+    "yearMismatches": 0,
+    "monthMismatches": 7,
+    "fingerprintsAffected": 7,
+    "releaseDecisions": [
+      "manual-review-required",
+      "eligible"
+    ]
+  },
+  "boundaryRows": [
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-9511b68acc934566",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-98de0d3a92c72086",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-e20ac2fe094befda",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a8194ab64b05a992",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "갑자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-8473676a7d1bfc06",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-ee8efb365cc67ea2",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-97e3062e85577c2a",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-c5b08cba89c40566",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소한",
+      "angle": 285,
+      "officialUtc": "2024-01-05T20:49:00.000Z",
+      "engineUtc": "2024-01-05T20:44:20.321Z",
+      "engineMinusJplSeconds": -302.217,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a6b27802880db31e",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-362b3d67731f3fab",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-6c3de4534a820167",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-3dfa1ca732c0b9db",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "actual": {
+        "year": "계묘",
+        "month": "을축"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-afbd55bf9fc05763",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a74a12b9064bf31d",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-4bcfd59b4103956f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-4232cab9ddcf4dfd",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-ab912015e77b8cd9",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입춘",
+      "angle": 315,
+      "officialUtc": "2024-02-04T08:27:00.000Z",
+      "engineUtc": "2024-02-04T08:21:25.784Z",
+      "engineMinusJplSeconds": -341.808,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-3c066d83cd6c1ff7",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-c5d88ebdca356221",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-464997bf7fb858d3",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-4e206013f9acf417",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병인"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-3895614915ba025d",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-81db2fa783242d0b",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-0fbad72d8349f991",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-5e98c5c52bf89e49",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-277f928ba685fc9f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "경칩",
+      "angle": 345,
+      "officialUtc": "2024-03-05T02:23:00.000Z",
+      "engineUtc": "2024-03-05T02:16:12.361Z",
+      "engineMinusJplSeconds": -393.775,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-abbfac7d6d2aff11",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-0edf44e71ebd6cd3",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-b2ab65cd35f30699",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-7f19464586baacd1",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-609357e5db2b4569",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "정묘"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-54133ff5632f00c9",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-b517b04f023247a3",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-4a14759f44873f53",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-ec7d6c339aa3df77",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "청명",
+      "angle": 15,
+      "officialUtc": "2024-04-04T07:02:00.000Z",
+      "engineUtc": "2024-04-04T06:55:32.343Z",
+      "engineMinusJplSeconds": -405.353,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-068a733f09f76a5b",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-aacf3ec1cc437c0d",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-da53a2fb7b4635c7",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-14f209832c56749f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-3d6a043b2e6140b7",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "무진"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-ca7aa5eb98cc4cdf",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-54d45b676362b8db",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-d8208cbf3ad16003",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a381985f40f7d6b3",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입하",
+      "angle": 45,
+      "officialUtc": "2024-05-05T00:10:00.000Z",
+      "engineUtc": "2024-05-05T00:04:17.897Z",
+      "engineMinusJplSeconds": -347.162,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-62039a1bc1c939bf",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a2ec63f426dd60a8",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-c45f6fa4638decd8",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-d1fa03d8ba91e33c",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "기사"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-b02fe2688dc26d6c",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-815372acfffa6ea8",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-079c256e6b8dc4ca",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a2c4dd066aeb5292",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-4d57d30acf4f5dd6",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "망종",
+      "angle": 75,
+      "officialUtc": "2024-06-05T04:10:00.000Z",
+      "engineUtc": "2024-06-05T04:06:16.489Z",
+      "engineMinusJplSeconds": -217.182,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-c0a6f8cef116efaa",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-d03b6038b8bae994",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-6ef4e12e5921ec7a",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-94390f22a188d5ce",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-77bd4d4a30e6e896",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "경오"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-2dddef628ae1890e",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-7b01fda85a532064",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-54906908f28bfac4",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-5d3e3d5030c1c7dc",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "소서",
+      "angle": 105,
+      "officialUtc": "2024-07-06T14:20:00.000Z",
+      "engineUtc": "2024-07-06T14:18:49.389Z",
+      "engineMinusJplSeconds": -74.018,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-11aba6546a5e4d50",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-df65a6482f1826c4",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-9d14012c87e43440",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-9b4a18a41b77a218",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-7b699954ea1e2468",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "신미"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-22d1c4f2195ac206",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-aa066e2ec689c85a",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-2ef0279ea5a574aa",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-64eb3d2ab7852936",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입추",
+      "angle": 135,
+      "officialUtc": "2024-08-07T00:09:00.000Z",
+      "engineUtc": "2024-08-07T00:08:47.774Z",
+      "engineMinusJplSeconds": -28.68,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-0e95dc120d4c180e",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a5e2cc07dff75fc3",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-a5827017c4cdf723",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-eb4e51a329c7038f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-8e3e79376f0a661b",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "임신"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-68ec1335d8765a89",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-65f61e3361c78c07",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-5f0cb19b17c8071f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-43241a977007509b",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "백로",
+      "angle": 165,
+      "officialUtc": "2024-09-07T03:11:00.000Z",
+      "engineUtc": "2024-09-07T03:09:52.841Z",
+      "engineMinusJplSeconds": -87.995,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-eb1deaab3b7efcdf",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "eligible",
+      "releaseFingerprint": "uw-1d7005d250fb29a6",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "eligible",
+      "releaseFingerprint": "uw-e4058466b0728b8a",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "eligible",
+      "releaseFingerprint": "uw-82895b8212874b46",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "eligible",
+      "releaseFingerprint": "uw-ab9b7d8a0d0f844e",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "계유"
+      },
+      "yearMismatch": false,
+      "monthMismatch": true,
+      "releaseDecision": "eligible",
+      "releaseFingerprint": "uw-ecb001126f4d569e",
+      "fingerprintWouldChangeWithCorrectPillars": true
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-47560d80646dbc6c",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-68fb50a857bb5fc4",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-aa269c1865d65e64",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "한로",
+      "angle": 195,
+      "officialUtc": "2024-10-07T19:00:00.000Z",
+      "engineUtc": "2024-10-07T18:57:15.629Z",
+      "engineMinusJplSeconds": -161.709,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-846c04d6d0c388ba",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-f84f9ac8c5344c84",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-4732942057b518cc",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-69ed0c84cef83d80",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "갑술"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-e2f597ec7e90a048",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-9d052bfe301dcada",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-e14722e21022214e",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-5bf5a9eaf358afc6",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-65c7d0baac6c6836",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "입동",
+      "angle": 225,
+      "officialUtc": "2024-11-06T22:20:00.000Z",
+      "engineUtc": "2024-11-06T22:17:13.534Z",
+      "engineMinusJplSeconds": -171.017,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-5e5a39f60dc023a2",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": -10,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-e96fa787dca41a1b",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": -7,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-86b03db9a5d03f15",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": -5,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-c752088d95a8f469",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": -1,
+      "expected": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "을해"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-b43870cd21be4989",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": 0,
+      "expected": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-0b4881532894c50f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": 1,
+      "expected": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-821e0fcbf124c067",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": 5,
+      "expected": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-f07a0e0bcc49df17",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": 7,
+      "expected": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-75b5ba43cdae3a3f",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    },
+    {
+      "term": "대설",
+      "angle": 255,
+      "officialUtc": "2024-12-06T15:17:00.000Z",
+      "engineUtc": "2024-12-06T15:15:08.756Z",
+      "engineMinusJplSeconds": -113.88,
+      "offsetMinutes": 10,
+      "expected": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "actual": {
+        "year": "갑진",
+        "month": "병자"
+      },
+      "yearMismatch": false,
+      "monthMismatch": false,
+      "releaseDecision": "manual-review-required",
+      "releaseFingerprint": "uw-bb45344fbd366b9b",
+      "fingerprintWouldChangeWithCorrectPillars": false
+    }
+  ],
+  "dayunSummary": {
+    "fixtures": 10,
+    "maxAbsoluteStartsAtDeltaSeconds": 3810.6944541015623,
+    "meanAbsoluteStartsAtDeltaSeconds": 1539.203797607422
+  },
+  "dayunRows": [
+    {
+      "birthDate": "1990-01-01",
+      "birthTime": "12:30",
+      "gender": "male",
+      "forward": false,
+      "independentBoundaryTerm": "대설",
+      "independentBoundaryUtc": "1989-12-07T03:20:57.636Z",
+      "currentStartAge": 8.335399278549383,
+      "independentStartAgeUnderCurrentPolicy": 8.335425787037037,
+      "currentStartsAt": "1998-05-03T14:02:58.880Z",
+      "independentStartsAtUnderCurrentPolicy": "1998-05-03T14:16:55.406Z",
+      "startsAtDeltaSeconds": -836.5268536376954,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "1990-01-01",
+      "birthTime": "12:30",
+      "gender": "female",
+      "forward": true,
+      "independentBoundaryTerm": "소한",
+      "independentBoundaryUtc": "1990-01-05T14:33:13.740Z",
+      "currentStartAge": 1.4869014313271605,
+      "independentStartAgeUnderCurrentPolicy": 1.486858564814815,
+      "currentStartsAt": "1991-06-28T05:23:58.556Z",
+      "independentStartsAtUnderCurrentPolicy": "1991-06-28T05:01:25.821Z",
+      "startsAtDeltaSeconds": 1352.7347239990233,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "1992-09-09",
+      "birthTime": "10:24",
+      "gender": "male",
+      "forward": true,
+      "independentBoundaryTerm": "한로",
+      "independentBoundaryUtc": "1992-10-08T00:51:26.749Z",
+      "currentStartAge": 9.659117577160494,
+      "independentStartAgeUnderCurrentPolicy": 9.659130976080247,
+      "currentStartsAt": "2002-05-07T23:24:59.380Z",
+      "independentStartsAtUnderCurrentPolicy": "2002-05-07T23:32:02.209Z",
+      "startsAtDeltaSeconds": -422.8292026367188,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "1992-09-09",
+      "birthTime": "10:24",
+      "gender": "female",
+      "forward": false,
+      "independentBoundaryTerm": "백로",
+      "independentBoundaryUtc": "1992-09-07T09:18:18.366Z",
+      "currentStartAge": 0.5568577199074074,
+      "independentStartAgeUnderCurrentPolicy": 0.5568735879629629,
+      "currentStartsAt": "1993-03-31T10:42:37.904Z",
+      "independentStartsAtUnderCurrentPolicy": "1993-03-31T10:50:58.651Z",
+      "startsAtDeltaSeconds": -500.74725158691405,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "2000-02-29",
+      "birthTime": "23:30",
+      "gender": "male",
+      "forward": true,
+      "independentBoundaryTerm": "경칩",
+      "independentBoundaryUtc": "2000-03-05T06:42:38.657Z",
+      "currentStartAge": 1.5584349189814815,
+      "independentStartAgeUnderCurrentPolicy": 1.5584824729938271,
+      "currentStartsAt": "2001-09-20T19:26:55.538Z",
+      "independentStartsAtUnderCurrentPolicy": "2001-09-20T19:51:56.197Z",
+      "startsAtDeltaSeconds": -1500.659241821289,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "2000-02-29",
+      "birthTime": "23:30",
+      "gender": "female",
+      "forward": false,
+      "independentBoundaryTerm": "입춘",
+      "independentBoundaryUtc": "2000-02-04T12:40:22.680Z",
+      "currentStartAge": 8.35872650462963,
+      "independentStartAgeUnderCurrentPolicy": 8.358708796296296,
+      "currentStartsAt": "2008-07-09T13:31:54.429Z",
+      "independentStartsAtUnderCurrentPolicy": "2008-07-09T13:22:35.608Z",
+      "startsAtDeltaSeconds": 558.8200319824218,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "2012-06-21",
+      "birthTime": "06:45",
+      "gender": "male",
+      "forward": true,
+      "independentBoundaryTerm": "소서",
+      "independentBoundaryUtc": "2012-07-06T16:40:43.383Z",
+      "currentStartAge": 5.262778097993827,
+      "independentStartAgeUnderCurrentPolicy": 5.262898854166667,
+      "currentStartsAt": "2017-09-25T02:16:39.413Z",
+      "independentStartsAtUnderCurrentPolicy": "2017-09-25T03:20:10.107Z",
+      "startsAtDeltaSeconds": -3810.6944541015623,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "2012-06-21",
+      "birthTime": "06:45",
+      "gender": "female",
+      "forward": false,
+      "independentBoundaryTerm": "망종",
+      "independentBoundaryUtc": "2012-06-05T06:25:54.458Z",
+      "currentStartAge": 5.21282007330247,
+      "independentStartAgeUnderCurrentPolicy": 5.2127528626543205,
+      "currentStartsAt": "2017-09-06T20:21:17.721Z",
+      "independentStartsAtUnderCurrentPolicy": "2017-09-06T19:45:56.760Z",
+      "startsAtDeltaSeconds": 2120.9609091796874,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "2024-02-04",
+      "birthTime": "17:28",
+      "gender": "male",
+      "forward": true,
+      "independentBoundaryTerm": "경칩",
+      "independentBoundaryUtc": "2024-03-05T02:22:46.136Z",
+      "currentStartAge": 9.91538918595679,
+      "independentStartAgeUnderCurrentPolicy": 9.915455771604938,
+      "currentStartsAt": "2034-01-03T20:54:43.595Z",
+      "independentStartsAtUnderCurrentPolicy": "2034-01-03T21:29:44.834Z",
+      "startsAtDeltaSeconds": -2101.2390463867187,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    },
+    {
+      "birthDate": "2024-02-04",
+      "birthTime": "17:28",
+      "gender": "female",
+      "forward": false,
+      "independentBoundaryTerm": "입춘",
+      "independentBoundaryUtc": "2024-02-04T08:27:07.592Z",
+      "currentStartAge": 0.0002714891975308642,
+      "independentStartAgeUnderCurrentPolicy": 0.00020219135802469136,
+      "currentStartsAt": "2024-02-04T10:50:47.364Z",
+      "independentStartsAtUnderCurrentPolicy": "2024-02-04T10:14:20.537Z",
+      "startsAtDeltaSeconds": 2186.8262607421875,
+      "policyQualification": "3일=1년 및 365.2422일/년이라는 현행 정책을 고정한 경계시각 영향 추정"
+    }
+  ]
+}

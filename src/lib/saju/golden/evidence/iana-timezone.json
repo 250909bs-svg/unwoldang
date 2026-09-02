@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "sourceAuthority": "IANA Time Zone Database via Node.js Intl",
+  "sourceUrl": "https://www.iana.org/time-zones",
+  "tzdbVersion": "2026b",
+  "icuVersion": "78.3",
+  "accessedAt": "2026-09-02",
+  "fieldsSupported": [
+    "utcOffsetMinutes",
+    "normalizedInstant"
+  ],
+  "limitations": [
+    "This evidence verifies civil timezone and DST behavior only.",
+    "It does not verify apparent solar-time or equation-of-time corrections."
+  ],
+  "entries": [
+    {
+      "fixtureId": "timezone-solar-001",
+      "timezone": "UTC",
+      "localDateTime": "1992-09-09T01:24",
+      "expectedUtcOffsetMinutes": 0,
+      "observedUtcOffsetMinutes": 0,
+      "normalizedInstant": "1992-09-09T01:24:00.000Z",
+      "renderedLocalDateTime": "1992-09-09T01:24",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-002",
+      "timezone": "America/New_York",
+      "localDateTime": "2024-03-10T01:59",
+      "expectedUtcOffsetMinutes": -300,
+      "observedUtcOffsetMinutes": -300,
+      "normalizedInstant": "2024-03-10T06:59:00.000Z",
+      "renderedLocalDateTime": "2024-03-10T01:59",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-003",
+      "timezone": "America/New_York",
+      "localDateTime": "2024-03-10T03:01",
+      "expectedUtcOffsetMinutes": -240,
+      "observedUtcOffsetMinutes": -240,
+      "normalizedInstant": "2024-03-10T07:01:00.000Z",
+      "renderedLocalDateTime": "2024-03-10T03:01",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-004",
+      "timezone": "America/New_York",
+      "localDateTime": "2024-11-03T01:30",
+      "expectedUtcOffsetMinutes": -240,
+      "observedUtcOffsetMinutes": -240,
+      "normalizedInstant": "2024-11-03T05:30:00.000Z",
+      "renderedLocalDateTime": "2024-11-03T01:30",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-005",
+      "timezone": "America/New_York",
+      "localDateTime": "2024-11-03T01:30",
+      "expectedUtcOffsetMinutes": -300,
+      "observedUtcOffsetMinutes": -300,
+      "normalizedInstant": "2024-11-03T06:30:00.000Z",
+      "renderedLocalDateTime": "2024-11-03T01:30",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-006",
+      "timezone": "Europe/London",
+      "localDateTime": "2024-03-31T00:59",
+      "expectedUtcOffsetMinutes": 0,
+      "observedUtcOffsetMinutes": 0,
+      "normalizedInstant": "2024-03-31T00:59:00.000Z",
+      "renderedLocalDateTime": "2024-03-31T00:59",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-007",
+      "timezone": "Europe/London",
+      "localDateTime": "2024-03-31T02:01",
+      "expectedUtcOffsetMinutes": 60,
+      "observedUtcOffsetMinutes": 60,
+      "normalizedInstant": "2024-03-31T01:01:00.000Z",
+      "renderedLocalDateTime": "2024-03-31T02:01",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-008",
+      "timezone": "Asia/Tokyo",
+      "localDateTime": "1988-08-08T08:08",
+      "expectedUtcOffsetMinutes": 540,
+      "observedUtcOffsetMinutes": 540,
+      "normalizedInstant": "1988-08-07T23:08:00.000Z",
+      "renderedLocalDateTime": "1988-08-08T08:08",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-009",
+      "timezone": "Australia/Sydney",
+      "localDateTime": "2000-01-15T12:00",
+      "expectedUtcOffsetMinutes": 660,
+      "observedUtcOffsetMinutes": 660,
+      "normalizedInstant": "2000-01-15T01:00:00.000Z",
+      "renderedLocalDateTime": "2000-01-15T12:00",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-010",
+      "timezone": "Australia/Sydney",
+      "localDateTime": "2000-06-15T12:00",
+      "expectedUtcOffsetMinutes": 600,
+      "observedUtcOffsetMinutes": 600,
+      "normalizedInstant": "2000-06-15T02:00:00.000Z",
+      "renderedLocalDateTime": "2000-06-15T12:00",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-011",
+      "timezone": "America/Los_Angeles",
+      "localDateTime": "2024-03-10T01:59",
+      "expectedUtcOffsetMinutes": -480,
+      "observedUtcOffsetMinutes": -480,
+      "normalizedInstant": "2024-03-10T09:59:00.000Z",
+      "renderedLocalDateTime": "2024-03-10T01:59",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-012",
+      "timezone": "America/Los_Angeles",
+      "localDateTime": "2024-03-10T03:01",
+      "expectedUtcOffsetMinutes": -420,
+      "observedUtcOffsetMinutes": -420,
+      "normalizedInstant": "2024-03-10T10:01:00.000Z",
+      "renderedLocalDateTime": "2024-03-10T03:01",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-013",
+      "timezone": "Asia/Kathmandu",
+      "localDateTime": "1995-05-05T10:15",
+      "expectedUtcOffsetMinutes": 345,
+      "observedUtcOffsetMinutes": 345,
+      "normalizedInstant": "1995-05-05T04:30:00.000Z",
+      "renderedLocalDateTime": "1995-05-05T10:15",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-014",
+      "timezone": "Pacific/Honolulu",
+      "localDateTime": "1985-12-25T22:30",
+      "expectedUtcOffsetMinutes": -600,
+      "observedUtcOffsetMinutes": -600,
+      "normalizedInstant": "1985-12-26T08:30:00.000Z",
+      "renderedLocalDateTime": "1985-12-25T22:30",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": false
+    },
+    {
+      "fixtureId": "timezone-solar-015",
+      "timezone": "Asia/Seoul",
+      "localDateTime": "1992-09-09T10:24",
+      "expectedUtcOffsetMinutes": 540,
+      "observedUtcOffsetMinutes": 540,
+      "normalizedInstant": "1992-09-09T01:24:00.000Z",
+      "renderedLocalDateTime": "1992-09-09T10:24",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": true
+    },
+    {
+      "fixtureId": "timezone-solar-016",
+      "timezone": "Asia/Seoul",
+      "localDateTime": "1992-09-09T10:24",
+      "expectedUtcOffsetMinutes": 540,
+      "observedUtcOffsetMinutes": 540,
+      "normalizedInstant": "1992-09-09T01:24:00.000Z",
+      "renderedLocalDateTime": "1992-09-09T10:24",
+      "localRoundTripMatch": true,
+      "offsetMatch": true,
+      "trueSolarTimeExcluded": true
+    }
+  ]
+}

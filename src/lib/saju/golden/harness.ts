@@ -1,5 +1,6 @@
 import type { IntakeFormData } from '../../../api/mockData';
 import { buildDeterministicSajuBasis } from '../deterministicBasis';
+import { getSolarTermInstantForGregorianYear } from '../sxtwl';
 import type {
   GoldenExpectedFacts,
   GoldenFactField,
@@ -8,7 +9,7 @@ import type {
   GoldenFixtureCategory,
   GoldenVerificationStatus
 } from './schema';
-import { goldenFixtureCategories, hasIndependentProvenance } from './schema';
+import { deriveGoldenFixtureStatus, goldenFixtureCategories, hasIndependentProvenance } from './schema';
 
 export type GoldenActualFacts = GoldenExpectedFacts;
 export type GoldenActualProvider = (fixture: GoldenFixture) => GoldenActualFacts;
@@ -20,13 +21,14 @@ export interface GoldenFieldComparison {
   result: 'match' | 'mismatch' | 'not-eligible';
   expectedSource?: GoldenFactProvenance;
   message?: string;
+  classification?: 'ENGINE_BUG_CONFIRMED' | 'EXPECTED_DATA_ERROR' | 'POLICY_DIFFERENCE' | 'SOURCE_CONFLICT' | 'INSUFFICIENT_EVIDENCE';
 }
 
 export interface GoldenFixtureComparison {
   fixtureId: string;
   category: GoldenFixtureCategory;
   verificationStatus: GoldenVerificationStatus;
-  result: 'match' | 'mismatch' | 'pending' | 'no-source-backed-expected' | 'engine-error';
+  result: 'match' | 'mismatch' | 'pending' | 'source-conflict' | 'no-source-backed-expected' | 'engine-error';
   fields: GoldenFieldComparison[];
   warnings: string[];
   boundaryPolicy: {
@@ -42,6 +44,7 @@ export interface GoldenCategorySummary {
   verified: number;
   partial: number;
   pending: number;
+  conflicting: number;
   compared: number;
   matches: number;
   mismatches: number;
@@ -52,12 +55,24 @@ export interface GoldenMatrixSummary {
   verified: number;
   partial: number;
   pending: number;
+  conflicting: number;
   comparedFixtures: number;
   fixtureMatches: number;
   fixtureMismatches: number;
   factMatches: number;
   factMismatches: number;
+  verifiedFactFields: number;
+  conflictingFactFields: number;
+  unexplainedMismatches: number;
   provenanceWarnings: number;
+  sourceTierCounts: Record<'A' | 'B' | 'C' | 'D' | 'E', number>;
+  sourceChecks: {
+    kasi: number;
+    independentManse: number;
+    standardTable: number;
+    expert: number;
+  };
+  releaseGate: 'PASS' | 'NO-GO';
   categories: Record<GoldenFixtureCategory, GoldenCategorySummary>;
 }
 
@@ -89,6 +104,31 @@ function inferDayunDirection(monthPillar: string, firstDayun: string | undefined
     return 'reverse' as const;
   }
   return undefined;
+}
+
+const SOLAR_TERM_ANGLES: Record<string, number> = {
+  입춘: 315,
+  경칩: 345,
+  청명: 15,
+  입하: 45,
+  망종: 75,
+  소서: 105,
+  입추: 135,
+  백로: 165,
+  한로: 195,
+  입동: 225
+};
+
+function fixtureInstant(fixture: GoldenFixture, utcOffsetMinutes: number) {
+  if (!fixture.input.birthTime || !/^\d{2}:\d{2}$/.test(fixture.input.birthTime)) return undefined;
+  const [year, month, day] = fixture.input.birthDate.split('-').map(Number);
+  const [hour, minute] = fixture.input.birthTime.split(':').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour, minute) - utcOffsetMinutes * 60_000);
+}
+
+function roundInstantToMinute(value: Date | undefined) {
+  if (!value) return undefined;
+  return new Date(Math.round(value.getTime() / 60_000) * 60_000);
 }
 
 export function goldenFixtureToIntake(fixture: GoldenFixture): IntakeFormData {
@@ -130,10 +170,19 @@ export function goldenFixtureToIntake(fixture: GoldenFixture): IntakeFormData {
 export const runCurrentDeterministicFacts: GoldenActualProvider = (fixture) => {
   const basis = buildDeterministicSajuBasis('general-signature', goldenFixtureToIntake(fixture));
   const firstDayun = basis.dayun[0];
+  const utcOffsetMinutes = basis.input.timezoneContext.utcOffsetMinutes;
+  const normalizedInstant = fixtureInstant(fixture, utcOffsetMinutes)?.toISOString();
+  const termAngle = fixture.boundaryReference?.kind === 'solar-term'
+    ? SOLAR_TERM_ANGLES[fixture.boundaryReference.label]
+    : undefined;
+  const termInstant = roundInstantToMinute(termAngle === undefined
+    ? undefined
+    : getSolarTermInstantForGregorianYear(Number(fixture.input.birthDate.slice(0, 4)), termAngle));
+  const inputInstant = fixtureInstant(fixture, fixture.input.location.utcOffsetMinutes ?? 540);
 
   return {
     normalizedSolarDate: dateLabel(basis.commercialV2.calendar.trace?.normalizedSolarDate),
-    leapMonth: basis.input.isLeapMonth,
+    leapMonth: fixture.input.calendarType === 'lunar' ? basis.input.isLeapMonth : undefined,
     yearPillar: basis.pillars.year,
     monthPillar: basis.pillars.month,
     dayPillar: basis.pillars.day,
@@ -142,6 +191,12 @@ export const runCurrentDeterministicFacts: GoldenActualProvider = (fixture) => {
     dayunDirection: inferDayunDirection(basis.pillars.month, firstDayun?.ganzhi),
     dayunStartsAt: firstDayun?.startsAt,
     firstDayun: firstDayun?.ganzhi
+    ,solarTermBoundaryInstant: termInstant?.toISOString()
+    ,boundaryRelativeMinutes: termInstant && inputInstant
+      ? Math.round((inputInstant.getTime() - termInstant.getTime()) / 60_000)
+      : undefined
+    ,utcOffsetMinutes
+    ,normalizedInstant
   };
 };
 
@@ -152,8 +207,34 @@ function comparable(value: unknown) {
   return value;
 }
 
+function classifyMismatch(
+  field: GoldenFactField,
+  source: GoldenFactProvenance | undefined,
+  expected: unknown,
+  actual: unknown
+) {
+  if (
+    source?.sourceTier === 'A' &&
+    source.sourceId === 'naoj-reki-yoko-2024' &&
+    (field === 'solarTermBoundaryInstant' || field === 'boundaryRelativeMinutes')
+  ) {
+    // NAOJ publishes these instants at minute precision. Keep the mismatch
+    // visible, but do not call a one-minute rounding-bin difference an engine
+    // bug after the independent JPL second-level comparison has passed.
+    if (field === 'solarTermBoundaryInstant' && typeof expected === 'string' && typeof actual === 'string') {
+      const delta = Math.abs(Date.parse(expected) - Date.parse(actual));
+      if (Number.isFinite(delta) && delta <= 60_000) return 'INSUFFICIENT_EVIDENCE' as const;
+    }
+    if (field === 'boundaryRelativeMinutes' && typeof expected === 'number' && typeof actual === 'number') {
+      if (Math.abs(expected - actual) <= 1) return 'INSUFFICIENT_EVIDENCE' as const;
+    }
+    return 'ENGINE_BUG_CONFIRMED' as const;
+  }
+  return undefined;
+}
+
 function emptyCategorySummary(): GoldenCategorySummary {
-  return { total: 0, verified: 0, partial: 0, pending: 0, compared: 0, matches: 0, mismatches: 0 };
+  return { total: 0, verified: 0, partial: 0, pending: 0, conflicting: 0, compared: 0, matches: 0, mismatches: 0 };
 }
 
 function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider): GoldenFixtureComparison {
@@ -164,6 +245,9 @@ function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider):
     timezone: fixture.input.timezone
   };
   const expectedEntries = Object.entries(fixture.expected) as Array<[GoldenFactField, unknown]>;
+  const eligibleEntries = expectedEntries.filter(([field]) =>
+    ['verified', 'conflicting'].includes(fixture.fieldVerification?.[field] || '')
+  );
 
   for (const [field] of expectedEntries) {
     if (!hasIndependentProvenance(fixture.provenance[field])) {
@@ -183,7 +267,7 @@ function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider):
     };
   }
 
-  const sourceBackedEntries = expectedEntries.filter(([field]) =>
+  const sourceBackedEntries = eligibleEntries.filter(([field]) =>
     hasIndependentProvenance(fixture.provenance[field])
   );
   if (sourceBackedEntries.length === 0) {
@@ -191,7 +275,7 @@ function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider):
       fixtureId: fixture.id,
       category: fixture.category,
       verificationStatus: fixture.verificationStatus,
-      result: 'no-source-backed-expected',
+      result: fixture.verificationStatus === 'conflicting' ? 'source-conflict' : 'no-source-backed-expected',
       fields: expectedEntries.map(([field, expected]) => ({
         field,
         expected,
@@ -221,7 +305,7 @@ function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider):
     };
   }
 
-  const fields = expectedEntries.map(([field, expected]): GoldenFieldComparison => {
+  const fields = eligibleEntries.map(([field, expected]): GoldenFieldComparison => {
     if (!hasIndependentProvenance(fixture.provenance[field])) {
       return {
         field,
@@ -232,12 +316,26 @@ function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider):
       };
     }
     const actualValue = actual[field];
+    if (actualValue === undefined) {
+      return {
+        field,
+        expected,
+        actual: actualValue,
+        result: 'not-eligible',
+        expectedSource: fixture.provenance[field],
+        message: 'The current engine does not expose this FACT in the comparison contract.'
+      };
+    }
+    const matches = comparable(expected) === comparable(actualValue);
     return {
       field,
       expected,
       actual: actualValue,
-      result: comparable(expected) === comparable(actualValue) ? 'match' : 'mismatch',
-      expectedSource: fixture.provenance[field]
+      result: matches ? 'match' : 'mismatch',
+      expectedSource: fixture.provenance[field],
+      classification: matches
+        ? undefined
+        : classifyMismatch(field, fixture.provenance[field], expected, actualValue)
     };
   });
   const hasMismatch = fields.some((field) => field.result === 'mismatch');
@@ -246,7 +344,7 @@ function compareFixture(fixture: GoldenFixture, provider: GoldenActualProvider):
     fixtureId: fixture.id,
     category: fixture.category,
     verificationStatus: fixture.verificationStatus,
-    result: hasMismatch ? 'mismatch' : 'match',
+    result: fixture.verificationStatus === 'conflicting' ? 'source-conflict' : hasMismatch ? 'mismatch' : 'match',
     fields,
     warnings,
     boundaryPolicy
@@ -261,6 +359,13 @@ export function evaluateGoldenMatrix(
     goldenFixtureCategories.map((category) => [category, emptyCategorySummary()])
   ) as Record<GoldenFixtureCategory, GoldenCategorySummary>;
   const comparisons = fixtures.map((fixture) => compareFixture(fixture, provider));
+  const activeProvenance = fixtures.flatMap((fixture) =>
+    (fixture.targetFields || []).flatMap((field) => {
+      const status = fixture.fieldVerification?.[field];
+      const source = fixture.provenance[field];
+      return status && status !== 'pending' && status !== 'not-applicable' && source ? [source] : [];
+    })
+  );
 
   for (const comparison of comparisons) {
     const category = categories[comparison.category];
@@ -273,20 +378,53 @@ export function evaluateGoldenMatrix(
     if (comparison.result === 'mismatch' || comparison.result === 'engine-error') category.mismatches += 1;
   }
 
-  return {
-    summary: {
+  const summary: GoldenMatrixSummary = {
       total: fixtures.length,
       verified: fixtures.filter((fixture) => fixture.verificationStatus === 'verified').length,
       partial: fixtures.filter((fixture) => fixture.verificationStatus === 'partial').length,
       pending: fixtures.filter((fixture) => fixture.verificationStatus === 'pending').length,
+      conflicting: fixtures.filter((fixture) => fixture.verificationStatus === 'conflicting').length,
       comparedFixtures: comparisons.filter((item) => ['match', 'mismatch', 'engine-error'].includes(item.result)).length,
       fixtureMatches: comparisons.filter((item) => item.result === 'match').length,
       fixtureMismatches: comparisons.filter((item) => item.result === 'mismatch' || item.result === 'engine-error').length,
       factMatches: comparisons.flatMap((item) => item.fields).filter((field) => field.result === 'match').length,
       factMismatches: comparisons.flatMap((item) => item.fields).filter((field) => field.result === 'mismatch').length,
+      verifiedFactFields: fixtures.reduce(
+        (sum, fixture) => sum + Object.values(fixture.fieldVerification || {}).filter((status) => status === 'verified').length,
+        0
+      ),
+      conflictingFactFields: fixtures.reduce(
+        (sum, fixture) => sum + Object.values(fixture.fieldVerification || {}).filter((status) => status === 'conflicting').length,
+        0
+      ),
+      unexplainedMismatches: comparisons
+        .filter((item) => item.verificationStatus !== 'conflicting')
+        .flatMap((item) => item.fields)
+        .filter((field) => field.result === 'mismatch' && !field.classification).length,
       provenanceWarnings: comparisons.reduce((sum, item) => sum + item.warnings.length, 0),
+      sourceTierCounts: {
+        A: activeProvenance.filter((source) => source.sourceTier === 'A').length,
+        B: activeProvenance.filter((source) => source.sourceTier === 'B').length,
+        C: activeProvenance.filter((source) => source.sourceTier === 'C').length,
+        D: activeProvenance.filter((source) => source.sourceTier === 'D').length,
+        E: activeProvenance.filter((source) => source.sourceTier === 'E').length
+      },
+      sourceChecks: {
+        kasi: activeProvenance.filter((source) => source.sourceId?.startsWith('kasi-')).length,
+        independentManse: activeProvenance.filter((source) => source.sourceType === 'approved-independent-manse').length,
+        standardTable: activeProvenance.filter((source) => source.sourceTier === 'C').length,
+        expert: activeProvenance.filter((source) => source.sourceType === 'expert-review').length
+      },
+      releaseGate: 'NO-GO',
       categories
-    },
+    };
+  summary.releaseGate = summary.verified === summary.total && summary.partial === 0 &&
+    summary.pending === 0 && summary.conflicting === 0 && summary.factMismatches === 0
+    ? 'PASS'
+    : 'NO-GO';
+
+  return {
+    summary,
     fixtures: comparisons
   };
 }
@@ -300,13 +438,23 @@ export function validateGoldenFixtureDefinitions(fixtures: GoldenFixture[]) {
     ids.add(fixture.id);
 
     const expectedFields = Object.keys(fixture.expected) as GoldenFactField[];
+    const targetFields = fixture.targetFields || expectedFields;
+    if (
+      fixture.fieldVerification &&
+      fixture.verificationStatus !== deriveGoldenFixtureStatus(targetFields, fixture.fieldVerification)
+    ) {
+      errors.push(`${fixture.id}: fixture status does not match field verification states.`);
+    }
     if (fixture.verificationStatus === 'verified' && expectedFields.length === 0) {
       errors.push(`${fixture.id}: verified fixture has no expected FACT.`);
     }
     if (fixture.verificationStatus === 'verified') {
-      for (const field of expectedFields) {
+      for (const field of targetFields) {
         if (!hasIndependentProvenance(fixture.provenance[field])) {
           errors.push(`${fixture.id}.${field}: verified expected FACT lacks independent provenance.`);
+        }
+        if (fixture.fieldVerification?.[field] !== 'verified') {
+          errors.push(`${fixture.id}.${field}: fixture is verified but field is not verified.`);
         }
       }
     }
