@@ -189,6 +189,89 @@ describe('general-signature release preflight', () => {
     expect(new Set([base, lunar, leap, range]).size).toBe(4);
   });
 
+  it('binds an ambiguous wall-clock input to its explicit UTC occurrence', () => {
+    const first = buildReleasePreflightInputFingerprint('general-signature', {
+      ...formData,
+      birthDate: '2024-11-03',
+      birthTime: '01:30',
+      birthLocation: {
+        label: 'New York',
+        timezone: 'America/New_York',
+        utcOffsetMinutes: -240
+      }
+    }, 'v1');
+    const second = buildReleasePreflightInputFingerprint('general-signature', {
+      ...formData,
+      birthDate: '2024-11-03',
+      birthTime: '01:30',
+      birthLocation: {
+        label: 'New York',
+        timezone: 'America/New_York',
+        utcOffsetMinutes: -300
+      }
+    }, 'v1');
+
+    expect(first).not.toBe(second);
+  });
+
+  it('rejects a nonexistent local time before release eligibility is evaluated', async () => {
+    const invalidRequest: ReportRequestBody = {
+      ...requestBody,
+      payload: {
+        ...requestBody.payload,
+        birth: {
+          ...requestBody.payload?.birth,
+          date: '2024-03-10',
+          time: '02:30',
+          location: {
+            label: 'New York',
+            timezone: 'America/New_York',
+            utcOffsetMinutes: -300
+          }
+        }
+      }
+    };
+
+    await expect(evaluateGeneralSignatureReleasePreflight(invalidRequest))
+      .rejects.toMatchObject({ status: 422 });
+    await expect(evaluateGeneralSignatureReleasePreflight(invalidRequest))
+      .rejects.toThrow(/해당 시간이 존재하지/);
+  });
+
+  it('requires an explicit valid occurrence for an ambiguous preflight input', async () => {
+    const ambiguousBirth = {
+      ...requestBody.payload?.birth,
+      date: '2024-11-03',
+      time: '01:30',
+      location: {
+        label: 'New York',
+        timezone: 'America/New_York'
+      }
+    };
+    const unresolved: ReportRequestBody = {
+      ...requestBody,
+      payload: { ...requestBody.payload, birth: ambiguousBirth }
+    };
+
+    await expect(evaluateGeneralSignatureReleasePreflight(unresolved))
+      .rejects.toMatchObject({ status: 422 });
+    await expect(evaluateGeneralSignatureReleasePreflight(unresolved))
+      .rejects.toThrow(/두 번 존재/);
+
+    for (const utcOffsetMinutes of [-240, -300]) {
+      await expect(evaluateGeneralSignatureReleasePreflight({
+        ...unresolved,
+        payload: {
+          ...unresolved.payload,
+          birth: {
+            ...ambiguousBirth,
+            location: { ...ambiguousBirth.location, utcOffsetMinutes }
+          }
+        }
+      })).resolves.toHaveProperty('inputFingerprint');
+    }
+  });
+
   it('invalidates the calculation fingerprint when the calendar policy version changes', () => {
     const previous = buildCommercialReleaseAudit(
       makeAuditInput({ calendarVersion: 'calendar-v2.0.0' })

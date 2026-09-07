@@ -1,22 +1,15 @@
 import type { IntakeFormData } from '../../../../api/mockData';
 import { parseCivilDate } from './dateMath';
 import { parseBirthTime } from './timeParser';
+import { assertResolvableLocalDateTime, assertValidIanaTimeZone } from './timeZoneValidation';
 import type { BirthContext, BirthContextOptions, BirthLocation } from './types';
 
 const KOREA_TIMEZONE = 'Asia/Seoul';
 const KST_OFFSET_MINUTES = 9 * 60;
 
-function assertValidTimeZoneId(timezoneId: string) {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: timezoneId }).format(new Date(0));
-  } catch {
-    throw new Error(`유효하지 않은 IANA 시간대입니다: ${timezoneId}`);
-  }
-}
-
 function resolveUtcOffsetMinutes(options: BirthContextOptions, birthYear: number) {
   const timezoneId = options.timezoneId || KOREA_TIMEZONE;
-  assertValidTimeZoneId(timezoneId);
+  assertValidIanaTimeZone(timezoneId);
 
   if (options.utcOffsetMinutes !== undefined) {
     return options.utcOffsetMinutes;
@@ -71,9 +64,26 @@ export function normalizeIntakeFormToBirthContext(
 ): BirthContext {
   const calendar = formData.calendar === 'lunar' ? 'lunar' : 'solar';
   const date = parseCivilDate(formData.birthDate, calendar);
+  const time = parseBirthTime(formData.birthTime, Boolean(formData.isUnknownTime));
   const location = buildLocation(formData, options);
   const hasExplicitTimezone = options.timezoneId !== undefined || options.utcOffsetMinutes !== undefined;
   const timezoneId = options.timezoneId || KOREA_TIMEZONE;
+
+  // A lunar input first needs canonical solar conversion. That path is checked
+  // in calculateBirthContext before any true-solar or pillar calculation.
+  if (
+    calendar === 'solar'
+    && time.precision === 'exact-minute'
+    && time.hour !== null
+    && time.minute !== null
+  ) {
+    assertResolvableLocalDateTime(
+      { ...date, hour: time.hour, minute: time.minute },
+      timezoneId,
+      options.utcOffsetMinutes
+    );
+  }
+
   const utcOffsetMinutes = resolveUtcOffsetMinutes(options, date.year);
   if (!Number.isFinite(utcOffsetMinutes) || utcOffsetMinutes < -14 * 60 || utcOffsetMinutes > 14 * 60) {
     throw new Error('UTC 오프셋은 -14:00부터 +14:00 사이여야 합니다.');
@@ -87,7 +97,7 @@ export function normalizeIntakeFormToBirthContext(
     calendar,
     isLeapMonth: Boolean(formData.isLeapMonth),
     date,
-    time: parseBirthTime(formData.birthTime, Boolean(formData.isUnknownTime)),
+    time,
     location,
     timezone: {
       id: timezoneId,

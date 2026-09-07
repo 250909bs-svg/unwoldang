@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 1,
+  "collectedAt": "2026-09-02",
+  "sourceId": "6tail-lunar-javascript-1.7.7",
+  "sourceTier": "B",
+  "sourceUrl": "https://github.com/6tail/lunar-javascript",
+  "version": "1.7.7",
+  "integrity": "sha512-u/KYiwPIBo/0bT+WWfU7qO1d+aqeB90Tuy4ErXenr2Gam0QcWeezUvtiOIyXR7HbVnW2I1DKfU0NBvzMZhbVQw==",
+  "license": "MIT",
+  "independentFromUnwoldang": true,
+  "policy": {
+    "sect1": "23:00-23:59 uses the next sexagenary day",
+    "sect2": "23:00-23:59 retains the civil-day pillar",
+    "hourPillar": "provider time pillar uses its exact day-stem policy at late Zi",
+    "dayunDirection": "yang-year male/yin-year female forward; the opposite reverse",
+    "dayunStartSect": 2,
+    "dayunStartConversion": "4320 minutes=1 year, 360=1 month, 12=1 day, remainder minute=2 hours",
+    "timezoneNormalization": "KST physical instant rendered as CST before provider calculation"
+  },
+  "limitations": [
+    "This is one approved independent provider, not a second consensus source.",
+    "Late-Zi and dayun conversion remain policy-sensitive.",
+    "Provider results do not verify Unwoldang true-solar-time correction."
+  ],
+  "lateZi": [
+    {
+      "date": "1992-09-09",
+      "time": "22:59",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "癸亥"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "22:59",
+      "policy": "late-zi-next-day",
+      "dayPillar": "戊子",
+      "hourPillar": "癸亥"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "23:00",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "23:00",
+      "policy": "late-zi-next-day",
+      "dayPillar": "己丑",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "23:30",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "23:30",
+      "policy": "late-zi-next-day",
+      "dayPillar": "己丑",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "23:59",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "23:59",
+      "policy": "late-zi-next-day",
+      "dayPillar": "己丑",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "00:00",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "壬子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "00:00",
+      "policy": "late-zi-next-day",
+      "dayPillar": "戊子",
+      "hourPillar": "壬子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "00:30",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "壬子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "00:30",
+      "policy": "late-zi-next-day",
+      "dayPillar": "戊子",
+      "hourPillar": "壬子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "00:59",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "壬子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "00:59",
+      "policy": "late-zi-next-day",
+      "dayPillar": "戊子",
+      "hourPillar": "壬子"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "01:00",
+      "policy": "civil-midnight",
+      "dayPillar": "戊子",
+      "hourPillar": "癸丑"
+    },
+    {
+      "date": "1992-09-09",
+      "time": "01:00",
+      "policy": "late-zi-next-day",
+      "dayPillar": "戊子",
+      "hourPillar": "癸丑"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "22:59",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "乙亥"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "22:59",
+      "policy": "late-zi-next-day",
+      "dayPillar": "甲子",
+      "hourPillar": "乙亥"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "23:00",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "丙子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "23:00",
+      "policy": "late-zi-next-day",
+      "dayPillar": "乙丑",
+      "hourPillar": "丙子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "23:30",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "丙子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "23:30",
+      "policy": "late-zi-next-day",
+      "dayPillar": "乙丑",
+      "hourPillar": "丙子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "23:59",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "丙子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "23:59",
+      "policy": "late-zi-next-day",
+      "dayPillar": "乙丑",
+      "hourPillar": "丙子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "00:00",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "00:00",
+      "policy": "late-zi-next-day",
+      "dayPillar": "甲子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "00:30",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "00:30",
+      "policy": "late-zi-next-day",
+      "dayPillar": "甲子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "00:59",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "00:59",
+      "policy": "late-zi-next-day",
+      "dayPillar": "甲子",
+      "hourPillar": "甲子"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "01:00",
+      "policy": "civil-midnight",
+      "dayPillar": "甲子",
+      "hourPillar": "乙丑"
+    },
+    {
+      "date": "2024-01-01",
+      "time": "01:00",
+      "policy": "late-zi-next-day",
+      "dayPillar": "甲子",
+      "hourPillar": "乙丑"
+    }
+  ],
+  "dayun": [
+    {
+      "fixtureId": "dayun-boundary-001",
+      "birthDate": "1990-01-01",
+      "birthTime": "12:30",
+      "gender": "male",
+      "providerInputCst": "1990-01-01T11:30:00+08:00",
+      "localCivilPillars": {
+        "year": "己巳",
+        "month": "丙子",
+        "day": "丙寅",
+        "hour": "甲午"
+      },
+      "direction": "reverse",
+      "startComponents": {
+        "years": 8,
+        "months": 4,
+        "days": 0,
+        "hours": 20
+      },
+      "startsAtProviderCivil": "1998-05-02 07:30:00+08:00",
+      "startsAtInstant": "1998-05-01T23:30:00.000Z",
+      "firstDayun": "乙亥"
+    },
+    {
+      "fixtureId": "dayun-boundary-002",
+      "birthDate": "1990-01-01",
+      "birthTime": "12:30",
+      "gender": "female",
+      "providerInputCst": "1990-01-01T11:30:00+08:00",
+      "localCivilPillars": {
+        "year": "己巳",
+        "month": "丙子",
+        "day": "丙寅",
+        "hour": "甲午"
+      },
+      "direction": "forward",
+      "startComponents": {
+        "years": 1,
+        "months": 5,
+        "days": 25,
+        "hours": 6
+      },
+      "startsAtProviderCivil": "1991-06-26 17:30:00+08:00",
+      "startsAtInstant": "1991-06-26T09:30:00.000Z",
+      "firstDayun": "丁丑"
+    },
+    {
+      "fixtureId": "dayun-boundary-003",
+      "birthDate": "1992-09-09",
+      "birthTime": "10:24",
+      "gender": "male",
+      "providerInputCst": "1992-09-09T09:24:00+08:00",
+      "localCivilPillars": {
+        "year": "壬申",
+        "month": "己酉",
+        "day": "戊子",
+        "hour": "丁巳"
+      },
+      "direction": "forward",
+      "startComponents": {
+        "years": 9,
+        "months": 7,
+        "days": 27,
+        "hours": 6
+      },
+      "startsAtProviderCivil": "2002-05-06 15:24:00+08:00",
+      "startsAtInstant": "2002-05-06T07:24:00.000Z",
+      "firstDayun": "庚戌"
+    },
+    {
+      "fixtureId": "dayun-boundary-004",
+      "birthDate": "1992-09-09",
+      "birthTime": "10:24",
+      "gender": "female",
+      "providerInputCst": "1992-09-09T09:24:00+08:00",
+      "localCivilPillars": {
+        "year": "壬申",
+        "month": "己酉",
+        "day": "戊子",
+        "hour": "丁巳"
+      },
+      "direction": "reverse",
+      "startComponents": {
+        "years": 0,
+        "months": 6,
+        "days": 20,
+        "hours": 12
+      },
+      "startsAtProviderCivil": "1993-03-29 21:24:00+08:00",
+      "startsAtInstant": "1993-03-29T13:24:00.000Z",
+      "firstDayun": "戊申"
+    },
+    {
+      "fixtureId": "dayun-boundary-005",
+      "birthDate": "2000-02-29",
+      "birthTime": "23:30",
+      "gender": "male",
+      "providerInputCst": "2000-02-29T22:30:00+08:00",
+      "localCivilPillars": {
+        "year": "庚辰",
+        "month": "戊寅",
+        "day": "丁巳",
+        "hour": "壬子"
+      },
+      "direction": "forward",
+      "startComponents": {
+        "years": 1,
+        "months": 6,
+        "days": 21,
+        "hours": 0
+      },
+      "startsAtProviderCivil": "2001-09-18 22:30:00+08:00",
+      "startsAtInstant": "2001-09-18T14:30:00.000Z",
+      "firstDayun": "己卯"
+    },
+    {
+      "fixtureId": "dayun-boundary-006",
+      "birthDate": "2000-02-29",
+      "birthTime": "23:30",
+      "gender": "female",
+      "providerInputCst": "2000-02-29T22:30:00+08:00",
+      "localCivilPillars": {
+        "year": "庚辰",
+        "month": "戊寅",
+        "day": "丁巳",
+        "hour": "壬子"
+      },
+      "direction": "reverse",
+      "startComponents": {
+        "years": 8,
+        "months": 4,
+        "days": 9,
+        "hours": 4
+      },
+      "startsAtProviderCivil": "2008-07-09 02:30:00+08:00",
+      "startsAtInstant": "2008-07-08T18:30:00.000Z",
+      "firstDayun": "丁丑"
+    },
+    {
+      "fixtureId": "dayun-boundary-007",
+      "birthDate": "2012-06-21",
+      "birthTime": "06:45",
+      "gender": "male",
+      "providerInputCst": "2012-06-21T05:45:00+08:00",
+      "localCivilPillars": {
+        "year": "壬辰",
+        "month": "丙午",
+        "day": "癸丑",
+        "hour": "乙卯"
+      },
+      "direction": "forward",
+      "startComponents": {
+        "years": 5,
+        "months": 3,
+        "days": 4,
+        "hours": 14
+      },
+      "startsAtProviderCivil": "2017-09-25 19:45:00+08:00",
+      "startsAtInstant": "2017-09-25T11:45:00.000Z",
+      "firstDayun": "丁未"
+    },
+    {
+      "fixtureId": "dayun-boundary-008",
+      "birthDate": "2012-06-21",
+      "birthTime": "06:45",
+      "gender": "female",
+      "providerInputCst": "2012-06-21T05:45:00+08:00",
+      "localCivilPillars": {
+        "year": "壬辰",
+        "month": "丙午",
+        "day": "癸丑",
+        "hour": "乙卯"
+      },
+      "direction": "reverse",
+      "startComponents": {
+        "years": 5,
+        "months": 2,
+        "days": 16,
+        "hours": 16
+      },
+      "startsAtProviderCivil": "2017-09-06 21:45:00+08:00",
+      "startsAtInstant": "2017-09-06T13:45:00.000Z",
+      "firstDayun": "乙巳"
+    },
+    {
+      "fixtureId": "dayun-boundary-009",
+      "birthDate": "2024-02-04",
+      "birthTime": "17:28",
+      "gender": "male",
+      "providerInputCst": "2024-02-04T16:28:00+08:00",
+      "localCivilPillars": {
+        "year": "甲辰",
+        "month": "丙寅",
+        "day": "戊戌",
+        "hour": "辛酉"
+      },
+      "direction": "forward",
+      "startComponents": {
+        "years": 9,
+        "months": 10,
+        "days": 29,
+        "hours": 12
+      },
+      "startsAtProviderCivil": "2034-01-03 04:28:00+08:00",
+      "startsAtInstant": "2034-01-02T20:28:00.000Z",
+      "firstDayun": "丁卯"
+    },
+    {
+      "fixtureId": "dayun-boundary-010",
+      "birthDate": "2024-02-04",
+      "birthTime": "17:28",
+      "gender": "female",
+      "providerInputCst": "2024-02-04T16:28:00+08:00",
+      "localCivilPillars": {
+        "year": "甲辰",
+        "month": "丙寅",
+        "day": "戊戌",
+        "hour": "辛酉"
+      },
+      "direction": "reverse",
+      "startComponents": {
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "hours": 2
+      },
+      "startsAtProviderCivil": "2024-02-04 18:28:00+08:00",
+      "startsAtInstant": "2024-02-04T10:28:00.000Z",
+      "firstDayun": "乙丑"
+    }
+  ]
+}

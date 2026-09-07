@@ -6,6 +6,18 @@ export {
 export type { BirthCalculationResult } from './calculate';
 export { normalizeIntakeFormToBirthContext } from './normalize';
 export {
+  assertResolvableLocalDateTime,
+  assertValidIanaTimeZone,
+  LocalTimeValidationError,
+  resolveLocalDateTime
+} from './timeZoneValidation';
+export type {
+  LocalDateTimeCandidate,
+  LocalDateTimeResolution,
+  LocalDateTimeStatus,
+  LocalTimeValidationErrorCode
+} from './timeZoneValidation';
+export {
   applyDayBoundaryPolicy,
   applyTrueSolarTime,
   calculateEquationOfTimeMinutes,

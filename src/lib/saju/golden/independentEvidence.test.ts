@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import hkoEvidence from './evidence/hko-calendar.json';
 import ianaEvidence from './evidence/iana-timezone.json';
 import solarTermEvidence from './evidence/solar-terms-2024.json';
+import timeDayunEvidence from './evidence/time-dayun-6tail-1.7.7.json';
 import { generalSignatureGoldenFixtures } from './fixtures';
 import { goldenSourceManifest, independentProviderCandidates } from './sourceManifest';
 
@@ -30,8 +31,13 @@ describe('general signature independent evidence snapshots', () => {
     ).toEqual(['partial', 'partial']);
   });
 
-  it('keeps approved independent manse providers at zero until policies and versions are reproducible', () => {
-    expect(independentProviderCandidates.filter((provider) => provider.decision === 'approved')).toHaveLength(0);
+  it('approves only the versioned and reproducible independent manse provider', () => {
+    expect(independentProviderCandidates.filter((provider) => provider.decision === 'approved')).toHaveLength(1);
+    expect(timeDayunEvidence).toMatchObject({ version: '1.7.7', license: 'MIT', independentFromUnwoldang: true });
+    expect(timeDayunEvidence.lateZi).toHaveLength(32);
+    expect(timeDayunEvidence.dayun).toHaveLength(10);
+    expect(timeDayunEvidence.integrity).toMatch(/^sha512-/);
+    expect(JSON.stringify(timeDayunEvidence)).not.toMatch(/serviceKey|api[_-]?key|credential|token/i);
     expect(independentProviderCandidates.some((provider) => provider.decision === 'rejected')).toBe(true);
     expect(goldenSourceManifest.filter((source) => source.tier === 'A').length).toBeGreaterThanOrEqual(5);
   });

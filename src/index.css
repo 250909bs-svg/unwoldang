@@ -12899,6 +12899,13 @@ body {
   background: rgba(50, 36, 21, 0.78);
 }
 
+.intake-birth-validation-error {
+  margin: 2px 0 0;
+  color: #9f3f35;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .intake-story-secondary,
 .intake-story-primary {
   display: inline-flex;

@@ -105,10 +105,36 @@ export const goldenSourceManifest: GoldenSourceManifestEntry[] = [
     policyNotes: ['표준 매핑과 정책 민감 해석을 분리한다.'],
     limitations: ['공식 천문기관 자료가 아니며 형·원진 등 학파 차이가 있다.'],
     licenseNotes: '검증에 필요한 매핑만 사용한다.'
+  },
+  {
+    sourceId: '6tail-lunar-javascript-1.7.7',
+    name: '6tail lunar-javascript',
+    authority: '6tail open-source calendar implementation',
+    tier: 'B',
+    reference: 'https://github.com/6tail/lunar-javascript',
+    version: '1.7.7 / npm integrity pinned in evidence snapshot',
+    accessedAt: '2026-09-02',
+    fieldsSupported: ['dayPillarBySect', 'hourPillar', 'dayunDirection', 'firstDayun', 'dayunStartsAtBySect2'],
+    policyNotes: [
+      'sect 1은 23:00부터 다음 일주, sect 2는 민간시 일주를 유지한다.',
+      '대운 비교는 KST 물리시각을 CST로 렌더링한 뒤 sect 2 분 환산 정책을 사용한다.'
+    ],
+    limitations: [
+      '단일 독립 provider이므로 두 provider 합의는 아니다.',
+      '야자시 시간 천간과 대운 startsAt 환산은 학파·구현 정책 차이를 포함한다.',
+      '진태양시 보정을 검증하지 않는다.'
+    ],
+    licenseNotes: 'MIT; audit-only 설치이며 production dependency가 아니다.'
   }
 ];
 
 export const independentProviderCandidates = [
+  {
+    name: '6tail lunar-javascript',
+    reference: 'https://github.com/6tail/lunar-javascript/tree/1.7.7',
+    decision: 'approved' as const,
+    reason: '1.7.7 버전·MIT 라이선스·npm integrity·야자시 sect·시주·대운 방향/환산 코드가 공개되어 재현 가능하며 운월당 코드를 사용하지 않는다.'
+  },
   {
     name: 'DateDB',
     reference: 'https://datedb.net/tool/saju-worksheet/19920909/',

@@ -1,0 +1,1587 @@
+{
+  "source": {
+    "id": "6tail-lunar-javascript-1.7.7",
+    "version": "1.7.7",
+    "integrity": "sha512-u/KYiwPIBo/0bT+WWfU7qO1d+aqeB90Tuy4ErXenr2Gam0QcWeezUvtiOIyXR7HbVnW2I1DKfU0NBvzMZhbVQw==",
+    "license": "MIT",
+    "limitations": [
+      "This is one approved independent provider, not a second consensus source.",
+      "Late-Zi and dayun conversion remain policy-sensitive.",
+      "Provider results do not verify Unwoldang true-solar-time correction."
+    ]
+  },
+  "hourBranch": {
+    "total": 24,
+    "matches": 24,
+    "rows": [
+      {
+        "hour": 0,
+        "expected": "자",
+        "actual": "자",
+        "match": true
+      },
+      {
+        "hour": 1,
+        "expected": "축",
+        "actual": "축",
+        "match": true
+      },
+      {
+        "hour": 2,
+        "expected": "축",
+        "actual": "축",
+        "match": true
+      },
+      {
+        "hour": 3,
+        "expected": "인",
+        "actual": "인",
+        "match": true
+      },
+      {
+        "hour": 4,
+        "expected": "인",
+        "actual": "인",
+        "match": true
+      },
+      {
+        "hour": 5,
+        "expected": "묘",
+        "actual": "묘",
+        "match": true
+      },
+      {
+        "hour": 6,
+        "expected": "묘",
+        "actual": "묘",
+        "match": true
+      },
+      {
+        "hour": 7,
+        "expected": "진",
+        "actual": "진",
+        "match": true
+      },
+      {
+        "hour": 8,
+        "expected": "진",
+        "actual": "진",
+        "match": true
+      },
+      {
+        "hour": 9,
+        "expected": "사",
+        "actual": "사",
+        "match": true
+      },
+      {
+        "hour": 10,
+        "expected": "사",
+        "actual": "사",
+        "match": true
+      },
+      {
+        "hour": 11,
+        "expected": "오",
+        "actual": "오",
+        "match": true
+      },
+      {
+        "hour": 12,
+        "expected": "오",
+        "actual": "오",
+        "match": true
+      },
+      {
+        "hour": 13,
+        "expected": "미",
+        "actual": "미",
+        "match": true
+      },
+      {
+        "hour": 14,
+        "expected": "미",
+        "actual": "미",
+        "match": true
+      },
+      {
+        "hour": 15,
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "hour": 16,
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "hour": 17,
+        "expected": "유",
+        "actual": "유",
+        "match": true
+      },
+      {
+        "hour": 18,
+        "expected": "유",
+        "actual": "유",
+        "match": true
+      },
+      {
+        "hour": 19,
+        "expected": "술",
+        "actual": "술",
+        "match": true
+      },
+      {
+        "hour": 20,
+        "expected": "술",
+        "actual": "술",
+        "match": true
+      },
+      {
+        "hour": 21,
+        "expected": "해",
+        "actual": "해",
+        "match": true
+      },
+      {
+        "hour": 22,
+        "expected": "해",
+        "actual": "해",
+        "match": true
+      },
+      {
+        "hour": 23,
+        "expected": "자",
+        "actual": "자",
+        "match": true
+      }
+    ]
+  },
+  "hourStem": {
+    "total": 120,
+    "matches": 120,
+    "rows": [
+      {
+        "dayStem": "갑",
+        "hourBranch": "자",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "축",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "인",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "묘",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "진",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "사",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "오",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "미",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "신",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "유",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "술",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "갑",
+        "hourBranch": "해",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "자",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "축",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "인",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "묘",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "진",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "사",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "오",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "미",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "신",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "유",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "술",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "을",
+        "hourBranch": "해",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "자",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "축",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "인",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "묘",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "진",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "사",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "오",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "미",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "신",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "유",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "술",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "병",
+        "hourBranch": "해",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "자",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "축",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "인",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "묘",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "진",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "사",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "오",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "미",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "신",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "유",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "술",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "정",
+        "hourBranch": "해",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "자",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "축",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "인",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "묘",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "진",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "사",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "오",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "미",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "신",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "유",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "술",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "무",
+        "hourBranch": "해",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "자",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "축",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "인",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "묘",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "진",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "사",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "오",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "미",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "신",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "유",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "술",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "기",
+        "hourBranch": "해",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "자",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "축",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "인",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "묘",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "진",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "사",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "오",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "미",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "신",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "유",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "술",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "경",
+        "hourBranch": "해",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "자",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "축",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "인",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "묘",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "진",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "사",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "오",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "미",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "신",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "유",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "술",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "신",
+        "hourBranch": "해",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "자",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "축",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "인",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "묘",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "진",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "사",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "오",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "미",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "신",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "유",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "술",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "임",
+        "hourBranch": "해",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "자",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "축",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "인",
+        "expected": "갑",
+        "actual": "갑",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "묘",
+        "expected": "을",
+        "actual": "을",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "진",
+        "expected": "병",
+        "actual": "병",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "사",
+        "expected": "정",
+        "actual": "정",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "오",
+        "expected": "무",
+        "actual": "무",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "미",
+        "expected": "기",
+        "actual": "기",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "신",
+        "expected": "경",
+        "actual": "경",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "유",
+        "expected": "신",
+        "actual": "신",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "술",
+        "expected": "임",
+        "actual": "임",
+        "match": true
+      },
+      {
+        "dayStem": "계",
+        "hourBranch": "해",
+        "expected": "계",
+        "actual": "계",
+        "match": true
+      }
+    ]
+  },
+  "representative1992": {
+    "dayPillar": "무자",
+    "dayStemSource": "KASI lunIljin: 무자",
+    "localTime": "10:24",
+    "hourBranch": "사",
+    "expectedHourPillar": "정사",
+    "actualHourPillar": "정사",
+    "match": true
+  },
+  "lateZi": {
+    "total": 32,
+    "dayMatches": 32,
+    "hourMatches": 26,
+    "policyDifferences": 6,
+    "unexplainedMismatches": 0,
+    "rows": [
+      {
+        "date": "1992-09-09",
+        "time": "22:59",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "계해",
+        "actualHour": "계해",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "22:59",
+        "policy": "late-zi-next-day",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "계해",
+        "actualHour": "계해",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "23:00",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "갑자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": false,
+        "classification": "POLICY_DIFFERENCE"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "23:00",
+        "policy": "late-zi-next-day",
+        "expectedDay": "기축",
+        "actualDay": "기축",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "23:30",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "갑자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": false,
+        "classification": "POLICY_DIFFERENCE"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "23:30",
+        "policy": "late-zi-next-day",
+        "expectedDay": "기축",
+        "actualDay": "기축",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "23:59",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "갑자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": false,
+        "classification": "POLICY_DIFFERENCE"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "23:59",
+        "policy": "late-zi-next-day",
+        "expectedDay": "기축",
+        "actualDay": "기축",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "00:00",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "임자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "00:00",
+        "policy": "late-zi-next-day",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "임자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "00:30",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "임자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "00:30",
+        "policy": "late-zi-next-day",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "임자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "00:59",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "임자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "00:59",
+        "policy": "late-zi-next-day",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "임자",
+        "actualHour": "임자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "01:00",
+        "policy": "civil-midnight",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "계축",
+        "actualHour": "계축",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "1992-09-09",
+        "time": "01:00",
+        "policy": "late-zi-next-day",
+        "expectedDay": "무자",
+        "actualDay": "무자",
+        "expectedHour": "계축",
+        "actualHour": "계축",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "22:59",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "을해",
+        "actualHour": "을해",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "22:59",
+        "policy": "late-zi-next-day",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "을해",
+        "actualHour": "을해",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "23:00",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "병자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": false,
+        "classification": "POLICY_DIFFERENCE"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "23:00",
+        "policy": "late-zi-next-day",
+        "expectedDay": "을축",
+        "actualDay": "을축",
+        "expectedHour": "병자",
+        "actualHour": "병자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "23:30",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "병자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": false,
+        "classification": "POLICY_DIFFERENCE"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "23:30",
+        "policy": "late-zi-next-day",
+        "expectedDay": "을축",
+        "actualDay": "을축",
+        "expectedHour": "병자",
+        "actualHour": "병자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "23:59",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "병자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": false,
+        "classification": "POLICY_DIFFERENCE"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "23:59",
+        "policy": "late-zi-next-day",
+        "expectedDay": "을축",
+        "actualDay": "을축",
+        "expectedHour": "병자",
+        "actualHour": "병자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "00:00",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "00:00",
+        "policy": "late-zi-next-day",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "00:30",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "00:30",
+        "policy": "late-zi-next-day",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "00:59",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "00:59",
+        "policy": "late-zi-next-day",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "갑자",
+        "actualHour": "갑자",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "01:00",
+        "policy": "civil-midnight",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "을축",
+        "actualHour": "을축",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      },
+      {
+        "date": "2024-01-01",
+        "time": "01:00",
+        "policy": "late-zi-next-day",
+        "expectedDay": "갑자",
+        "actualDay": "갑자",
+        "expectedHour": "을축",
+        "actualHour": "을축",
+        "dayMatch": true,
+        "hourMatch": true,
+        "classification": "MATCH"
+      }
+    ]
+  },
+  "dayun": {
+    "total": 10,
+    "directionMatches": 10,
+    "firstDayunMatches": 10,
+    "startsAtMatches": 0,
+    "startsAtPolicyDifferences": 10,
+    "startsAtMaxAbsDeltaSeconds": 190615.538,
+    "rows": [
+      {
+        "fixtureId": "dayun-boundary-001",
+        "gender": "male",
+        "yearPillar": "기사",
+        "providerDirection": "reverse",
+        "tableDirection": "reverse",
+        "currentDirection": "reverse",
+        "directionMatch": true,
+        "providerFirstDayun": "을해",
+        "currentFirstDayun": "을해",
+        "firstDayunMatch": true,
+        "providerStartsAt": "1998-05-01T23:30:00.000Z",
+        "currentStartsAt": "1998-05-03T14:02:58.880Z",
+        "startsAtDeltaSeconds": 138778.88,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-002",
+        "gender": "female",
+        "yearPillar": "기사",
+        "providerDirection": "forward",
+        "tableDirection": "forward",
+        "currentDirection": "forward",
+        "directionMatch": true,
+        "providerFirstDayun": "정축",
+        "currentFirstDayun": "정축",
+        "firstDayunMatch": true,
+        "providerStartsAt": "1991-06-26T09:30:00.000Z",
+        "currentStartsAt": "1991-06-28T05:23:58.556Z",
+        "startsAtDeltaSeconds": 158038.556,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-003",
+        "gender": "male",
+        "yearPillar": "임신",
+        "providerDirection": "forward",
+        "tableDirection": "forward",
+        "currentDirection": "forward",
+        "directionMatch": true,
+        "providerFirstDayun": "경술",
+        "currentFirstDayun": "경술",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2002-05-06T07:24:00.000Z",
+        "currentStartsAt": "2002-05-07T23:24:59.380Z",
+        "startsAtDeltaSeconds": 144059.38,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-004",
+        "gender": "female",
+        "yearPillar": "임신",
+        "providerDirection": "reverse",
+        "tableDirection": "reverse",
+        "currentDirection": "reverse",
+        "directionMatch": true,
+        "providerFirstDayun": "무신",
+        "currentFirstDayun": "무신",
+        "firstDayunMatch": true,
+        "providerStartsAt": "1993-03-29T13:24:00.000Z",
+        "currentStartsAt": "1993-03-31T10:42:37.904Z",
+        "startsAtDeltaSeconds": 163117.904,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-005",
+        "gender": "male",
+        "yearPillar": "경진",
+        "providerDirection": "forward",
+        "tableDirection": "forward",
+        "currentDirection": "forward",
+        "directionMatch": true,
+        "providerFirstDayun": "기묘",
+        "currentFirstDayun": "기묘",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2001-09-18T14:30:00.000Z",
+        "currentStartsAt": "2001-09-20T19:26:55.538Z",
+        "startsAtDeltaSeconds": 190615.538,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-006",
+        "gender": "female",
+        "yearPillar": "경진",
+        "providerDirection": "reverse",
+        "tableDirection": "reverse",
+        "currentDirection": "reverse",
+        "directionMatch": true,
+        "providerFirstDayun": "정축",
+        "currentFirstDayun": "정축",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2008-07-08T18:30:00.000Z",
+        "currentStartsAt": "2008-07-09T13:31:54.429Z",
+        "startsAtDeltaSeconds": 68514.429,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-007",
+        "gender": "male",
+        "yearPillar": "임진",
+        "providerDirection": "forward",
+        "tableDirection": "forward",
+        "currentDirection": "forward",
+        "directionMatch": true,
+        "providerFirstDayun": "정미",
+        "currentFirstDayun": "정미",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2017-09-25T11:45:00.000Z",
+        "currentStartsAt": "2017-09-25T02:16:39.413Z",
+        "startsAtDeltaSeconds": -34100.587,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-008",
+        "gender": "female",
+        "yearPillar": "임진",
+        "providerDirection": "reverse",
+        "tableDirection": "reverse",
+        "currentDirection": "reverse",
+        "directionMatch": true,
+        "providerFirstDayun": "을사",
+        "currentFirstDayun": "을사",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2017-09-06T13:45:00.000Z",
+        "currentStartsAt": "2017-09-06T20:21:17.721Z",
+        "startsAtDeltaSeconds": 23777.721,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-009",
+        "gender": "male",
+        "yearPillar": "갑진",
+        "providerDirection": "forward",
+        "tableDirection": "forward",
+        "currentDirection": "forward",
+        "directionMatch": true,
+        "providerFirstDayun": "정묘",
+        "currentFirstDayun": "정묘",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2034-01-02T20:28:00.000Z",
+        "currentStartsAt": "2034-01-03T20:54:43.595Z",
+        "startsAtDeltaSeconds": 88003.595,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      },
+      {
+        "fixtureId": "dayun-boundary-010",
+        "gender": "female",
+        "yearPillar": "갑진",
+        "providerDirection": "reverse",
+        "tableDirection": "reverse",
+        "currentDirection": "reverse",
+        "directionMatch": true,
+        "providerFirstDayun": "을축",
+        "currentFirstDayun": "을축",
+        "firstDayunMatch": true,
+        "providerStartsAt": "2024-02-04T10:28:00.000Z",
+        "currentStartsAt": "2024-02-04T10:50:47.364Z",
+        "startsAtDeltaSeconds": 1367.364,
+        "startsAtClassification": "POLICY_DIFFERENCE"
+      }
+    ]
+  },
+  "timezoneDst": {
+    "springGapRoundTripValid": false,
+    "nonexistentNewYorkInputAccepted": false,
+    "fallBackExplicitOffsetsBothValid": true,
+    "classification": "MATCH"
+  }
+}

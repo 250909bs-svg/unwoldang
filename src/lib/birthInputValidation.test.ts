@@ -89,6 +89,26 @@ describe('commercial birth-input preflight', () => {
     }));
   });
 
+  it('returns a birth-time validation error for an IANA DST gap', () => {
+    const result = validateBirthInput({
+      ...validExactBirth,
+      birthDate: '2024-03-10',
+      birthTime: '02:30',
+      birthLocation: {
+        label: 'New York',
+        timezone: 'America/New_York',
+        utcOffsetMinutes: -300
+      }
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContainEqual(expect.objectContaining({
+      code: 'calendar_preflight_failed',
+      field: 'birthTime'
+    }));
+    expect(result.errors.map((error) => error.message).join(' ')).toContain('해당 시간이 존재하지');
+  });
+
   it('requires and independently preflights the partner for compatibility products', () => {
     const missingPartner = validateIntakeBirthInputs(validExactBirth, { requirePartner: true });
     const invalidPartner = validateIntakeBirthInputs({

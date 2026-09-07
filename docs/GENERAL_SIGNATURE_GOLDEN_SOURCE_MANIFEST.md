@@ -13,12 +13,14 @@
 | `iana-tzdb-2026b` | A | IANA Time Zone Database / ICU 78.3 | 역사적 UTC offset, DST, UTC instant | 진태양시·균시차 미지원 |
 | `chen-twelve-stages-2021` | C | C. Chen, *Chinese Medicine* 2021, DOI 10.4236/cm.2021.123007 | 12운성 120표, 지장간 표 | 학파별 표기·순서 차이 가능 |
 | `bazichic-reference-2017` | C | BaZiChic reference tables, September 2017 pp.71-72 | 십성, 표준 천간·지지 관계 | 공식 천문기관 자료 아님; 정책 민감 관계 제외 |
+| `6tail-lunar-javascript-1.7.7` | B | 6tail lunar-javascript 1.7.7 | 자시 sect별 일주, 시주, 대운 방향·첫 대운·sect-2 startsAt | 단일 provider이며 야자시 시간천간·startsAt 환산은 정책 민감 |
 
 ## Evidence snapshots
 
 - `src/lib/saju/golden/evidence/hko-calendar.json`: 55개 공식 연간 PDF URL·SHA-256과 70 fixture 최소 날짜 매핑. API key/원문 PDF는 저장하지 않는다.
 - `src/lib/saju/golden/evidence/solar-terms-2024.json`: 2024년 10개 절입 시각과 원문 URL.
 - `src/lib/saju/golden/evidence/iana-timezone.json`: 16개 현지 시각의 offset·UTC instant와 tzdb/ICU 버전.
+- `src/lib/saju/golden/evidence/time-dayun-6tail-1.7.7.json`: npm integrity로 고정한 32개 자시 정책 row와 10개 대운 row. Secret과 개인정보 없음.
 - `artifacts/solar-term-audit/solar-term-engine-audit.json`: JPL DE440s 240건과 NAOJ 120건의 독립 reference snapshot. 현재 운월당 engine output은 expected로 사용하지 않는다.
 - `artifacts/solar-term-audit/solar-term-engine-fix-validation.json`: production `astronomy-engine@2.1.19` 결과와 위 독립 reference의 비교, 경계·대운·성능 영향.
 
@@ -28,8 +30,9 @@
 
 | 후보 | 판정 | 이유 |
 |---|---|---|
+| 6tail lunar-javascript 1.7.7 | APPROVED | 버전·MIT·npm integrity·sect 및 대운 계산 코드가 공개되어 재현 가능하고 운월당 구현과 독립적 |
 | DateDB | PENDING | 공개 출력은 재현 가능하지만 알고리즘 버전·야자시·대운 정책·라이선스가 충분히 문서화되지 않음 |
 | Mansaenyang | PENDING | 계산 버전·시간대·절입·대운 정책을 확인할 수 없음 |
 | 8s8s calendar | REJECTED | 버전·정책·재현 계약·사용 조건을 확인할 수 없음 |
 
-승인된 `approved-independent-manse` provider는 현재 **0개**다. 따라서 해당 provenance는 새로 발행하지 않는다.
+승인된 `approved-independent-manse` provider는 현재 **1개**다. 단일 provider 결과만으로 정책 민감 startsAt을 최종 확정하지 않으며, 시주와 대운 방향은 독립 표·문헌을 함께 사용한다.

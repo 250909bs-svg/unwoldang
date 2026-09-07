@@ -6,6 +6,7 @@ import type {
 } from '../api/mockData';
 import {
   buildBirthCalculation,
+  LocalTimeValidationError,
   type BirthCalculationResult,
   type BirthContextOptions
 } from './saju/v2/calendar';
@@ -223,7 +224,7 @@ export function validateBirthInput(
     } catch (error) {
       errors.push({
         code: 'calendar_preflight_failed',
-        field: 'birthDate',
+        field: error instanceof LocalTimeValidationError ? 'birthTime' : 'birthDate',
         message: preflightMessage(error, subjectLabel)
       });
     }

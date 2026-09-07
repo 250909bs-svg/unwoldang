@@ -47,20 +47,20 @@ describe('general signature independent golden FACT matrix', () => {
 
     expect(report.summary).toMatchObject({
       total: 140,
-      verified: 0,
-      partial: 106,
-      pending: 34,
+      verified: 16,
+      partial: 116,
+      pending: 8,
       conflicting: 0,
-      verifiedFactFields: 286,
+      verifiedFactFields: 378,
       conflictingFactFields: 0,
       releaseGate: 'NO-GO',
       provenanceWarnings: 0
     });
     expect(report.summary.fixtureMatches).not.toBe(report.summary.total);
-    expect(report.fixtures.filter((fixture) => fixture.result === 'pending')).toHaveLength(34);
+    expect(report.fixtures.filter((fixture) => fixture.result === 'pending')).toHaveLength(8);
     expect(report.fixtures.filter((fixture) => fixture.result === 'source-conflict')).toHaveLength(0);
     expect(report.summary.fixtureMismatches).toBeGreaterThan(0);
-    expect(report.summary.sourceChecks.independentManse).toBe(0);
+    expect(report.summary.sourceChecks.independentManse).toBe(66);
     expect(report.summary.sourceTierCounts.E).toBe(0);
     expect(
       report.fixtures

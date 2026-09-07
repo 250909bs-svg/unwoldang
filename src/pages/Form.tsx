@@ -598,6 +598,9 @@ export default function Form() {
     () => validateBirthInput(partnerData, { subjectLabel: '상대방' }),
     [partnerData]
   );
+  const selfBirthTimeZoneError = selfBirthValidation.errors.find((error) =>
+    error.code === 'calendar_preflight_failed' && error.field === 'birthTime'
+  );
   const birthDateReady = Boolean(formData.birthDate);
   const step1Ready = selfBirthValidation.valid && (
     !isGeneralSignatureFlow || isGeneralSignatureGenderSelected(formData.gender)
@@ -998,6 +1001,11 @@ export default function Form() {
                   <ChevronDown size={16} />
                 </div>
                 <p className="intake-story-caption">{birthTimePreview}</p>
+                {selfBirthTimeZoneError ? (
+                  <p className="intake-birth-validation-error" role="alert">
+                    {selfBirthTimeZoneError.message}
+                  </p>
+                ) : null}
               </div>
 
               <div className="intake-story-field">

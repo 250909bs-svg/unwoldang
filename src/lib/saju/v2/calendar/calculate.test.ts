@@ -58,6 +58,38 @@ describe('normalizeIntakeFormToBirthContext', () => {
     })).toThrow(/IANA 시간대/);
   });
 
+  it('rejects nonexistent local time and requires an explicit offset for a DST fold', () => {
+    expect(() => normalizeIntakeFormToBirthContext(intake({
+      birthDate: '2024-03-10',
+      birthTime: '02:30'
+    }), {
+      timezoneId: 'America/New_York',
+      utcOffsetMinutes: -300
+    })).toThrow(/해당 시간이 존재하지/);
+
+    expect(() => normalizeIntakeFormToBirthContext(intake({
+      birthDate: '2024-11-03',
+      birthTime: '01:30'
+    }), {
+      timezoneId: 'America/New_York'
+    })).toThrow(/두 번 존재/);
+
+    expect(normalizeIntakeFormToBirthContext(intake({
+      birthDate: '2024-11-03',
+      birthTime: '01:30'
+    }), {
+      timezoneId: 'America/New_York',
+      utcOffsetMinutes: -240
+    }).timezone.utcOffsetMinutes).toBe(-240);
+    expect(normalizeIntakeFormToBirthContext(intake({
+      birthDate: '2024-11-03',
+      birthTime: '01:30'
+    }), {
+      timezoneId: 'America/New_York',
+      utcOffsetMinutes: -300
+    }).timezone.utcOffsetMinutes).toBe(-300);
+  });
+
   it('requires an explicit historical offset for pre-1962 Korean births', () => {
     const historical = intake({ birthDate: '1955-01-15', birthTime: '01:20' });
 
@@ -199,6 +231,18 @@ describe('buildBirthCalculation', () => {
     expect(result.trace?.solarTimeCorrection.longitudeCorrectionMinutes).toBe(0);
   });
 
+  it('validates the legal instant before applying true-solar correction', () => {
+    expect(() => buildBirthCalculation(intake({
+      birthDate: '2024-03-10',
+      birthTime: '02:30'
+    }), {
+      timezoneId: 'America/New_York',
+      utcOffsetMinutes: -300,
+      longitude: -74.006,
+      applyTrueSolarTime: true
+    })).toThrow(/해당 시간이 존재하지/);
+  });
+
   it('normalizes lunar input before applying clock policies', () => {
     const result = buildBirthCalculation(intake({
       calendar: 'lunar',
@@ -208,5 +252,16 @@ describe('buildBirthCalculation', () => {
     expect(result.trace?.inputCalendar).toBe('lunar');
     expect(result.trace?.normalizedSolarDate).not.toEqual({ year: 2024, month: 1, day: 1 });
     expect(result.primary?.bazi.lunar_in).toContain('2024-01-01');
+  });
+
+  it('validates a lunar birth against DST only after solar-date conversion', () => {
+    expect(() => buildBirthCalculation(intake({
+      calendar: 'lunar',
+      birthDate: '2024-02-01',
+      birthTime: '02:30'
+    }), {
+      timezoneId: 'America/New_York',
+      utcOffsetMinutes: -300
+    })).toThrow(/해당 시간이 존재하지/);
   });
 });
