@@ -108,14 +108,14 @@ const representativeFixture: GoldenFixture = {
   verificationStatus: 'verified'
 };
 
-const solarSeeds: Array<[string, string, 'male' | 'female']> = [
-  ['1960-01-01', '00:30', 'male'], ['1964-02-29', '06:15', 'female'],
+const solarSeeds: Array<[string, string, 'male' | 'female', number?]> = [
+  ['1960-01-01', '00:30', 'male', 510], ['1964-02-29', '06:15', 'female'],
   ['1968-07-20', '21:40', 'male'], ['1970-12-31', '23:20', 'female'],
   ['1972-02-29', '14:05', 'male'], ['1975-05-18', '03:12', 'female'],
   ['1977-11-07', '17:45', 'male'], ['1980-02-29', '09:00', 'female'],
   ['1981-08-15', '11:11', 'male'], ['1983-10-03', '19:20', 'female'],
   ['1984-04-04', '04:44', 'male'], ['1985-12-25', '22:10', 'female'],
-  ['1987-06-10', '13:35', 'male'], ['1988-02-29', '18:25', 'female'],
+  ['1987-06-10', '13:35', 'male', 600], ['1988-02-29', '18:25', 'female'],
   ['1989-09-30', '07:50', 'male'], ['1990-01-01', '12:30', 'female'],
   ['1991-03-21', '05:05', 'male'], ['1993-11-19', '16:40', 'female'],
   ['1994-07-07', '20:20', 'male'], ['1995-05-05', '08:08', 'female'],
@@ -133,12 +133,27 @@ const solarSeeds: Array<[string, string, 'male' | 'female']> = [
 
 const solarGeneralFixtures: GoldenFixture[] = [
   representativeFixture,
-  ...solarSeeds.map(([birthDate, birthTime, gender], index) =>
+  ...solarSeeds.map(([birthDate, birthTime, gender, historicalUtcOffset], index) =>
     pendingFixture(
       `solar-general-${String(index + 2).padStart(3, '0')}`,
       'solar-general',
       `일반 양력 분산 표본 ${index + 2}`,
-      input({ birthDate, birthTime, gender })
+      input({
+        birthDate,
+        birthTime,
+        gender,
+        location: {
+          ...SEOUL,
+          utcOffsetMinutes: historicalUtcOffset ?? SEOUL.utcOffsetMinutes
+        }
+      }),
+      historicalUtcOffset === undefined
+        ? {}
+        : {
+            reviewNotes: [
+              `IANA tzdb 2026b / ICU 78.3 기준 역사적 Asia/Seoul UTC offset ${historicalUtcOffset}분을 적용했다.`
+            ]
+          }
     )
   )
 ];

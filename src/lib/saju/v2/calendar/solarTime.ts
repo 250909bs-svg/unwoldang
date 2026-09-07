@@ -1,3 +1,4 @@
+import { Body, Equator, Observer, SiderealTime } from 'astronomy-engine';
 import { addDays, addMinutes, compareCivilDate, datePart } from './dateMath';
 import type {
   BirthContext,
@@ -8,28 +9,40 @@ import type {
   SolarTimeCorrectionTrace
 } from './types';
 
-function dayOfYear(date: CivilDate): number {
-  const start = Date.UTC(date.year, 0, 1);
-  const current = Date.UTC(date.year, date.month - 1, date.day);
-  return Math.floor((current - start) / 86_400_000) + 1;
+export const TRUE_SOLAR_TIME_ENGINE_VERSION = 'astronomy-engine-2.1.19' as const;
+
+const GREENWICH_OBSERVER = new Observer(0, 0, 0);
+
+function wrapHours(value: number) {
+  return ((value + 12) % 24 + 24) % 24 - 12;
 }
 
 /**
- * Returns the equation of time in minutes using the standard Spencer/NOAA
- * fractional-year approximation. Accuracy is sufficient for minute-resolution
- * birth input and the approximation is deterministic and dependency-free.
+ * Returns apparent-solar minus mean-solar time in minutes. The civil components
+ * are converted to their physical UTC instant before the Sun's apparent
+ * right ascension and Greenwich apparent sidereal time are evaluated.
  */
-export function calculateEquationOfTimeMinutes(dateTime: CivilDateTime): number {
-  const daysInYear = new Date(Date.UTC(dateTime.year, 1, 29)).getUTCMonth() === 1 ? 366 : 365;
-  const gamma = (2 * Math.PI / daysInYear)
-    * (dayOfYear(dateTime) - 1 + (dateTime.hour - 12) / 24);
-  return 229.18 * (
-    0.000075
-    + 0.001868 * Math.cos(gamma)
-    - 0.032077 * Math.sin(gamma)
-    - 0.014615 * Math.cos(2 * gamma)
-    - 0.040849 * Math.sin(2 * gamma)
+export function calculateEquationOfTimeMinutes(
+  dateTime: CivilDateTime,
+  utcOffsetMinutes = 0
+): number {
+  const utcInstant = new Date(
+    Date.UTC(
+      dateTime.year,
+      dateTime.month - 1,
+      dateTime.day,
+      dateTime.hour,
+      dateTime.minute
+    ) - utcOffsetMinutes * 60_000
   );
+  const sun = Equator(Body.Sun, utcInstant, GREENWICH_OBSERVER, true, true);
+  const apparentSolarHours = (SiderealTime(utcInstant) - sun.ra + 12 + 24) % 24;
+  const meanSolarHours = utcInstant.getUTCHours()
+    + utcInstant.getUTCMinutes() / 60
+    + utcInstant.getUTCSeconds() / 3_600
+    + utcInstant.getUTCMilliseconds() / 3_600_000;
+
+  return wrapHours(apparentSolarHours - meanSolarHours) * 60;
 }
 
 function dayDifference(left: CivilDate, right: CivilDate): number {
@@ -75,7 +88,7 @@ export function applyTrueSolarTime(
 
   const longitudeCorrectionMinutes = 4 * (longitude - standardMeridianLongitude);
   const equationOfTimeMinutes = context.trueSolarTime.includeEquationOfTime
-    ? calculateEquationOfTimeMinutes(input)
+    ? calculateEquationOfTimeMinutes(input, context.timezone.utcOffsetMinutes)
     : 0;
   const totalCorrectionMinutes = longitudeCorrectionMinutes + equationOfTimeMinutes;
   const appliedCorrectionMinutes = Math.round(totalCorrectionMinutes);

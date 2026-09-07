@@ -81,6 +81,38 @@ export const goldenSourceManifest: GoldenSourceManifestEntry[] = [
     licenseNotes: 'IANA tzdb 라이선스를 따른다.'
   },
   {
+    sourceId: 'jpl-de440s-equation-of-time',
+    name: 'JPL DE440s equation-of-time evidence',
+    authority: 'NASA Jet Propulsion Laboratory ephemeris via Skyfield',
+    tier: 'A',
+    reference: 'https://ssd.jpl.nasa.gov/planets/eph_export.html',
+    version: 'DE440s / Skyfield 1.53 / jplephem 2.24',
+    accessedAt: '2026-09-07',
+    fieldsSupported: ['equationOfTimeMinutes'],
+    policyNotes: [
+      '태양의 date-frame apparent RA와 Greenwich apparent sidereal time으로 apparent-minus-mean solar time을 산출한다.',
+      'ephemeris SHA-256과 최소 수치 표본만 evidence snapshot에 보존한다.'
+    ],
+    limitations: [
+      '진태양시 보정 적용 여부라는 명리 정책과 출생지 경도 자체는 검증하지 않는다.',
+      '대운·시주·야자시 정책을 지원하지 않는다.'
+    ],
+    licenseNotes: 'JPL ephemeris 및 Skyfield 사용 조건을 따르며 대용량 BSP는 저장소에 포함하지 않는다.'
+  },
+  {
+    sourceId: 'noaa-general-solar-position-calculations',
+    name: 'NOAA General Solar Position Calculations',
+    authority: 'NOAA Global Monitoring Laboratory',
+    tier: 'A',
+    reference: 'https://gml.noaa.gov/grad/solcalc/solareqns.PDF',
+    version: 'official published equations',
+    accessedAt: '2026-09-07',
+    fieldsSupported: ['longitudeCorrectionMinutes', 'equationOfTimeDefinition'],
+    policyNotes: ['time_offset = eqtime + 4×longitude − 60×timezone 수식을 독립 계약 근거로 사용한다.'],
+    limitations: ['fractional-year equation-of-time 식은 근사식이므로 최종 수치 expected에는 JPL DE440s를 사용한다.'],
+    licenseNotes: '공식 기술자료의 수식과 출처만 참조한다.'
+  },
+  {
     sourceId: 'chen-twelve-stages-2021',
     name: 'Twelve Life Stages and hidden-stem table',
     authority: 'C. Chen, Chinese Medicine, 2021',

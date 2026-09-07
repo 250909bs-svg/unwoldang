@@ -3,6 +3,7 @@ import hkoEvidence from './evidence/hko-calendar.json';
 import ianaEvidence from './evidence/iana-timezone.json';
 import solarTermEvidence from './evidence/solar-terms-2024.json';
 import timeDayunEvidence from './evidence/time-dayun-6tail-1.7.7.json';
+import trueSolarEvidence from './evidence/true-solar-time-jpl-de440s.json';
 import { generalSignatureGoldenFixtures } from './fixtures';
 import { goldenSourceManifest, independentProviderCandidates } from './sourceManifest';
 
@@ -40,5 +41,15 @@ describe('general signature independent evidence snapshots', () => {
     expect(JSON.stringify(timeDayunEvidence)).not.toMatch(/serviceKey|api[_-]?key|credential|token/i);
     expect(independentProviderCandidates.some((provider) => provider.decision === 'rejected')).toBe(true);
     expect(goldenSourceManifest.filter((source) => source.tier === 'A').length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('stores independent JPL equation-of-time evidence without promoting policy-sensitive fields', () => {
+    expect(trueSolarEvidence).toMatchObject({
+      ephemeris: 'JPL DE440s',
+      independentFromUnwoldang: true
+    });
+    expect(trueSolarEvidence.samples).toHaveLength(20);
+    expect(trueSolarEvidence.ephemerisSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(JSON.stringify(trueSolarEvidence)).not.toMatch(/serviceKey|api[_-]?key|credential|token/i);
   });
 });

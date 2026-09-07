@@ -21,6 +21,7 @@ export {
   applyDayBoundaryPolicy,
   applyTrueSolarTime,
   calculateEquationOfTimeMinutes,
+  TRUE_SOLAR_TIME_ENGINE_VERSION,
   renderInstantInKst
 } from './solarTime';
 export {
