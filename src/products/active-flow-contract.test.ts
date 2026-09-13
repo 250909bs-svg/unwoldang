@@ -56,8 +56,8 @@ function expectRouteWiring(path: string, ...tokens: string[]) {
 }
 
 describe('active product flow contract', () => {
-  it('keeps canonical detail, intake, checkout, loading, and report routes for all five products', () => {
-    expect(activeProducts.map((product) => product.id)).toEqual(Object.keys(expectedActiveFlows));
+  it('keeps general signature as the only active product flow', () => {
+    expect(activeProducts.map((product) => product.id)).toEqual(['general-signature']);
 
     activeProducts.forEach((product) => {
       expect([

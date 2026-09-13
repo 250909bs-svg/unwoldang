@@ -178,7 +178,7 @@
         "answer": "아닙니다. 사주에 나타난 성향과 반복 패턴을 상징적인 전생 서사로 풀어낸 자기이해형 콘텐츠이며 역사적 사실이나 초자연적 사실을 증명하는 서비스가 아닙니다."
       }
     ],
-    "indexable": true,
+    "indexable": false,
     "lastmod": "2026-07-18"
   },
   "/detail/love-reading": {
@@ -234,7 +234,7 @@
         "answer": "아닙니다. 명식과 핵심 판정은 코드 엔진이 확정합니다. 생성 모델은 확정된 문장과 허용된 근거를 리포트 구조에 배치하며 서버가 문장 일치와 근거 적합성을 다시 검증합니다."
       }
     ],
-    "indexable": true,
+    "indexable": false,
     "lastmod": "2026-07-18"
   },
   "/detail/love-reunion": {
@@ -250,7 +250,7 @@
     "productName": "홍연아씨 재회 가능성",
     "price": 55000,
     "priceCurrency": "KRW",
-    "indexable": true,
+    "indexable": false,
     "lastmod": "2026-07-21"
   },
   "/detail/match-couple": {
@@ -266,7 +266,7 @@
     "productName": "월연도령 사주궁합",
     "price": 69000,
     "priceCurrency": "KRW",
-    "indexable": true,
+    "indexable": false,
     "lastmod": "2026-07-21"
   },
   "/detail/match-destiny": {

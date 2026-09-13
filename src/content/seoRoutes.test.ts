@@ -7,10 +7,14 @@ import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
 import seoRouteData from './seoRoutes.json';
 import { activeProducts, getProductByRoute, productRegistry } from '../products/registry';
 
-const activeDetailPaths = ['/detail/general-saju', '/detail/love-reading', '/detail/love-reunion', '/detail/match-couple', '/detail/past-life-goblin'] as const;
+const activeDetailPaths = ['/detail/general-saju'] as const;
 const archivedDetailPaths = [
   '/detail/life-flow',
   '/detail/concern-reading',
+  '/detail/past-life-goblin',
+  '/detail/love-reading',
+  '/detail/love-reunion',
+  '/detail/match-couple',
   '/detail/match-destiny',
   '/detail/marriage-blueprint',
   '/detail/marriage-timing',
@@ -23,7 +27,7 @@ const routeSeo = seoRouteData as Record<string, { indexable: boolean; serviceId?
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
 describe('retired detail page indexing', () => {
-  it('keeps only the five active product detail pages indexable', () => {
+  it('keeps only the general signature product detail page indexable', () => {
     const indexableDetailPaths = Object.entries(seoRouteData)
       .filter(([path, seo]) => path.startsWith('/detail/') && seo.indexable)
       .map(([path]) => path)
@@ -36,18 +40,14 @@ describe('retired detail page indexing', () => {
     });
   });
 
-  it('keeps the five active detail rewrites on their static SEO pages', () => {
+  it('keeps the active general signature detail rewrite on its static SEO page', () => {
     const activeRewrites = new Map(
       vercelConfig.rewrites
         .filter((rewrite) => activeDetailPaths.includes(rewrite.source as (typeof activeDetailPaths)[number]))
         .map((rewrite) => [rewrite.source, rewrite.destination])
     );
 
-    expect(activeRewrites.get('/detail/past-life-goblin')).toBe('/seo/detail-past-life-goblin.html');
-    expect(activeRewrites.get('/detail/love-reading')).toBe('/seo/detail-love-reading.html');
     expect(activeRewrites.get('/detail/general-saju')).toBe('/seo/detail-general-saju.html');
-    expect(activeRewrites.get('/detail/love-reunion')).toBe('/seo/detail-love-reunion.html');
-    expect(activeRewrites.get('/detail/match-couple')).toBe('/seo/detail-match-couple.html');
     expect(vercelConfig.trailingSlash).toBe(false);
   });
 
