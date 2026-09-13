@@ -196,9 +196,9 @@ const homeDiscoverySections = [
       {
         id: 'general-signature',
         image: illustrationDeck.generalSaju,
-        coverKicker: '운월선생',
+        coverKicker: '운월당',
         coverTitle: '종합사주',
-        title: '운월선생 정통 종합사주',
+        title: '정통 종합사주',
         summary: '인생 전반의 흐름과 선택 기준'
       },
       {

@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_ENABLE_CLIENT_ADMIN?: string;
   readonly VITE_LOCAL_ADMIN_CREDENTIAL_HASH?: string;
   readonly VITE_REPORT_ENDPOINT?: string;
+  readonly VITE_RELEASE_PREFLIGHT_ENDPOINT?: string;
   readonly VITE_REPORT_ARCHIVE_ENDPOINT?: string;
   readonly VITE_ADMIN_LOGIN_ENDPOINT?: string;
   readonly VITE_ADMIN_REPORTS_ENDPOINT?: string;

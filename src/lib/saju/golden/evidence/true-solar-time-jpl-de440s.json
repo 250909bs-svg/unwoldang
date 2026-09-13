@@ -1,0 +1,35 @@
+{
+  "sourceId": "jpl-de440s-equation-of-time",
+  "ephemeris": "JPL DE440s",
+  "ephemerisSha256": "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2",
+  "tool": "Skyfield 1.53 / jplephem 2.24",
+  "method": "Apparent Sun right ascension of date combined with Greenwich apparent sidereal time; equation of time is apparent solar time minus mean solar time.",
+  "generatedAt": "2026-09-07",
+  "independentFromUnwoldang": true,
+  "samples": [
+    { "instant": "1992-01-01T12:00:00Z", "equationOfTimeMinutes": -3.293585733838995 },
+    { "instant": "1992-02-11T12:00:00Z", "equationOfTimeMinutes": -14.273127152360914 },
+    { "instant": "1992-03-20T12:00:00Z", "equationOfTimeMinutes": -7.413447751544311 },
+    { "instant": "1992-05-15T12:00:00Z", "equationOfTimeMinutes": 3.675873175255262 },
+    { "instant": "1992-07-01T12:00:00Z", "equationOfTimeMinutes": -3.8543933771637384 },
+    { "instant": "1992-09-09T12:00:00Z", "equationOfTimeMinutes": 2.8005675132907726 },
+    { "instant": "1992-11-03T12:00:00Z", "equationOfTimeMinutes": 16.409859785595877 },
+    { "instant": "1992-12-21T12:00:00Z", "equationOfTimeMinutes": 1.737484137042884 },
+    { "instant": "2024-01-01T12:00:00Z", "equationOfTimeMinutes": -3.315470403882941 },
+    { "instant": "2024-02-11T12:00:00Z", "equationOfTimeMinutes": -14.193197101698871 },
+    { "instant": "2024-03-20T12:00:00Z", "equationOfTimeMinutes": -7.309033046665405 },
+    { "instant": "2024-05-15T12:00:00Z", "equationOfTimeMinutes": 3.6321130011397784 },
+    { "instant": "2024-07-01T12:00:00Z", "equationOfTimeMinutes": -3.9845395009692197 },
+    { "instant": "2024-09-09T12:00:00Z", "equationOfTimeMinutes": 2.8455295169675665 },
+    { "instant": "2024-11-03T12:00:00Z", "equationOfTimeMinutes": 16.451275687965783 },
+    { "instant": "2024-12-21T12:00:00Z", "equationOfTimeMinutes": 1.7098905353809357 },
+    { "instant": "1992-09-09T01:24:00Z", "equationOfTimeMinutes": 2.6468603596662987 },
+    { "instant": "2024-03-20T03:00:00Z", "equationOfTimeMinutes": -7.420381115950008 },
+    { "instant": "2024-11-03T05:30:00Z", "equationOfTimeMinutes": 16.453487174814683 },
+    { "instant": "2024-11-03T06:30:00Z", "equationOfTimeMinutes": 16.453211794362694 }
+  ],
+  "limitations": [
+    "The evidence validates equation-of-time instants, not the service policy that chooses whether to apply true-solar correction.",
+    "Longitude coordinates and historical civil timezone offsets require separate provenance."
+  ]
+}

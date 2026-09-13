@@ -1,0 +1,923 @@
+{
+  "schemaVersion": 1,
+  "sourceAuthority": "Hong Kong Observatory",
+  "accessedAt": "2026-09-02",
+  "fieldsSupported": [
+    "normalizedSolarDate",
+    "normalizedLunarDate",
+    "leapMonth"
+  ],
+  "limitations": [
+    "The HKO Gan-Zhi year changes at Lunar New Year and is not used as a BaZi Ipchun year-pillar authority.",
+    "The PDF conversion table does not verify hour pillars, Ten Gods, twelve stages, or Dayun policy."
+  ],
+  "sources": [
+    {
+      "year": 1960,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1960e.pdf",
+      "sha256": "b933c9137dee559b9870d93234334cb405cc2bc5fd10824f69097af56bad9e02"
+    },
+    {
+      "year": 1964,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1964e.pdf",
+      "sha256": "c4c960b1abf4195df4bf8f259396c0af636cf7bd77cf137fd06a160d40cf3ef8"
+    },
+    {
+      "year": 1965,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1965e.pdf",
+      "sha256": "fa55100983912a29288ee09d0fd6a6281a502428ec98f0ba1f83247f1cb243db"
+    },
+    {
+      "year": 1966,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1966e.pdf",
+      "sha256": "df3c862ed43f96a4cacb05dc17dfc7682ba9bb6db6f59f1cefabdec0516a1c16"
+    },
+    {
+      "year": 1968,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1968e.pdf",
+      "sha256": "20e012f1f0d1cae34b0e9e8025e63c34149d0da71bba4b372f711153cf93c2df"
+    },
+    {
+      "year": 1970,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1970e.pdf",
+      "sha256": "a374446a2d1ac76e3f9978cbbf3ba7c7da2f8b25d635977af02d49905d5846cd"
+    },
+    {
+      "year": 1971,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1971e.pdf",
+      "sha256": "1fc7555280c3aad30d4ef3020abefeeda06fc04d3066820d653725715bd6fe8f"
+    },
+    {
+      "year": 1972,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1972e.pdf",
+      "sha256": "ffec730a760c85a1dac7341d96a55417008042300c6871edb884ef90f54803d8"
+    },
+    {
+      "year": 1975,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1975e.pdf",
+      "sha256": "0fb42f4c3537838c3dfdc855bfd93c2d6ce440277212be725751898c681254c0"
+    },
+    {
+      "year": 1976,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1976e.pdf",
+      "sha256": "994d4668fba4df50ef206d1b5c33b42f352091458761a6a547829db266a6e064"
+    },
+    {
+      "year": 1977,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1977e.pdf",
+      "sha256": "cdd30591c26b86a79205bd61442c3d6ffb5c86d71f31d2cdce70f3d8eef8ed96"
+    },
+    {
+      "year": 1980,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1980e.pdf",
+      "sha256": "7243998b0ea79c5cff23598bd20969a8ab4271ca52c9a1640d163b96409515b7"
+    },
+    {
+      "year": 1981,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1981e.pdf",
+      "sha256": "cfb35a3e86a5eef132e73a81b773e9c494b5e76385a9b8c1591ba806e4a7bb45"
+    },
+    {
+      "year": 1983,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1983e.pdf",
+      "sha256": "89131febc50328fdb2cfa9c645e41f924cfa5343cbc95e0e01ec2a40b62c260a"
+    },
+    {
+      "year": 1984,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1984e.pdf",
+      "sha256": "9eb52465a2ae94b5a2f1e6b33fa5119256ae352f448abb7d8f85cab9573f6461"
+    },
+    {
+      "year": 1985,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1985e.pdf",
+      "sha256": "fd8c0c6a978ac9429533908f6a3b6ed32cb72fb5bdef9f5fbaa4617e02f41eb6"
+    },
+    {
+      "year": 1987,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1987e.pdf",
+      "sha256": "a74c4fc18e32d189dc7fdd089a2a92adfc58228f65fc19d0e0f8c21cf6dc23c7"
+    },
+    {
+      "year": 1988,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1988e.pdf",
+      "sha256": "dfd877beb71e528189d89daefad6e0959b572dd3d3f47a89b665033651ad4c80"
+    },
+    {
+      "year": 1989,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1989e.pdf",
+      "sha256": "a828b46e00ca96a23d9ed50f9828ecf177d849509944cbe474c7d5364a7fd377"
+    },
+    {
+      "year": 1990,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1990e.pdf",
+      "sha256": "bc6348c20b1250e177180ee635762cdb97c0d35a4d90a02282eea92b7e7b0eb1"
+    },
+    {
+      "year": 1991,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1991e.pdf",
+      "sha256": "b441dcda6ae5bc727587d3124ff4bec64f975552e42f63adc3425a2093d29229"
+    },
+    {
+      "year": 1992,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1992e.pdf",
+      "sha256": "4f844134187cedbf425fe458b2bd455b6d1007910b2165f092564d0dee9a7f89"
+    },
+    {
+      "year": 1993,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1993e.pdf",
+      "sha256": "4133f3b18b246b98af949ec0abd06cb350bafecb904d1d26d67a2878b1ed5efe"
+    },
+    {
+      "year": 1994,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1994e.pdf",
+      "sha256": "7f0aaa63390a080fc405ffc9835488c692054955a8b8e7b2468ab2d89e7cedd5"
+    },
+    {
+      "year": 1995,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1995e.pdf",
+      "sha256": "43d003eb5e1e0c074cb9edebce35f8b0b31a8484425fba2d467279cb2441dc73"
+    },
+    {
+      "year": 1996,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1996e.pdf",
+      "sha256": "882ae766b994ec6cbb3df82c15992b907009918d6658ddd58854a84026e34abf"
+    },
+    {
+      "year": 1997,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1997e.pdf",
+      "sha256": "86b76ed8f3b1918b4fa60df12af78ad9f016d66e47cfb8143b9944881e720f7b"
+    },
+    {
+      "year": 1998,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1998e.pdf",
+      "sha256": "42c8b2d38933b89d92a1db431225508060a504e72d1c2c0cfa4dbf907e3e3664"
+    },
+    {
+      "year": 1999,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/1999e.pdf",
+      "sha256": "d97606534cb970e44bbf9a18767376f218f791ed7207aa548b2317ded4fdfac6"
+    },
+    {
+      "year": 2000,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2000e.pdf",
+      "sha256": "283b3551d8340d355353a1b4da4e6ad28d9cbad0f1ce02495a8fb3b0f2177661"
+    },
+    {
+      "year": 2001,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2001e.pdf",
+      "sha256": "6eb6bb5fbe5d818d8baf748823e8e927cd3bb47436365ed55ba090f3dcee72dd"
+    },
+    {
+      "year": 2002,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2002e.pdf",
+      "sha256": "5f46fadc92f9993adb6eb193320ae47d3ddebdec06725237f8d02dbb0ae4916b"
+    },
+    {
+      "year": 2003,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2003e.pdf",
+      "sha256": "81f1c7aa25e5e1f7bea4326d09c9ae9ee4fa3f0e880652fe900eb47a0197ac05"
+    },
+    {
+      "year": 2004,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2004e.pdf",
+      "sha256": "894026d52f244638296422efa8b1bb3c052a1f6744240b832ff33a42b84c3c06"
+    },
+    {
+      "year": 2005,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2005e.pdf",
+      "sha256": "c362048b242b13f9b441d38b23a0c0dda2e1fcb72c39aae9edeb116f1eda4961"
+    },
+    {
+      "year": 2006,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2006e.pdf",
+      "sha256": "96aa0ae102b72d3c1e74a5b80f4d6c65f68d98f91d6e10b862f449db8d3d5cf0"
+    },
+    {
+      "year": 2007,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2007e.pdf",
+      "sha256": "89ee13aa649a6b8d59c3330f9f3f013c5e7ba6b5bd84a9a432a38ef2bcea6aab"
+    },
+    {
+      "year": 2008,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2008e.pdf",
+      "sha256": "0c0699335c7cdb71bc594bc086be57025ac4c17d39a35d4c61b2640cae548bca"
+    },
+    {
+      "year": 2009,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2009e.pdf",
+      "sha256": "384f33cd6259f971c5bd752480c8291172fe7698b6329da7f08ceeb81d198b9d"
+    },
+    {
+      "year": 2010,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2010e.pdf",
+      "sha256": "e2fd51368d66c092544df0a636164df8ec035db7ee0a1c83f6f5eca8e106d1b1"
+    },
+    {
+      "year": 2011,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2011e.pdf",
+      "sha256": "62c560150f65ed2fc9d66ef2da9d1453b03ee789f605d1448bde1cb04c4b04be"
+    },
+    {
+      "year": 2012,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2012e.pdf",
+      "sha256": "3394e4f7c280e8f9f1594839d65ffc15a8948d459e12b40503db57a330633fe0"
+    },
+    {
+      "year": 2013,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2013e.pdf",
+      "sha256": "ff5ccb218bb190935c8dcca1d524954ebc47c0c21958afb230b80aea479042c1"
+    },
+    {
+      "year": 2014,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2014e.pdf",
+      "sha256": "dea0e33803f14203f1076e03b7a433dbbcc2b98fd69ad1161ac423cf9bb96a82"
+    },
+    {
+      "year": 2015,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2015e.pdf",
+      "sha256": "e0f79cb04bf2e98026ed4119201fe03052c8dfdc7d621d0ce2e70d6597d06208"
+    },
+    {
+      "year": 2016,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2016e.pdf",
+      "sha256": "2da46829cafb6b6d83a5d47a183db77715dd4ffc8468bff71d1d12579f522326"
+    },
+    {
+      "year": 2017,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2017e.pdf",
+      "sha256": "2dbd7f1d09919a9ecce0326119ddcb2bda1123037c88dded5b2bc6a50d54ade6"
+    },
+    {
+      "year": 2018,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2018e.pdf",
+      "sha256": "84a09761e4010e7c7e85415a70e4919333645e318509341e70b2005c20c1fcf5"
+    },
+    {
+      "year": 2019,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2019e.pdf",
+      "sha256": "1355a9ebd832f8752e640c0c8d065496ab1b00c258ab4c1b20142b6cbe5b3fb8"
+    },
+    {
+      "year": 2020,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2020e.pdf",
+      "sha256": "b688b095725eb33f5c4d9a6cbd94821392f92335da9edac2048994e794ccecd6"
+    },
+    {
+      "year": 2021,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2021e.pdf",
+      "sha256": "67470ba2da3a9ac5c1c7245f225e5f23718929544cf45931c77971eca4b25327"
+    },
+    {
+      "year": 2022,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2022e.pdf",
+      "sha256": "61d85d9b3832a74a9387c922448925776626deb1bab27f1229032f9f790d6ae4"
+    },
+    {
+      "year": 2023,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2023e.pdf",
+      "sha256": "57245f05e454de6d4b18d6f20d868e497b37c40a01b8d9890936a7c5e7911ac5"
+    },
+    {
+      "year": 2024,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2024e.pdf",
+      "sha256": "d79232c648b6db862df8bdc620bba738c69c8658daa197775f8b670d9b496256"
+    },
+    {
+      "year": 2025,
+      "url": "https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/2025e.pdf",
+      "sha256": "2fd4da167d25c376809888bfee0da74dcc01e66822afd8bd9ee803e2f8373f54"
+    }
+  ],
+  "entries": [
+    {
+      "fixtureId": "solar-general-001",
+      "status": "verified-source-record",
+      "solarDate": "1992-09-09",
+      "lunarDate": "1992-08-13",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1992",
+      "sourceSha256": "4f844134187cedbf425fe458b2bd455b6d1007910b2165f092564d0dee9a7f89"
+    },
+    {
+      "fixtureId": "solar-general-002",
+      "status": "verified-source-record",
+      "solarDate": "1960-01-01",
+      "lunarDate": "1959-12-03",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1960",
+      "sourceSha256": "b933c9137dee559b9870d93234334cb405cc2bc5fd10824f69097af56bad9e02"
+    },
+    {
+      "fixtureId": "solar-general-003",
+      "status": "verified-source-record",
+      "solarDate": "1964-02-29",
+      "lunarDate": "1964-01-17",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1964",
+      "sourceSha256": "c4c960b1abf4195df4bf8f259396c0af636cf7bd77cf137fd06a160d40cf3ef8"
+    },
+    {
+      "fixtureId": "solar-general-004",
+      "status": "verified-source-record",
+      "solarDate": "1968-07-20",
+      "lunarDate": "1968-06-25",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1968",
+      "sourceSha256": "20e012f1f0d1cae34b0e9e8025e63c34149d0da71bba4b372f711153cf93c2df"
+    },
+    {
+      "fixtureId": "solar-general-005",
+      "status": "verified-source-record",
+      "solarDate": "1970-12-31",
+      "lunarDate": "1970-12-04",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1970",
+      "sourceSha256": "a374446a2d1ac76e3f9978cbbf3ba7c7da2f8b25d635977af02d49905d5846cd"
+    },
+    {
+      "fixtureId": "solar-general-006",
+      "status": "verified-source-record",
+      "solarDate": "1972-02-29",
+      "lunarDate": "1972-01-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1972",
+      "sourceSha256": "ffec730a760c85a1dac7341d96a55417008042300c6871edb884ef90f54803d8"
+    },
+    {
+      "fixtureId": "solar-general-007",
+      "status": "verified-source-record",
+      "solarDate": "1975-05-18",
+      "lunarDate": "1975-04-08",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1975",
+      "sourceSha256": "0fb42f4c3537838c3dfdc855bfd93c2d6ce440277212be725751898c681254c0"
+    },
+    {
+      "fixtureId": "solar-general-008",
+      "status": "verified-source-record",
+      "solarDate": "1977-11-07",
+      "lunarDate": "1977-09-26",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1977",
+      "sourceSha256": "cdd30591c26b86a79205bd61442c3d6ffb5c86d71f31d2cdce70f3d8eef8ed96"
+    },
+    {
+      "fixtureId": "solar-general-009",
+      "status": "verified-source-record",
+      "solarDate": "1980-02-29",
+      "lunarDate": "1980-01-14",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1980",
+      "sourceSha256": "7243998b0ea79c5cff23598bd20969a8ab4271ca52c9a1640d163b96409515b7"
+    },
+    {
+      "fixtureId": "solar-general-010",
+      "status": "verified-source-record",
+      "solarDate": "1981-08-15",
+      "lunarDate": "1981-07-16",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1981",
+      "sourceSha256": "cfb35a3e86a5eef132e73a81b773e9c494b5e76385a9b8c1591ba806e4a7bb45"
+    },
+    {
+      "fixtureId": "solar-general-011",
+      "status": "verified-source-record",
+      "solarDate": "1983-10-03",
+      "lunarDate": "1983-08-27",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1983",
+      "sourceSha256": "89131febc50328fdb2cfa9c645e41f924cfa5343cbc95e0e01ec2a40b62c260a"
+    },
+    {
+      "fixtureId": "solar-general-012",
+      "status": "verified-source-record",
+      "solarDate": "1984-04-04",
+      "lunarDate": "1984-03-04",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1984",
+      "sourceSha256": "9eb52465a2ae94b5a2f1e6b33fa5119256ae352f448abb7d8f85cab9573f6461"
+    },
+    {
+      "fixtureId": "solar-general-013",
+      "status": "verified-source-record",
+      "solarDate": "1985-12-25",
+      "lunarDate": "1985-11-14",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1985",
+      "sourceSha256": "fd8c0c6a978ac9429533908f6a3b6ed32cb72fb5bdef9f5fbaa4617e02f41eb6"
+    },
+    {
+      "fixtureId": "solar-general-014",
+      "status": "verified-source-record",
+      "solarDate": "1987-06-10",
+      "lunarDate": "1987-05-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1987",
+      "sourceSha256": "a74c4fc18e32d189dc7fdd089a2a92adfc58228f65fc19d0e0f8c21cf6dc23c7"
+    },
+    {
+      "fixtureId": "solar-general-015",
+      "status": "verified-source-record",
+      "solarDate": "1988-02-29",
+      "lunarDate": "1988-01-13",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1988",
+      "sourceSha256": "dfd877beb71e528189d89daefad6e0959b572dd3d3f47a89b665033651ad4c80"
+    },
+    {
+      "fixtureId": "solar-general-016",
+      "status": "verified-source-record",
+      "solarDate": "1989-09-30",
+      "lunarDate": "1989-09-01",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1989",
+      "sourceSha256": "a828b46e00ca96a23d9ed50f9828ecf177d849509944cbe474c7d5364a7fd377"
+    },
+    {
+      "fixtureId": "solar-general-017",
+      "status": "verified-source-record",
+      "solarDate": "1990-01-01",
+      "lunarDate": "1989-12-05",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1990",
+      "sourceSha256": "bc6348c20b1250e177180ee635762cdb97c0d35a4d90a02282eea92b7e7b0eb1"
+    },
+    {
+      "fixtureId": "solar-general-018",
+      "status": "verified-source-record",
+      "solarDate": "1991-03-21",
+      "lunarDate": "1991-02-06",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1991",
+      "sourceSha256": "b441dcda6ae5bc727587d3124ff4bec64f975552e42f63adc3425a2093d29229"
+    },
+    {
+      "fixtureId": "solar-general-019",
+      "status": "verified-source-record",
+      "solarDate": "1993-11-19",
+      "lunarDate": "1993-10-06",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1993",
+      "sourceSha256": "4133f3b18b246b98af949ec0abd06cb350bafecb904d1d26d67a2878b1ed5efe"
+    },
+    {
+      "fixtureId": "solar-general-020",
+      "status": "verified-source-record",
+      "solarDate": "1994-07-07",
+      "lunarDate": "1994-05-29",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1994",
+      "sourceSha256": "7f0aaa63390a080fc405ffc9835488c692054955a8b8e7b2468ab2d89e7cedd5"
+    },
+    {
+      "fixtureId": "solar-general-021",
+      "status": "verified-source-record",
+      "solarDate": "1995-05-05",
+      "lunarDate": "1995-04-06",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1995",
+      "sourceSha256": "43d003eb5e1e0c074cb9edebce35f8b0b31a8484425fba2d467279cb2441dc73"
+    },
+    {
+      "fixtureId": "solar-general-022",
+      "status": "verified-source-record",
+      "solarDate": "1996-02-29",
+      "lunarDate": "1996-01-11",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1996",
+      "sourceSha256": "882ae766b994ec6cbb3df82c15992b907009918d6658ddd58854a84026e34abf"
+    },
+    {
+      "fixtureId": "solar-general-023",
+      "status": "verified-source-record",
+      "solarDate": "1997-08-08",
+      "lunarDate": "1997-07-06",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1997",
+      "sourceSha256": "86b76ed8f3b1918b4fa60df12af78ad9f016d66e47cfb8143b9944881e720f7b"
+    },
+    {
+      "fixtureId": "solar-general-024",
+      "status": "verified-source-record",
+      "solarDate": "1998-12-12",
+      "lunarDate": "1998-10-24",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1998",
+      "sourceSha256": "42c8b2d38933b89d92a1db431225508060a504e72d1c2c0cfa4dbf907e3e3664"
+    },
+    {
+      "fixtureId": "solar-general-025",
+      "status": "verified-source-record",
+      "solarDate": "1999-09-09",
+      "lunarDate": "1999-07-30",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1999",
+      "sourceSha256": "d97606534cb970e44bbf9a18767376f218f791ed7207aa548b2317ded4fdfac6"
+    },
+    {
+      "fixtureId": "solar-general-026",
+      "status": "verified-source-record",
+      "solarDate": "2000-02-29",
+      "lunarDate": "2000-01-25",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2000",
+      "sourceSha256": "283b3551d8340d355353a1b4da4e6ad28d9cbad0f1ce02495a8fb3b0f2177661"
+    },
+    {
+      "fixtureId": "solar-general-027",
+      "status": "verified-source-record",
+      "solarDate": "2001-01-15",
+      "lunarDate": "2000-12-21",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2001",
+      "sourceSha256": "6eb6bb5fbe5d818d8baf748823e8e927cd3bb47436365ed55ba090f3dcee72dd"
+    },
+    {
+      "fixtureId": "solar-general-028",
+      "status": "verified-source-record",
+      "solarDate": "2002-06-21",
+      "lunarDate": "2002-05-11",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2002",
+      "sourceSha256": "5f46fadc92f9993adb6eb193320ae47d3ddebdec06725237f8d02dbb0ae4916b"
+    },
+    {
+      "fixtureId": "solar-general-029",
+      "status": "verified-source-record",
+      "solarDate": "2003-10-10",
+      "lunarDate": "2003-09-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2003",
+      "sourceSha256": "81f1c7aa25e5e1f7bea4326d09c9ae9ee4fa3f0e880652fe900eb47a0197ac05"
+    },
+    {
+      "fixtureId": "solar-general-030",
+      "status": "verified-source-record",
+      "solarDate": "2004-02-29",
+      "lunarDate": "2004-02-10",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2004",
+      "sourceSha256": "894026d52f244638296422efa8b1bb3c052a1f6744240b832ff33a42b84c3c06"
+    },
+    {
+      "fixtureId": "solar-general-031",
+      "status": "verified-source-record",
+      "solarDate": "2005-05-31",
+      "lunarDate": "2005-04-24",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2005",
+      "sourceSha256": "c362048b242b13f9b441d38b23a0c0dda2e1fcb72c39aae9edeb116f1eda4961"
+    },
+    {
+      "fixtureId": "solar-general-032",
+      "status": "verified-source-record",
+      "solarDate": "2006-09-17",
+      "lunarDate": "2006-07-25",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2006",
+      "sourceSha256": "96aa0ae102b72d3c1e74a5b80f4d6c65f68d98f91d6e10b862f449db8d3d5cf0"
+    },
+    {
+      "fixtureId": "solar-general-033",
+      "status": "verified-source-record",
+      "solarDate": "2007-12-01",
+      "lunarDate": "2007-10-22",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2007",
+      "sourceSha256": "89ee13aa649a6b8d59c3330f9f3f013c5e7ba6b5bd84a9a432a38ef2bcea6aab"
+    },
+    {
+      "fixtureId": "solar-general-034",
+      "status": "verified-source-record",
+      "solarDate": "2008-02-29",
+      "lunarDate": "2008-01-23",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2008",
+      "sourceSha256": "0c0699335c7cdb71bc594bc086be57025ac4c17d39a35d4c61b2640cae548bca"
+    },
+    {
+      "fixtureId": "solar-general-035",
+      "status": "verified-source-record",
+      "solarDate": "2010-04-14",
+      "lunarDate": "2010-03-01",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2010",
+      "sourceSha256": "e2fd51368d66c092544df0a636164df8ec035db7ee0a1c83f6f5eca8e106d1b1"
+    },
+    {
+      "fixtureId": "solar-general-036",
+      "status": "verified-source-record",
+      "solarDate": "2012-02-29",
+      "lunarDate": "2012-02-08",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2012",
+      "sourceSha256": "3394e4f7c280e8f9f1594839d65ffc15a8948d459e12b40503db57a330633fe0"
+    },
+    {
+      "fixtureId": "solar-general-037",
+      "status": "verified-source-record",
+      "solarDate": "2015-08-23",
+      "lunarDate": "2015-07-10",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2015",
+      "sourceSha256": "e0f79cb04bf2e98026ed4119201fe03052c8dfdc7d621d0ce2e70d6597d06208"
+    },
+    {
+      "fixtureId": "solar-general-038",
+      "status": "verified-source-record",
+      "solarDate": "2016-02-29",
+      "lunarDate": "2016-01-22",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2016",
+      "sourceSha256": "2da46829cafb6b6d83a5d47a183db77715dd4ffc8468bff71d1d12579f522326"
+    },
+    {
+      "fixtureId": "solar-general-039",
+      "status": "verified-source-record",
+      "solarDate": "2020-02-29",
+      "lunarDate": "2020-02-07",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2020",
+      "sourceSha256": "b688b095725eb33f5c4d9a6cbd94821392f92335da9edac2048994e794ccecd6"
+    },
+    {
+      "fixtureId": "solar-general-040",
+      "status": "verified-source-record",
+      "solarDate": "2024-02-29",
+      "lunarDate": "2024-01-20",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2024",
+      "sourceSha256": "d79232c648b6db862df8bdc620bba738c69c8658daa197775f8b670d9b496256"
+    },
+    {
+      "fixtureId": "lunar-regular-001",
+      "status": "verified-source-record",
+      "solarDate": "1992-09-09",
+      "lunarDate": "1992-08-13",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1992",
+      "sourceSha256": "4f844134187cedbf425fe458b2bd455b6d1007910b2165f092564d0dee9a7f89"
+    },
+    {
+      "fixtureId": "lunar-regular-002",
+      "status": "verified-source-record",
+      "solarDate": "1965-02-02",
+      "lunarDate": "1965-01-01",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1965",
+      "sourceSha256": "fa55100983912a29288ee09d0fd6a6281a502428ec98f0ba1f83247f1cb243db"
+    },
+    {
+      "fixtureId": "lunar-regular-003",
+      "status": "verified-source-record",
+      "solarDate": "1970-04-20",
+      "lunarDate": "1970-03-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1970",
+      "sourceSha256": "a374446a2d1ac76e3f9978cbbf3ba7c7da2f8b25d635977af02d49905d5846cd"
+    },
+    {
+      "fixtureId": "lunar-regular-004",
+      "status": "verified-source-record",
+      "solarDate": "1975-06-14",
+      "lunarDate": "1975-05-05",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1975",
+      "sourceSha256": "0fb42f4c3537838c3dfdc855bfd93c2d6ce440277212be725751898c681254c0"
+    },
+    {
+      "fixtureId": "lunar-regular-005",
+      "status": "verified-source-record",
+      "solarDate": "1980-08-17",
+      "lunarDate": "1980-07-07",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1980",
+      "sourceSha256": "7243998b0ea79c5cff23598bd20969a8ab4271ca52c9a1640d163b96409515b7"
+    },
+    {
+      "fixtureId": "lunar-regular-006",
+      "status": "verified-source-record",
+      "solarDate": "1985-02-01",
+      "lunarDate": "1984-12-12",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1985",
+      "sourceSha256": "fd8c0c6a978ac9429533908f6a3b6ed32cb72fb5bdef9f5fbaa4617e02f41eb6"
+    },
+    {
+      "fixtureId": "lunar-regular-007",
+      "status": "verified-source-record",
+      "solarDate": "1988-03-02",
+      "lunarDate": "1988-01-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1988",
+      "sourceSha256": "dfd877beb71e528189d89daefad6e0959b572dd3d3f47a89b665033651ad4c80"
+    },
+    {
+      "fixtureId": "lunar-regular-008",
+      "status": "verified-source-record",
+      "solarDate": "1990-05-02",
+      "lunarDate": "1990-04-08",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1990",
+      "sourceSha256": "bc6348c20b1250e177180ee635762cdb97c0d35a4d90a02282eea92b7e7b0eb1"
+    },
+    {
+      "fixtureId": "lunar-regular-009",
+      "status": "verified-source-record",
+      "solarDate": "1994-07-14",
+      "lunarDate": "1994-06-06",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1994",
+      "sourceSha256": "7f0aaa63390a080fc405ffc9835488c692054955a8b8e7b2468ab2d89e7cedd5"
+    },
+    {
+      "fixtureId": "lunar-regular-010",
+      "status": "verified-source-record",
+      "solarDate": "1996-10-20",
+      "lunarDate": "1996-09-09",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1996",
+      "sourceSha256": "882ae766b994ec6cbb3df82c15992b907009918d6658ddd58854a84026e34abf"
+    },
+    {
+      "fixtureId": "lunar-regular-011",
+      "status": "verified-source-record",
+      "solarDate": "1999-12-18",
+      "lunarDate": "1999-11-11",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-1999",
+      "sourceSha256": "d97606534cb970e44bbf9a18767376f218f791ed7207aa548b2317ded4fdfac6"
+    },
+    {
+      "fixtureId": "lunar-regular-012",
+      "status": "verified-source-record",
+      "solarDate": "2001-03-08",
+      "lunarDate": "2001-02-14",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2001",
+      "sourceSha256": "6eb6bb5fbe5d818d8baf748823e8e927cd3bb47436365ed55ba090f3dcee72dd"
+    },
+    {
+      "fixtureId": "lunar-regular-013",
+      "status": "verified-source-record",
+      "solarDate": "2004-09-28",
+      "lunarDate": "2004-08-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2004",
+      "sourceSha256": "894026d52f244638296422efa8b1bb3c052a1f6744240b832ff33a42b84c3c06"
+    },
+    {
+      "fixtureId": "lunar-regular-014",
+      "status": "verified-source-record",
+      "solarDate": "2007-11-12",
+      "lunarDate": "2007-10-03",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2007",
+      "sourceSha256": "89ee13aa649a6b8d59c3330f9f3f013c5e7ba6b5bd84a9a432a38ef2bcea6aab"
+    },
+    {
+      "fixtureId": "lunar-regular-015",
+      "status": "verified-source-record",
+      "solarDate": "2010-02-23",
+      "lunarDate": "2010-01-10",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2010",
+      "sourceSha256": "e2fd51368d66c092544df0a636164df8ec035db7ee0a1c83f6f5eca8e106d1b1"
+    },
+    {
+      "fixtureId": "lunar-regular-016",
+      "status": "verified-source-record",
+      "solarDate": "2013-04-12",
+      "lunarDate": "2013-03-03",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2013",
+      "sourceSha256": "ff5ccb218bb190935c8dcca1d524954ebc47c0c21958afb230b80aea479042c1"
+    },
+    {
+      "fixtureId": "lunar-regular-017",
+      "status": "verified-source-record",
+      "solarDate": "2016-06-19",
+      "lunarDate": "2016-05-15",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2016",
+      "sourceSha256": "2da46829cafb6b6d83a5d47a183db77715dd4ffc8468bff71d1d12579f522326"
+    },
+    {
+      "fixtureId": "lunar-regular-018",
+      "status": "verified-source-record",
+      "solarDate": "2019-08-07",
+      "lunarDate": "2019-07-07",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2019",
+      "sourceSha256": "1355a9ebd832f8752e640c0c8d065496ab1b00c258ab4c1b20142b6cbe5b3fb8"
+    },
+    {
+      "fixtureId": "lunar-regular-019",
+      "status": "verified-source-record",
+      "solarDate": "2022-10-04",
+      "lunarDate": "2022-09-09",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2022",
+      "sourceSha256": "61d85d9b3832a74a9387c922448925776626deb1bab27f1229032f9f790d6ae4"
+    },
+    {
+      "fixtureId": "lunar-regular-020",
+      "status": "verified-source-record",
+      "solarDate": "2024-12-01",
+      "lunarDate": "2024-11-01",
+      "leapMonth": false,
+      "sourceId": "hko-calendar-2024",
+      "sourceSha256": "d79232c648b6db862df8bdc620bba738c69c8658daa197775f8b670d9b496256"
+    },
+    {
+      "fixtureId": "lunar-leap-001",
+      "status": "verified-source-record",
+      "solarDate": "2023-03-22",
+      "lunarDate": "2023-02-01",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2023",
+      "sourceSha256": "57245f05e454de6d4b18d6f20d868e497b37c40a01b8d9890936a7c5e7911ac5"
+    },
+    {
+      "fixtureId": "lunar-leap-002",
+      "status": "verified-source-record",
+      "solarDate": "2020-05-23",
+      "lunarDate": "2020-04-01",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2020",
+      "sourceSha256": "b688b095725eb33f5c4d9a6cbd94821392f92335da9edac2048994e794ccecd6"
+    },
+    {
+      "fixtureId": "lunar-leap-003",
+      "status": "verified-source-record",
+      "solarDate": "2017-08-01",
+      "lunarDate": "2017-06-10",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2017",
+      "sourceSha256": "2dbd7f1d09919a9ecce0326119ddcb2bda1123037c88dded5b2bc6a50d54ade6"
+    },
+    {
+      "fixtureId": "lunar-leap-004",
+      "status": "verified-source-record",
+      "solarDate": "2014-10-28",
+      "lunarDate": "2014-09-05",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2014",
+      "sourceSha256": "dea0e33803f14203f1076e03b7a433dbbcc2b98fd69ad1161ac423cf9bb96a82"
+    },
+    {
+      "fixtureId": "lunar-leap-005",
+      "status": "verified-source-record",
+      "solarDate": "2012-06-01",
+      "lunarDate": "2012-04-12",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2012",
+      "sourceSha256": "3394e4f7c280e8f9f1594839d65ffc15a8948d459e12b40503db57a330633fe0"
+    },
+    {
+      "fixtureId": "lunar-leap-006",
+      "status": "verified-source-record",
+      "solarDate": "2009-06-30",
+      "lunarDate": "2009-05-08",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2009",
+      "sourceSha256": "384f33cd6259f971c5bd752480c8291172fe7698b6329da7f08ceeb81d198b9d"
+    },
+    {
+      "fixtureId": "lunar-leap-007",
+      "status": "verified-source-record",
+      "solarDate": "2006-09-07",
+      "lunarDate": "2006-07-15",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2006",
+      "sourceSha256": "96aa0ae102b72d3c1e74a5b80f4d6c65f68d98f91d6e10b862f449db8d3d5cf0"
+    },
+    {
+      "fixtureId": "lunar-leap-008",
+      "status": "verified-source-record",
+      "solarDate": "2004-04-03",
+      "lunarDate": "2004-02-14",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2004",
+      "sourceSha256": "894026d52f244638296422efa8b1bb3c052a1f6744240b832ff33a42b84c3c06"
+    },
+    {
+      "fixtureId": "lunar-leap-009",
+      "status": "verified-source-record",
+      "solarDate": "2001-05-31",
+      "lunarDate": "2001-04-09",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-2001",
+      "sourceSha256": "6eb6bb5fbe5d818d8baf748823e8e927cd3bb47436365ed55ba090f3dcee72dd"
+    },
+    {
+      "fixtureId": "lunar-leap-010",
+      "status": "verified-source-record",
+      "solarDate": "1998-06-26",
+      "lunarDate": "1998-05-03",
+      "leapMonth": true,
+      "sourceId": "hko-calendar-1998",
+      "sourceSha256": "42c8b2d38933b89d92a1db431225508060a504e72d1c2c0cfa4dbf907e3e3664"
+    }
+  ]
+}

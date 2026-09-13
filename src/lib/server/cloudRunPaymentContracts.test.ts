@@ -18,7 +18,7 @@ import type {
 const FIXED_NOW = Date.parse('2026-07-21T00:00:00.000Z');
 const ORDER_ID = 'UW-20260721-payment-contract-0001';
 const PRODUCT_ID = 'general-signature';
-const PRODUCT_PRICE = 79_000;
+const PRODUCT_PRICE = 990;
 const ARCHIVED_ORDER_ID = 'UW-20260721-archived-contract-0001';
 const ARCHIVED_PRODUCT_ID = 'life-flow';
 const ARCHIVED_PRODUCT_PRICE = 59_000;
@@ -433,7 +433,7 @@ describe('Cloud Run payment contracts', () => {
         ...base,
         orderId: 'UW-list-valid-older-0001',
         productId: 'general-signature',
-        amount: 79_000,
+        amount: 990,
         confirmedAt: '2026-07-20T10:00:00.000Z'
       },
       {
@@ -455,7 +455,7 @@ describe('Cloud Run payment contracts', () => {
         userId: OTHER_USER.userId,
         orderId: 'UW-list-other-user-0003',
         productId: 'general-signature',
-        amount: 79_000,
+        amount: 990,
         confirmedAt: '2026-07-22T10:00:00.000Z'
       },
       {
@@ -463,7 +463,7 @@ describe('Cloud Run payment contracts', () => {
         userBinding: 'wrong-binding',
         orderId: 'UW-list-wrong-binding-0004',
         productId: 'general-signature',
-        amount: 79_000,
+        amount: 990,
         confirmedAt: '2026-07-22T10:00:00.000Z'
       },
       {
@@ -471,7 +471,7 @@ describe('Cloud Run payment contracts', () => {
         entitlementStatus: 'revoked',
         orderId: 'UW-list-inactive-0005',
         productId: 'general-signature',
-        amount: 79_000,
+        amount: 990,
         confirmedAt: '2026-07-22T10:00:00.000Z'
       },
       {
@@ -485,7 +485,7 @@ describe('Cloud Run payment contracts', () => {
         ...base,
         orderId: 'UW-list-unknown-product-0007',
         productId: 'unknown-product',
-        amount: 79_000,
+        amount: 990,
         confirmedAt: '2026-07-22T10:00:00.000Z'
       }
     ];
@@ -516,7 +516,7 @@ describe('Cloud Run payment contracts', () => {
       {
         orderId: 'UW-list-valid-older-0001',
         productId: 'general-signature',
-        amount: 79_000,
+        amount: 990,
         currency: 'KRW',
         confirmedAt: '2026-07-20T10:00:00.000Z',
         status: 'active'

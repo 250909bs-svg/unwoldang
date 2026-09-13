@@ -4,13 +4,13 @@ import type { ReportSection, SajuReportData } from './report';
 const CUSTOMER_FORBIDDEN_PATTERNS: ReadonlyArray<[RegExp, string]> = [
   [/은\(는\)|이\(가\)|을\(를\)|과\(와\)/, '조사 placeholder'],
   [/님가|미상로|편인와/, '잘못된 한국어 조사'],
-  [/\b(?:not-configured|supported|conditional|insufficient|balanced|eokbu|tonggwan)\b/i, '내부 상태값'],
+  [/\b(?:not-configured|supported|conditional|insufficient|balanced|eokbu|tonggwan|integration|activation|latent-tension)\b/i, '내부 상태값'],
   [/MRE-V2|unwoldang-myeongri-v/i, '내부 엔진 식별자'],
   [/\bundefined\b|\bnull\b|\[object Object\]/i, '직렬화 오류 문자열']
 ];
 
 const CUSTOMER_ADDITIONAL_FORBIDDEN_PATTERNS: ReadonlyArray<[RegExp, string]> = [
-  [/겁재은|식신와|정인가|사은 사건|태은 사건|무은지형|돈·사업 구조과|비교적 균형적인 편입니다로 판정했습니다/, '잘못된 한국어 조사'],
+  [/겁재은|식신와|정인가|사은 사건|태은 사건|무은지형|돈·사업 구조과|비교적 균형적인 편입니다로 판정했습니다|관계의 역할 배치을|판단 순서으로|대운 진입 전 대운|고려하면로 보이므로/, '잘못된 한국어 조사'],
   [/\b(?:weak|strong|cold|hot|dry|wet|johu|byeongyak)\b/i, '내부 상태값'],
   [/\b(?:relation|natal|dayun|seun|wolyun|luck):|branch\+|fingerprint|engine version|rule id/i, '내부 근거 식별자'],
   [/고객 체감|읽는 사람이|상담받는 느낌|AI가|프롬프트|\bLLM\b/i, '제작 과정 메타 문구'],
@@ -68,7 +68,11 @@ function cleanSection(section: ReportSection): ReportSection {
 
 function customerTendency(value: string) {
   return value
+    .replace(/\blatent-tension\b/gi, '잠재적 조정 필요')
     .replace(/\blatent-friction\b/gi, '잠재적 마찰 가능성')
+    .replace(/\bintegration\b/gi, '조화·결합 흐름')
+    .replace(/\bactivation\b/gi, '활성화 흐름')
+    .replace(/\bconditional\b/gi, '조건을 함께 봐야 하는 흐름')
     .replace(/\bsupportive\b/gi, '조화를 돕는 흐름')
     .replace(/\btension\b/gi, '조정이 필요한 흐름')
     .replace(/\bneutral\b/gi, '중립적인 흐름')
@@ -165,6 +169,15 @@ export function findCustomerReportTextViolations(report: SajuReportData) {
 
   if (report.engineMeta?.calculationPrecision === 'exact-minute' && /미정|미상|\bunknown\b/i.test(text)) {
     violations.push('정확 시각 리포트의 미정·미상 값');
+  }
+
+  if (report.serviceId === 'general-signature' && report.questionAnswers.length >= 2) {
+    const normalizedQuestions = report.questionAnswers
+      .map((answer) => answer.question.replace(/[\s\p{P}\p{S}]+/gu, '').toLowerCase())
+      .filter(Boolean);
+    if (new Set(normalizedQuestions).size !== normalizedQuestions.length) {
+      violations.push('중복된 사용자 질문');
+    }
   }
 
   return [...new Set(violations)];

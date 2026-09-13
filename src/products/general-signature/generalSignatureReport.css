@@ -1,378 +1,1786 @@
 .general-signature-report {
-  --gs-paper: #fffdf7;
-  --gs-ivory: #f4efe3;
-  --gs-ink: #211d18;
-  --gs-muted: #71685d;
-  --gs-gold: #9d773b;
-  --gs-line: rgba(77, 62, 42, 0.2);
-  background: var(--gs-ivory);
-  color: var(--gs-ink);
+  --report-bg: #29261f;
+  --report-paper: #fbf8f1;
+  --report-paper-soft: #f4efe5;
+  --report-paper-deep: #ebe3d5;
+  --report-ink: #211f1b;
+  --report-ink-soft: #4f4a42;
+  --report-muted: #766e63;
+  --report-faint: #a3998b;
+  --report-line: #ddd3c3;
+  --report-line-strong: #c7b89e;
+  --report-gold: #ad8447;
+  --report-gold-dark: #75562b;
+  --report-gold-soft: #e8dbc2;
+  --report-green: #2d6548;
+  --report-red: #a05247;
+  min-height: 100vh;
   overflow-x: clip;
+  color: var(--report-ink);
+  background:
+    radial-gradient(circle at 50% 10%, rgba(184, 150, 98, 0.08), transparent 34rem),
+    var(--report-bg);
+  font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+}
+
+body:has(.general-signature-report) {
+  overflow-x: clip;
+  background: var(--report-bg);
+}
+
+.general-signature-report-app-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: var(--report-bg);
+  box-shadow: none;
+}
+
+.general-signature-report .premium-report-topbar {
+  position: sticky;
+  z-index: 40;
+  top: 0;
+  color: #f7f0e4;
+  background: rgba(31, 29, 24, 0.94);
+  border-bottom: 1px solid rgba(226, 202, 159, 0.2);
+  backdrop-filter: blur(14px);
+}
+
+.general-signature-report .premium-report-topbar-inner {
+  width: min(980px, calc(100% - 32px));
+  min-height: 58px;
+  margin: 0 auto;
+}
+
+.general-signature-report .premium-report-brand {
+  min-height: 44px;
+  align-items: center;
+  color: #f4e8d3;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.general-signature-report .premium-icon-action,
+.general-signature-report .app-profile-button {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #eadcc3;
+  background: transparent;
+  border: 1px solid rgba(234, 220, 195, 0.25);
+  border-radius: 50%;
+}
+
+.general-signature-report .premium-icon-action:hover,
+.general-signature-report .app-profile-button:hover {
+  color: #fffaf1;
+  border-color: rgba(234, 220, 195, 0.65);
+}
+
+.general-signature-report :is(a, button, summary):focus-visible {
+  outline: 3px solid #d8a95b;
+  outline-offset: 3px;
 }
 
 .general-signature-report .premium-report-shell {
-  width: min(100%, 1120px);
+  width: 100%;
+  max-width: none;
+  padding: 30px 20px 84px;
 }
 
 .general-signature-report .premium-report-paper {
-  background: var(--gs-paper);
-  box-shadow: 0 18px 50px rgba(49, 40, 27, 0.08);
+  position: relative;
+  width: min(980px, 100%);
+  max-width: 980px;
+  margin: 0 auto;
+  overflow: visible;
+  color: var(--report-ink);
+  background:
+    radial-gradient(circle at 14% 12%, rgba(173, 132, 71, 0.045), transparent 24rem),
+    radial-gradient(circle at 86% 62%, rgba(90, 78, 56, 0.035), transparent 28rem),
+    var(--report-paper);
+  border: 1px solid rgba(221, 211, 195, 0.68);
+  border-radius: 3px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+}
+
+.general-signature-report .premium-report-paper *,
+.general-signature-report .premium-report-paper *::before,
+.general-signature-report .premium-report-paper *::after {
+  box-sizing: border-box;
+}
+
+.general-signature-report .premium-report-paper *,
+.general-signature-report .premium-card,
+.general-signature-report .premium-pillar-card,
+.general-signature-report .premium-dayun-card,
+.general-signature-report .premium-glance-card,
+.general-signature-report .premium-meta-card,
+.general-signature-report .premium-accordion {
+  animation: none !important;
 }
 
 .gs-cover,
 .gs-briefing,
-.gs-timeline {
-  position: relative;
-  max-width: 880px;
+.gs-timeline,
+.general-signature-report .premium-report-section {
+  width: min(880px, calc(100% - 96px));
   margin-inline: auto;
 }
 
 .gs-cover {
-  min-height: min(860px, calc(100svh - 72px));
-  padding: clamp(56px, 9vw, 108px) clamp(20px, 6vw, 72px) 52px;
-  text-align: center;
-  border-bottom: 1px solid var(--gs-line);
+  padding: 50px 0 46px;
+  border-bottom: 1px solid var(--report-line-strong);
 }
 
-.gs-cover::before {
-  content: '雲月堂';
-  position: absolute;
-  inset: 30px 0 auto;
-  color: rgba(157, 119, 59, 0.07);
-  font-family: serif;
-  font-size: clamp(48px, 11vw, 104px);
-  letter-spacing: 0.16em;
-  pointer-events: none;
+.gs-cover-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(245px, 0.72fr);
+  gap: clamp(30px, 5vw, 54px);
+  align-items: center;
+  padding: 46px 0 36px;
+}
+
+.gs-cover-copy {
+  min-width: 0;
 }
 
 .gs-eyebrow,
+.gs-chapter-kicker,
 .gs-section-heading > span {
-  position: relative;
-  margin: 0 0 18px;
-  color: var(--gs-gold);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  display: block;
+  margin: 0 0 11px;
+  color: var(--report-gold-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.19em;
 }
 
 .gs-cover h1 {
-  position: relative;
-  max-width: 680px;
-  margin: 0 auto;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: clamp(2rem, 6.2vw, 3.8rem);
-  font-weight: 700;
-  line-height: 1.32;
+  margin: 0;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(2.45rem, 5vw, 3.55rem);
+  font-weight: 500;
+  line-height: 1.28;
   letter-spacing: -0.045em;
-  overflow-wrap: anywhere;
-}
-
-.gs-pillar-mark {
-  display: inline-grid;
-  gap: 7px;
-  margin: 34px auto 24px;
-}
-
-.gs-pillar-mark span {
-  color: var(--gs-gold);
-  font-family: serif;
-  font-size: clamp(2.1rem, 6vw, 3.2rem);
-  letter-spacing: 0.16em;
-}
-
-.gs-pillar-mark strong {
-  font-size: 1rem;
-}
-
-.gs-cover blockquote {
-  max-width: 640px;
-  margin: 0 auto;
-  color: #3f382f;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: clamp(1.12rem, 3vw, 1.45rem);
-  line-height: 1.8;
   word-break: keep-all;
 }
 
-.gs-keywords {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin: 25px 0 0;
-  padding: 0;
-  list-style: none;
+.gs-cover h1 span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--report-gold-dark);
+  font-size: 0.64em;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
-.gs-keywords li {
-  padding: 9px 13px;
-  border: 1px solid rgba(157, 119, 59, 0.34);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.58);
-  color: #654d29;
-  font-size: 0.94rem;
-  font-weight: 700;
+.gs-cover-subtitle {
+  margin: 22px 0 0;
+  color: var(--report-ink-soft);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1rem;
+  line-height: 1.85;
+  word-break: keep-all;
+}
+
+.gs-cover-facts {
+  display: grid;
+  margin: 28px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--report-line);
+}
+
+.gs-cover-facts > div {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--report-line);
+}
+
+.gs-cover-facts dt,
+.gs-cover-facts dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.gs-cover-facts dt {
+  color: var(--report-muted);
+  font-size: 0.78rem;
+}
+
+.gs-cover-facts dd {
+  overflow-wrap: anywhere;
+  color: var(--report-ink);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.gs-cover blockquote {
+  position: relative;
+  margin: 28px 0 0;
+  padding: 17px 0 0 22px;
+  color: var(--report-ink-soft);
+  border-left: 2px solid var(--report-gold);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.03rem;
+  line-height: 1.82;
+  word-break: keep-all;
 }
 
 .gs-current-flow {
   display: grid;
-  gap: 4px;
-  max-width: 360px;
-  margin: 32px auto 0;
-  padding: 20px;
-  border-block: 1px solid var(--gs-line);
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 16px;
+  align-items: baseline;
+  margin-top: 28px;
+  padding: 13px 0;
+  border-block: 1px solid var(--report-line-strong);
 }
 
 .gs-current-flow span,
 .gs-current-flow p {
-  color: var(--gs-muted);
-  font-size: 0.94rem;
+  margin: 0;
+  color: var(--report-muted);
+  font-size: 0.75rem;
 }
 
 .gs-current-flow strong {
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: 1.45rem;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1rem;
 }
 
-.gs-current-flow p,
-.gs-precision-note p {
+.gs-cover-visual {
+  position: relative;
   margin: 0;
+  overflow: hidden;
+  aspect-ratio: 0.61;
+  background: #18281f;
+  border: 1px solid rgba(117, 86, 43, 0.42);
+  border-radius: 2px;
+  box-shadow: 0 18px 40px rgba(45, 35, 23, 0.22);
+}
+
+.gs-cover-visual picture,
+.gs-cover-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.gs-cover-visual img {
+  object-fit: cover;
+}
+
+.gs-cover-visual figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 48px 17px 15px;
+  color: #eadbbd;
+  background: linear-gradient(transparent, rgba(9, 18, 13, 0.86));
+  font-size: 0.58rem;
+  letter-spacing: 0.13em;
+}
+
+.gs-cover-signature {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 16px 0;
+  border-block: 1px solid var(--report-line-strong);
+}
+
+.gs-cover-signature span,
+.gs-cover-signature em {
+  color: var(--report-muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+
+.gs-cover-signature strong {
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: 1.14rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-align: center;
+}
+
+.gs-input-summary {
+  margin: 13px 0 0;
+  color: var(--report-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  text-align: center;
 }
 
 .gs-precision-note {
-  max-width: 680px;
-  margin: 26px auto 0;
-  padding: 14px 16px;
-  border-left: 3px solid var(--gs-gold);
-  background: #f7f1e6;
-  text-align: left;
+  margin-top: 16px;
+  padding: 14px 17px;
+  color: var(--report-ink-soft);
+  background: var(--report-paper-soft);
+  border-left: 3px solid var(--report-gold);
 }
 
 .gs-precision-note p {
-  color: #574e43;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.gs-reading-nav-shell {
+  position: sticky;
+  z-index: 20;
+  top: 58px;
+  background: rgba(251, 248, 241, 0.97);
+  border-bottom: 1px solid var(--report-line-strong);
+  box-shadow: 0 8px 20px rgba(52, 44, 32, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.gs-reading-nav {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  width: min(880px, calc(100% - 96px));
+  margin: 0 auto;
+}
+
+.gs-reading-nav a {
+  display: grid;
+  min-width: 0;
+  min-height: 64px;
+  align-content: center;
+  gap: 3px;
+  padding: 9px 13px;
+  color: var(--report-ink);
+  text-decoration: none;
+  border-right: 1px solid var(--report-line);
+}
+
+.gs-reading-nav a:first-child {
+  border-left: 1px solid var(--report-line);
+}
+
+.gs-reading-nav a:hover {
+  background: var(--report-paper-soft);
+}
+
+.gs-reading-nav span {
+  color: var(--report-gold-dark);
+  font-family: Georgia, serif;
+  font-size: 0.7rem;
+}
+
+.gs-reading-nav strong {
+  overflow: hidden;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-briefing,
+.gs-timeline,
+.general-signature-report .premium-report-section {
+  padding-block: 68px;
+  scroll-margin-top: 138px;
+}
+
+.gs-briefing,
+.gs-timeline {
+  border-bottom: 1px solid var(--report-line-strong);
+}
+
+.gs-section-heading,
+.general-signature-report .premium-section-heading {
+  display: block;
+  margin: 0 0 30px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--report-line-strong);
+}
+
+.gs-section-heading h2,
+.general-signature-report .premium-section-heading h2 {
+  margin: 0;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.36;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+}
+
+.gs-section-heading p,
+.general-signature-report .premium-section-heading .premium-muted {
+  margin: 9px 0 0;
+  color: var(--report-muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.general-signature-report .premium-section-title-wrap {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.general-signature-report .premium-section-title-wrap.without-index {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.general-signature-report .premium-section-index {
+  display: block;
+  width: auto;
+  height: auto;
+  color: var(--report-gold-dark);
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.gs-briefing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--report-line);
+  border-left: 1px solid var(--report-line);
+}
+
+.gs-briefing-item {
+  display: grid;
+  min-width: 0;
+  min-height: 170px;
+  align-content: start;
+  gap: 13px;
+  padding: 22px;
+  color: inherit;
+  text-decoration: none;
+  border-right: 1px solid var(--report-line);
+  border-bottom: 1px solid var(--report-line);
+}
+
+.gs-briefing-item:hover {
+  background: var(--report-paper-soft);
+}
+
+.gs-briefing-item strong {
+  color: var(--report-gold-dark);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
   font-size: 1rem;
+}
+
+.gs-briefing-item span {
+  color: var(--report-ink-soft);
+  font-size: 0.88rem;
   line-height: 1.75;
+  word-break: keep-all;
 }
 
 .gs-important {
-  max-width: 720px;
-  margin: 42px auto 0;
-  text-align: left;
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 34px;
+  margin-top: 42px;
+  padding-top: 30px;
+  border-top: 1px solid var(--report-line-strong);
 }
 
-.gs-important h2,
-.gs-section-heading h2 {
+.gs-important h3 {
   margin: 0;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: clamp(1.55rem, 4.5vw, 2.2rem);
-  line-height: 1.4;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.22rem;
+  line-height: 1.55;
+  word-break: keep-all;
 }
 
 .gs-important ol {
   display: grid;
   gap: 0;
-  margin: 20px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: gs-important;
+  counter-reset: important;
 }
 
 .gs-important li {
+  position: relative;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 3px 12px;
-  padding: 18px 0;
-  border-top: 1px solid var(--gs-line);
-  counter-increment: gs-important;
+  grid-template-columns: 120px 1fr;
+  gap: 18px;
+  padding: 16px 0 16px 46px;
+  border-bottom: 1px solid var(--report-line);
+  counter-increment: important;
 }
 
 .gs-important li::before {
-  grid-row: 1 / 3;
-  content: counter(gs-important, decimal-leading-zero);
-  color: var(--gs-gold);
-  font-family: serif;
-  font-weight: 700;
+  content: "0" counter(important);
+  position: absolute;
+  left: 0;
+  color: var(--report-gold);
+  font-family: Georgia, serif;
+  font-size: 1.25rem;
 }
 
-.gs-important strong,
-.gs-important span {
-  min-width: 0;
+.gs-important li strong {
+  font-size: 0.87rem;
 }
 
-.gs-important span {
-  color: #554d43;
-  font-size: 1rem;
-  line-height: 1.75;
+.gs-important li span {
+  color: var(--report-ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.7;
   word-break: keep-all;
 }
 
-.gs-cover-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 30px;
+.gs-timeline > ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block: 1px solid var(--report-line-strong);
 }
 
-.gs-cover-actions a,
+.gs-timeline > ol > li {
+  min-width: 0;
+  min-height: 158px;
+  padding: 21px 18px;
+  border-right: 1px solid var(--report-line);
+}
+
+.gs-timeline > ol > li:last-child {
+  border-right: 0;
+}
+
+.gs-timeline > ol > li:first-child {
+  background: var(--report-paper-soft);
+  box-shadow: inset 0 3px var(--report-gold);
+}
+
+.gs-timeline li span,
+.gs-timeline li strong,
+.gs-timeline li p {
+  display: block;
+}
+
+.gs-timeline li span {
+  color: var(--report-muted);
+  font-size: 0.72rem;
+}
+
+.gs-timeline li strong {
+  margin-top: 10px;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1rem;
+}
+
+.gs-timeline li p {
+  margin: 11px 0 0;
+  color: var(--report-ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
 .gs-inline-link {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
-  border: 1px solid var(--gs-line);
-  border-radius: 3px;
-  color: var(--gs-ink);
-  font-size: 0.96rem;
-  font-weight: 750;
-  text-decoration: none;
+  margin-top: 18px;
+  color: var(--report-gold-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-underline-offset: 5px;
 }
 
-.gs-cover-actions a:first-child {
-  border-color: #382f25;
-  background: #382f25;
-  color: #fffdf7;
-}
-
-.gs-cover-actions a:focus-visible,
-.gs-inline-link:focus-visible,
-.gs-briefing-item:focus-visible {
-  outline: 3px solid #c99a4f;
-  outline-offset: 3px;
-}
-
-.gs-briefing,
-.gs-timeline {
-  padding: clamp(52px, 8vw, 90px) clamp(20px, 6vw, 72px);
-  border-bottom: 1px solid var(--gs-line);
-  scroll-margin-top: 82px;
-}
-
-.gs-section-heading {
-  max-width: 680px;
-  margin-bottom: 30px;
-}
-
-.gs-section-heading p {
-  margin: 10px 0 0;
-  color: var(--gs-muted);
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.gs-briefing-grid {
+.general-signature-report .gs-generation-note {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px 20px;
+  width: min(880px, calc(100% - 96px));
+  margin: 26px auto 0;
+  padding: 15px 18px;
+  color: var(--report-ink-soft);
+  background: var(--report-paper-soft);
+  border-left: 3px solid var(--report-gold);
+}
+
+.general-signature-report .gs-generation-note strong,
+.general-signature-report .gs-generation-note p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.general-signature-report .premium-divider {
+  width: min(880px, calc(100% - 96px));
+  height: 1px;
+  margin: 0 auto;
+  background: var(--report-line-strong);
+}
+
+.general-signature-report .premium-report-section {
+  max-width: none;
+}
+
+.general-signature-report .premium-grid2,
+.general-signature-report .premium-grid3 {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.general-signature-report .premium-grid2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--gs-line);
 }
 
-.gs-briefing-item {
-  display: grid;
-  gap: 8px;
+.general-signature-report .premium-grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.general-signature-report .premium-card,
+.general-signature-report .premium-distribution-card,
+.general-signature-report .premium-dayun-card,
+.general-signature-report .premium-fortune-timeline article,
+.general-signature-report .premium-report-support-card {
   min-width: 0;
-  padding: 22px 18px;
-  border-bottom: 1px solid var(--gs-line);
-  color: inherit;
-  text-decoration: none;
+  padding: 22px;
+  color: var(--report-ink);
+  background: rgba(255, 255, 255, 0.26);
+  border: 1px solid var(--report-line);
+  border-radius: 4px;
+  box-shadow: none;
 }
 
-.gs-briefing-item:nth-child(odd) {
-  border-right: 1px solid var(--gs-line);
+.general-signature-report .premium-card::before,
+.general-signature-report .premium-card::after,
+.general-signature-report .premium-dayun-card::before,
+.general-signature-report .premium-fortune-timeline article::before {
+  display: none;
 }
 
-.gs-briefing-item strong {
-  color: #725628;
-  font-size: 0.96rem;
+.general-signature-report .premium-card h3,
+.general-signature-report .premium-callout h3,
+.general-signature-report .premium-card h4 {
+  margin: 0 0 10px;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-weight: 650;
+  line-height: 1.5;
 }
 
-.gs-briefing-item span {
-  font-size: 1rem;
+.general-signature-report .premium-card h3 {
+  font-size: 1.05rem;
+}
+
+.general-signature-report .premium-card h4 {
+  margin-top: 20px;
+  color: var(--report-gold-dark);
+  font-size: 0.86rem;
+}
+
+.general-signature-report :is(.premium-card, .premium-callout) p {
+  margin: 0;
+  color: var(--report-ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.78;
+  word-break: keep-all;
+}
+
+.general-signature-report .premium-card p + p {
+  margin-top: 13px;
+}
+
+.general-signature-report .premium-card.tone-good {
+  border-top: 3px solid var(--report-green);
+}
+
+.general-signature-report .premium-card.tone-warn {
+  border-top: 3px solid var(--report-red);
+}
+
+.general-signature-report .premium-callout {
+  margin: 22px 0;
+  padding: 22px 24px;
+  color: var(--report-ink);
+  background: var(--report-paper-soft);
+  border: 0;
+  border-left: 3px solid var(--report-gold);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.general-signature-report .premium-callout p + p {
+  margin-top: 13px;
+}
+
+.general-signature-report .premium-prose {
+  display: block;
+  max-width: 720px;
+  margin-top: 26px;
+}
+
+.general-signature-report .premium-prose p {
+  margin: 0;
+  color: var(--report-ink-soft);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.02rem;
+  line-height: 1.98;
+  word-break: keep-all;
+}
+
+.general-signature-report .premium-prose p + p {
+  margin-top: 24px;
+}
+
+.general-signature-report .premium-list {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.general-signature-report .premium-list li {
+  position: relative;
+  padding-left: 17px;
+  color: var(--report-ink-soft);
+  font-size: 0.89rem;
   line-height: 1.72;
   word-break: keep-all;
 }
 
-.gs-timeline ol {
+.general-signature-report .premium-list li::before {
+  content: "";
+  position: absolute;
+  top: 0.72em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  background: var(--report-gold);
+  transform: rotate(45deg);
+}
+
+.general-signature-report .premium-mini-badge,
+.general-signature-report .premium-key-label {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--report-gold-dark);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+
+.general-signature-report .premium-wonguk-board {
+  position: relative;
+  margin-top: 24px;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.general-signature-report .premium-wonguk-board::before,
+.general-signature-report .premium-wonguk-board::after {
+  display: none;
+}
+
+.general-signature-report .premium-wonguk-frame {
+  overflow: hidden;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--report-line-strong);
+  border-radius: 3px;
+  box-shadow: none;
+}
+
+.general-signature-report .premium-wonguk-frame::before,
+.general-signature-report .premium-wonguk-frame::after {
+  display: none;
+}
+
+.general-signature-report .premium-wonguk-columns {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 0 0 26px;
+  gap: 0;
+}
+
+.general-signature-report .premium-wonguk-column {
+  display: block;
+  min-width: 0;
+  padding: 0 13px 17px;
+  text-align: center;
+  border-right: 1px solid var(--report-line);
+}
+
+.general-signature-report .premium-wonguk-column:last-child {
+  border-right: 0;
+}
+
+.general-signature-report .premium-wonguk-column:nth-child(3) {
+  background: rgba(173, 132, 71, 0.075);
+  box-shadow: inset 0 3px var(--report-gold);
+}
+
+.general-signature-report .premium-wonguk-head {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-bottom: 1px solid var(--report-line);
+}
+
+.general-signature-report .premium-wonguk-head strong {
+  color: var(--report-gold-dark);
+  font-family: Georgia, serif;
+  font-weight: 500;
+}
+
+.general-signature-report .premium-wonguk-head span {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.general-signature-report .premium-wonguk-chip {
+  position: static;
+  display: grid;
+  width: auto;
+  min-height: 128px;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  padding: 13px 4px;
+  background: transparent;
+  border-bottom: 1px solid var(--report-line);
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+.general-signature-report .premium-wonguk-chip::before {
+  display: none;
+}
+
+.general-signature-report .premium-wonguk-chip span,
+.general-signature-report .premium-wonguk-chip em {
+  color: var(--report-muted);
+  font-size: 0.69rem;
+  font-style: normal;
+}
+
+.general-signature-report .premium-wonguk-chip strong {
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  font-weight: 500;
+  line-height: 1.15;
+  text-shadow: none;
+}
+
+.general-signature-report .premium-wonguk-chip[data-element="목"] strong { color: #357151; }
+.general-signature-report .premium-wonguk-chip[data-element="화"] strong { color: #a44f42; }
+.general-signature-report .premium-wonguk-chip[data-element="토"] strong { color: #98743d; }
+.general-signature-report .premium-wonguk-chip[data-element="금"] strong { color: #6b6861; }
+.general-signature-report .premium-wonguk-chip[data-element="수"] strong { color: #315d7c; }
+
+.general-signature-report .premium-wonguk-ten-god,
+.general-signature-report .premium-wonguk-column > p {
+  margin: 12px 0 0;
+  color: var(--report-muted);
+  font-size: 0.69rem;
+  line-height: 1.55;
+  word-break: keep-all;
+  white-space: normal;
+}
+
+.general-signature-report .premium-wonguk-reading-card {
+  margin-top: 18px;
+  padding: 28px;
+  border-left: 3px solid var(--report-gold);
+}
+
+.general-signature-report .premium-wonguk-reading-kicker,
+.general-signature-report .premium-distribution-head > div > span,
+.general-signature-report .premium-dayun-card > span {
+  color: var(--report-gold-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+}
+
+.general-signature-report .premium-glance-chart-grid {
+  align-items: start;
+}
+
+.general-signature-report .premium-distribution-card {
+  padding: 27px;
+  border-color: var(--report-line);
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+}
+
+.general-signature-report .premium-element-compass {
+  min-height: 0;
+}
+
+.general-signature-report .premium-distribution-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid var(--report-line);
+}
+
+.general-signature-report .premium-distribution-head > div {
+  display: grid;
+  gap: 5px;
+}
+
+.general-signature-report .premium-distribution-head h3 {
+  margin: 0;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.18rem;
+  line-height: 1.35;
+}
+
+.general-signature-report .premium-distribution-total {
+  min-width: 52px;
+  padding-top: 3px;
+  color: var(--report-gold-dark);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.general-signature-report .premium-element-compass-core,
+.general-signature-report .premium-tengod-lead {
+  position: static;
+  display: grid;
+  width: auto;
+  min-height: 0;
+  justify-items: stretch;
+  align-items: stretch;
+  gap: 6px;
+  margin: 18px 0 16px;
+  padding: 16px 17px;
+  border: 1px solid var(--report-line);
+  border-radius: 3px;
+  background: var(--report-paper-soft);
+  box-shadow: none;
+  text-align: left;
+}
+
+.general-signature-report .premium-element-compass-core span,
+.general-signature-report .premium-tengod-lead span,
+.general-signature-report .premium-element-compass-core p {
+  margin: 0;
+  color: var(--report-muted);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.general-signature-report .premium-element-compass-core strong,
+.general-signature-report .premium-tengod-lead strong {
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 0.96rem;
+  line-height: 1.5;
+  text-align: left;
+  word-break: keep-all;
+  white-space: normal;
+}
+
+.general-signature-report .premium-element-list,
+.general-signature-report .premium-tengod-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
   padding: 0;
-  border-top: 1px solid var(--gs-line);
   list-style: none;
 }
 
-.gs-timeline li {
+.general-signature-report .premium-element-row {
+  display: grid;
+  grid-template-columns: minmax(92px, auto) minmax(70px, 1fr) 48px;
+  gap: 12px;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--report-line);
+}
+
+.general-signature-report .premium-element-row:last-child,
+.general-signature-report .premium-tengod-row:last-child {
+  border-bottom: 0;
+}
+
+.general-signature-report .premium-element-label {
+  display: grid;
+  grid-template-columns: 9px 25px minmax(0, 1fr);
+  gap: 7px;
+  align-items: center;
   min-width: 0;
-  padding: 22px 16px;
-  border-bottom: 1px solid var(--gs-line);
 }
 
-.gs-timeline li + li {
-  border-left: 1px solid var(--gs-line);
+.general-signature-report .premium-element-label i {
+  width: 8px;
+  height: 8px;
+  background: var(--element-color);
+  border-radius: 50%;
 }
 
-.gs-timeline li > span {
+.general-signature-report .premium-element-label strong {
+  color: var(--report-ink);
+  font-size: 0.84rem;
+}
+
+.general-signature-report .premium-element-label span {
+  color: var(--report-muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.general-signature-report .premium-element-bar,
+.general-signature-report .premium-tengod-bar {
   display: block;
-  margin-bottom: 8px;
-  color: var(--gs-gold);
-  font-size: 0.88rem;
-  font-weight: 800;
+  height: 5px;
+  overflow: hidden;
+  background: var(--report-paper-deep);
+  border-radius: 999px;
 }
 
-.gs-timeline li strong {
+.general-signature-report .premium-element-bar span,
+.general-signature-report .premium-tengod-bar i {
   display: block;
-  overflow-wrap: anywhere;
+  width: var(--element-level);
+  height: 100%;
+  background: var(--element-color);
+  border-radius: inherit;
 }
 
-.gs-timeline li p {
-  margin: 10px 0 0;
-  color: #5c5349;
+.general-signature-report .premium-element-row.empty .premium-element-bar span {
+  width: 0;
+}
+
+.general-signature-report .premium-element-value {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px;
+  align-items: baseline;
+  justify-content: end;
+  text-align: right;
+}
+
+.general-signature-report .premium-element-value strong {
+  color: var(--report-ink);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 0.9rem;
+}
+
+.general-signature-report .premium-element-value span {
+  color: var(--report-muted);
+  font-size: 0.66rem;
+}
+
+.general-signature-report .premium-tengod-row {
+  display: grid;
+  grid-template-columns: 28px 50px minmax(70px, 1fr) 24px;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--report-line);
+}
+
+.general-signature-report .premium-tengod-row small {
+  color: var(--report-faint);
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 0.68rem;
+}
+
+.general-signature-report .premium-tengod-row strong {
+  font-size: 0.82rem;
+}
+
+.general-signature-report .premium-tengod-row em {
+  color: var(--report-muted);
+  font-size: 0.74rem;
+  font-style: normal;
+  text-align: right;
+}
+
+.general-signature-report .premium-tengod-bar i {
+  width: var(--ten-god-level);
+  background: var(--report-gold-soft);
+}
+
+.general-signature-report .premium-tengod-row.major .premium-tengod-bar i {
+  background: var(--report-gold);
+}
+
+.general-signature-report .premium-dayun-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.general-signature-report .premium-dayun-card.current {
+  border-color: var(--report-gold);
+  box-shadow: inset 0 3px var(--report-gold);
+}
+
+.general-signature-report .premium-dayun-card strong,
+.general-signature-report .premium-dayun-card em {
+  display: block;
+  margin-top: 9px;
+  font-style: normal;
+}
+
+.general-signature-report .premium-dayun-card strong {
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.08rem;
+}
+
+.general-signature-report .premium-dayun-card em {
+  color: var(--report-gold-dark);
+  font-size: 0.76rem;
+}
+
+.general-signature-report .premium-dayun-card p {
+  margin: 13px 0 0;
+}
+
+.general-signature-report .premium-fortune-timeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 22px;
+  border: 1px solid var(--report-line-strong);
+}
+
+.general-signature-report .premium-fortune-timeline article {
+  min-height: 150px;
+  padding: 18px 14px;
+  border: 0;
+  border-right: 1px solid var(--report-line);
+  border-radius: 0;
+}
+
+.general-signature-report .premium-fortune-timeline article:last-child {
+  border-right: 0;
+}
+
+.general-signature-report .premium-fortune-timeline article.active {
+  background: var(--report-paper-soft);
+  box-shadow: inset 0 3px var(--report-gold);
+}
+
+.general-signature-report .premium-fortune-timeline article span {
+  color: var(--report-muted);
+  font-size: 0.72rem;
+}
+
+.general-signature-report .premium-fortune-timeline article strong {
+  display: block;
+  margin-top: 9px;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.general-signature-report .premium-fortune-timeline article p {
+  margin-top: 10px;
+  font-size: 0.76rem;
+  line-height: 1.62;
+}
+
+.general-signature-report .premium-accordion-group {
+  margin-top: 26px;
+  border-top: 1px solid var(--report-line-strong);
+}
+
+.general-signature-report .premium-accordion,
+.general-signature-report .gs-question-disclosure {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--report-line-strong);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.general-signature-report .premium-accordion > summary {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 2px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.general-signature-report summary::-webkit-details-marker {
+  display: none;
+}
+
+.general-signature-report .premium-details-hint {
+  color: var(--report-muted);
+  font-size: 0.72rem;
+}
+
+.general-signature-report .premium-accordion-body {
+  padding: 4px 2px 25px;
+}
+
+.general-signature-report .premium-accordion-body p {
+  margin: 0;
+  color: var(--report-ink-soft);
+  font-size: 0.91rem;
+  line-height: 1.82;
+  word-break: keep-all;
+}
+
+.general-signature-report .premium-accordion-body p + p {
+  margin-top: 15px;
+}
+
+.general-signature-report .premium-table-wrap {
+  max-width: 100%;
+  margin-top: 24px;
+  overflow-x: auto;
+  border: 1px solid var(--report-line-strong);
+  border-radius: 0;
+}
+
+.general-signature-report .premium-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  color: var(--report-ink);
+  background: transparent;
+}
+
+.general-signature-report .premium-table :is(th, td) {
+  padding: 13px 14px;
+  text-align: left;
+  border-right: 1px solid var(--report-line);
+  border-bottom: 1px solid var(--report-line);
+  font-size: 0.79rem;
+  line-height: 1.6;
+}
+
+.general-signature-report .premium-table th {
+  color: var(--report-gold-dark);
+  background: var(--report-paper-soft);
+  font-weight: 700;
+}
+
+.general-signature-report .gs-question-disclosure > summary {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 30px;
+  gap: 14px;
+  align-items: center;
+  min-height: 74px;
+  padding: 14px 2px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.general-signature-report .gs-question-disclosure > summary span {
+  color: var(--report-gold-dark);
+  font-family: Georgia, serif;
   font-size: 1rem;
-  line-height: 1.65;
+}
+
+.general-signature-report .gs-question-disclosure > summary strong {
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1rem;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.general-signature-report .gs-question-disclosure > summary i {
+  color: var(--report-gold-dark);
+  font-size: 1.2rem;
+  font-style: normal;
+  text-align: center;
+}
+
+.general-signature-report .gs-question-disclosure[open] > summary i {
+  transform: rotate(45deg);
+}
+
+.general-signature-report .gs-question-disclosure .premium-answer-card {
+  margin: 0 0 24px 60px;
+  padding: 24px;
+  background: var(--report-paper-soft);
+  border: 0;
+  border-left: 3px solid var(--report-gold);
+}
+
+.general-signature-report .gs-action-horizons {
+  padding: 5px 2px 25px;
+}
+
+.general-signature-report .gs-action-horizons h3 {
+  margin: 0 0 14px;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-size: 1.05rem;
+}
+
+.general-signature-report .gs-action-horizons ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--report-line-strong);
+}
+
+.general-signature-report .gs-action-horizons li {
+  min-width: 0;
+  min-height: 140px;
+  padding: 18px;
+  border-right: 1px solid var(--report-line);
+}
+
+.general-signature-report .gs-action-horizons li:last-child {
+  border-right: 0;
+}
+
+.general-signature-report .gs-action-horizons strong,
+.general-signature-report .gs-action-horizons span {
+  display: block;
+}
+
+.general-signature-report .gs-action-horizons strong {
+  color: var(--report-gold-dark);
+  font-size: 0.78rem;
+}
+
+.general-signature-report .gs-action-horizons span {
+  margin-top: 11px;
+  color: var(--report-ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.66;
+  word-break: keep-all;
+}
+
+.general-signature-report .premium-report-character {
+  display: none;
+}
+
+.general-signature-report .premium-report-support-actions,
+.general-signature-report .premium-report-footer {
+  width: min(880px, calc(100% - 96px));
+  margin-inline: auto;
+}
+
+.general-signature-report .premium-report-footer {
+  padding: 44px 0 56px;
+  color: var(--report-muted);
+  border-top: 1px solid var(--report-line-strong);
+  font-size: 0.78rem;
+  line-height: 1.78;
+  word-break: keep-all;
+}
+
+.general-signature-report .gs-report-download {
+  display: flex;
+  width: min(880px, calc(100% - 96px));
+  margin: 12px auto 0;
+  padding: 30px 0 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-top: 1px solid var(--report-line);
+}
+
+.general-signature-report .gs-report-download-button,
+.general-signature-report .gs-report-download-retry {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 22px;
+  border: 1px solid #302b24;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.general-signature-report .gs-report-download-button {
+  color: #fffaf0;
+  background: #2a2721;
+}
+
+.general-signature-report .gs-report-download-retry {
+  color: var(--report-ink);
+  background: transparent;
+}
+
+.general-signature-report .gs-report-download-button:hover,
+.general-signature-report .gs-report-download-button:focus-visible {
+  background: #171511;
+}
+
+.general-signature-report .gs-report-download-retry:hover,
+.general-signature-report .gs-report-download-retry:focus-visible {
+  border-color: var(--report-gold-dark);
+  color: var(--report-gold-dark);
 }
 
 @media (max-width: 767px) {
+  .general-signature-report .premium-report-topbar-inner {
+    width: calc(100% - 24px);
+    min-height: 54px;
+  }
+
+  .general-signature-report .premium-report-shell {
+    padding: 0;
+  }
+
   .general-signature-report .premium-report-paper {
     width: 100%;
+    border: 0;
     border-radius: 0;
     box-shadow: none;
   }
 
-  .gs-cover {
-    min-height: auto;
-  }
-
-  .gs-cover::before {
-    inset-block-start: 22px;
-  }
-
-  .gs-briefing-grid,
-  .gs-timeline ol {
-    grid-template-columns: 1fr;
-  }
-
-  .gs-briefing-item:nth-child(odd),
-  .gs-timeline li + li {
-    border-right: 0;
-    border-left: 0;
-  }
-
-  .gs-cover-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 359px) {
   .gs-cover,
   .gs-briefing,
-  .gs-timeline {
-    padding-inline: 16px;
+  .gs-timeline,
+  .general-signature-report .premium-report-section,
+  .general-signature-report .premium-divider,
+  .general-signature-report .premium-report-support-actions,
+  .general-signature-report .premium-report-footer,
+  .general-signature-report .gs-report-download,
+  .general-signature-report .gs-generation-note {
+    width: calc(100% - 40px);
+  }
+
+  .gs-cover {
+    padding: 28px 0 34px;
+  }
+
+  .gs-cover-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 34px 0 28px;
+  }
+
+  .gs-cover h1 {
+    font-size: clamp(2.18rem, 11vw, 3rem);
+  }
+
+  .gs-cover-subtitle {
+    font-size: 0.94rem;
+  }
+
+  .gs-cover-visual {
+    width: min(78vw, 300px);
+    justify-self: center;
+  }
+
+  .gs-current-flow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .gs-current-flow p {
+    grid-column: 1 / -1;
+  }
+
+  .gs-cover-signature {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .gs-cover-signature strong {
+    font-size: 0.98rem;
+    line-height: 1.7;
+  }
+
+  .gs-reading-nav-shell {
+    top: 54px;
+    overflow: hidden;
+  }
+
+  .gs-reading-nav {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .gs-reading-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gs-reading-nav a {
+    flex: 0 0 auto;
+    min-width: 102px;
+    min-height: 58px;
+    padding: 8px 13px;
+    scroll-snap-align: start;
+  }
+
+  .gs-briefing,
+  .gs-timeline,
+  .general-signature-report .premium-report-section {
+    padding-block: 52px;
+    scroll-margin-top: 122px;
+  }
+
+  .gs-section-heading,
+  .general-signature-report .premium-section-heading {
+    margin-bottom: 24px;
+  }
+
+  .general-signature-report .premium-section-title-wrap {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .gs-briefing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gs-briefing-item {
+    min-height: 0;
+    padding: 19px;
+  }
+
+  .gs-important {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-top: 34px;
   }
 
   .gs-important li {
-    grid-template-columns: 30px minmax(0, 1fr);
-    gap: 3px 8px;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding-left: 42px;
+  }
+
+  .gs-timeline > ol {
+    grid-template-columns: 1fr;
+  }
+
+  .gs-timeline > ol > li {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--report-line);
+  }
+
+  .gs-timeline > ol > li:last-child {
+    border-bottom: 0;
+  }
+
+  .general-signature-report .premium-grid2,
+  .general-signature-report .premium-grid3,
+  .general-signature-report .premium-dayun-grid,
+  .general-signature-report .premium-glance-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .general-signature-report .premium-card,
+  .general-signature-report .premium-distribution-card,
+  .general-signature-report .premium-dayun-card {
+    padding: 20px;
+  }
+
+  .general-signature-report .premium-prose p {
+    font-size: 1rem;
+    line-height: 1.92;
+  }
+
+  .general-signature-report :is(
+    .premium-card,
+    .premium-callout,
+    .premium-answer-card,
+    .premium-dayun-card
+  ) p,
+  .general-signature-report .premium-accordion-body p,
+  .general-signature-report .premium-fortune-timeline article p,
+  .general-signature-report .premium-list li,
+  .general-signature-report .gs-action-horizons span {
+    font-size: 1rem;
+    line-height: 1.82;
+  }
+
+  .general-signature-report .gs-generation-note {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .general-signature-report .premium-wonguk-column {
+    padding-inline: 6px;
+  }
+
+  .general-signature-report .premium-wonguk-head {
+    gap: 3px;
+  }
+
+  .general-signature-report .premium-wonguk-head strong,
+  .general-signature-report .premium-wonguk-head span {
+    font-size: 0.72rem;
+  }
+
+  .general-signature-report .premium-wonguk-chip {
+    min-height: 103px;
+    padding-inline: 1px;
+  }
+
+  .general-signature-report .premium-wonguk-chip strong {
+    font-size: clamp(1.95rem, 10vw, 2.55rem);
+  }
+
+  .general-signature-report .premium-wonguk-chip span,
+  .general-signature-report .premium-wonguk-chip em,
+  .general-signature-report .premium-wonguk-ten-god,
+  .general-signature-report .premium-wonguk-column > p {
+    font-size: 0.68rem;
+  }
+
+  .general-signature-report .premium-wonguk-reading-card {
+    padding: 22px 19px;
+  }
+
+  .general-signature-report .premium-fortune-timeline {
+    grid-template-columns: 1fr;
+  }
+
+  .general-signature-report .premium-fortune-timeline article {
+    min-height: 0;
+    padding: 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--report-line);
+  }
+
+  .general-signature-report .premium-table-wrap {
+    overflow: visible;
+    border: 0;
+  }
+
+  .general-signature-report .premium-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .general-signature-report .premium-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .general-signature-report .premium-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .general-signature-report .premium-table tr {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--report-line-strong);
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .general-signature-report .premium-table td {
+    display: grid;
+    grid-template-columns: minmax(82px, 34%) minmax(0, 1fr);
+    gap: 12px;
+    padding: 11px 12px;
+    border-right: 0;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+  }
+
+  .general-signature-report .premium-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .general-signature-report .premium-table td::before {
+    content: attr(data-label);
+    color: var(--report-gold-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.55;
+  }
+
+  .general-signature-report .gs-question-disclosure > summary {
+    grid-template-columns: 36px minmax(0, 1fr) 26px;
+    gap: 9px;
+  }
+
+  .general-signature-report .gs-question-disclosure > summary strong {
+    font-size: 1rem;
+  }
+
+  .general-signature-report .gs-question-disclosure .premium-answer-card {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .general-signature-report .gs-action-horizons ol {
+    grid-template-columns: 1fr;
+  }
+
+  .general-signature-report .gs-action-horizons li {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--report-line);
+  }
+
+  .general-signature-report .gs-action-horizons li:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 374px) {
+  .gs-cover,
+  .gs-briefing,
+  .gs-timeline,
+  .general-signature-report .premium-report-section,
+  .general-signature-report .premium-divider,
+  .general-signature-report .premium-report-support-actions,
+  .general-signature-report .premium-report-footer,
+  .general-signature-report .gs-generation-note {
+    width: calc(100% - 32px);
+  }
+
+  .general-signature-report .premium-wonguk-chip strong {
+    font-size: 1.92rem;
   }
 }
 
@@ -381,271 +1789,36 @@
   .general-signature-report *::before,
   .general-signature-report *::after {
     scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-.general-signature-report .premium-wonguk-ten-god {
-  margin: 8px 0 0;
-  color: #73582f;
-  font-size: 0.9rem;
-  font-weight: 750;
-  line-height: 1.5;
-}
-
-.gs-expert-disclosure {
-  max-width: 880px;
-  margin-inline: auto;
-  border-block: 1px solid var(--gs-line);
-}
-
-.gs-expert-disclosure > summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 18px;
-  min-height: 56px;
-  align-items: center;
-  padding: 16px 4px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.gs-expert-disclosure > summary::-webkit-details-marker {
-  display: none;
-}
-
-.gs-expert-disclosure > summary::after {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  content: '+';
-  color: var(--gs-gold);
-  font-size: 1.4rem;
-}
-
-.gs-expert-disclosure[open] > summary::after {
-  content: '−';
-}
-
-.gs-expert-disclosure > summary span {
-  color: var(--gs-gold);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.gs-expert-disclosure > summary strong {
-  grid-column: 1;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: 1.08rem;
-  overflow-wrap: anywhere;
-}
-
-.gs-expert-disclosure > .premium-report-section {
-  padding-top: 24px;
-}
-
-.general-signature-report .premium-answer-card h4 {
-  margin: 24px 0 8px;
-  color: #765c31;
-  font-size: 1rem;
-}
-
-.gs-answer-evidence {
-  margin-top: 20px !important;
-  padding-top: 16px;
-  border-top: 1px solid var(--gs-line);
-  color: var(--gs-muted) !important;
-  font-size: 0.94rem !important;
-}
-
-.gs-action-horizons {
-  margin-bottom: 28px;
-}
-
-.gs-action-horizons h3 {
-  margin: 0 0 16px;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: 1.28rem;
-}
-
-.gs-action-horizons ol {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 0;
-  padding: 0;
-  border-block: 1px solid var(--gs-line);
-  list-style: none;
-}
-
-.gs-action-horizons li {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  padding: 18px 14px;
-}
-
-.gs-action-horizons li + li {
-  border-left: 1px solid var(--gs-line);
-}
-
-.gs-action-horizons strong {
-  color: var(--gs-gold);
-}
-
-.gs-action-horizons span {
-  font-size: 1rem;
-  line-height: 1.65;
-  word-break: keep-all;
-}
-
-@media (max-width: 767px) {
-  .gs-expert-disclosure > summary {
-    padding-inline: 0;
+@media print {
+  .general-signature-report,
+  body:has(.general-signature-report) {
+    background: #fff;
   }
 
-  .gs-action-horizons ol {
-    grid-template-columns: 1fr;
+  .general-signature-report .premium-report-topbar,
+  .general-signature-report .gs-reading-nav-shell,
+  .general-signature-report .premium-report-support-actions {
+    display: none !important;
   }
 
-  .gs-action-horizons li + li {
-    border-top: 1px solid var(--gs-line);
-    border-left: 0;
-  }
-}
-
-/* Paid long-form reading: keep body copy readable on small screens. */
-.general-signature-report p,
-.general-signature-report li,
-.general-signature-report .premium-accordion-body {
-  font-size: max(1rem, 16px);
-  line-height: 1.75;
-}
-
-.general-signature-report .premium-icon-action,
-.general-signature-report .app-profile-button {
-  min-width: 44px;
-  min-height: 44px;
-}
-
-.general-signature-report .premium-report-brand {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-}
-
-.general-signature-report button,
-.general-signature-report a,
-.general-signature-report summary {
-  -webkit-tap-highlight-color: rgba(157, 119, 59, 0.18);
-}
-
-.general-signature-report button:focus-visible,
-.general-signature-report a:focus-visible,
-.general-signature-report summary:focus-visible {
-  outline: 3px solid #b8822f;
-  outline-offset: 3px;
-}
-
-.general-signature-report .gs-answer-evidence,
-.general-signature-report .premium-wonguk-ten-god {
-  font-size: 1rem !important;
-}
-
-.general-signature-report .premium-report-brand {
-  width: auto !important;
-  min-width: 44px !important;
-  padding-inline: 4px;
-}
-
-.general-signature-report .premium-table-wrap {
-  overscroll-behavior-inline: contain;
-}
-
-/* The four-pillar board is a compact data visualization, not body copy. */
-.general-signature-report .premium-wonguk-column > p {
-  min-width: 0;
-  margin-top: 4px;
-  color: #665f54;
-  font-size: clamp(0.69rem, 2.8vw, 0.8rem) !important;
-  font-weight: 700;
-  line-height: 1.45;
-  letter-spacing: -0.025em;
-  overflow-wrap: anywhere;
-  word-break: keep-all;
-  white-space: normal;
-}
-
-.general-signature-report .premium-wonguk-ten-god {
-  min-height: 2.9em;
-  align-content: center;
-  color: #73582f;
-}
-
-@media (max-width: 359px) {
-  .general-signature-report .premium-wonguk-board {
-    padding: 16px 10px 12px;
-    border-radius: 22px;
+  .general-signature-report .premium-report-shell {
+    padding: 0;
   }
 
-  .general-signature-report .premium-wonguk-frame {
-    padding: 10px 6px;
-    border-radius: 18px;
+  .general-signature-report .premium-report-paper {
+    width: 100%;
+    border: 0;
+    box-shadow: none;
   }
 
-  .general-signature-report .premium-wonguk-columns {
-    gap: 4px;
-  }
-
-  .general-signature-report .premium-wonguk-chip {
-    min-height: 78px;
-    padding-inline: 2px;
-    border-radius: 16px;
-  }
-}
-
-.general-signature-report .premium-element-compass-core {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 320px;
-  padding-inline: 16px;
-}
-
-.general-signature-report .premium-element-compass-core strong,
-.general-signature-report .premium-element-compass-core em {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: keep-all;
-  white-space: normal;
-}
-
-@media (max-width: 430px) {
-  .general-signature-report .premium-element-compass .premium-element-medallions {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .general-signature-report .premium-element-compass .premium-element-medallion {
-    grid-column: span 2;
-    min-height: 108px;
-    padding-inline: 5px;
-    transform: none;
-  }
-
-  .general-signature-report .premium-element-compass .premium-element-medallion:nth-child(4) {
-    grid-column: 2 / span 2;
-  }
-
-  .general-signature-report .premium-element-compass .premium-element-medallion:nth-child(5) {
-    grid-column: 4 / span 2;
-  }
-
-  .general-signature-report .premium-element-compass .premium-element-medallion em,
-  .general-signature-report .premium-element-compass .premium-element-medallion small {
-    box-sizing: border-box;
-    max-width: 100%;
-    padding-inline: 5px;
-    text-align: center;
-    white-space: normal;
+  .general-signature-report .premium-report-section,
+  .gs-cover,
+  .gs-briefing,
+  .gs-timeline {
+    break-inside: avoid;
   }
 }

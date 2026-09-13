@@ -18,6 +18,8 @@ const ALLOWED_ORIGIN = 'https://contract.example';
 
 const EXPECTED_PUBLIC_ROUTES = [
   'GET /health',
+  'POST /api/report/preflight',
+  'POST /report/preflight',
   'POST /api/report',
   'POST /report',
   'POST /api/payments/portone/order',
@@ -54,6 +56,14 @@ const unexpectedExternalFetch = vi.fn(async () => {
 
 const productionReportGenerator = vi.fn(async () => ({
   provider: 'fixture-report-generator'
+}));
+const productionReleasePreflightEvaluator = vi.fn(async () => ({
+  serviceId: 'general-signature',
+  status: 'auto-eligible',
+  reasons: [],
+  policyVersion: 'fixture-policy-v1',
+  inputFingerprint: 'uwi-fixture-input',
+  calculationFingerprint: 'uw-fixture-calculation'
 }));
 
 let productionServer: Server;
@@ -102,7 +112,9 @@ beforeAll(async () => {
   const running = await startApp({
     config: productionConfig,
     fetchImplementation: unexpectedExternalFetch as unknown as typeof fetch,
-    reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator']
+    reportGenerator: productionReportGenerator as unknown as CreateAppOptions['reportGenerator'],
+    releasePreflightEvaluator:
+      productionReleasePreflightEvaluator as unknown as CreateAppOptions['releasePreflightEvaluator']
   });
   productionServer = running.server;
   productionBaseUrl = running.baseUrl;
@@ -275,6 +287,36 @@ describe('Cloud Run API HTTP contracts', () => {
         expect(await readJson(response)).toEqual({ message: contract.message });
       }
     }
+  });
+
+  it('serves release preflight through both public aliases without report entitlement', async () => {
+    for (const path of ['/report/preflight', '/api/report/preflight']) {
+      const response = await fetch(`${productionBaseUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: 'general-signature',
+          status: 'blocked',
+          payload: { fixture: true }
+        })
+      });
+
+      expect(response.status).toBe(200);
+      expect(await readJson(response)).toEqual({
+        serviceId: 'general-signature',
+        status: 'auto-eligible',
+        reasons: [],
+        policyVersion: 'fixture-policy-v1',
+        inputFingerprint: 'uwi-fixture-input',
+        calculationFingerprint: 'uw-fixture-calculation'
+      });
+    }
+
+    expect(productionReleasePreflightEvaluator).toHaveBeenCalledTimes(2);
+    expect(productionReleasePreflightEvaluator.mock.calls[0][0]).toMatchObject({
+      serviceId: 'general-signature',
+      status: 'blocked'
+    });
   });
   it('rate-limits failed admin logins independently by client IP and resets after success', async () => {
     const adminId = 'release-admin';
@@ -491,7 +533,7 @@ describe('Cloud Run API HTTP contracts', () => {
 
   it('keeps the exact twelve-product server catalog and sale status contract', () => {
     expect(SERVER_PRODUCT_CATALOG).toEqual({
-      'general-signature': { amount: 79_000, currency: 'KRW', status: 'active' },
+      'general-signature': { amount: 990, currency: 'KRW', status: 'active' },
       'life-flow': { amount: 59_000, currency: 'KRW', status: 'archived' },
       'concern-reading': { amount: 2_900, currency: 'KRW', status: 'archived' },
       'past-life-goblin': { amount: 49_000, currency: 'KRW', status: 'active' },
@@ -589,7 +631,7 @@ describe('Cloud Run API HTTP contracts', () => {
     expect(order).toEqual({
       orderId: expect.stringMatching(/^UW-[A-Za-z0-9._-]{12,116}$/),
       productId: 'general-signature',
-      amount: 79_000,
+      amount: 990,
       currency: 'KRW',
       orderClaim: expect.any(String),
       orderClaimExpiresAt: expect.any(String)
@@ -597,7 +639,7 @@ describe('Cloud Run API HTTP contracts', () => {
     expect(tokens.verifyPaymentOrderClaim(order.orderClaim, 'fixture-user')).toMatchObject({
       orderId: order.orderId,
       productId: 'general-signature',
-      amount: 79_000,
+      amount: 990,
       userBinding: firstBinding,
       version: 1
     });

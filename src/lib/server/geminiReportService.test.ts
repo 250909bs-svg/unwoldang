@@ -4,6 +4,7 @@ import { buildSajuReport } from '../saju/reportBuilder';
 import {
   assertCommercialReportRequest,
   assertGeminiEvidenceReferences,
+  prepareCommercialReportRequest,
   sanitizeGeminiDraft,
   stripGeminiEvidenceMetadata,
   toFormData
@@ -46,6 +47,31 @@ describe('Gemini commercial response validation', () => {
       dayBoundaryPolicy: 'late-zi',
       q2: '두 번째 질문입니다.'
     })).toThrow(/일주가 달라/);
+  });
+
+  it('blocks direct report preparation for a nonexistent IANA local time', async () => {
+    await expect(prepareCommercialReportRequest({
+      serviceId: 'general-signature',
+      payload: {
+        serviceId: 'general-signature',
+        user: { name: '검증자', gender: 'female' },
+        birth: {
+          calendar: 'solar',
+          isLeapMonth: false,
+          date: '2024-03-10',
+          time: '02:30',
+          isUnknownTime: false,
+          precision: 'exact',
+          dayBoundaryPolicy: 'midnight',
+          location: {
+            label: 'New York',
+            timezone: 'America/New_York',
+            utcOffsetMinutes: -300
+          }
+        },
+        questions: ['첫 번째 질문입니다.', '두 번째 질문입니다.']
+      }
+    })).rejects.toMatchObject({ status: 422 });
   });
 
   it('restores the love micro choice and expanded relationship status', () => {

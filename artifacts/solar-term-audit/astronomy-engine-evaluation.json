@@ -1,0 +1,2435 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-02T03:47:38.507Z",
+  "package": {
+    "name": "astronomy-engine",
+    "version": "2.1.19",
+    "license": "MIT",
+    "source": "https://github.com/cosinekitty/astronomy",
+    "method": "SearchSunLongitude"
+  },
+  "engineImportUsed": false,
+  "currentEngineUsedAsExpected": false,
+  "statistics": {
+    "candidateVsJpl": {
+      "count": 240,
+      "minimumSeconds": -37.531,
+      "maximumSeconds": 41.48,
+      "maximumAbsoluteSeconds": 41.48,
+      "meanSeconds": 1.9073541666666682,
+      "meanAbsoluteSeconds": 9.913570833333337,
+      "medianSeconds": 2.073
+    },
+    "candidateVsNaoj": {
+      "count": 120,
+      "minimumSeconds": -48.482,
+      "maximumSeconds": 70.241,
+      "maximumAbsoluteSeconds": 70.241,
+      "meanSeconds": 2.9910750000000017,
+      "meanAbsoluteSeconds": 20.056475000000002,
+      "medianSeconds": 2.568
+    }
+  },
+  "records": [
+    {
+      "year": 1989,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "1989-03-20T15:28:17.528Z",
+      "jplSkyfieldUtc": "1989-03-20T15:28:14.898Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 2.63,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "1989-04-04T19:29:43.803Z",
+      "jplSkyfieldUtc": "1989-04-04T19:29:54.499Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -10.696,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "1989-04-20T02:38:58.257Z",
+      "jplSkyfieldUtc": "1989-04-20T02:38:55.210Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 3.047,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "1989-05-05T12:53:48.929Z",
+      "jplSkyfieldUtc": "1989-05-05T12:53:55.739Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.81,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "1989-05-21T01:53:32.192Z",
+      "jplSkyfieldUtc": "1989-05-21T01:53:31.872Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 0.32,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "1989-06-05T17:05:08.913Z",
+      "jplSkyfieldUtc": "1989-06-05T17:05:13.914Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -5.001,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "1989-06-21T09:52:51.360Z",
+      "jplSkyfieldUtc": "1989-06-21T09:53:00.887Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -9.527,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "1989-07-07T03:19:10.974Z",
+      "jplSkyfieldUtc": "1989-07-07T03:19:26.182Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -15.208,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "1989-07-22T20:45:11.990Z",
+      "jplSkyfieldUtc": "1989-07-22T20:45:28.983Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -16.993,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "1989-08-07T13:03:36.119Z",
+      "jplSkyfieldUtc": "1989-08-07T13:03:53.575Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -17.456,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "1989-08-23T03:46:02.885Z",
+      "jplSkyfieldUtc": "1989-08-23T03:46:12.682Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -9.797,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "1989-09-07T15:53:45.473Z",
+      "jplSkyfieldUtc": "1989-09-07T15:53:55.083Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -9.61,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "1989-09-23T01:19:40.724Z",
+      "jplSkyfieldUtc": "1989-09-23T01:19:36.186Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 4.538,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "1989-10-08T07:27:17.692Z",
+      "jplSkyfieldUtc": "1989-10-08T07:27:20.229Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.537,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "1989-10-23T10:35:12.907Z",
+      "jplSkyfieldUtc": "1989-10-23T10:35:08.338Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 4.569,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "1989-11-07T10:33:32.873Z",
+      "jplSkyfieldUtc": "1989-11-07T10:33:32.410Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 0.463,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "1989-11-22T08:04:39.804Z",
+      "jplSkyfieldUtc": "1989-11-22T08:04:37.238Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 2.566,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "1989-12-07T03:21:04.507Z",
+      "jplSkyfieldUtc": "1989-12-07T03:20:57.636Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 6.871,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "1989-12-21T21:22:08.561Z",
+      "jplSkyfieldUtc": "1989-12-21T21:22:00.983Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 7.578,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "1989-01-05T08:46:10.537Z",
+      "jplSkyfieldUtc": "1989-01-05T08:45:55.950Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 14.587,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "1989-01-20T02:07:20.048Z",
+      "jplSkyfieldUtc": "1989-01-20T02:06:58.492Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 21.556,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "1989-02-03T20:27:15.360Z",
+      "jplSkyfieldUtc": "1989-02-03T20:27:09.806Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 5.554,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "1989-02-18T16:20:41.279Z",
+      "jplSkyfieldUtc": "1989-02-18T16:20:29.913Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 11.366,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1989,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "1989-03-05T14:34:01.967Z",
+      "jplSkyfieldUtc": "1989-03-05T14:34:08.646Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.679,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "1990-03-20T21:19:00.660Z",
+      "jplSkyfieldUtc": "1990-03-20T21:19:15.252Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -14.592,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "1990-04-05T01:12:55.307Z",
+      "jplSkyfieldUtc": "1990-04-05T01:12:54.619Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 0.688,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "1990-04-20T08:26:30.190Z",
+      "jplSkyfieldUtc": "1990-04-20T08:26:31.897Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -1.707,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "1990-05-05T18:35:35.727Z",
+      "jplSkyfieldUtc": "1990-05-05T18:35:25.976Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 9.751,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "1990-05-21T07:37:27.997Z",
+      "jplSkyfieldUtc": "1990-05-21T07:37:23.826Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 4.171,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "1990-06-05T22:46:26.955Z",
+      "jplSkyfieldUtc": "1990-06-05T22:46:18.010Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 8.945,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "1990-06-21T15:32:50.331Z",
+      "jplSkyfieldUtc": "1990-06-21T15:32:47.282Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 3.049,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "1990-07-07T09:00:26.289Z",
+      "jplSkyfieldUtc": "1990-07-07T09:00:28.618Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.329,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "1990-07-23T02:21:31.435Z",
+      "jplSkyfieldUtc": "1990-07-23T02:21:30.826Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 0.609,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "1990-08-07T18:45:24.889Z",
+      "jplSkyfieldUtc": "1990-08-07T18:45:31.450Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.561,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "1990-08-23T09:20:52.319Z",
+      "jplSkyfieldUtc": "1990-08-23T09:20:49.550Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 2.769,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "1990-09-07T21:37:29.076Z",
+      "jplSkyfieldUtc": "1990-09-07T21:37:27.547Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 1.529,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "1990-09-23T06:55:47.452Z",
+      "jplSkyfieldUtc": "1990-09-23T06:55:29.747Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 17.705,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "1990-10-08T13:14:02.574Z",
+      "jplSkyfieldUtc": "1990-10-08T13:13:47.629Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 14.945,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "1990-10-23T16:14:19.071Z",
+      "jplSkyfieldUtc": "1990-10-23T16:13:56.989Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 22.082,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "1990-11-07T16:23:42.097Z",
+      "jplSkyfieldUtc": "1990-11-07T16:23:28.651Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 13.446,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "1990-11-22T13:47:04.477Z",
+      "jplSkyfieldUtc": "1990-11-22T13:46:55.242Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 9.235,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "1990-12-07T09:14:08.912Z",
+      "jplSkyfieldUtc": "1990-12-07T09:14:09.695Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -0.783,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "1990-12-22T03:06:57.279Z",
+      "jplSkyfieldUtc": "1990-12-22T03:06:59.340Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.061,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "1990-01-05T14:33:24.851Z",
+      "jplSkyfieldUtc": "1990-01-05T14:33:13.740Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 11.111,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "1990-01-20T08:01:33.365Z",
+      "jplSkyfieldUtc": "1990-01-20T08:01:32.787Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 0.578,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "1990-02-04T02:13:58.005Z",
+      "jplSkyfieldUtc": "1990-02-04T02:13:59.979Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -1.974,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "1990-02-18T22:13:46.239Z",
+      "jplSkyfieldUtc": "1990-02-18T22:14:01.192Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -14.953,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1990,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "1990-03-05T20:19:09.711Z",
+      "jplSkyfieldUtc": "1990-03-05T20:19:16.684Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.973,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "1992-03-20T08:48:09.270Z",
+      "jplSkyfieldUtc": "1992-03-20T08:48:02.706Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 6.564,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "1992-04-04T12:45:05.080Z",
+      "jplSkyfieldUtc": "1992-04-04T12:45:07.827Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.747,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "1992-04-19T19:57:05.531Z",
+      "jplSkyfieldUtc": "1992-04-19T19:56:53.150Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 12.381,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "1992-05-05T06:08:40.730Z",
+      "jplSkyfieldUtc": "1992-05-05T06:08:40.016Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 0.714,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "1992-05-20T19:12:19.935Z",
+      "jplSkyfieldUtc": "1992-05-20T19:12:08.271Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 11.664,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "1992-06-05T10:22:24.804Z",
+      "jplSkyfieldUtc": "1992-06-05T10:22:20.058Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 4.746,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "1992-06-21T03:14:19.262Z",
+      "jplSkyfieldUtc": "1992-06-21T03:14:09.124Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 10.138,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "1992-07-06T20:40:21.919Z",
+      "jplSkyfieldUtc": "1992-07-06T20:40:14.991Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 6.928,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "1992-07-22T14:09:01.641Z",
+      "jplSkyfieldUtc": "1992-07-22T14:08:49.487Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 12.154,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "1992-08-07T06:27:32.134Z",
+      "jplSkyfieldUtc": "1992-08-07T06:27:22.438Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 9.696,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "1992-08-22T21:10:15.085Z",
+      "jplSkyfieldUtc": "1992-08-22T21:10:06.305Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 8.78,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "1992-09-07T09:18:22.479Z",
+      "jplSkyfieldUtc": "1992-09-07T09:18:18.366Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 4.113,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "1992-09-22T18:42:51.787Z",
+      "jplSkyfieldUtc": "1992-09-22T18:42:45.763Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 6.024,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "1992-10-08T00:51:23.276Z",
+      "jplSkyfieldUtc": "1992-10-08T00:51:26.749Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -3.473,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "1992-10-23T03:57:08.700Z",
+      "jplSkyfieldUtc": "1992-10-23T03:57:06.865Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 1.835,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "1992-11-07T03:56:55.166Z",
+      "jplSkyfieldUtc": "1992-11-07T03:57:01.216Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.05,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "1992-11-22T01:25:51.136Z",
+      "jplSkyfieldUtc": "1992-11-22T01:25:51.250Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -0.114,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "1992-12-06T20:44:08.233Z",
+      "jplSkyfieldUtc": "1992-12-06T20:44:11.528Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -3.295,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "1992-12-21T14:43:15.945Z",
+      "jplSkyfieldUtc": "1992-12-21T14:43:13.286Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 2.659,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "1992-01-06T02:08:39.726Z",
+      "jplSkyfieldUtc": "1992-01-06T02:08:30.750Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 8.976,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "1992-01-20T19:32:34.614Z",
+      "jplSkyfieldUtc": "1992-01-20T19:32:29.007Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 5.607,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "1992-02-04T13:48:12.361Z",
+      "jplSkyfieldUtc": "1992-02-04T13:48:16.185Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -3.824,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "1992-02-19T09:43:31.617Z",
+      "jplSkyfieldUtc": "1992-02-19T09:43:29.085Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 2.532,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 1992,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "1992-03-05T07:52:00.693Z",
+      "jplSkyfieldUtc": "1992-03-05T07:52:07.051Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.358,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2000-03-20T07:35:15.576Z",
+      "jplSkyfieldUtc": "2000-03-20T07:35:14.347Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 1.229,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2000-04-04T11:31:47.158Z",
+      "jplSkyfieldUtc": "2000-04-04T11:31:57.498Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -10.34,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2000-04-19T18:39:33.200Z",
+      "jplSkyfieldUtc": "2000-04-19T18:39:30.124Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 3.076,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2000-05-05T04:49:58.986Z",
+      "jplSkyfieldUtc": "2000-05-05T04:50:09.238Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -10.252,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2000-05-20T17:49:22.498Z",
+      "jplSkyfieldUtc": "2000-05-20T17:49:24.712Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.214,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2000-06-05T08:58:25.647Z",
+      "jplSkyfieldUtc": "2000-06-05T08:58:33.485Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -7.838,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2000-06-21T01:47:39.260Z",
+      "jplSkyfieldUtc": "2000-06-21T01:47:42.057Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.797,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2000-07-06T19:13:56.127Z",
+      "jplSkyfieldUtc": "2000-07-06T19:13:56.252Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -0.125,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2000-07-22T12:42:51.297Z",
+      "jplSkyfieldUtc": "2000-07-22T12:42:40.909Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 10.388,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2000-08-07T05:03:12.928Z",
+      "jplSkyfieldUtc": "2000-08-07T05:02:59.354Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 13.574,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2000-08-22T19:48:50.384Z",
+      "jplSkyfieldUtc": "2000-08-22T19:48:31.073Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 19.311,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2000-09-07T07:59:29.080Z",
+      "jplSkyfieldUtc": "2000-09-07T07:59:09.447Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 19.633,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2000-09-22T17:27:57.187Z",
+      "jplSkyfieldUtc": "2000-09-22T17:27:35.339Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 21.848,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2000-10-07T23:38:26.706Z",
+      "jplSkyfieldUtc": "2000-10-07T23:38:11.826Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 14.88,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2000-10-23T02:47:46.654Z",
+      "jplSkyfieldUtc": "2000-10-23T02:47:28.585Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 18.069,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2000-11-07T02:48:15.845Z",
+      "jplSkyfieldUtc": "2000-11-07T02:48:03.218Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 12.627,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2000-11-22T00:19:39.078Z",
+      "jplSkyfieldUtc": "2000-11-22T00:19:20.623Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 18.455,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2000-12-06T19:37:21.901Z",
+      "jplSkyfieldUtc": "2000-12-06T19:37:01.590Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 20.311,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2000-12-21T13:37:52.025Z",
+      "jplSkyfieldUtc": "2000-12-21T13:37:25.472Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 26.553,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2000-01-06T01:00:55.938Z",
+      "jplSkyfieldUtc": "2000-01-06T01:00:40.862Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 15.076,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2000-01-20T18:23:12.153Z",
+      "jplSkyfieldUtc": "2000-01-20T18:23:01.759Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 10.394,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2000-02-04T12:40:18.090Z",
+      "jplSkyfieldUtc": "2000-02-04T12:40:22.680Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -4.59,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2000-02-19T08:33:18.750Z",
+      "jplSkyfieldUtc": "2000-02-19T08:33:17.241Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 1.509,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2000,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2000-03-05T06:42:26.331Z",
+      "jplSkyfieldUtc": "2000-03-05T06:42:38.657Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -12.326,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2010,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2010-03-20T17:31:55.418Z",
+      "jplSkyfieldUtc": "2010-03-20T17:32:11.990Z",
+      "officialNaojUtc": "2010-03-20T17:32:00.000Z",
+      "candidateMinusJplSeconds": -16.572,
+      "candidateMinusNaojSeconds": -4.582
+    },
+    {
+      "year": 2010,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2010-04-04T21:30:26.453Z",
+      "jplSkyfieldUtc": "2010-04-04T21:30:28.099Z",
+      "officialNaojUtc": "2010-04-04T21:30:00.000Z",
+      "candidateMinusJplSeconds": -1.646,
+      "candidateMinusNaojSeconds": 26.453
+    },
+    {
+      "year": 2010,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2010-04-20T04:29:44.933Z",
+      "jplSkyfieldUtc": "2010-04-20T04:29:47.881Z",
+      "officialNaojUtc": "2010-04-20T04:30:00.000Z",
+      "candidateMinusJplSeconds": -2.948,
+      "candidateMinusNaojSeconds": -15.067
+    },
+    {
+      "year": 2010,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2010-05-05T14:44:09.901Z",
+      "jplSkyfieldUtc": "2010-05-05T14:44:00.735Z",
+      "officialNaojUtc": "2010-05-05T14:44:00.000Z",
+      "candidateMinusJplSeconds": 9.166,
+      "candidateMinusNaojSeconds": 9.901
+    },
+    {
+      "year": 2010,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2010-05-21T03:34:02.673Z",
+      "jplSkyfieldUtc": "2010-05-21T03:33:53.828Z",
+      "officialNaojUtc": "2010-05-21T03:34:00.000Z",
+      "candidateMinusJplSeconds": 8.845,
+      "candidateMinusNaojSeconds": 2.673
+    },
+    {
+      "year": 2010,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2010-06-05T18:49:34.120Z",
+      "jplSkyfieldUtc": "2010-06-05T18:49:23.443Z",
+      "officialNaojUtc": "2010-06-05T18:49:00.000Z",
+      "candidateMinusJplSeconds": 10.677,
+      "candidateMinusNaojSeconds": 34.12
+    },
+    {
+      "year": 2010,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2010-06-21T11:28:27.339Z",
+      "jplSkyfieldUtc": "2010-06-21T11:28:24.510Z",
+      "officialNaojUtc": "2010-06-21T11:28:00.000Z",
+      "candidateMinusJplSeconds": 2.829,
+      "candidateMinusNaojSeconds": 27.339
+    },
+    {
+      "year": 2010,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2010-07-07T05:02:22.776Z",
+      "jplSkyfieldUtc": "2010-07-07T05:02:24.213Z",
+      "officialNaojUtc": "2010-07-07T05:02:00.000Z",
+      "candidateMinusJplSeconds": -1.437,
+      "candidateMinusNaojSeconds": 22.776
+    },
+    {
+      "year": 2010,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2010-07-22T22:21:06.469Z",
+      "jplSkyfieldUtc": "2010-07-22T22:21:12.641Z",
+      "officialNaojUtc": "2010-07-22T22:21:00.000Z",
+      "candidateMinusJplSeconds": -6.172,
+      "candidateMinusNaojSeconds": 6.469
+    },
+    {
+      "year": 2010,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2010-08-07T14:49:04.776Z",
+      "jplSkyfieldUtc": "2010-08-07T14:49:08.813Z",
+      "officialNaojUtc": "2010-08-07T14:49:00.000Z",
+      "candidateMinusJplSeconds": -4.037,
+      "candidateMinusNaojSeconds": 4.776
+    },
+    {
+      "year": 2010,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2010-08-23T05:26:55.442Z",
+      "jplSkyfieldUtc": "2010-08-23T05:26:57.069Z",
+      "officialNaojUtc": "2010-08-23T05:27:00.000Z",
+      "candidateMinusJplSeconds": -1.627,
+      "candidateMinusNaojSeconds": -4.558
+    },
+    {
+      "year": 2010,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2010-09-07T17:45:00.683Z",
+      "jplSkyfieldUtc": "2010-09-07T17:44:41.037Z",
+      "officialNaojUtc": "2010-09-07T17:45:00.000Z",
+      "candidateMinusJplSeconds": 19.646,
+      "candidateMinusNaojSeconds": 0.683
+    },
+    {
+      "year": 2010,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2010-09-23T03:09:23.987Z",
+      "jplSkyfieldUtc": "2010-09-23T03:09:01.733Z",
+      "officialNaojUtc": "2010-09-23T03:09:00.000Z",
+      "candidateMinusJplSeconds": 22.254,
+      "candidateMinusNaojSeconds": 23.987
+    },
+    {
+      "year": 2010,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2010-10-08T09:27:10.241Z",
+      "jplSkyfieldUtc": "2010-10-08T09:26:28.761Z",
+      "officialNaojUtc": "2010-10-08T09:26:00.000Z",
+      "candidateMinusJplSeconds": 41.48,
+      "candidateMinusNaojSeconds": 70.241
+    },
+    {
+      "year": 2010,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2010-10-23T12:35:29.002Z",
+      "jplSkyfieldUtc": "2010-10-23T12:35:03.110Z",
+      "officialNaojUtc": "2010-10-23T12:35:00.000Z",
+      "candidateMinusJplSeconds": 25.892,
+      "candidateMinusNaojSeconds": 29.002
+    },
+    {
+      "year": 2010,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2010-11-07T12:42:58.725Z",
+      "jplSkyfieldUtc": "2010-11-07T12:42:29.829Z",
+      "officialNaojUtc": "2010-11-07T12:42:00.000Z",
+      "candidateMinusJplSeconds": 28.896,
+      "candidateMinusNaojSeconds": 58.725
+    },
+    {
+      "year": 2010,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2010-11-22T10:14:36.964Z",
+      "jplSkyfieldUtc": "2010-11-22T10:14:33.783Z",
+      "officialNaojUtc": "2010-11-22T10:15:00.000Z",
+      "candidateMinusJplSeconds": 3.181,
+      "candidateMinusNaojSeconds": -23.036
+    },
+    {
+      "year": 2010,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2010-12-07T05:38:30.859Z",
+      "jplSkyfieldUtc": "2010-12-07T05:38:23.343Z",
+      "officialNaojUtc": "2010-12-07T05:38:00.000Z",
+      "candidateMinusJplSeconds": 7.516,
+      "candidateMinusNaojSeconds": 30.859
+    },
+    {
+      "year": 2010,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2010-12-21T23:38:23.021Z",
+      "jplSkyfieldUtc": "2010-12-21T23:38:27.425Z",
+      "officialNaojUtc": "2010-12-21T23:38:00.000Z",
+      "candidateMinusJplSeconds": -4.404,
+      "candidateMinusNaojSeconds": 23.021
+    },
+    {
+      "year": 2010,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2010-01-05T11:08:37.485Z",
+      "jplSkyfieldUtc": "2010-01-05T11:08:47.135Z",
+      "officialNaojUtc": "2010-01-05T11:09:00.000Z",
+      "candidateMinusJplSeconds": -9.65,
+      "candidateMinusNaojSeconds": -22.515
+    },
+    {
+      "year": 2010,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2010-01-20T04:27:31.553Z",
+      "jplSkyfieldUtc": "2010-01-20T04:27:41.713Z",
+      "officialNaojUtc": "2010-01-20T04:28:00.000Z",
+      "candidateMinusJplSeconds": -10.16,
+      "candidateMinusNaojSeconds": -28.447
+    },
+    {
+      "year": 2010,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2010-02-03T22:47:38.705Z",
+      "jplSkyfieldUtc": "2010-02-03T22:47:50.705Z",
+      "officialNaojUtc": "2010-02-03T22:48:00.000Z",
+      "candidateMinusJplSeconds": -12,
+      "candidateMinusNaojSeconds": -21.295
+    },
+    {
+      "year": 2010,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2010-02-18T18:35:20.685Z",
+      "jplSkyfieldUtc": "2010-02-18T18:35:37.197Z",
+      "officialNaojUtc": "2010-02-18T18:36:00.000Z",
+      "candidateMinusJplSeconds": -16.512,
+      "candidateMinusNaojSeconds": -39.315
+    },
+    {
+      "year": 2010,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2010-03-05T16:46:09.514Z",
+      "jplSkyfieldUtc": "2010-03-05T16:46:20.073Z",
+      "officialNaojUtc": "2010-03-05T16:46:00.000Z",
+      "candidateMinusJplSeconds": -10.559,
+      "candidateMinusNaojSeconds": 9.514
+    },
+    {
+      "year": 2012,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2012-03-20T05:14:15.516Z",
+      "jplSkyfieldUtc": "2012-03-20T05:14:25.667Z",
+      "officialNaojUtc": "2012-03-20T05:14:00.000Z",
+      "candidateMinusJplSeconds": -10.151,
+      "candidateMinusNaojSeconds": 15.516
+    },
+    {
+      "year": 2012,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2012-04-04T09:05:38.739Z",
+      "jplSkyfieldUtc": "2012-04-04T09:05:35.786Z",
+      "officialNaojUtc": "2012-04-04T09:06:00.000Z",
+      "candidateMinusJplSeconds": 2.953,
+      "candidateMinusNaojSeconds": -21.261
+    },
+    {
+      "year": 2012,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2012-04-19T16:12:01.724Z",
+      "jplSkyfieldUtc": "2012-04-19T16:12:04.846Z",
+      "officialNaojUtc": "2012-04-19T16:12:00.000Z",
+      "candidateMinusJplSeconds": -3.122,
+      "candidateMinusNaojSeconds": 1.724
+    },
+    {
+      "year": 2012,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2012-05-05T02:19:44.088Z",
+      "jplSkyfieldUtc": "2012-05-05T02:19:40.815Z",
+      "officialNaojUtc": "2012-05-05T02:20:00.000Z",
+      "candidateMinusJplSeconds": 3.273,
+      "candidateMinusNaojSeconds": -15.912
+    },
+    {
+      "year": 2012,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2012-05-20T15:15:19.677Z",
+      "jplSkyfieldUtc": "2012-05-20T15:15:32.075Z",
+      "officialNaojUtc": "2012-05-20T15:16:00.000Z",
+      "candidateMinusJplSeconds": -12.398,
+      "candidateMinusNaojSeconds": -40.323
+    },
+    {
+      "year": 2012,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2012-06-05T06:25:37.037Z",
+      "jplSkyfieldUtc": "2012-06-05T06:25:54.458Z",
+      "officialNaojUtc": "2012-06-05T06:26:00.000Z",
+      "candidateMinusJplSeconds": -17.421,
+      "candidateMinusNaojSeconds": -22.963
+    },
+    {
+      "year": 2012,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2012-06-20T23:08:11.518Z",
+      "jplSkyfieldUtc": "2012-06-20T23:08:49.049Z",
+      "officialNaojUtc": "2012-06-20T23:09:00.000Z",
+      "candidateMinusJplSeconds": -37.531,
+      "candidateMinusNaojSeconds": -48.482
+    },
+    {
+      "year": 2012,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2012-07-06T16:40:12.083Z",
+      "jplSkyfieldUtc": "2012-07-06T16:40:43.383Z",
+      "officialNaojUtc": "2012-07-06T16:41:00.000Z",
+      "candidateMinusJplSeconds": -31.3,
+      "candidateMinusNaojSeconds": -47.917
+    },
+    {
+      "year": 2012,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2012-07-22T10:00:23.734Z",
+      "jplSkyfieldUtc": "2012-07-22T10:00:51.853Z",
+      "officialNaojUtc": "2012-07-22T10:01:00.000Z",
+      "candidateMinusJplSeconds": -28.119,
+      "candidateMinusNaojSeconds": -36.266
+    },
+    {
+      "year": 2012,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2012-08-07T02:30:18.367Z",
+      "jplSkyfieldUtc": "2012-08-07T02:30:32.746Z",
+      "officialNaojUtc": "2012-08-07T02:31:00.000Z",
+      "candidateMinusJplSeconds": -14.379,
+      "candidateMinusNaojSeconds": -41.633
+    },
+    {
+      "year": 2012,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2012-08-22T17:06:44.675Z",
+      "jplSkyfieldUtc": "2012-08-22T17:06:49.441Z",
+      "officialNaojUtc": "2012-08-22T17:07:00.000Z",
+      "candidateMinusJplSeconds": -4.766,
+      "candidateMinusNaojSeconds": -15.325
+    },
+    {
+      "year": 2012,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2012-09-07T05:28:59.535Z",
+      "jplSkyfieldUtc": "2012-09-07T05:29:00.233Z",
+      "officialNaojUtc": "2012-09-07T05:29:00.000Z",
+      "candidateMinusJplSeconds": -0.698,
+      "candidateMinusNaojSeconds": -0.465
+    },
+    {
+      "year": 2012,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2012-09-22T14:48:57.705Z",
+      "jplSkyfieldUtc": "2012-09-22T14:48:58.076Z",
+      "officialNaojUtc": "2012-09-22T14:49:00.000Z",
+      "candidateMinusJplSeconds": -0.371,
+      "candidateMinusNaojSeconds": -2.295
+    },
+    {
+      "year": 2012,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2012-10-07T21:11:32.333Z",
+      "jplSkyfieldUtc": "2012-10-07T21:11:42.308Z",
+      "officialNaojUtc": "2012-10-07T21:12:00.000Z",
+      "candidateMinusJplSeconds": -9.975,
+      "candidateMinusNaojSeconds": -27.667
+    },
+    {
+      "year": 2012,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2012-10-23T00:13:21.392Z",
+      "jplSkyfieldUtc": "2012-10-23T00:13:33.669Z",
+      "officialNaojUtc": "2012-10-23T00:14:00.000Z",
+      "candidateMinusJplSeconds": -12.277,
+      "candidateMinusNaojSeconds": -38.608
+    },
+    {
+      "year": 2012,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2012-11-07T00:25:39.264Z",
+      "jplSkyfieldUtc": "2012-11-07T00:25:57.363Z",
+      "officialNaojUtc": "2012-11-07T00:26:00.000Z",
+      "candidateMinusJplSeconds": -18.099,
+      "candidateMinusNaojSeconds": -20.736
+    },
+    {
+      "year": 2012,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2012-11-21T21:49:56.565Z",
+      "jplSkyfieldUtc": "2012-11-21T21:50:08.916Z",
+      "officialNaojUtc": "2012-11-21T21:50:00.000Z",
+      "candidateMinusJplSeconds": -12.351,
+      "candidateMinusNaojSeconds": -3.435
+    },
+    {
+      "year": 2012,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2012-12-06T17:18:47.108Z",
+      "jplSkyfieldUtc": "2012-12-06T17:18:56.194Z",
+      "officialNaojUtc": "2012-12-06T17:19:00.000Z",
+      "candidateMinusJplSeconds": -9.086,
+      "candidateMinusNaojSeconds": -12.892
+    },
+    {
+      "year": 2012,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2012-12-21T11:11:39.854Z",
+      "jplSkyfieldUtc": "2012-12-21T11:11:36.526Z",
+      "officialNaojUtc": "2012-12-21T11:12:00.000Z",
+      "candidateMinusJplSeconds": 3.328,
+      "candidateMinusNaojSeconds": -20.146
+    },
+    {
+      "year": 2012,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2012-01-05T22:44:10.616Z",
+      "jplSkyfieldUtc": "2012-01-05T22:43:55.624Z",
+      "officialNaojUtc": "2012-01-05T22:44:00.000Z",
+      "candidateMinusJplSeconds": 14.992,
+      "candidateMinusNaojSeconds": 10.616
+    },
+    {
+      "year": 2012,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2012-01-20T16:09:54.718Z",
+      "jplSkyfieldUtc": "2012-01-20T16:09:50.748Z",
+      "officialNaojUtc": "2012-01-20T16:10:00.000Z",
+      "candidateMinusJplSeconds": 3.97,
+      "candidateMinusNaojSeconds": -5.282
+    },
+    {
+      "year": 2012,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2012-02-04T10:22:24.876Z",
+      "jplSkyfieldUtc": "2012-02-04T10:22:23.884Z",
+      "officialNaojUtc": "2012-02-04T10:22:00.000Z",
+      "candidateMinusJplSeconds": 0.992,
+      "candidateMinusNaojSeconds": 24.876
+    },
+    {
+      "year": 2012,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2012-02-19T06:17:27.550Z",
+      "jplSkyfieldUtc": "2012-02-19T06:17:36.980Z",
+      "officialNaojUtc": "2012-02-19T06:18:00.000Z",
+      "candidateMinusJplSeconds": -9.43,
+      "candidateMinusNaojSeconds": -32.45
+    },
+    {
+      "year": 2012,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2012-03-05T04:20:58.388Z",
+      "jplSkyfieldUtc": "2012-03-05T04:21:02.840Z",
+      "officialNaojUtc": "2012-03-05T04:21:00.000Z",
+      "candidateMinusJplSeconds": -4.452,
+      "candidateMinusNaojSeconds": -1.612
+    },
+    {
+      "year": 2020,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2020-03-20T03:49:56.290Z",
+      "jplSkyfieldUtc": "2020-03-20T03:49:37.120Z",
+      "officialNaojUtc": "2020-03-20T03:50:00.000Z",
+      "candidateMinusJplSeconds": 19.17,
+      "candidateMinusNaojSeconds": -3.71
+    },
+    {
+      "year": 2020,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2020-04-04T07:38:37.900Z",
+      "jplSkyfieldUtc": "2020-04-04T07:38:10.212Z",
+      "officialNaojUtc": "2020-04-04T07:38:00.000Z",
+      "candidateMinusJplSeconds": 27.688,
+      "candidateMinusNaojSeconds": 37.9
+    },
+    {
+      "year": 2020,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2020-04-19T14:45:49.981Z",
+      "jplSkyfieldUtc": "2020-04-19T14:45:28.970Z",
+      "officialNaojUtc": "2020-04-19T14:45:00.000Z",
+      "candidateMinusJplSeconds": 21.011,
+      "candidateMinusNaojSeconds": 49.981
+    },
+    {
+      "year": 2020,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2020-05-05T00:51:48.482Z",
+      "jplSkyfieldUtc": "2020-05-05T00:51:23.317Z",
+      "officialNaojUtc": "2020-05-05T00:51:00.000Z",
+      "candidateMinusJplSeconds": 25.165,
+      "candidateMinusNaojSeconds": 48.482
+    },
+    {
+      "year": 2020,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2020-05-20T13:49:26.788Z",
+      "jplSkyfieldUtc": "2020-05-20T13:49:17.192Z",
+      "officialNaojUtc": "2020-05-20T13:49:00.000Z",
+      "candidateMinusJplSeconds": 9.596,
+      "candidateMinusNaojSeconds": 26.788
+    },
+    {
+      "year": 2020,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2020-06-05T04:58:30.149Z",
+      "jplSkyfieldUtc": "2020-06-05T04:58:25.892Z",
+      "officialNaojUtc": "2020-06-05T04:58:00.000Z",
+      "candidateMinusJplSeconds": 4.257,
+      "candidateMinusNaojSeconds": 30.149
+    },
+    {
+      "year": 2020,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2020-06-20T21:43:31.283Z",
+      "jplSkyfieldUtc": "2020-06-20T21:43:40.926Z",
+      "officialNaojUtc": "2020-06-20T21:44:00.000Z",
+      "candidateMinusJplSeconds": -9.643,
+      "candidateMinusNaojSeconds": -28.717
+    },
+    {
+      "year": 2020,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2020-07-06T15:14:26.501Z",
+      "jplSkyfieldUtc": "2020-07-06T15:14:27.478Z",
+      "officialNaojUtc": "2020-07-06T15:14:00.000Z",
+      "candidateMinusJplSeconds": -0.977,
+      "candidateMinusNaojSeconds": 26.501
+    },
+    {
+      "year": 2020,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2020-07-22T08:36:57.872Z",
+      "jplSkyfieldUtc": "2020-07-22T08:36:52.596Z",
+      "officialNaojUtc": "2020-07-22T08:37:00.000Z",
+      "candidateMinusJplSeconds": 5.276,
+      "candidateMinusNaojSeconds": -2.128
+    },
+    {
+      "year": 2020,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2020-08-07T01:06:25.469Z",
+      "jplSkyfieldUtc": "2020-08-07T01:06:11.569Z",
+      "officialNaojUtc": "2020-08-07T01:06:00.000Z",
+      "candidateMinusJplSeconds": 13.9,
+      "candidateMinusNaojSeconds": 25.469
+    },
+    {
+      "year": 2020,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2020-08-22T15:45:18.135Z",
+      "jplSkyfieldUtc": "2020-08-22T15:44:56.103Z",
+      "officialNaojUtc": "2020-08-22T15:45:00.000Z",
+      "candidateMinusJplSeconds": 22.032,
+      "candidateMinusNaojSeconds": 18.135
+    },
+    {
+      "year": 2020,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2020-09-07T04:08:20.114Z",
+      "jplSkyfieldUtc": "2020-09-07T04:08:03.132Z",
+      "officialNaojUtc": "2020-09-07T04:08:00.000Z",
+      "candidateMinusJplSeconds": 16.982,
+      "candidateMinusNaojSeconds": 20.114
+    },
+    {
+      "year": 2020,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2020-09-22T13:30:59.379Z",
+      "jplSkyfieldUtc": "2020-09-22T13:30:39.264Z",
+      "officialNaojUtc": "2020-09-22T13:31:00.000Z",
+      "candidateMinusJplSeconds": 20.115,
+      "candidateMinusNaojSeconds": -0.621
+    },
+    {
+      "year": 2020,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2020-10-07T19:55:22.326Z",
+      "jplSkyfieldUtc": "2020-10-07T19:55:15.974Z",
+      "officialNaojUtc": "2020-10-07T19:55:00.000Z",
+      "candidateMinusJplSeconds": 6.352,
+      "candidateMinusNaojSeconds": 22.326
+    },
+    {
+      "year": 2020,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2020-10-22T22:59:45.836Z",
+      "jplSkyfieldUtc": "2020-10-22T22:59:32.502Z",
+      "officialNaojUtc": "2020-10-22T23:00:00.000Z",
+      "candidateMinusJplSeconds": 13.334,
+      "candidateMinusNaojSeconds": -14.164
+    },
+    {
+      "year": 2020,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2020-11-06T23:13:57.976Z",
+      "jplSkyfieldUtc": "2020-11-06T23:13:55.402Z",
+      "officialNaojUtc": "2020-11-06T23:14:00.000Z",
+      "candidateMinusJplSeconds": 2.574,
+      "candidateMinusNaojSeconds": -2.024
+    },
+    {
+      "year": 2020,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2020-11-21T20:39:58.898Z",
+      "jplSkyfieldUtc": "2020-11-21T20:39:45.553Z",
+      "officialNaojUtc": "2020-11-21T20:40:00.000Z",
+      "candidateMinusJplSeconds": 13.345,
+      "candidateMinusNaojSeconds": -1.102
+    },
+    {
+      "year": 2020,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2020-12-06T16:09:40.949Z",
+      "jplSkyfieldUtc": "2020-12-06T16:09:30.404Z",
+      "officialNaojUtc": "2020-12-06T16:09:00.000Z",
+      "candidateMinusJplSeconds": 10.545,
+      "candidateMinusNaojSeconds": 40.949
+    },
+    {
+      "year": 2020,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2020-12-21T10:02:42.334Z",
+      "jplSkyfieldUtc": "2020-12-21T10:02:20.437Z",
+      "officialNaojUtc": "2020-12-21T10:02:00.000Z",
+      "candidateMinusJplSeconds": 21.897,
+      "candidateMinusNaojSeconds": 42.334
+    },
+    {
+      "year": 2020,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2020-01-05T21:30:19.573Z",
+      "jplSkyfieldUtc": "2020-01-05T21:30:06.500Z",
+      "officialNaojUtc": "2020-01-05T21:30:00.000Z",
+      "candidateMinusJplSeconds": 13.073,
+      "candidateMinusNaojSeconds": 19.573
+    },
+    {
+      "year": 2020,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2020-01-20T14:54:54.521Z",
+      "jplSkyfieldUtc": "2020-01-20T14:54:40.207Z",
+      "officialNaojUtc": "2020-01-20T14:55:00.000Z",
+      "candidateMinusJplSeconds": 14.314,
+      "candidateMinusNaojSeconds": -5.479
+    },
+    {
+      "year": 2020,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2020-02-04T09:03:38.336Z",
+      "jplSkyfieldUtc": "2020-02-04T09:03:19.936Z",
+      "officialNaojUtc": "2020-02-04T09:03:00.000Z",
+      "candidateMinusJplSeconds": 18.4,
+      "candidateMinusNaojSeconds": 38.336
+    },
+    {
+      "year": 2020,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2020-02-19T04:57:17.701Z",
+      "jplSkyfieldUtc": "2020-02-19T04:57:00.201Z",
+      "officialNaojUtc": "2020-02-19T04:57:00.000Z",
+      "candidateMinusJplSeconds": 17.5,
+      "candidateMinusNaojSeconds": 17.701
+    },
+    {
+      "year": 2020,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2020-03-05T02:57:14.433Z",
+      "jplSkyfieldUtc": "2020-03-05T02:56:53.288Z",
+      "officialNaojUtc": "2020-03-05T02:57:00.000Z",
+      "candidateMinusJplSeconds": 21.145,
+      "candidateMinusNaojSeconds": 14.433
+    },
+    {
+      "year": 2024,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2024-03-20T03:06:24.047Z",
+      "jplSkyfieldUtc": "2024-03-20T03:06:24.155Z",
+      "officialNaojUtc": "2024-03-20T03:06:00.000Z",
+      "candidateMinusJplSeconds": -0.108,
+      "candidateMinusNaojSeconds": 24.047
+    },
+    {
+      "year": 2024,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2024-04-04T07:02:14.725Z",
+      "jplSkyfieldUtc": "2024-04-04T07:02:17.696Z",
+      "officialNaojUtc": "2024-04-04T07:02:00.000Z",
+      "candidateMinusJplSeconds": -2.971,
+      "candidateMinusNaojSeconds": 14.725
+    },
+    {
+      "year": 2024,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2024-04-19T13:59:55.070Z",
+      "jplSkyfieldUtc": "2024-04-19T13:59:45.462Z",
+      "officialNaojUtc": "2024-04-19T14:00:00.000Z",
+      "candidateMinusJplSeconds": 9.608,
+      "candidateMinusNaojSeconds": -4.93
+    },
+    {
+      "year": 2024,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2024-05-05T00:10:08.464Z",
+      "jplSkyfieldUtc": "2024-05-05T00:10:05.058Z",
+      "officialNaojUtc": "2024-05-05T00:10:00.000Z",
+      "candidateMinusJplSeconds": 3.406,
+      "candidateMinusNaojSeconds": 8.464
+    },
+    {
+      "year": 2024,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2024-05-20T12:59:38.197Z",
+      "jplSkyfieldUtc": "2024-05-20T12:59:30.365Z",
+      "officialNaojUtc": "2024-05-20T13:00:00.000Z",
+      "candidateMinusJplSeconds": 7.832,
+      "candidateMinusNaojSeconds": -21.803
+    },
+    {
+      "year": 2024,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2024-06-05T04:09:54.092Z",
+      "jplSkyfieldUtc": "2024-06-05T04:09:53.671Z",
+      "officialNaojUtc": "2024-06-05T04:10:00.000Z",
+      "candidateMinusJplSeconds": 0.421,
+      "candidateMinusNaojSeconds": -5.908
+    },
+    {
+      "year": 2024,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2024-06-20T20:50:58.360Z",
+      "jplSkyfieldUtc": "2024-06-20T20:50:59.805Z",
+      "officialNaojUtc": "2024-06-20T20:51:00.000Z",
+      "candidateMinusJplSeconds": -1.445,
+      "candidateMinusNaojSeconds": -1.64
+    },
+    {
+      "year": 2024,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2024-07-06T14:20:07.101Z",
+      "jplSkyfieldUtc": "2024-07-06T14:20:03.407Z",
+      "officialNaojUtc": "2024-07-06T14:20:00.000Z",
+      "candidateMinusJplSeconds": 3.694,
+      "candidateMinusNaojSeconds": 7.101
+    },
+    {
+      "year": 2024,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2024-07-22T07:44:29.225Z",
+      "jplSkyfieldUtc": "2024-07-22T07:44:25.736Z",
+      "officialNaojUtc": "2024-07-22T07:44:00.000Z",
+      "candidateMinusJplSeconds": 3.489,
+      "candidateMinusNaojSeconds": 29.225
+    },
+    {
+      "year": 2024,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2024-08-07T00:09:30.136Z",
+      "jplSkyfieldUtc": "2024-08-07T00:09:16.454Z",
+      "officialNaojUtc": "2024-08-07T00:09:00.000Z",
+      "candidateMinusJplSeconds": 13.682,
+      "candidateMinusNaojSeconds": 30.136
+    },
+    {
+      "year": 2024,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2024-08-22T14:55:15.989Z",
+      "jplSkyfieldUtc": "2024-08-22T14:55:02.965Z",
+      "officialNaojUtc": "2024-08-22T14:55:00.000Z",
+      "candidateMinusJplSeconds": 13.024,
+      "candidateMinusNaojSeconds": 15.989
+    },
+    {
+      "year": 2024,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2024-09-07T03:11:41.910Z",
+      "jplSkyfieldUtc": "2024-09-07T03:11:20.836Z",
+      "officialNaojUtc": "2024-09-07T03:11:00.000Z",
+      "candidateMinusJplSeconds": 21.074,
+      "candidateMinusNaojSeconds": 41.91
+    },
+    {
+      "year": 2024,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2024-09-22T12:43:55.451Z",
+      "jplSkyfieldUtc": "2024-09-22T12:43:39.559Z",
+      "officialNaojUtc": "2024-09-22T12:44:00.000Z",
+      "candidateMinusJplSeconds": 15.892,
+      "candidateMinusNaojSeconds": -4.549
+    },
+    {
+      "year": 2024,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2024-10-07T19:00:06.976Z",
+      "jplSkyfieldUtc": "2024-10-07T18:59:57.338Z",
+      "officialNaojUtc": "2024-10-07T19:00:00.000Z",
+      "candidateMinusJplSeconds": 9.638,
+      "candidateMinusNaojSeconds": 6.976
+    },
+    {
+      "year": 2024,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2024-10-22T22:14:46.498Z",
+      "jplSkyfieldUtc": "2024-10-22T22:14:44.425Z",
+      "officialNaojUtc": "2024-10-22T22:15:00.000Z",
+      "candidateMinusJplSeconds": 2.073,
+      "candidateMinusNaojSeconds": -13.502
+    },
+    {
+      "year": 2024,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2024-11-06T22:19:55.550Z",
+      "jplSkyfieldUtc": "2024-11-06T22:20:04.551Z",
+      "officialNaojUtc": "2024-11-06T22:20:00.000Z",
+      "candidateMinusJplSeconds": -9.001,
+      "candidateMinusNaojSeconds": -4.45
+    },
+    {
+      "year": 2024,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2024-11-21T19:56:14.256Z",
+      "jplSkyfieldUtc": "2024-11-21T19:56:29.753Z",
+      "officialNaojUtc": "2024-11-21T19:56:00.000Z",
+      "candidateMinusJplSeconds": -15.497,
+      "candidateMinusNaojSeconds": 14.256
+    },
+    {
+      "year": 2024,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2024-12-06T15:16:48.690Z",
+      "jplSkyfieldUtc": "2024-12-06T15:17:02.636Z",
+      "officialNaojUtc": "2024-12-06T15:17:00.000Z",
+      "candidateMinusJplSeconds": -13.946,
+      "candidateMinusNaojSeconds": -11.31
+    },
+    {
+      "year": 2024,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2024-12-21T09:20:18.673Z",
+      "jplSkyfieldUtc": "2024-12-21T09:20:34.194Z",
+      "officialNaojUtc": "2024-12-21T09:21:00.000Z",
+      "candidateMinusJplSeconds": -15.521,
+      "candidateMinusNaojSeconds": -41.327
+    },
+    {
+      "year": 2024,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2024-01-05T20:49:19.758Z",
+      "jplSkyfieldUtc": "2024-01-05T20:49:22.539Z",
+      "officialNaojUtc": "2024-01-05T20:49:00.000Z",
+      "candidateMinusJplSeconds": -2.781,
+      "candidateMinusNaojSeconds": 19.758
+    },
+    {
+      "year": 2024,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2024-01-20T14:07:19.331Z",
+      "jplSkyfieldUtc": "2024-01-20T14:07:20.733Z",
+      "officialNaojUtc": "2024-01-20T14:07:00.000Z",
+      "candidateMinusJplSeconds": -1.402,
+      "candidateMinusNaojSeconds": 19.331
+    },
+    {
+      "year": 2024,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2024-02-04T08:26:49.630Z",
+      "jplSkyfieldUtc": "2024-02-04T08:27:07.592Z",
+      "officialNaojUtc": "2024-02-04T08:27:00.000Z",
+      "candidateMinusJplSeconds": -17.962,
+      "candidateMinusNaojSeconds": -10.37
+    },
+    {
+      "year": 2024,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2024-02-19T04:13:03.396Z",
+      "jplSkyfieldUtc": "2024-02-19T04:13:10.323Z",
+      "officialNaojUtc": "2024-02-19T04:13:00.000Z",
+      "candidateMinusJplSeconds": -6.927,
+      "candidateMinusNaojSeconds": 3.396
+    },
+    {
+      "year": 2024,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2024-03-05T02:22:28.877Z",
+      "jplSkyfieldUtc": "2024-03-05T02:22:46.136Z",
+      "officialNaojUtc": "2024-03-05T02:23:00.000Z",
+      "candidateMinusJplSeconds": -17.259,
+      "candidateMinusNaojSeconds": -31.123
+    },
+    {
+      "year": 2025,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2025-03-20T09:01:26.759Z",
+      "jplSkyfieldUtc": "2025-03-20T09:01:28.934Z",
+      "officialNaojUtc": "2025-03-20T09:01:00.000Z",
+      "candidateMinusJplSeconds": -2.175,
+      "candidateMinusNaojSeconds": 26.759
+    },
+    {
+      "year": 2025,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2025-04-04T12:48:34.186Z",
+      "jplSkyfieldUtc": "2025-04-04T12:48:33.765Z",
+      "officialNaojUtc": "2025-04-04T12:49:00.000Z",
+      "candidateMinusJplSeconds": 0.421,
+      "candidateMinusNaojSeconds": -25.814
+    },
+    {
+      "year": 2025,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2025-04-19T19:56:03.322Z",
+      "jplSkyfieldUtc": "2025-04-19T19:56:01.140Z",
+      "officialNaojUtc": "2025-04-19T19:56:00.000Z",
+      "candidateMinusJplSeconds": 2.182,
+      "candidateMinusNaojSeconds": 3.322
+    },
+    {
+      "year": 2025,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2025-05-05T05:57:21.708Z",
+      "jplSkyfieldUtc": "2025-05-05T05:57:11.435Z",
+      "officialNaojUtc": "2025-05-05T05:57:00.000Z",
+      "candidateMinusJplSeconds": 10.273,
+      "candidateMinusNaojSeconds": 21.708
+    },
+    {
+      "year": 2025,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2025-05-20T18:54:51.046Z",
+      "jplSkyfieldUtc": "2025-05-20T18:54:38.162Z",
+      "officialNaojUtc": "2025-05-20T18:55:00.000Z",
+      "candidateMinusJplSeconds": 12.884,
+      "candidateMinusNaojSeconds": -8.954
+    },
+    {
+      "year": 2025,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2025-06-05T09:56:40.819Z",
+      "jplSkyfieldUtc": "2025-06-05T09:56:31.172Z",
+      "officialNaojUtc": "2025-06-05T09:57:00.000Z",
+      "candidateMinusJplSeconds": 9.647,
+      "candidateMinusNaojSeconds": -19.181
+    },
+    {
+      "year": 2025,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2025-06-21T02:42:17.883Z",
+      "jplSkyfieldUtc": "2025-06-21T02:42:15.680Z",
+      "officialNaojUtc": "2025-06-21T02:42:00.000Z",
+      "candidateMinusJplSeconds": 2.203,
+      "candidateMinusNaojSeconds": 17.883
+    },
+    {
+      "year": 2025,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2025-07-06T20:04:51.895Z",
+      "jplSkyfieldUtc": "2025-07-06T20:04:59.097Z",
+      "officialNaojUtc": "2025-07-06T20:05:00.000Z",
+      "candidateMinusJplSeconds": -7.202,
+      "candidateMinusNaojSeconds": -8.105
+    },
+    {
+      "year": 2025,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2025-07-22T13:29:20.778Z",
+      "jplSkyfieldUtc": "2025-07-22T13:29:27.116Z",
+      "officialNaojUtc": "2025-07-22T13:29:00.000Z",
+      "candidateMinusJplSeconds": -6.338,
+      "candidateMinusNaojSeconds": 20.778
+    },
+    {
+      "year": 2025,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2025-08-07T05:51:16.773Z",
+      "jplSkyfieldUtc": "2025-08-07T05:51:34.714Z",
+      "officialNaojUtc": "2025-08-07T05:52:00.000Z",
+      "candidateMinusJplSeconds": -17.941,
+      "candidateMinusNaojSeconds": -43.227
+    },
+    {
+      "year": 2025,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2025-08-22T20:33:49.605Z",
+      "jplSkyfieldUtc": "2025-08-22T20:33:51.474Z",
+      "officialNaojUtc": "2025-08-22T20:34:00.000Z",
+      "candidateMinusJplSeconds": -1.869,
+      "candidateMinusNaojSeconds": -10.395
+    },
+    {
+      "year": 2025,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2025-09-07T08:51:50.124Z",
+      "jplSkyfieldUtc": "2025-09-07T08:51:56.684Z",
+      "officialNaojUtc": "2025-09-07T08:52:00.000Z",
+      "candidateMinusJplSeconds": -6.56,
+      "candidateMinusNaojSeconds": -9.876
+    },
+    {
+      "year": 2025,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2025-09-22T18:19:34.559Z",
+      "jplSkyfieldUtc": "2025-09-22T18:19:20.502Z",
+      "officialNaojUtc": "2025-09-22T18:19:00.000Z",
+      "candidateMinusJplSeconds": 14.057,
+      "candidateMinusNaojSeconds": 34.559
+    },
+    {
+      "year": 2025,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2025-10-08T00:41:21.049Z",
+      "jplSkyfieldUtc": "2025-10-08T00:41:12.108Z",
+      "officialNaojUtc": "2025-10-08T00:41:00.000Z",
+      "candidateMinusJplSeconds": 8.941,
+      "candidateMinusNaojSeconds": 21.049
+    },
+    {
+      "year": 2025,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2025-10-23T03:51:20.321Z",
+      "jplSkyfieldUtc": "2025-10-23T03:50:55.457Z",
+      "officialNaojUtc": "2025-10-23T03:51:00.000Z",
+      "candidateMinusJplSeconds": 24.864,
+      "candidateMinusNaojSeconds": 20.321
+    },
+    {
+      "year": 2025,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2025-11-07T04:04:15.490Z",
+      "jplSkyfieldUtc": "2025-11-07T04:04:02.744Z",
+      "officialNaojUtc": "2025-11-07T04:04:00.000Z",
+      "candidateMinusJplSeconds": 12.746,
+      "candidateMinusNaojSeconds": 15.49
+    },
+    {
+      "year": 2025,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2025-11-22T01:35:50.103Z",
+      "jplSkyfieldUtc": "2025-11-22T01:35:34.562Z",
+      "officialNaojUtc": "2025-11-22T01:36:00.000Z",
+      "candidateMinusJplSeconds": 15.541,
+      "candidateMinusNaojSeconds": -9.897
+    },
+    {
+      "year": 2025,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2025-12-06T21:04:38.611Z",
+      "jplSkyfieldUtc": "2025-12-06T21:04:34.935Z",
+      "officialNaojUtc": "2025-12-06T21:05:00.000Z",
+      "candidateMinusJplSeconds": 3.676,
+      "candidateMinusNaojSeconds": -21.389
+    },
+    {
+      "year": 2025,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2025-12-21T15:03:03.907Z",
+      "jplSkyfieldUtc": "2025-12-21T15:03:05.152Z",
+      "officialNaojUtc": "2025-12-21T15:03:00.000Z",
+      "candidateMinusJplSeconds": -1.245,
+      "candidateMinusNaojSeconds": 3.907
+    },
+    {
+      "year": 2025,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2025-01-05T02:32:41.099Z",
+      "jplSkyfieldUtc": "2025-01-05T02:32:46.354Z",
+      "officialNaojUtc": "2025-01-05T02:33:00.000Z",
+      "candidateMinusJplSeconds": -5.255,
+      "candidateMinusNaojSeconds": -18.901
+    },
+    {
+      "year": 2025,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2025-01-19T20:00:02.568Z",
+      "jplSkyfieldUtc": "2025-01-19T20:00:07.452Z",
+      "officialNaojUtc": "2025-01-19T20:00:00.000Z",
+      "candidateMinusJplSeconds": -4.884,
+      "candidateMinusNaojSeconds": 2.568
+    },
+    {
+      "year": 2025,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2025-02-03T14:10:29.634Z",
+      "jplSkyfieldUtc": "2025-02-03T14:10:28.122Z",
+      "officialNaojUtc": "2025-02-03T14:10:00.000Z",
+      "candidateMinusJplSeconds": 1.512,
+      "candidateMinusNaojSeconds": 29.634
+    },
+    {
+      "year": 2025,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2025-02-18T10:06:35.157Z",
+      "jplSkyfieldUtc": "2025-02-18T10:06:34.264Z",
+      "officialNaojUtc": "2025-02-18T10:07:00.000Z",
+      "candidateMinusJplSeconds": 0.893,
+      "candidateMinusNaojSeconds": -24.843
+    },
+    {
+      "year": 2025,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2025-03-05T08:07:17.119Z",
+      "jplSkyfieldUtc": "2025-03-05T08:07:16.177Z",
+      "officialNaojUtc": "2025-03-05T08:07:00.000Z",
+      "candidateMinusJplSeconds": 0.942,
+      "candidateMinusNaojSeconds": 17.119
+    },
+    {
+      "year": 2030,
+      "angle": 0,
+      "name": "춘분",
+      "candidateUtc": "2030-03-20T13:51:42.425Z",
+      "jplSkyfieldUtc": "2030-03-20T13:52:05.710Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -23.285,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 15,
+      "name": "청명",
+      "candidateUtc": "2030-04-04T17:40:29.200Z",
+      "jplSkyfieldUtc": "2030-04-04T17:41:00.327Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -31.127,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 30,
+      "name": "곡우",
+      "candidateUtc": "2030-04-20T00:43:14.772Z",
+      "jplSkyfieldUtc": "2030-04-20T00:43:34.976Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -20.204,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 45,
+      "name": "입하",
+      "candidateUtc": "2030-05-05T10:45:51.570Z",
+      "jplSkyfieldUtc": "2030-05-05T10:46:18.187Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -26.617,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 60,
+      "name": "소만",
+      "candidateUtc": "2030-05-20T23:40:53.869Z",
+      "jplSkyfieldUtc": "2030-05-20T23:41:05.093Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -11.224,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 75,
+      "name": "망종",
+      "candidateUtc": "2030-06-05T14:44:09.589Z",
+      "jplSkyfieldUtc": "2030-06-05T14:44:29.975Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -20.386,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 90,
+      "name": "하지",
+      "candidateUtc": "2030-06-21T07:31:13.263Z",
+      "jplSkyfieldUtc": "2030-06-21T07:31:18.812Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -5.549,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 105,
+      "name": "소서",
+      "candidateUtc": "2030-07-07T00:55:20.744Z",
+      "jplSkyfieldUtc": "2030-07-07T00:55:29.302Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -8.558,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 120,
+      "name": "대서",
+      "candidateUtc": "2030-07-22T18:25:00.466Z",
+      "jplSkyfieldUtc": "2030-07-22T18:24:53.766Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 6.7,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 135,
+      "name": "입추",
+      "candidateUtc": "2030-08-07T10:47:25.924Z",
+      "jplSkyfieldUtc": "2030-08-07T10:47:19.891Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 6.033,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 150,
+      "name": "처서",
+      "candidateUtc": "2030-08-23T01:36:41.433Z",
+      "jplSkyfieldUtc": "2030-08-23T01:36:23.923Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 17.51,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 165,
+      "name": "백로",
+      "candidateUtc": "2030-09-07T13:53:05.645Z",
+      "jplSkyfieldUtc": "2030-09-07T13:52:50.001Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 15.644,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 180,
+      "name": "추분",
+      "candidateUtc": "2030-09-22T23:27:13.152Z",
+      "jplSkyfieldUtc": "2030-09-22T23:26:53.285Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 19.867,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 195,
+      "name": "한로",
+      "candidateUtc": "2030-10-08T05:45:27.502Z",
+      "jplSkyfieldUtc": "2030-10-08T05:45:16.405Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 11.097,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 210,
+      "name": "상강",
+      "candidateUtc": "2030-10-23T09:00:46.801Z",
+      "jplSkyfieldUtc": "2030-10-23T09:00:33.907Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 12.894,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 225,
+      "name": "입동",
+      "candidateUtc": "2030-11-07T09:08:46.114Z",
+      "jplSkyfieldUtc": "2030-11-07T09:08:44.023Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 2.091,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 240,
+      "name": "소설",
+      "candidateUtc": "2030-11-22T06:44:37.289Z",
+      "jplSkyfieldUtc": "2030-11-22T06:44:36.187Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 1.102,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 255,
+      "name": "대설",
+      "candidateUtc": "2030-12-07T02:07:37.300Z",
+      "jplSkyfieldUtc": "2030-12-07T02:07:37.312Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -0.012,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 270,
+      "name": "동지",
+      "candidateUtc": "2030-12-21T20:09:35.689Z",
+      "jplSkyfieldUtc": "2030-12-21T20:09:37.931Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -2.242,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 285,
+      "name": "소한",
+      "candidateUtc": "2030-01-05T07:30:38.863Z",
+      "jplSkyfieldUtc": "2030-01-05T07:30:34.168Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": 4.695,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 300,
+      "name": "대한",
+      "candidateUtc": "2030-01-20T00:54:16.936Z",
+      "jplSkyfieldUtc": "2030-01-20T00:54:23.356Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -6.42,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 315,
+      "name": "입춘",
+      "candidateUtc": "2030-02-03T19:08:11.578Z",
+      "jplSkyfieldUtc": "2030-02-03T19:08:28.309Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -16.731,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 330,
+      "name": "우수",
+      "candidateUtc": "2030-02-18T14:59:38.516Z",
+      "jplSkyfieldUtc": "2030-02-18T14:59:56.359Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -17.843,
+      "candidateMinusNaojSeconds": null
+    },
+    {
+      "year": 2030,
+      "angle": 345,
+      "name": "경칩",
+      "candidateUtc": "2030-03-05T13:02:48.866Z",
+      "jplSkyfieldUtc": "2030-03-05T13:03:18.265Z",
+      "officialNaojUtc": null,
+      "candidateMinusJplSeconds": -29.399,
+      "candidateMinusNaojSeconds": null
+    }
+  ]
+}

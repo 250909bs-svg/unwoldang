@@ -176,6 +176,8 @@ function AppShell() {
   const isPastLifeLandingRoute = location.pathname.startsWith('/detail/past-life-goblin');
   const isPastLifeReportRoute = location.pathname === '/report/past-life-goblin';
   const isGeneralDetailRoute = location.pathname === '/detail/general-saju';
+  const isGeneralFormRoute = location.pathname === '/form/general-signature';
+  const isGeneralReportRoute = location.pathname === '/report/general-signature';
   const isLoveDetailRoute = location.pathname === '/detail/love-reading';
   const isLoveFormRoute = location.pathname === '/form/love-reading';
   const isLovePreviewRoute = location.pathname === '/preview/love-reading';
@@ -190,6 +192,7 @@ function AppShell() {
     location.pathname.startsWith('/login') ||
     isPastLifeLandingRoute ||
     isGeneralDetailRoute ||
+    isGeneralFormRoute ||
     isImmersiveLoveRoute ||
     isLegalRoute;
 
@@ -208,6 +211,10 @@ function AppShell() {
           ? 'app-container admin-app-container'
           : isGeneralDetailRoute
             ? 'app-container general-saju-app-container'
+          : isGeneralFormRoute
+            ? 'app-container general-saju-intake-app-container'
+          : isGeneralReportRoute
+            ? 'app-container general-signature-report-app-container'
           : isLoveDetailRoute
             ? 'app-container mz-love-app-container'
             : isLoveFormRoute || isLovePreviewRoute
@@ -221,14 +228,22 @@ function AppShell() {
             : 'app-container'
       }
     >
-      <AppRoutes hideGlobalChrome={isPastLifeLandingRoute || isImmersiveLoveRoute || isGeneralDetailRoute} />
+      <AppRoutes
+        hideGlobalChrome={
+          isPastLifeLandingRoute ||
+          isImmersiveLoveRoute ||
+          isGeneralDetailRoute ||
+          isGeneralFormRoute ||
+          isGeneralReportRoute
+        }
+      />
     </div>
   );
 }
 
 function App() {
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Router>
       <AppShell />
     </Router>
   );

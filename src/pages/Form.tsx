@@ -19,7 +19,14 @@ import { validateBirthInput } from '../lib/birthInputValidation';
 import { normalizeIntakeFormData } from '../lib/intakeDataContract';
 import { MZ_LOVE_CHOICE_STORAGE_KEY, normalizeLoveReaction } from '../lib/mz-love-fact/microChoice';
 import { isRelationshipDurationRequired } from '../lib/relationshipIntake';
+import { requestGeneralSignatureReleasePreflight } from '../lib/releasePreflight';
 import { getProductById } from '../products/registry';
+import {
+  isGeneralSignatureGenderSelected,
+  isGeneralSignatureQuestionReady,
+  isGeneralSignatureRelationshipReady
+} from '../products/general-signature/generalSignatureIntakeContract';
+import GeneralSignatureIntake from '../products/general-signature/GeneralSignatureIntake';
 import '../styles/mz-love-fact.css';
 import '../styles/past-life.css';
 
@@ -59,6 +66,11 @@ const emptyPartnerBirthData: PartnerBirthData = {
 };
 
 type IntakeStep = 1 | 2 | 3 | 4;
+
+type ReleasePreflightUiState = {
+  status: 'idle' | 'checking' | 'manual-review-required' | 'blocked' | 'error';
+  message: string;
+};
 
 const pastLifeGuideStepCopy: Record<IntakeStep, { eyebrow: string; line: string }> = {
   1: {
@@ -250,11 +262,14 @@ const formatBirthDate = (digits: string) => {
   return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
 };
 
-const hydrateFormData = (source?: Partial<IntakeFormData> | null): IntakeFormData => normalizeIntakeFormData({
+const hydrateFormData = (
+  source?: Partial<IntakeFormData> | null,
+  genderFallback: IntakeFormData['gender'] = 'female'
+): IntakeFormData => normalizeIntakeFormData({
   ...initialState,
   ...source,
   name: source?.name ?? '',
-  gender: source?.gender ?? 'female',
+  gender: source?.gender ?? genderFallback,
   calendar: source?.calendar ?? 'solar',
   isLeapMonth: Boolean(source?.isLeapMonth),
   birthDate: source?.birthDate ?? '',
@@ -314,12 +329,13 @@ function getPartnerExactBirthTimeValue(partner: PartnerBirthData) {
   return match ? `${match[1].padStart(2, '0')}:${match[2]}` : '';
 }
 
-export default function Form() {
+function LegacyForm() {
   const { id } = useParams<{ id: string }>();
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
   const isPastLifeFlow = product.flow.intakeVariant === 'past-life';
   const isCompatibilityFlow = product.flow.intakeVariant === 'compatibility';
+  const isGeneralSignatureFlow = service.id === 'general-signature';
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -327,10 +343,19 @@ export default function Form() {
   const tabOrigin = locationState?.tabOrigin || '/';
   const draftKey = useMemo(() => `unwoldang.intake.${service.id}`, [service.id]);
   const [step, setStep] = useState<IntakeStep>(1);
-  const [formData, setFormData] = useState<IntakeFormData>(initialState);
+  const [formData, setFormData] = useState<IntakeFormData>(() => (
+    isGeneralSignatureFlow ? { ...initialState, gender: '' } : initialState
+  ));
   const [birthDigits, setBirthDigits] = useState('');
   const [partnerBirthDigits, setPartnerBirthDigits] = useState('');
+  const [releasePreflightState, setReleasePreflightState] = useState<ReleasePreflightUiState>({
+    status: 'idle',
+    message: ''
+  });
   const partnerData = formData.partner || emptyPartnerBirthData;
+  const resetReleasePreflightState = () => {
+    setReleasePreflightState({ status: 'idle', message: '' });
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -358,19 +383,22 @@ export default function Form() {
     const storedLoveReaction = service.id === 'love-reading'
       ? window.sessionStorage.getItem(MZ_LOVE_CHOICE_STORAGE_KEY)
       : null;
-    const hydrated = hydrateFormData({
-      ...source,
-      loveReaction:
-        normalizeLoveReaction(locationState?.loveReaction) ??
-        normalizeLoveReaction(source?.loveReaction) ??
-        normalizeLoveReaction(storedLoveReaction) ??
-        undefined
-    });
+    const hydrated = hydrateFormData(
+      {
+        ...source,
+        loveReaction:
+          normalizeLoveReaction(locationState?.loveReaction) ??
+          normalizeLoveReaction(source?.loveReaction) ??
+          normalizeLoveReaction(storedLoveReaction) ??
+          undefined
+      },
+      isGeneralSignatureFlow ? '' : 'female'
+    );
 
     setFormData(hydrated);
     setBirthDigits(parseDateDigits(hydrated.birthDate));
     setPartnerBirthDigits(parseDateDigits(hydrated.partner?.birthDate));
-  }, [draftKey, locationState?.formData, locationState?.loveReaction, service.id]);
+  }, [draftKey, isGeneralSignatureFlow, locationState?.formData, locationState?.loveReaction, service.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -381,14 +409,19 @@ export default function Form() {
   }, [draftKey, formData]);
 
   const updateField = <K extends keyof IntakeFormData>(name: K, value: IntakeFormData[K]) => {
+    resetReleasePreflightState();
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const selectRelationshipStatus = (relationshipStatus: Exclude<RelationshipStatus, ''>) => {
+    resetReleasePreflightState();
     setFormData((prev) => ({
       ...prev,
       relationshipStatus,
-      relationshipDuration: relationshipStatus === 'single' ? '' : prev.relationshipDuration
+      relationshipDuration:
+        isGeneralSignatureFlow || relationshipStatus !== 'single'
+          ? prev.relationshipDuration
+          : ''
     }));
   };
 
@@ -429,6 +462,7 @@ export default function Form() {
   const updateBirthLocation = (label: string) => {
     const selected = birthLocationOptions.find((option) => option.label === label);
 
+    resetReleasePreflightState();
     setFormData((prev) => ({
       ...prev,
       location: selected?.latitude === undefined ? '' : selected.label,
@@ -565,21 +599,35 @@ export default function Form() {
     () => validateBirthInput(partnerData, { subjectLabel: '상대방' }),
     [partnerData]
   );
+  const selfBirthTimeZoneError = selfBirthValidation.errors.find((error) =>
+    error.code === 'calendar_preflight_failed' && error.field === 'birthTime'
+  );
   const birthDateReady = Boolean(formData.birthDate);
-  const step1Ready = selfBirthValidation.valid;
+  const step1Ready = selfBirthValidation.valid && (
+    !isGeneralSignatureFlow || isGeneralSignatureGenderSelected(formData.gender)
+  );
   const isLoveReadingFlow = product.flow.intakeVariant === 'love-reading';
   const step2Ready = isPastLifeFlow
     ? Boolean(formData.pastLifeTopic?.trim())
     : isCompatibilityFlow
       ? partnerBirthValidation.valid
-      : Boolean(formData.relationshipStatus) &&
-        (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration));
+      : isGeneralSignatureFlow
+        ? isGeneralSignatureRelationshipReady(
+            formData.relationshipStatus,
+            formData.relationshipDuration
+          )
+        : Boolean(formData.relationshipStatus) &&
+          (!isRelationshipDurationRequired(formData.relationshipStatus) || Boolean(formData.relationshipDuration));
   const step3Ready = isPastLifeFlow
     ? Boolean(formData.repeatedScene?.trim()) && Boolean(formData.frequentEmotion?.trim()) && Boolean(formData.hiddenDesire?.trim())
-    : Boolean(formData.q1.trim());
+    : isGeneralSignatureFlow
+      ? isGeneralSignatureQuestionReady(formData.q1)
+      : Boolean(formData.q1.trim());
   const step4Ready = isPastLifeFlow
     ? Boolean(formData.chosenSymbol?.trim()) && Boolean(formData.readingTone?.trim())
-    : Boolean(formData.q2.trim());
+    : isGeneralSignatureFlow
+      ? isGeneralSignatureQuestionReady(formData.q2)
+      : Boolean(formData.q2.trim());
   const canSubmit = step1Ready && step2Ready && step3Ready && step4Ready;
   const isYearlyFlow = false;
   const isCinematicFlow = true;
@@ -651,6 +699,11 @@ export default function Form() {
       : '태어난 시간 구간을 눌러 선택해 주세요.';
 
   const handleBack = () => {
+    if (releasePreflightState.status === 'checking') {
+      return;
+    }
+
+    resetReleasePreflightState();
     if (step === 1) {
       navigate(tabOrigin, { state: { tabOrigin } });
       return;
@@ -659,8 +712,8 @@ export default function Form() {
     setStep((prev) => (prev === 4 ? 3 : prev === 3 ? 2 : 1));
   };
 
-  const submitForm = () => {
-    if (!canSubmit) {
+  const submitForm = async () => {
+    if (!canSubmit || releasePreflightState.status === 'checking') {
       return;
     }
 
@@ -684,6 +737,43 @@ export default function Form() {
         }
       });
       return;
+    }
+
+    if (isGeneralSignatureFlow) {
+      setReleasePreflightState({
+        status: 'checking',
+        message: '정확한 자동 분석이 가능한 명식인지 확인하고 있습니다.'
+      });
+
+      try {
+        const preflight = await requestGeneralSignatureReleasePreflight(submittedFormData);
+
+        if (preflight.status === 'manual-review-required') {
+          setReleasePreflightState({
+            status: 'manual-review-required',
+            message: '이 명식은 자동 해석보다 추가 검토가 필요합니다.'
+          });
+          return;
+        }
+
+        if (preflight.status === 'blocked') {
+          setReleasePreflightState({
+            status: 'blocked',
+            message: '현재 입력으로는 정확한 자동 분석을 진행하기 어렵습니다.'
+          });
+          return;
+        }
+
+        setReleasePreflightState({ status: 'idle', message: '' });
+      } catch (error) {
+        setReleasePreflightState({
+          status: 'error',
+          message: error instanceof Error
+            ? error.message
+            : '종합사주 자동 발행 가능 여부를 확인하지 못했습니다.'
+        });
+        return;
+      }
     }
 
     navigate('/checkout', {
@@ -723,7 +813,7 @@ export default function Form() {
       return;
     }
 
-    submitForm();
+    void submitForm();
   };
 
   const applyQuestionSuggestion = (key: 'q1' | 'q2', value: string) => {
@@ -912,6 +1002,11 @@ export default function Form() {
                   <ChevronDown size={16} />
                 </div>
                 <p className="intake-story-caption">{birthTimePreview}</p>
+                {selfBirthTimeZoneError ? (
+                  <p className="intake-birth-validation-error" role="alert">
+                    {selfBirthTimeZoneError.message}
+                  </p>
+                ) : null}
               </div>
 
               <div className="intake-story-field">
@@ -1204,11 +1299,22 @@ export default function Form() {
                 </div>
               </article>
 
-              <article className="intake-story-question-card" hidden={formData.relationshipStatus === 'single'}>
+              <article
+                className="intake-story-question-card"
+                hidden={
+                  isGeneralSignatureFlow
+                    ? !formData.relationshipStatus
+                    : formData.relationshipStatus === 'single'
+                }
+              >
                 <div className="intake-story-question-head">
                   <strong>
-                    기간은 얼마나 되나요?
-                    {!isRelationshipDurationRequired(formData.relationshipStatus) ? ' (선택)' : ''}
+                    {isGeneralSignatureFlow && formData.relationshipStatus === 'single'
+                      ? '마지막 연애 이후 얼마나 지났나요?'
+                      : '기간은 얼마나 되나요?'}
+                    {!isGeneralSignatureFlow && !isRelationshipDurationRequired(formData.relationshipStatus)
+                      ? ' (선택)'
+                      : ''}
                   </strong>
                   <span className="intake-story-order-badge">PERIOD</span>
                 </div>
@@ -1229,7 +1335,9 @@ export default function Form() {
                   ))}
                 </div>
                 <p className="intake-story-caption">
-                  연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.
+                  {isGeneralSignatureFlow && formData.relationshipStatus === 'single'
+                    ? '솔로로 지낸 기간을 골라주세요. 관계 진입 기준과 반복 패턴을 해석하는 상황 정보로 사용합니다.'
+                    : '연애 중·기혼은 현재 관계가 이어진 기간을 골라주세요. 썸·애매한 관계·이별·재회는 기억나는 범위에서 선택해도 됩니다.'}
                 </p>
               </article>
             </div>
@@ -1407,8 +1515,23 @@ export default function Form() {
             )
           ) : null}
 
+          {isGeneralSignatureFlow && releasePreflightState.message ? (
+            <p
+              className={`intake-release-preflight-status is-${releasePreflightState.status}`}
+              role={releasePreflightState.status === 'checking' ? 'status' : 'alert'}
+              aria-live="polite"
+            >
+              {releasePreflightState.message}
+            </p>
+          ) : null}
+
           <footer className="intake-story-actions">
-            <button type="button" className="intake-story-secondary" onClick={handleBack}>
+            <button
+              type="button"
+              className="intake-story-secondary"
+              onClick={handleBack}
+              disabled={releasePreflightState.status === 'checking'}
+            >
               이전
             </button>
             <button
@@ -1419,10 +1542,13 @@ export default function Form() {
                 (step === 1 && !step1Ready) ||
                 (step === 2 && !step2Ready) ||
                 (step === 3 && !step3Ready) ||
-                (step === 4 && !step4Ready)
+                (step === 4 && !step4Ready) ||
+                releasePreflightState.status === 'checking'
               }
             >
-              {step === 4
+              {step === 4 && releasePreflightState.status === 'checking'
+                ? '자동 분석 가능 여부 확인 중…'
+                : step === 4
                 ? isPastLifeFlow
                   ? '49,000원 · 내 전생장부 열기'
                   : isYearlyFlow
@@ -1435,4 +1561,10 @@ export default function Form() {
       </div>
     </main>
   );
+}
+
+export default function Form() {
+  const { id } = useParams<{ id: string }>();
+
+  return id === 'general-signature' ? <GeneralSignatureIntake /> : <LegacyForm />;
 }

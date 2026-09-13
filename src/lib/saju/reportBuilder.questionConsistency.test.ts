@@ -124,6 +124,36 @@ describe('general-signature canonical current dayun contract', () => {
 });
 
 describe('general-signature comparison question classifier', () => {
+  it('answers an existing sales-role fit question and annual priorities as different situations', () => {
+    const salesQuestion = '영업일 하고있는데 지금 나한테 잘 맞는걸까?';
+    const annualQuestion = '2026년도 중요한것들과 하지말아야될것들 알려줘';
+    const { basis, report } = buildWithBasis(makeInput({ q1: salesQuestion, q2: annualQuestion }));
+    const [sales, annual] = report.questionAnswers;
+    const salesText = [sales.analysis, ...sales.advice].join(' ');
+    const annualText = [annual.analysis, ...annual.advice].join(' ');
+    const annualFact = basis.seun.find((item) => item.year === 2026);
+
+    expect(sales.question).toBe(salesQuestion);
+    expect(sales.title).toContain('영업');
+    expect(sales.analysis).toContain('이미 영업을 하고 있고');
+    expect(salesText).toContain('상담 전환율');
+    expect(salesText).not.toContain('현재 고민의 핵심과 우선순위를 정리하는 상황');
+
+    expect(annual.question).toBe(annualQuestion);
+    expect(annual.title).toContain('2026년');
+    expect(annual.analysis).toContain(`2026년 세운은`);
+    expect(annual.analysis).toContain(`(${annualFact?.ganzhi})`);
+    expect(annual.analysis).toContain('지지 오의 본기는 비견');
+    expect(annualText).toContain('확인된 성과는 키우고');
+    expect(annualText).not.toBe(salesText);
+    expect(sales.advice.filter((item) => annual.advice.includes(item))).toEqual([]);
+    expect(report.actionPlan.priorities.join(' ')).toContain('상담 전환');
+    expect(report.actionPlan.priorities.join(' ')).toContain('2026년');
+    expect(report.actionPlan.dos.join(' ')).toContain('인센티브 산식');
+    expect(report.actionPlan.avoids.join(' ')).toContain('권한과 보상');
+    assertCanonicalDayun(report, basis);
+  });
+
   it('preserves an open-ended money question without inventing comparison options', () => {
     const question = '앞으로 돈을 남기려면 무엇을 주의해야 하나요?';
     expect(extractQuestionOptions(question)).toEqual([]);
@@ -131,11 +161,16 @@ describe('general-signature comparison question classifier', () => {
     const { report } = buildWithBasis(makeInput({ q1: question, q2: '' }));
     expect(report.questionAnswers[0]?.question).toBe(question);
     expect(questionAnswerText(report)).not.toContain('앞으로·돈을·남기려면·무엇을');
+    expect(questionAnswerText(report)).not.toContain('판단 순서으로');
   });
 
   it('recognizes explicit Korean comparison wording', () => {
     expect(extractQuestionOptions('직장과 사업 중 어느 쪽이 더 맞나요?')).toEqual(['직장', '사업']);
     expect(extractQuestionOptions('서울과 부산 중 어디가 더 맞나요?')).toEqual(['서울', '부산']);
+
+    const { report } = buildWithBasis(makeInput());
+    expect(questionAnswerText(report)).not.toContain('고려하면로 보이므로');
+    expect(questionAnswerText(report)).not.toContain('"직장과 사업 중 어느 쪽이 더 맞나요?"은');
   });
 
   it('recognizes slash and VS comparison formats', () => {
@@ -150,5 +185,12 @@ describe('general-signature comparison question classifier', () => {
     expect(text).toContain(`${basis.pillars.day} 일주`);
     expect(text).toContain(`${basis.pillars.month} 월령`);
     assertCanonicalDayun(report, basis);
+  });
+
+  it('rejects duplicate paid questions after punctuation and whitespace normalization', () => {
+    expect(() => buildWithBasis(makeInput({
+      q1: '앞으로 돈을 남기려면 무엇을 주의해야 하나요?',
+      q2: '앞으로 돈을 남기려면 무엇을 주의해야 하나요 !'
+    }))).toThrow(/중복된 사용자 질문/);
   });
 });

@@ -10,6 +10,7 @@ import {
   renderInstantInKst
 } from './solarTime';
 import { buildBirthTimeScenarios } from './timeParser';
+import { assertResolvableLocalDateTime } from './timeZoneValidation';
 import type {
   BirthContext,
   BirthContextOptions,
@@ -19,7 +20,7 @@ import type {
   CivilDateTime
 } from './types';
 
-export const CALENDAR_ENGINE_VERSION = 'calendar-v2.0.0' as const;
+export const CALENDAR_ENGINE_VERSION = 'calendar-v2.2.0' as const;
 
 export interface BirthCalculationResult {
   version: typeof CALENDAR_ENGINE_VERSION;
@@ -143,6 +144,20 @@ function calculateScenario(
 /** Calculates a normalized context and preserves every time-uncertainty branch. */
 export function calculateBirthContext(context: BirthContext): BirthCalculationResult {
   const { solarDate, lunarInput } = normalizeInputDateToSolar(context);
+
+  if (
+    context.calendar === 'lunar'
+    && context.time.precision === 'exact-minute'
+    && context.time.hour !== null
+    && context.time.minute !== null
+  ) {
+    assertResolvableLocalDateTime(
+      { ...solarDate, hour: context.time.hour, minute: context.time.minute },
+      context.timezone.id,
+      context.timezone.utcOffsetMinutes
+    );
+  }
+
   const scenarioInputs = buildBirthTimeScenarios(context.time);
   const scenarios = scenarioInputs.map((scenario) =>
     calculateScenario(context, solarDate, lunarInput, scenario)

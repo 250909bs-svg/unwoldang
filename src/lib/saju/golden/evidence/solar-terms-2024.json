@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "naoj-reki-yoko-2024",
+  "sourceAuthority": "National Astronomical Observatory of Japan",
+  "sourceUrl": "https://eco.mtk.nao.ac.jp/koyomi/yoko/2024/rekiyou242.html.en",
+  "accessedAt": "2026-09-02",
+  "timezone": "Asia/Tokyo",
+  "utcOffsetMinutes": 540,
+  "fieldsSupported": ["solarTermBoundaryInstant", "boundaryRelativeMinutes"],
+  "limitations": [
+    "The source provides astronomical solar-term instants, not BaZi year/month pillars.",
+    "KASI special-day evidence confirms dates only and does not replace minute-level instants."
+  ],
+  "entries": [
+    { "term": "입춘", "longitude": 315, "localInstant": "2024-02-04T17:27:00+09:00", "utcInstant": "2024-02-04T08:27:00.000Z" },
+    { "term": "경칩", "longitude": 345, "localInstant": "2024-03-05T11:23:00+09:00", "utcInstant": "2024-03-05T02:23:00.000Z" },
+    { "term": "청명", "longitude": 15, "localInstant": "2024-04-04T16:02:00+09:00", "utcInstant": "2024-04-04T07:02:00.000Z" },
+    { "term": "입하", "longitude": 45, "localInstant": "2024-05-05T09:10:00+09:00", "utcInstant": "2024-05-05T00:10:00.000Z" },
+    { "term": "망종", "longitude": 75, "localInstant": "2024-06-05T13:10:00+09:00", "utcInstant": "2024-06-05T04:10:00.000Z" },
+    { "term": "소서", "longitude": 105, "localInstant": "2024-07-06T23:20:00+09:00", "utcInstant": "2024-07-06T14:20:00.000Z" },
+    { "term": "입추", "longitude": 135, "localInstant": "2024-08-07T09:09:00+09:00", "utcInstant": "2024-08-07T00:09:00.000Z" },
+    { "term": "백로", "longitude": 165, "localInstant": "2024-09-07T12:11:00+09:00", "utcInstant": "2024-09-07T03:11:00.000Z" },
+    { "term": "한로", "longitude": 195, "localInstant": "2024-10-08T04:00:00+09:00", "utcInstant": "2024-10-07T19:00:00.000Z" },
+    { "term": "입동", "longitude": 225, "localInstant": "2024-11-07T07:20:00+09:00", "utcInstant": "2024-11-06T22:20:00.000Z" }
+  ]
+}

@@ -67,7 +67,7 @@ export interface PartnerBirthData {
 
 export interface IntakeFormData {
   name: string;
-  gender: 'male' | 'female';
+  gender: 'male' | 'female' | '';
   interestedIn?: LoveInterest;
   calendar: 'solar' | 'lunar';
   isLeapMonth: boolean;
@@ -214,13 +214,13 @@ export const serviceCatalog: ServiceDefinition[] = [
   {
     id: 'general-signature',
     category: 'general',
-    label: '운월선생 정통 종합사주',
-    advisor: '운월선생',
+    label: '정통 종합사주',
+    advisor: '운월당',
     subtitle: '기질, 관계, 일, 재물의 흐름까지 한 번에 정리하는 운월당 대표 리포트',
     teaser: '타고난 결을 읽고 지금 가장 크게 움직이는 운의 방향을 정리합니다.',
     description:
       '처음 보는 분도 읽기 편하게, 하지만 얕지 않게 구성한 운월당의 시그니처 종합사주입니다. 인생 전반의 흐름을 카드형 요약과 챕터형 분석으로 나누어 보여주며, 질문 두 가지를 함께 반영해 개인화된 문장으로 정리합니다.',
-    price: '79,000원',
+    price: '990원',
     accent: '#ae7445',
     theme: 'general',
     heroTag: 'SIGNATURE',

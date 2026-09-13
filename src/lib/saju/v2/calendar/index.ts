@@ -6,9 +6,22 @@ export {
 export type { BirthCalculationResult } from './calculate';
 export { normalizeIntakeFormToBirthContext } from './normalize';
 export {
+  assertResolvableLocalDateTime,
+  assertValidIanaTimeZone,
+  LocalTimeValidationError,
+  resolveLocalDateTime
+} from './timeZoneValidation';
+export type {
+  LocalDateTimeCandidate,
+  LocalDateTimeResolution,
+  LocalDateTimeStatus,
+  LocalTimeValidationErrorCode
+} from './timeZoneValidation';
+export {
   applyDayBoundaryPolicy,
   applyTrueSolarTime,
   calculateEquationOfTimeMinutes,
+  TRUE_SOLAR_TIME_ENGINE_VERSION,
   renderInstantInKst
 } from './solarTime';
 export {

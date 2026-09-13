@@ -39,7 +39,7 @@ export function getManifestStatus(
 }
 
 export const SERVER_PRODUCT_CATALOG = Object.freeze({
-  'general-signature': { amount: 79_000, currency: 'KRW', status: getManifestStatus('general-signature') },
+  'general-signature': { amount: 990, currency: 'KRW', status: getManifestStatus('general-signature') },
   'life-flow': { amount: 59_000, currency: 'KRW', status: getManifestStatus('life-flow') },
   'concern-reading': { amount: 2_900, currency: 'KRW', status: getManifestStatus('concern-reading') },
   'past-life-goblin': { amount: 49_000, currency: 'KRW', status: getManifestStatus('past-life-goblin') },

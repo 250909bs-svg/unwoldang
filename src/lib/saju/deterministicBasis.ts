@@ -633,6 +633,8 @@ export function buildDeterministicSajuBasis(
           }
         : null,
       loveFocus: normalizeLoveFocus(formData.loveFocus),
+      relationshipStatus: formData.relationshipStatus || null,
+      relationshipDuration: formData.relationshipDuration || null,
       questions: [formData.q1, formData.q2]
         .filter((question): question is string => Boolean(question?.trim()))
         .map((question) => question.trim())
