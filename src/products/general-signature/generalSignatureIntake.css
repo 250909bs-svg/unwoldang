@@ -1,0 +1,486 @@
+.general-saju-intake-app-container {
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  background: #080a09;
+}
+
+.gs-intake-page {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  place-items: end center;
+  overflow: hidden;
+  background: #080a09;
+  color: #fff;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+}
+
+.gs-intake-page *,
+.gs-intake-page *::before,
+.gs-intake-page *::after {
+  box-sizing: border-box;
+}
+
+.gs-intake-video {
+  position: absolute;
+  top: -2%;
+  left: 50%;
+  display: block;
+  width: min(100%, 720px);
+  height: 104%;
+  object-fit: cover;
+  object-position: center center;
+  filter: brightness(0.82) saturate(0.94);
+  transform: translateX(-50%) scale(1.01);
+  transition: filter 320ms ease, transform 320ms ease;
+}
+
+.gs-intake-page.is-question-step .gs-intake-video {
+  filter: blur(7px) brightness(0.68) saturate(0.78);
+  transform: translateX(-50%) scale(1.035);
+}
+
+.gs-intake-video-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(4, 6, 5, 0.04) 0%, rgba(4, 6, 5, 0.08) 42%, rgba(4, 6, 5, 0.56) 100%),
+    linear-gradient(90deg, rgba(4, 6, 5, 0.08), transparent 24%, transparent 76%, rgba(4, 6, 5, 0.08));
+  pointer-events: none;
+}
+
+.gs-intake-page.is-question-step .gs-intake-video-shade {
+  background:
+    linear-gradient(180deg, rgba(4, 6, 5, 0.12) 0%, rgba(4, 6, 5, 0.2) 38%, rgba(4, 6, 5, 0.74) 100%),
+    linear-gradient(90deg, rgba(4, 6, 5, 0.18), transparent 24%, transparent 76%, rgba(4, 6, 5, 0.18));
+}
+
+.gs-intake-panel {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: min(100%, 520px);
+  min-height: min(62svh, 620px);
+  max-height: 100svh;
+  grid-template-rows: minmax(0, 1fr);
+  padding: 54px 24px max(24px, env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+  background: linear-gradient(0deg, rgba(4, 6, 5, 0.48) 0%, rgba(4, 6, 5, 0.12) 72%, transparent 100%);
+}
+
+.gs-intake-page.is-question-step .gs-intake-panel {
+  background: linear-gradient(0deg, rgba(4, 6, 5, 0.62) 0%, rgba(4, 6, 5, 0.22) 72%, transparent 100%);
+}
+
+.gs-intake-step {
+  display: flex;
+  min-height: 0;
+  align-items: flex-end;
+  padding: 10px 6px 6px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  animation: gsIntakeStepIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.gs-intake-step::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes gsIntakeStepIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes gsIntakeChoicePop {
+  0% { transform: scale(0.94); }
+  58% { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+
+.gs-intake-field {
+  position: relative;
+  display: grid;
+  width: 100%;
+  gap: 18px;
+}
+
+.gs-intake-field > span {
+  color: #fff;
+  font-size: clamp(34px, 9vw, 44px);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.055em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.25);
+}
+
+.gs-intake-field input,
+.gs-intake-field textarea,
+.gs-intake-select select {
+  width: 100%;
+  outline: 0;
+  color: #fff;
+  font: inherit;
+}
+
+.gs-intake-field > input {
+  min-height: 72px;
+  padding: 0 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 0;
+  background: transparent;
+  font-size: clamp(30px, 8vw, 40px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 790;
+  letter-spacing: -0.045em;
+}
+
+.gs-intake-field > input::placeholder,
+.gs-intake-time-row input::placeholder,
+.gs-intake-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.gs-intake-field textarea {
+  min-height: 142px;
+  padding: 16px 18px 38px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.11);
+  font-size: 16px;
+  line-height: 1.7;
+  resize: none;
+  backdrop-filter: blur(12px);
+}
+
+.gs-intake-field input:focus,
+.gs-intake-field textarea:focus,
+.gs-intake-select select:focus {
+  border-color: rgba(255, 255, 255, 0.86);
+  box-shadow: none;
+}
+
+.gs-intake-field input:disabled {
+  opacity: 0.3;
+}
+
+.gs-intake-choice-row,
+.gs-intake-large-choices,
+.gs-intake-duration-choices {
+  display: grid;
+  gap: 10px;
+}
+
+.gs-intake-choice-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gs-intake-large-choices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gs-intake-large-choices.relationship {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gs-intake-duration-choices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gs-intake-duration-block {
+  display: grid;
+  gap: 10px;
+  margin-top: 2px;
+  animation: gsIntakeStepIn 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.gs-intake-duration-block > span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  font-weight: 760;
+  letter-spacing: -0.03em;
+}
+
+.gs-intake-choice-row button,
+.gs-intake-large-choices button,
+.gs-intake-duration-choices button,
+.gs-intake-time-row button {
+  min-height: 58px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 760;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12), inset 0 1px rgba(255, 255, 255, 0.09);
+  transform: translateY(0) scale(1);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 120ms ease,
+    transform 90ms ease;
+  will-change: transform;
+}
+
+.gs-intake-large-choices button {
+  min-height: 70px;
+  font-size: 18px;
+}
+
+.gs-intake-large-choices.relationship button {
+  min-height: 64px;
+  padding-inline: 6px;
+  font-size: 14px;
+}
+
+.gs-intake-choice-row button.active,
+.gs-intake-large-choices button.active,
+.gs-intake-duration-choices button.active,
+.gs-intake-time-row button.active {
+  border-color: #fff;
+  background: #fff;
+  color: #151a21;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+  animation: gsIntakeChoicePop 260ms cubic-bezier(0.22, 1.35, 0.36, 1) both;
+}
+
+.gs-intake-choice-row button:active,
+.gs-intake-large-choices button:active,
+.gs-intake-duration-choices button:active,
+.gs-intake-time-row button:active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), inset 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(2px) scale(0.945);
+}
+
+.gs-intake-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.gs-intake-time-row input {
+  min-width: 0;
+  min-height: 62px;
+  padding: 0 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 0;
+  background: transparent;
+  font-size: clamp(27px, 7vw, 34px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 780;
+}
+
+.gs-intake-time-row button {
+  display: inline-flex;
+  min-width: 122px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.gs-intake-select {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.gs-intake-select > span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gs-intake-select select {
+  min-height: 58px;
+  padding: 0 46px 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.13);
+  font-size: 16px;
+  appearance: none;
+  backdrop-filter: blur(12px);
+}
+
+.gs-intake-select option {
+  color: #172019;
+}
+
+.gs-intake-select svg {
+  position: absolute;
+  right: 16px;
+  bottom: 20px;
+  color: rgba(255, 255, 255, 0.72);
+  pointer-events: none;
+}
+
+.gs-intake-question-meta {
+  position: absolute;
+  right: 14px;
+  bottom: 11px;
+}
+
+.gs-intake-question-meta span {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.gs-intake-question-action {
+  display: inline-flex;
+  width: 100%;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #151a21;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 90ms ease, opacity 160ms ease, box-shadow 160ms ease;
+}
+
+.gs-intake-question-action:active:not(:disabled) {
+  transform: translateY(2px) scale(0.975);
+}
+
+.gs-intake-question-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.gs-intake-preflight,
+.gs-intake-inline-error {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 680;
+  line-height: 1.55;
+}
+
+.gs-intake-preflight {
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(5, 10, 7, 0.5);
+}
+
+.gs-intake-preflight.is-error,
+.gs-intake-preflight.is-blocked {
+  border-color: rgba(255, 190, 170, 0.38);
+  color: #ffe1d7;
+}
+
+@media (hover: hover) {
+  .gs-intake-choice-row button:hover,
+  .gs-intake-large-choices button:hover,
+  .gs-intake-duration-choices button:hover,
+  .gs-intake-time-row button:hover {
+    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.19);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .gs-intake-choice-row button.active:hover,
+  .gs-intake-large-choices button.active:hover,
+  .gs-intake-duration-choices button.active:hover,
+  .gs-intake-time-row button.active:hover {
+    background: #fff;
+    color: #151a21;
+  }
+
+  .gs-intake-question-action:hover:not(:disabled) {
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  }
+
+}
+
+.gs-intake-page button:focus-visible,
+.gs-intake-page input:focus-visible,
+.gs-intake-page textarea:focus-visible,
+.gs-intake-page select:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.92);
+  outline-offset: 3px;
+}
+
+.gs-intake-time-row input:focus-visible {
+  outline: 0;
+  border-bottom-color: #fff;
+  box-shadow: 0 5px 0 -4px rgba(255, 255, 255, 0.94);
+}
+
+@media (min-width: 760px) {
+  .gs-intake-panel {
+    padding-right: 30px;
+    padding-bottom: 32px;
+    padding-left: 30px;
+  }
+}
+
+@media (max-width: 390px) {
+  .gs-intake-panel {
+    min-height: 64svh;
+    gap: 18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .gs-intake-field {
+    gap: 15px;
+  }
+
+  .gs-intake-large-choices.relationship button {
+    font-size: 13px;
+  }
+}
+
+@media (max-height: 700px) {
+  .gs-intake-panel {
+    min-height: 72svh;
+    gap: 15px;
+    padding-top: 34px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .gs-intake-field {
+    gap: 13px;
+  }
+
+  .gs-intake-field > span {
+    font-size: clamp(30px, 8vw, 38px);
+  }
+
+  .gs-intake-field textarea {
+    min-height: 112px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-intake-step {
+    animation: none;
+  }
+
+  .gs-intake-page button {
+    transition: none;
+    animation: none;
+  }
+}

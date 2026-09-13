@@ -26,6 +26,7 @@ import {
   isGeneralSignatureQuestionReady,
   isGeneralSignatureRelationshipReady
 } from '../products/general-signature/generalSignatureIntakeContract';
+import GeneralSignatureIntake from '../products/general-signature/GeneralSignatureIntake';
 import '../styles/mz-love-fact.css';
 import '../styles/past-life.css';
 
@@ -328,7 +329,7 @@ function getPartnerExactBirthTimeValue(partner: PartnerBirthData) {
   return match ? `${match[1].padStart(2, '0')}:${match[2]}` : '';
 }
 
-export default function Form() {
+function LegacyForm() {
   const { id } = useParams<{ id: string }>();
   const product = getProductById(id)!;
   const service = findServiceById(product.id);
@@ -1560,4 +1561,10 @@ export default function Form() {
       </div>
     </main>
   );
+}
+
+export default function Form() {
+  const { id } = useParams<{ id: string }>();
+
+  return id === 'general-signature' ? <GeneralSignatureIntake /> : <LegacyForm />;
 }

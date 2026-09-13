@@ -601,7 +601,7 @@ function getYearLuckSummary(
   const ganzhiHanja = formatGanzhiHanja(stem, branch);
   const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
   const hidden = HIDDEN_STEMS_KO[branch] || [];
-  const mainHiddenStem = hidden[hidden.length - 1];
+  const mainHiddenStem = hidden[0];
   const branchGod = mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '';
   const support = helpful.includes(stemElement) || helpful.includes(branchElement);
 
@@ -639,7 +639,7 @@ function getYearLuckWarning(
   const [stem, branch] = [...item.ganzhi] as [HeavenlyStem, EarthlyBranch];
   const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
   const hidden = HIDDEN_STEMS_KO[branch] || [];
-  const mainHiddenStem = hidden[hidden.length - 1];
+  const mainHiddenStem = hidden[0];
   const branchGod = mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '';
 
   return `${item.ganzhi} 세운에서는 ${stemGod || '천간 주제'}와 ${branchGod || '지지 주제'}가 동시에 과열될 때 한 가지 신호만 보고 결론 내리지 마세요. ` +
@@ -838,6 +838,7 @@ function getQuestionCategory(question: string): QuestionCategory {
   if (['love', 'dating', 'breakup', 'reunion', 'marriage', 'relationship', 'family'].includes(context.domain)) return 'relationship';
   if (['business', 'business_operation', 'wealth', 'spending', 'investment'].includes(context.domain)) return 'money';
   if (['career', 'job_change'].includes(context.domain)) return 'career';
+  if (context.domain === 'annual_outlook') return 'timing';
   if (/언제|시기|올해|내년|2026|2027|타이밍|기회/.test(normalized)) return 'timing';
   if (/조심|주의|위험|피해야|선택|고민|불안/.test(normalized)) return 'caution';
   if (/건강|잠|수면|체력|피로|몸|컨디션/.test(normalized)) return 'health';
@@ -1007,6 +1008,68 @@ function getTopTenGodsForQuestion(basis: DeterministicSajuBasis) {
     .join(', ') || '주요 십성';
 }
 
+function getQuestionTargetYear(question: string) {
+  const value = question.match(/(?:19|20)\d{2}/)?.[0];
+  return value ? Number(value) : null;
+}
+
+function getAnnualQuestionFacts(question: string, basis: DeterministicSajuBasis) {
+  const year = getQuestionTargetYear(question);
+  const item = year ? basis.seun.find((candidate) => candidate.year === year) : null;
+  if (!year || !item) return null;
+
+  const [stem, branch] = [...item.ganzhi] as [HeavenlyStem, EarthlyBranch];
+  const hidden = HIDDEN_STEMS_KO[branch] || [];
+  const mainHiddenStem = hidden[0];
+
+  return {
+    year,
+    ganzhi: item.ganzhi,
+    ganzhiHanja: formatGanzhiHanja(stem, branch),
+    stem,
+    branch,
+    stemElement: ELEMENT[stem as keyof typeof ELEMENT] as FiveElement,
+    branchElement: BRANCH_ELEM[branch as keyof typeof BRANCH_ELEM] as FiveElement,
+    stemGod: getTenGodByStem(basis.dayMaster.stem, stem),
+    branchGod: mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '십성 미판정'
+  };
+}
+
+function getSalesRoleProfile(basis: DeterministicSajuBasis) {
+  const labels = basis.tenGods.slice(0, 4).map((item) => item.label);
+  const hasWealth = labels.some((label) => label.includes('재'));
+  const hasResource = labels.some((label) => label.includes('인'));
+  const hasOutput = labels.some((label) => label === '식신' || label === '상관');
+  const hasOfficer = labels.some((label) => label.includes('관'));
+
+  if (hasWealth && hasResource) {
+    return {
+      fit: '고객 상황을 듣고 정보를 정리해 맞춤 제안을 만드는 상담형·기존 고객 관리형 영업',
+      drain: '무작위 콜 수와 즉석 압박만으로 실적을 요구하는 영업',
+      evidence: '재성의 거래 감각과 인성의 정보 정리·신뢰 형성이 함께 상위 흐름에 있습니다'
+    };
+  }
+  if (hasWealth && hasOutput) {
+    return {
+      fit: '상품의 장점을 설명하고 반응을 전환으로 연결하는 제안형·신규 개척형 영업',
+      drain: '설명 권한 없이 가격 할인만 반복하는 영업',
+      evidence: '재성의 거래 감각과 식상의 설명·표현 흐름이 함께 확인됩니다'
+    };
+  }
+  if (hasOfficer) {
+    return {
+      fit: '계약 조건과 목표가 분명한 기업·계정 관리형 영업',
+      drain: '평가 기준과 담당 범위가 수시로 바뀌는 영업',
+      evidence: '관성의 책임·기준 흐름이 상위 십성에 있습니다'
+    };
+  }
+  return {
+    fit: '상품과 고객군이 명확하고 본인이 제안 과정을 설계할 수 있는 영업',
+    drain: '관계 소모와 실적 압박만 크고 학습이 남지 않는 영업',
+    evidence: '영업 직함보다 실제 역할과 권한을 함께 봐야 하는 구성입니다'
+  };
+}
+
 function getQuestionIntent(question: string, category: QuestionCategory) {
   const normalized = question.replace(/\s/g, '');
   const context = buildQuestionContext(question);
@@ -1082,6 +1145,17 @@ function buildQuestionDirectAnswer(question: string, category: QuestionCategory,
   const careerFits = getCareerFitByTenGods(basis);
   const context = buildQuestionContext(question);
 
+  if (context.stage === 'current-role-fit') {
+    const sales = getSalesRoleProfile(basis);
+    return `결론부터 말하면 영업 전체가 안 맞는 것이 아니라, ${sales.fit}이면 강점을 쓰기 좋습니다. 반대로 ${sales.drain}은 오래 할수록 체력과 자신감을 함께 깎을 수 있습니다.`;
+  }
+  if (context.stage === 'annual-priorities') {
+    const annual = getAnnualQuestionFacts(question, basis);
+    return annual
+      ? `결론부터 말하면 ${annual.year}년은 ${annual.stemGod}·${annual.branchGod} 주제를 실제 성과와 수입으로 연결하되, 약속과 지출을 동시에 늘리지 않는 것이 핵심입니다.`
+      : '결론부터 말하면 요청한 연도의 세운 자료가 계산 범위에 있는지 먼저 확인한 뒤, 해야 할 일과 피할 일을 나눠 판단해야 합니다.';
+  }
+
   if (context.domain === 'business_operation' && context.stage === 'operating-profitability') {
     return '결론부터 말하면 이 질문은 창업 여부가 아니라 현재 사업의 매출 증가가 실제 이익으로 남지 않는 비용 구조에 관한 것입니다. 사주만으로 광고비와 인건비 중 어느 항목을 줄여야 하는지 재무 사실처럼 단정할 수는 없으므로, 확장보다 고정비·변동비·광고 효율·인건비 대비 매출을 먼저 비교해야 합니다.';
   }
@@ -1131,6 +1205,15 @@ function buildPremiumQuestionTitle(answer: QuestionAnswerBlock, category: Questi
   const prefix = answer.title.match(/^\d+\./)?.[0] || '';
   const normalized = answer.question.replace(/\s/g, '');
   const options = extractQuestionOptions(answer.question);
+  const context = buildQuestionContext(answer.question);
+
+  if (context.stage === 'current-role-fit') {
+    return `${prefix} 영업은 상담·제안·고객 관리 방식일수록 잘 맞습니다`.trim();
+  }
+  if (context.stage === 'annual-priorities') {
+    const year = getQuestionTargetYear(answer.question);
+    return `${prefix} ${year ? `${year}년은` : '올해는'} 성과와 지출의 속도를 따로 관리해야 합니다`.trim();
+  }
 
   if (category === 'crisis' || category === 'career' || category === 'money' || category === 'timing' || category === 'health') {
     return answer.title;
@@ -1363,6 +1446,25 @@ function buildPremiumQuestionAnalysis(
   const tenGodText = getTopTenGodsForQuestion(basis);
   const visibleTenGodText = basis.visibleTenGods.map((item) => `${item.pillar} ${item.reading}`).join(', ');
   const isSecondQuestion = questionIndex % 2 === 1;
+
+  if (questionContext.stage === 'current-role-fit') {
+    const sales = getSalesRoleProfile(basis);
+    return `${customerLabel}은 이미 영업을 하고 있고, 질문의 핵심은 새 직업 추천이 아니라 현재 영업이 본인에게 맞는지를 확인하는 것입니다. ${directAnswer} 명리 근거는 ${basis.pillars.day} 일주, ${basis.pillars.month} 월령, ${basis.dayMaster.stem} 일간과 지장간 포함 상위 십성 ${tenGodText}입니다. 특히 ${sales.evidence}. 이 흐름은 고객의 말을 듣고 요구를 정리한 뒤 제안서·후속 관리·재구매로 이어지는 영업에서는 장점이 되지만, 관계를 쌓을 시간 없이 통화량과 당일 실적만 압박받는 환경에서는 피로로 바뀔 수 있습니다. ${currentDayunName} 대운에서는 직함보다 실제 성과가 남는 방식을 택해야 하므로, 최근 8주 실적을 신규 접촉·상담 전환·계약·재구매·소개로 나눠 보면 적합성이 드러납니다. 계약률만 보지 말고 퇴근 뒤 회복 시간과 고객 불만도 함께 보세요. 세 지표가 함께 좋아진다면 영업이 맞는 편이고, 노력량만 늘고 전환·보상·회복이 모두 나빠진다면 업종보다 영업 방식이나 조직을 바꾸는 쪽이 먼저입니다.`;
+  }
+
+  if (questionContext.stage === 'annual-priorities') {
+    const annual = getAnnualQuestionFacts(answer.question, basis);
+    if (annual) {
+      const annualIsHelpful = basis.helpfulElements.includes(annual.stemElement) || basis.helpfulElements.includes(annual.branchElement);
+      const annualIsCautious = basis.cautiousElements.includes(annual.stemElement) || basis.cautiousElements.includes(annual.branchElement);
+      const balanceReading = annualIsCautious
+        ? '기회가 보일 때 약속·지출·업무량도 함께 커질 수 있어, 벌이는 속도와 회수 속도를 분리해야 합니다.'
+        : annualIsHelpful
+          ? '도움축과 맞닿는 흐름이므로 준비한 제안과 결과물을 밖으로 꺼내되, 반응이 확인된 일에만 범위를 넓혀야 합니다.'
+          : '도움과 부담이 한쪽으로 확정되지 않으므로, 실제 성과와 피로를 월별로 확인하며 범위를 조정해야 합니다.';
+      return `${customerLabel}이 묻는 것은 막연한 연운이 아니라 ${annual.year}년에 무엇을 먼저 하고 무엇을 멈춰야 하는지입니다. ${annual.year}년 세운은 ${annual.ganzhiHanja}(${annual.ganzhi})이며, ${basis.dayMaster.stem} 일간 기준 천간 ${annual.stem}은 ${annual.stemGod}, 지지 ${annual.branch}의 본기는 ${annual.branchGod}으로 읽습니다. 그래서 올해의 중요한 일은 성과·거래·책임을 눈에 보이는 숫자와 약속으로 남기는 것이고, 하지 말아야 할 일은 성과가 확인되기 전에 고정비와 책임 범위를 동시에 키우는 것입니다. ${balanceReading} 현재 ${currentDayunName} 대운과 겹쳐 보면 새 제안 자체를 피할 해는 아니지만, 수입보다 먼저 계약 범위·입금일·마감·회복 시간을 고정해야 남는 결과가 생깁니다. 사람 관계에서도 좋은 말보다 약속 이행을 보고, 일에서는 매출이나 칭찬보다 실제 이익·재구매·지속 가능한 업무량을 기준으로 판단하세요.`;
+    }
+  }
   const options = extractQuestionOptions(answer.question);
   const optionLine = options.length >= 2
     ? `이번 질문은 ${options.join('·')} 가운데 현실 조건을 비교하는 질문입니다. 각 선택지를 “돈이 남는가, 이동이 버틸 만한가, 만나는 사람이 달라지는가, 밤에 지치지 않는가, 다음 기회가 생기는가”로 나눠 검증해야 합니다.`
@@ -1453,6 +1555,40 @@ function getPremiumQuestionAdvice(
       '7일 안에는 비용 분류표를 만들고, 30일 안에는 한 항목씩 줄였을 때 매출과 고객 경험이 어떻게 변하는지 검증하세요.',
       '매출·원가·세금 자료가 복잡하면 무작정 비용을 끊지 말고 세무·회계 전문가와 손익 구조를 함께 확인하세요.'
     ].map((item, index) => `${index + 1}. ${item}`);
+  }
+
+  if (questionContext.stage === 'current-role-fit') {
+    const sales = getSalesRoleProfile(basis);
+    return [
+      `현재 영업을 바로 그만둘 필요는 없습니다. 먼저 지금 맡은 영업이 ${sales.fit}에 가까운지 확인하세요.`,
+      `${basis.dayMaster.stem} 일간과 ${getTopTenGodsForQuestion(basis)} 흐름은 “사람을 많이 만나는가”보다 고객 정보를 정리해 적절한 제안으로 바꾸는 과정에서 강점이 나는지 봐야 합니다.`,
+      '최근 8주를 신규 연락 수, 상담 전환율, 계약률, 재구매·소개, 환불·불만의 다섯 칸으로 나누세요. 어느 단계에서 성과가 나는지가 본인에게 맞는 영업 방식을 보여줍니다.',
+      '첫 통화보다 상담 뒤 요구 정리와 후속 제안에서 계약률이 높다면 신규 콜 영업보다 상담·계정 관리·B2B 제안 쪽이 더 맞습니다.',
+      '실적은 나오지만 퇴근 후 회복에 이틀 이상 걸리거나 수면·말투가 계속 무너지면 적성 문제가 아니라 목표량·고객군·관리 방식이 맞지 않는지 먼저 보세요.',
+      '급여는 기본급, 인센티브 산식, 취소 차감, 정산 시점을 따로 적으세요. 매출을 만들고도 보상이 남지 않는 구조라면 영업 적합성과 별개로 조직 조건을 바꿔야 합니다.',
+      '30일 동안 고객 유형 한 가지와 제안 문장 한 가지를 정해 반복해 보세요. 전환율과 상담 피로가 함께 좋아지는 방식이 본인에게 맞는 영업 루틴입니다.',
+      '보완할 역량은 무조건 말재주가 아닙니다. 질문 설계, 고객 기록, 제안서, 후속 연락, 계약 조건 설명 중 실제 전환이 막히는 한 가지부터 훈련하세요.',
+      `피해야 할 환경은 ${sales.drain}입니다. ${currentDayunName} 대운에서는 실적 수치만 남고 고객 자산이나 전문성이 쌓이지 않는 자리를 오래 끌지 마세요.`,
+      '최종 판단은 “영업이 맞나”가 아니라 “어떤 영업 단계에서 성과·보상·회복이 함께 좋아지는가”로 내리세요. 세 항목 중 두 가지 이상이 8주 연속 좋아지면 현재 방향을 유지할 근거가 있습니다.'
+    ].map((item, index) => `${index + 1}. ${item}`);
+  }
+
+  if (questionContext.stage === 'annual-priorities') {
+    const annual = getAnnualQuestionFacts(question, basis);
+    if (annual) {
+      return [
+        `${annual.year}년의 핵심은 ${annual.ganzhiHanja}(${annual.ganzhi}) 세운의 ${annual.stemGod}·${annual.branchGod} 주제를 성과와 수입으로 연결하되, 감당할 책임의 상한을 먼저 정하는 것입니다.`,
+        '일에서는 새 제안을 받을 때 목표, 마감, 담당 범위, 의사결정권을 먼저 확인하세요. 책임만 늘고 권한과 보상이 그대로인 역할은 받지 않는 편이 낫습니다.',
+        '돈에서는 매출·급여 총액보다 실제 입금액, 세금, 고정비, 취소·환불을 뺀 금액을 보세요. 들어오는 돈이 늘었다는 이유로 월 고정비부터 키우지 마세요.',
+        '기존 고객이나 거래처 중 반복 매출과 소개가 생기는 관계를 우선 관리하세요. 반응이 없는 채널을 체면 때문에 계속 유지하는 것은 피해야 합니다.',
+        '중요한 계약은 금액뿐 아니라 수정 횟수, 납기, 정산일, 해지 조건까지 문서로 남기세요. 말로 합의한 추가 업무를 습관처럼 받아주지 마세요.',
+        '관계에서는 호의와 책임을 구분하세요. 부탁을 들어준 뒤 서운함이 반복된다면 가능한 범위와 답변 시점을 먼저 말하는 것이 필요합니다.',
+        '생활에서는 일이 잘 풀릴수록 수면과 회복 시간을 먼저 확보하세요. 바쁜 시기에 휴식부터 줄이면 판단력이 떨어져 계약과 지출 실수가 함께 늘 수 있습니다.',
+        `${basis.helpfulElements.join(', ') || '도움'} 기운은 자료 정리, 비교, 회수 일정처럼 통제 가능한 행동으로 쓰세요. 반대로 ${basis.cautiousElements.join(', ') || '주의'} 기운이 강하게 체감되는 날에는 큰 결제와 장기 약속을 같은 날 확정하지 마세요.`,
+        '매달 마지막 날에는 새로 생긴 일, 실제로 남은 돈, 반복 고객, 미수금, 회복에 걸린 시간을 한 장에 적으세요. 다섯 항목 중 세 가지가 나빠지면 다음 달 확장은 멈추세요.',
+        `${annual.year}년의 최종 원칙은 “확인된 성과는 키우고, 확인되지 않은 책임은 늘리지 않는다”입니다. ${currentDayunName} 대운의 장기 방향과 맞는 일이라도 수익·권한·체력이 함께 남지 않으면 범위를 줄이세요.`
+      ].map((item, index) => `${index + 1}. ${item}`);
+    }
   }
 
   const placeGuide = isDatingPlace
@@ -1745,11 +1881,12 @@ function buildQuestionAnswers(
 function buildActionPlan(
   yearLuck: YearLuckItem[],
   _helpful: FiveElement[],
-  cautious: FiveElement[]
+  cautious: FiveElement[],
+  personalizationInput?: Partial<IntakeFormData>
 ): ActionPlan {
   const bestYear = [...yearLuck].sort((a, b) => b.score - a.score)[0];
 
-  return {
+  const basePlan: ActionPlan = {
     title: '종합사주 실행 계획',
     priorities: [
       '7일 안에 반복해서 피로해지는 일과 힘이 붙는 일을 각각 세 번 기록하기',
@@ -1772,6 +1909,59 @@ function buildActionPlan(
     // an explicit year/month interval. Fixed day-of-month lists are not saju facts.
     luckyDays: [],
     unluckyDays: []
+  };
+
+  if (!personalizationInput) return basePlan;
+
+  const questions = [personalizationInput.q1, personalizationInput.q2]
+    .map((question) => question?.trim() || '')
+    .filter(Boolean);
+  const salesFitQuestion = questions.find((question) =>
+    /영업|판매직/u.test(question) && buildQuestionContext(question).stage === 'current-role-fit'
+  );
+  const annualQuestion = questions.find((question) => buildQuestionContext(question).domain === 'annual_outlook');
+
+  if (!salesFitQuestion && !annualQuestion) return basePlan;
+
+  const annualYear = annualQuestion ? getQuestionTargetYear(annualQuestion) : null;
+  const priorities: string[] = [];
+  const dos: string[] = [];
+  const avoids: string[] = [];
+
+  if (salesFitQuestion) {
+    priorities.push(
+      '7일 안에 최근 8주의 신규 연락·상담 전환·계약·재구매·환불 수치를 한 장에 모으기',
+      '30일 동안 고객 유형 하나와 제안 문장 하나를 고정해 전환율과 퇴근 후 회복 시간을 함께 기록하기'
+    );
+    dos.push(
+      '고객의 말을 들은 뒤 요구를 정리하고 맞춤 제안·후속 관리로 이어지는 영업 방식에 집중하기',
+      '기본급·인센티브 산식·취소 차감·정산 시점을 실제 수령액 기준으로 확인하기'
+    );
+    avoids.push(
+      '무작위 콜 수와 당일 압박만으로 성과를 요구하는 환경을 적성 문제로 참고 버티기',
+      '매출은 늘지만 보상·고객 자산·회복 시간이 남지 않는 구조를 실적 때문에 유지하기'
+    );
+  }
+
+  if (annualQuestion && annualYear) {
+    priorities.push(
+      `${annualYear}년 범위를 넓히기 전에 실제 입금액·고정비·정산일·담당 권한을 확인하고 유지·축소 기준 정하기`
+    );
+    dos.push(
+      `${annualYear}년에는 반복 매출·재구매·소개처럼 확인된 성과가 나는 고객과 일을 우선 관리하기`,
+      '계약 금액뿐 아니라 담당 범위·수정 횟수·납기·정산일·해지 조건을 문서로 남기기'
+    );
+    avoids.push(
+      '성과가 확인되기 전에 고정비와 장기 약속을 동시에 늘리기',
+      '권한과 보상은 그대로인데 책임과 마감만 늘어나는 역할을 말로 합의하기'
+    );
+  }
+
+  return {
+    ...basePlan,
+    priorities: [...priorities, ...basePlan.priorities].slice(0, 3),
+    dos: [...dos, ...basePlan.dos].slice(0, 4),
+    avoids: [...avoids, ...basePlan.avoids].slice(0, 4)
   };
 }
 
@@ -2888,7 +3078,8 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
   const actionPlan = buildActionPlan(
     yearLuck,
     basis.helpfulElements as FiveElement[],
-    basis.cautiousElements as FiveElement[]
+    basis.cautiousElements as FiveElement[],
+    serviceId === 'general-signature' ? formData : undefined
   );
   const sections = [
     ...buildCommercialEvidenceSections(basis),

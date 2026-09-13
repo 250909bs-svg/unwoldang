@@ -129,7 +129,7 @@ export function buildRelationshipPersonalizationContext(
 export type QuestionDomain =
   | 'career' | 'job_change' | 'business' | 'business_operation' | 'wealth' | 'spending'
   | 'investment' | 'love' | 'dating' | 'breakup' | 'reunion' | 'marriage'
-  | 'relationship' | 'family' | 'general';
+  | 'relationship' | 'family' | 'annual_outlook' | 'general';
 
 export type QuestionContext = {
   originalQuestion: string;
@@ -147,9 +147,11 @@ const hasAny = (value: string, patterns: readonly RegExp[]) => patterns.some((pa
 export function buildQuestionContext(question: string): QuestionContext {
   const originalQuestion = question.trim();
   const value = originalQuestion.replace(/\s+/g, ' ');
+  const targetYear = value.match(/(?:19|20)\d{2}/)?.[0] || '';
   const explicitConstraints = [
     /매출(?:이|은)?\s*(?:늘|증가)/.test(value) ? '매출은 증가하고 있음' : '',
-    /돈(?:이|은)?.*(?:안|않).*남|돈(?:이|은)?.*남지|수익.*안.*남|이익.*안.*남/.test(value) ? '매출이 이익으로 남지 않음' : ''
+    /돈(?:이|은)?.*(?:안|않).*남|돈(?:이|은)?.*남지|수익.*안.*남|이익.*안.*남/.test(value) ? '매출이 이익으로 남지 않음' : '',
+    targetYear ? `대상 연도: ${targetYear}` : ''
   ].filter(Boolean);
   const result = (
     domain: QuestionDomain, stage: string, currentSituation: string,
@@ -166,6 +168,9 @@ export function buildQuestionContext(question: string): QuestionContext {
     const transition = /사업/.test(value);
     return result('job_change', transition ? 'career-business-transition' : 'advancement-vs-move', transition ? '현재 직장을 떠나 사업으로 전환할지 비교하는 상황' : '현재 조직에서 성장할지 외부 기회를 선택할지 비교하는 상황', '소득과 성장 가능성을 함께 지키는 경력 선택', '현재 경로를 유지할 때와 이동할 때의 조건 비교', transition ? '퇴사와 사업 전환의 순서' : '승진 대기와 이직 중 우선할 선택');
   }
+  if (targetYear && hasAny(value, [/중요/, /해야/, /하지\s*말/, /말아야/, /피해야/, /조심/, /주의/, /운세/, /흐름/])) {
+    return result('annual_outlook', 'annual-priorities', `${targetYear}년에 집중할 일과 피할 일을 구체적으로 확인하는 상황`, `${targetYear}년 세운을 실제 일·돈·관계 운영에 적용하는 것`, '한 해의 기회와 주의사항이 구체적으로 구분되지 않음', `${targetYear}년에 우선할 행동과 하지 말아야 할 행동`);
+  }
   if (hasAny(value, [/결혼/, /배우자/])) {
     return result('marriage', /지금 만나는|연애|현재/.test(value) ? 'considering-commitment' : 'marriage-planning', '현재 관계를 장기적인 약속으로 이어갈지 검토하는 상황', '감정과 현실 조건이 함께 지속되는 결혼 판단', '현재 상대와 장기 계획의 적합성', '결혼을 결정하기 전에 확인할 조건과 대화 순서');
   }
@@ -181,7 +186,11 @@ export function buildQuestionContext(question: string): QuestionContext {
   if (hasAny(value, [/투자/, /주식/, /코인/, /부동산/])) {
     return result('investment', 'risk-decision', '투자 판단과 감당 가능한 위험 수준을 검토하는 상황', '손실 가능성을 통제한 의사결정', '투자 시기와 위험 감수 범위', '실제 투자 전 확인할 조건과 중단 기준');
   }
-  if (hasAny(value, [/이직/, /직장/, /회사/, /승진/, /직업/, /먹고살/, /뭐먹고살/, /벌어먹/])) {
+  if (hasAny(value, [/영업/, /판매직/, /직무/, /하는\s*일/, /일하고\s*있/, /현재.*업무/]) && hasAny(value, [/맞/, /적성/, /계속/, /잘하고/, /괜찮/])) {
+    const role = /영업/.test(value) ? '영업' : '현재 직무';
+    return result('career', 'current-role-fit', `이미 ${role} 일을 하고 있으며 이 직무가 본인에게 맞는지 점검하는 상황`, `현재 직무에서 강점이 나는 방식과 오래 버틸 조건을 확인하는 것`, `${role}의 어떤 업무 방식이 맞고 어떤 환경에서 소모되는지 불분명함`, `${role}을 유지할지와 맞는 영업·업무 방식을 구분하는 기준`);
+  }
+  if (hasAny(value, [/이직/, /직장/, /회사/, /승진/, /직업/, /직무/, /영업/, /먹고살/, /뭐먹고살/, /벌어먹/])) {
     return result('career', /이직/.test(value) ? 'considering-change' : 'career-development', '현재 경력에서 다음 성장 방향을 검토하는 상황', '강점을 살리면서 지속 가능한 경력 선택', '현재 역할과 다음 기회의 적합성', '유지·이동·준비 중 우선할 경력 행동');
   }
   if (hasAny(value, [/연애/, /사람/, /관계/, /사랑/, /인연/])) {

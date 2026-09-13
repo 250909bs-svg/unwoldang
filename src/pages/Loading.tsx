@@ -14,6 +14,7 @@ import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig'
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
 import { getProductById } from '../products/registry';
+import '../styles/general-signature-loading.css';
 
 type LoadingLocationState = {
   product?: ServiceId;
@@ -36,6 +37,7 @@ const LOADING_PILLARS = [
 ] as const;
 
 const LOADING_PHASES = ['원국 계산', '오행 균형', '질문 해석', '리포트 완성'];
+const LOADING_BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'] as const;
 
 export default function Loading() {
   const navigate = useNavigate();
@@ -60,6 +62,7 @@ export default function Loading() {
   const initialReportAccessToken = locationState?.reportAccessToken || recoveredPayment?.reportAccessToken;
   const service = findServiceById(productDefinition.id);
   const isPastLifeProduct = productDefinition.flow.intakeVariant === 'past-life';
+  const isGeneralSignatureProduct = productDefinition.id === 'general-signature';
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
@@ -105,6 +108,13 @@ export default function Loading() {
             '현생에 남은 반복 장면을 읽고 있습니다.',
             '마지막 봉인을 풀고 있습니다.'
           ]
+        : isGeneralSignatureProduct
+        ? [
+            `${previewReport?.customerName || '고객'}님의 사주 원국을 정밀하게 세우고 있습니다.`,
+            '태어난 계절과 오행의 흐름을 차분히 살피고 있습니다.',
+            '현재 대운과 질문 두 가지를 하나의 흐름으로 읽고 있습니다.',
+            '해석의 근거와 문장을 마지막으로 점검하고 있습니다.'
+          ]
         : canRequestAiReport
         ? [
             `${service.advisor} 스타일로 프리미엄 리포트를 구성하고 있습니다.`,
@@ -118,7 +128,7 @@ export default function Loading() {
             '질문 2개와 사주 입력값을 묶어서 결과 구조를 정리하고 있습니다.',
             '분석이 거의 완료되었습니다. 결과 화면으로 이동합니다.'
           ],
-    [canRequestAiReport, isPastLifeProduct, service.advisor]
+    [canRequestAiReport, isGeneralSignatureProduct, isPastLifeProduct, previewReport?.customerName, service.advisor]
   );
 
   useEffect(() => {
@@ -315,16 +325,49 @@ export default function Loading() {
   }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, reportProvider, service.id, tabOrigin]);
 
   return (
-    <main className={isPastLifeProduct ? 'mobile-page-shell past-life-loading-page' : 'mobile-page-shell'}>
+    <main
+      className={
+        isPastLifeProduct
+          ? 'mobile-page-shell past-life-loading-page'
+          : isGeneralSignatureProduct
+            ? 'mobile-page-shell general-signature-loading-page'
+            : 'mobile-page-shell'
+      }
+    >
       <div className="mobile-page-card">
         <MobileTopBar title="리포트 생성 중" backTo="/" backLabel="홈" />
 
         <section className="mobile-page-content centered">
-          <div className="mobile-loading-card saju-loading-card">
-            <div className="saju-loading-head">
-              <span className="mobile-chip">{isPastLifeProduct ? '도깨비 전생장부 봉인 해제' : '운월당 사주 원국 분석'}</span>
-              <h1>{messages[messageIndex]}</h1>
-            </div>
+          <div className="mobile-loading-card saju-loading-card" role="status" aria-live="polite">
+            {isGeneralSignatureProduct ? (
+              <div className="general-signature-loading-compass">
+                <div className="general-signature-loading-disc" aria-hidden="true">
+                  <span className="general-signature-loading-ring ring-outer" />
+                  <span className="general-signature-loading-ring ring-middle" />
+                  <span className="general-signature-loading-ring ring-inner" />
+                  {LOADING_BRANCHES.map((branch, index) => (
+                    <span
+                      key={branch}
+                      className="general-signature-loading-branch"
+                      style={{ '--branch-index': index } as React.CSSProperties}
+                    >
+                      {branch}
+                    </span>
+                  ))}
+                  <span className="general-signature-loading-seal">命</span>
+                </div>
+                <div className="saju-loading-head">
+                  <span className="mobile-chip">운월당 정밀 명식 분석</span>
+                  <h1>{messages[messageIndex]}</h1>
+                  <p>입력하신 생년월일시와 질문을 바탕으로 결과를 구성합니다.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="saju-loading-head">
+                <span className="mobile-chip">{isPastLifeProduct ? '도깨비 전생장부 봉인 해제' : '운월당 사주 원국 분석'}</span>
+                <h1>{messages[messageIndex]}</h1>
+              </div>
+            )}
 
             {previewReport ? (
               <div className="saju-loading-board" aria-label="사주 원국 미리보기">

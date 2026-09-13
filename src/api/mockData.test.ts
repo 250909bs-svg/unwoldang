@@ -18,8 +18,9 @@ describe('MZ 도깨비 전생사주 상품', () => {
     const generalService = findServiceById('general-signature');
 
     expect(generalService.id).toBe('general-signature');
-    expect(generalService.label).toBe('운월선생 정통 종합사주');
+    expect(generalService.label).toBe('정통 종합사주');
     expect(generalService.theme).toBe('general');
+    expect(generalService.price).toBe('990원');
   });
 
   it('알 수 없는 상품을 종합사주로 대체하지 않는다', () => {

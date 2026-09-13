@@ -27,7 +27,9 @@ describe('personalization contexts', () => {
     ['회사에서 승진을 기다릴지 이직할지 고민입니다.', 'job_change', 'advancement-vs-move'],
     ['지금 만나는 사람과 결혼까지 가도 될까요?', 'marriage', 'considering-commitment'],
     ['썸을 오래 타고 있는데 상대가 관계를 정의하지 않아요.', 'dating', 'prolonged-ambiguity'],
-    ['헤어진 사람에게 제가 먼저 연락해도 될까요?', 'reunion', 'post-breakup-contact']
+    ['헤어진 사람에게 제가 먼저 연락해도 될까요?', 'reunion', 'post-breakup-contact'],
+    ['영업일 하고있는데 지금 나한테 잘 맞는걸까?', 'career', 'current-role-fit'],
+    ['2026년도 중요한것들과 하지말아야될것들 알려줘', 'annual_outlook', 'annual-priorities'],
   ])('preserves and classifies the actual situation: %s', (question, domain, stage) => {
     const context = buildQuestionContext(question);
     expect(context.originalQuestion).toBe(question);

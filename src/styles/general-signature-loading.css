@@ -1,0 +1,411 @@
+.general-signature-loading-page {
+  min-height: 100svh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(45, 80, 62, 0.28), transparent 36rem),
+    #020705;
+  color-scheme: dark;
+}
+
+.general-signature-loading-page > .mobile-page-card {
+  min-height: 100svh;
+  background: transparent;
+}
+
+.general-signature-loading-page .primary-topbar {
+  border-bottom: 1px solid rgba(224, 190, 119, 0.1);
+  background: rgba(0, 0, 0, 0.94);
+}
+
+.general-signature-loading-page .mobile-page-content.centered {
+  min-height: calc(100svh - 64px);
+  padding: 20px 14px max(28px, env(safe-area-inset-bottom, 0px));
+}
+
+.general-signature-loading-page .saju-loading-card {
+  position: relative;
+  width: min(100%, 470px);
+  gap: 14px;
+  overflow: hidden;
+  padding: 0 0 22px;
+  border: 1px solid rgba(224, 190, 119, 0.18);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(9, 20, 15, 0.96), rgba(3, 9, 6, 0.98)),
+    #030806;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.54);
+  color: #f3ead6;
+}
+
+.general-signature-loading-compass {
+  position: relative;
+  display: grid;
+  min-height: clamp(330px, 78vw, 400px);
+  place-items: center;
+  overflow: hidden;
+  padding: 28px 18px;
+  isolation: isolate;
+}
+
+.general-signature-loading-compass::after {
+  position: absolute;
+  inset: auto 9% 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(226, 194, 127, 0.42), transparent);
+  content: '';
+}
+
+.general-signature-loading-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(88vw, 390px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(231, 201, 139, 0.2);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(
+      from -7.5deg,
+      rgba(226, 194, 127, 0.1) 0deg 1deg,
+      transparent 1deg 29deg,
+      rgba(226, 194, 127, 0.16) 29deg 30deg
+    ),
+    radial-gradient(circle, rgba(35, 62, 48, 0.3) 0 23%, transparent 23.5% 100%);
+  box-shadow:
+    inset 0 0 54px rgba(0, 0, 0, 0.56),
+    0 0 48px rgba(177, 136, 66, 0.08);
+  opacity: 0.76;
+  transform: translate(-50%, -50%);
+  animation: general-signature-disc-breathe 4.8s ease-in-out infinite;
+}
+
+.general-signature-loading-ring {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.general-signature-loading-ring::before,
+.general-signature-loading-ring::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e5c17a;
+  box-shadow: 0 0 14px rgba(242, 207, 139, 0.76);
+  content: '';
+}
+
+.general-signature-loading-ring::before {
+  transform: translate(-50%, -50%) translateY(calc(var(--ring-radius, 100px) * -1));
+}
+
+.general-signature-loading-ring::after {
+  transform: translate(-50%, -50%) translateY(var(--ring-radius, 100px));
+}
+
+.general-signature-loading-ring.ring-outer {
+  --ring-radius: 164px;
+  inset: 7%;
+  border: 1px solid rgba(230, 198, 133, 0.24);
+  animation: general-signature-ring-spin 28s linear infinite;
+}
+
+.general-signature-loading-ring.ring-middle {
+  --ring-radius: 125px;
+  inset: 20%;
+  border: 1px dashed rgba(230, 198, 133, 0.25);
+  animation: general-signature-ring-spin-reverse 21s linear infinite;
+}
+
+.general-signature-loading-ring.ring-inner {
+  --ring-radius: 75px;
+  inset: 34%;
+  border: 1px solid rgba(230, 198, 133, 0.28);
+  animation: general-signature-ring-spin 14s linear infinite;
+}
+
+.general-signature-loading-branch {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: rgba(237, 213, 165, 0.62);
+  font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif;
+  font-size: 13px;
+  transform:
+    translate(-50%, -50%)
+    rotate(calc(var(--branch-index) * 30deg))
+    translateY(-145px)
+    rotate(calc(var(--branch-index) * -30deg));
+}
+
+.general-signature-loading-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(232, 199, 129, 0.48);
+  border-radius: 50%;
+  background: rgba(3, 10, 7, 0.78);
+  color: rgba(240, 211, 152, 0.76);
+  font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif;
+  font-size: 22px;
+  box-shadow: 0 0 32px rgba(209, 163, 80, 0.2);
+  transform: translate(-50%, -50%);
+  animation: general-signature-seal-glow 2.2s ease-in-out infinite;
+}
+
+.general-signature-loading-page .saju-loading-head {
+  position: relative;
+  z-index: 2;
+  max-width: 300px;
+  gap: 9px;
+}
+
+.general-signature-loading-page .saju-loading-card .mobile-chip {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(234, 204, 143, 0.22);
+  background: rgba(4, 12, 8, 0.58);
+  color: rgba(241, 216, 169, 0.74);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+}
+
+.general-signature-loading-page .saju-loading-card h1 {
+  max-width: 290px;
+  color: #f7f0df;
+  font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif;
+  font-size: clamp(20px, 5.8vw, 25px);
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72);
+}
+
+.general-signature-loading-page .saju-loading-head p {
+  max-width: 270px;
+  color: rgba(233, 228, 214, 0.58);
+  font-size: 11px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.general-signature-loading-page .saju-loading-board,
+.general-signature-loading-page .saju-loading-elements {
+  margin: 0 16px;
+  border-color: rgba(224, 190, 119, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(10px);
+}
+
+.general-signature-loading-page .saju-loading-board-head span,
+.general-signature-loading-page .saju-loading-elements-head span {
+  color: rgba(226, 202, 157, 0.62);
+}
+
+.general-signature-loading-page .saju-loading-board-head strong,
+.general-signature-loading-page .saju-loading-elements-head strong,
+.general-signature-loading-page .saju-loading-element-list > div > span,
+.general-signature-loading-page .saju-loading-element-list > div > strong {
+  color: rgba(247, 239, 222, 0.86);
+}
+
+.general-signature-loading-page .saju-loading-pillars article {
+  border: 1px solid rgba(229, 196, 128, 0.12);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.general-signature-loading-page .saju-loading-element-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.general-signature-loading-page .saju-loading-elements,
+.general-signature-loading-page .saju-loading-board {
+  animation: general-signature-content-rise 520ms ease both;
+}
+
+.general-signature-loading-page .saju-loading-elements {
+  animation-delay: 100ms;
+}
+
+.general-signature-loading-page .saju-loading-phases,
+.general-signature-loading-page .saju-loading-progress,
+.general-signature-loading-page .mobile-loading-notice,
+.general-signature-loading-page .mobile-loading-actions {
+  margin-right: 16px;
+  margin-left: 16px;
+}
+
+.general-signature-loading-page .saju-loading-phases span {
+  border: 1px solid rgba(229, 199, 140, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(229, 213, 184, 0.5);
+}
+
+.general-signature-loading-page .saju-loading-phases span.active {
+  border-color: rgba(236, 205, 141, 0.36);
+  background: rgba(206, 165, 87, 0.18);
+  color: #f4dcae;
+  box-shadow: 0 0 18px rgba(209, 163, 80, 0.08);
+}
+
+.general-signature-loading-page .saju-loading-progress .progress-track {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.general-signature-loading-page .saju-loading-progress .progress-track span {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #81622f, #e6c170, #a77a35);
+  box-shadow: 0 0 14px rgba(227, 185, 99, 0.24);
+  transition: width 220ms ease;
+}
+
+.general-signature-loading-page .saju-loading-progress .progress-track span::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.56), transparent);
+  content: '';
+  transform: translateX(-100%);
+  animation: general-signature-progress-shimmer 1.35s ease-in-out infinite;
+}
+
+.general-signature-loading-page .saju-loading-progress > strong {
+  color: #eed39a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.general-signature-loading-page .mobile-loading-notice {
+  border-color: rgba(240, 180, 120, 0.25);
+  background: rgba(82, 42, 28, 0.38);
+  color: #f1d7bf !important;
+}
+
+.general-signature-loading-page .mobile-loading-actions .app-black-button {
+  border: 1px solid rgba(234, 203, 139, 0.34);
+  background: #e2bd70;
+  color: #102018;
+}
+
+@keyframes general-signature-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes general-signature-ring-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes general-signature-disc-breathe {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+
+  50% {
+    opacity: 0.86;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+}
+
+@keyframes general-signature-seal-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(209, 163, 80, 0.14);
+    opacity: 0.7;
+  }
+
+  50% {
+    box-shadow: 0 0 38px rgba(232, 190, 107, 0.34);
+    opacity: 1;
+  }
+}
+
+@keyframes general-signature-content-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes general-signature-progress-shimmer {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@media (max-width: 390px) {
+  .general-signature-loading-page .mobile-page-content.centered {
+    padding-right: 9px;
+    padding-left: 9px;
+  }
+
+  .general-signature-loading-compass {
+    min-height: 320px;
+  }
+
+  .general-signature-loading-disc {
+    width: min(94vw, 360px);
+  }
+
+  .general-signature-loading-branch {
+    transform:
+      translate(-50%, -50%)
+      rotate(calc(var(--branch-index) * 30deg))
+      translateY(-132px)
+      rotate(calc(var(--branch-index) * -30deg));
+  }
+
+  .general-signature-loading-ring.ring-outer {
+    --ring-radius: 145px;
+  }
+
+  .general-signature-loading-ring.ring-middle {
+    --ring-radius: 112px;
+  }
+
+  .general-signature-loading-ring.ring-inner {
+    --ring-radius: 68px;
+  }
+
+  .general-signature-loading-page .saju-loading-board,
+  .general-signature-loading-page .saju-loading-elements,
+  .general-signature-loading-page .saju-loading-phases,
+  .general-signature-loading-page .saju-loading-progress,
+  .general-signature-loading-page .mobile-loading-notice,
+  .general-signature-loading-page .mobile-loading-actions {
+    margin-right: 12px;
+    margin-left: 12px;
+  }
+
+  .general-signature-loading-page .saju-loading-card {
+    border-radius: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .general-signature-loading-page *,
+  .general-signature-loading-page *::before,
+  .general-signature-loading-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

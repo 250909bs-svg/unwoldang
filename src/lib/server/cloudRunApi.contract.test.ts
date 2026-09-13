@@ -533,7 +533,7 @@ describe('Cloud Run API HTTP contracts', () => {
 
   it('keeps the exact twelve-product server catalog and sale status contract', () => {
     expect(SERVER_PRODUCT_CATALOG).toEqual({
-      'general-signature': { amount: 79_000, currency: 'KRW', status: 'active' },
+      'general-signature': { amount: 990, currency: 'KRW', status: 'active' },
       'life-flow': { amount: 59_000, currency: 'KRW', status: 'archived' },
       'concern-reading': { amount: 2_900, currency: 'KRW', status: 'archived' },
       'past-life-goblin': { amount: 49_000, currency: 'KRW', status: 'active' },
@@ -631,7 +631,7 @@ describe('Cloud Run API HTTP contracts', () => {
     expect(order).toEqual({
       orderId: expect.stringMatching(/^UW-[A-Za-z0-9._-]{12,116}$/),
       productId: 'general-signature',
-      amount: 79_000,
+      amount: 990,
       currency: 'KRW',
       orderClaim: expect.any(String),
       orderClaimExpiresAt: expect.any(String)
@@ -639,7 +639,7 @@ describe('Cloud Run API HTTP contracts', () => {
     expect(tokens.verifyPaymentOrderClaim(order.orderClaim, 'fixture-user')).toMatchObject({
       orderId: order.orderId,
       productId: 'general-signature',
-      amount: 79_000,
+      amount: 990,
       userBinding: firstBinding,
       version: 1
     });

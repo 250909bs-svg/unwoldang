@@ -3,7 +3,7 @@ import type { ReportSection, SajuReportData } from '../../lib/saju/report';
 import './generalSignatureReport.css';
 
 const STEM_HANJA: Record<string, string> = {
-  갑: '甲', 을: '乙', 병: '丙', 정: '丁', 무: '戊', 기: '己', 경: '庚', 신: '辛', 임: '壬', 계: '癸',
+  갑: '甲', 을: '乙', 병: '丙', 정: '丁', 무: '戊', 기: '己', 경: '庚', 신: '辛', 임: '壬', 계: '癸'
 };
 const BRANCH_HANJA: Record<string, string> = {
   자: '子', 축: '丑', 인: '寅', 묘: '卯', 진: '辰', 사: '巳', 오: '午', 미: '未', 신: '申', 유: '酉', 술: '戌', 해: '亥'
@@ -35,7 +35,9 @@ function compactInsight(value: string, maxLength = 120) {
 }
 
 function firstSectionInsight(section: ReportSection | undefined, fallback: string) {
-  return compactInsight(section?.callout?.body || section?.cards?.[0]?.body || section?.paragraphs?.[0] || section?.bullets?.[0] || fallback);
+  return compactInsight(
+    section?.callout?.body || section?.cards?.[0]?.body || section?.paragraphs?.[0] || section?.bullets?.[0] || fallback
+  );
 }
 
 function getTimePrecision(input: Partial<IntakeFormData>, report: SajuReportData) {
@@ -46,11 +48,13 @@ function getTimePrecision(input: Partial<IntakeFormData>, report: SajuReportData
 
 function buildBriefing(report: SajuReportData): BriefingItem[] {
   const hasConfirmedYongsin = report.engineMeta?.yongsinConsensusStatus === 'confirmed';
-  const personality = findSection(report, ['personality', '성향', '작동']);
-  const career = findSection(report, ['career', '직업', '사업', '일']);
   const wealth = findSection(report, ['wealth', '재물', '돈']);
-  const relationship = findSection(report, ['love', 'marriage', 'relationship', '연애', '결혼', '관계']);
-  const strongest = [...report.fiveElements].sort((left, right) => right.value - left.value)[0]?.label;
+  const cautionText = report.cautiousElements.length
+    ? `${report.cautiousElements.join('·')} 흐름이 과해지는 순간에는 결정의 범위와 책임을 먼저 확인해야 합니다.`
+    : '빠른 결론보다 일정·비용·관계의 조건을 하나씩 확인해야 합니다.';
+  const balanceText = hasConfirmedYongsin && report.helpfulElements.length
+    ? `${report.helpfulElements.join('·')} 기운을 현재 선택과 생활 리듬에 연결해 활용합니다.`
+    : `${report.strengthLabel} 판정과 월령·대운을 함께 놓고 균형을 확인합니다.`;
 
   return [
     {
@@ -59,43 +63,42 @@ function buildBriefing(report: SajuReportData): BriefingItem[] {
       anchor: 'glance'
     },
     {
-      label: '가장 강한 장점',
-      body: report.keyTakeaways[0]?.body || `${strongest || report.dayMasterElement} 기운을 현실의 강점으로 쓰는 힘이 있습니다.`,
-      anchor: personality?.id || 'summary'
-    },
-    {
-      label: '반복되는 약점',
-      body: `${report.cautiousElements.join('·')} 흐름이 과해지는 순간에는 판단을 서두르거나 혼자 책임을 떠안을 수 있습니다. 결정 전에 범위와 역할을 확인해야 합니다.`,
-      anchor: personality?.id || 'summary'
-    },
-    {
-      label: '돈의 핵심',
-      body: firstSectionInsight(wealth, hasConfirmedYongsin
-        ? `${report.helpfulElements.join('·')} 기운을 활용하되 계약 범위와 정산 기준을 먼저 세울 때 돈을 남기기 쉽습니다.`
-        : '월령·강약·현재 대운을 함께 보면, 수입의 크기보다 계약 범위와 정산 기준을 먼저 세우는 일이 중요합니다.'),
-      anchor: wealth?.id || 'summary'
-    },
-    {
-      label: '일의 핵심',
-      body: firstSectionInsight(career, `${report.tenGods.slice(0, 2).map((item) => item.label).join('·')}의 장점을 역할과 업무 방식에 연결하는 것이 핵심입니다.`),
-      anchor: career?.id || 'summary'
-    },
-    {
-      label: '관계의 핵심',
-      body: firstSectionInsight(relationship, '감정의 크기보다 오래 유지할 수 있는 생활 리듬과 대화 방식을 먼저 확인하세요.'),
-      anchor: relationship?.id || 'summary'
-    },
-    {
-      label: '현재 운의 핵심',
-      body: `${report.currentDayun.name} 대운: ${report.currentDayun.summary}`,
+      label: '현재 대운',
+      body: compactInsight(`${report.currentDayun.name} 대운 · ${report.currentDayun.summary}`),
       anchor: 'fortune'
     },
     {
-      label: '지금 가장 먼저 할 일',
-      body: report.actionPlan.priorities[0] || report.actionPlan.dos[0] || '오늘 실행할 수 있는 가장 작은 한 가지를 정하고 기록하세요.',
+      label: hasConfirmedYongsin ? '용희의 핵심' : '균형의 핵심',
+      body: compactInsight(balanceText),
+      anchor: 'glance'
+    },
+    {
+      label: '가장 중요한 주의점',
+      body: compactInsight(cautionText),
+      anchor: 'summary'
+    },
+    {
+      label: '재물의 핵심',
+      body: firstSectionInsight(wealth, '수입의 크기보다 계약 범위와 정산 기준을 먼저 세우는 일이 중요합니다.'),
+      anchor: wealth?.id || 'summary'
+    },
+    {
+      label: '종합 조언',
+      body: compactInsight(report.actionPlan.priorities[0] || report.keyTakeaways[0]?.body || report.heroNote),
       anchor: 'plan'
     }
   ];
+}
+
+function getCalendarLabel(input: Partial<IntakeFormData>) {
+  if (input.calendar !== 'lunar') return '양력';
+  return input.isLeapMonth ? '음력 · 윤달' : '음력 · 평달';
+}
+
+function getGenderLabel(input: Partial<IntakeFormData>) {
+  if (input.gender === 'male') return '남성';
+  if (input.gender === 'female') return '여성';
+  return '미입력';
 }
 
 export default function GeneralSignatureReportIntro({
@@ -105,42 +108,81 @@ export default function GeneralSignatureReportIntro({
   report: SajuReportData;
   input: Partial<IntakeFormData>;
 }) {
-  const dayPillarHanja = toHanja(report.pillars.day);
   const precision = getTimePrecision(input, report);
-  const hasConfirmedYongsin = report.engineMeta?.yongsinConsensusStatus === 'confirmed';
-  const keywords = [
-    `${report.dayMasterElement} 일간`,
-    report.tenGods[0]?.label,
-    hasConfirmedYongsin && report.helpfulElements[0]
-      ? `${report.helpfulElements[0]} 기운 활용`
-      : '월령·강약 종합'
-  ].filter((keyword): keyword is string => Boolean(keyword));
   const briefing = buildBriefing(report);
   const currentYear = report.yearLuck[0];
   const nextYear = report.yearLuck[1];
   const important = report.keyTakeaways.slice(0, 3);
+  const pillarSignature = [report.pillars.year, report.pillars.month, report.pillars.day, report.pillars.hour]
+    .filter((pillar): pillar is string => Boolean(pillar))
+    .map(toHanja)
+    .join(' · ');
+  const coverFacts = [
+    ['이름', report.customerName],
+    ['생년월일', input.birthDate || report.birthLabel],
+    ['출생시간', input.isUnknownTime ? '시간 미상' : input.birthTime || '미입력'],
+    ['달력 기준', getCalendarLabel(input)],
+    ['성별', getGenderLabel(input)]
+  ];
 
   return (
     <>
       <section className="gs-cover" aria-labelledby="gs-cover-title">
-        <p className="gs-eyebrow">운월당 정통 종합사주 · 개인 인생 설계서</p>
-        <h1 id="gs-cover-title">{report.customerName}님의 운월당 인생 설계서</h1>
-        <p className="gs-input-summary" aria-label="분석에 사용한 출생정보">{report.birthLabel}</p>
-        <div className="gs-pillar-mark" aria-label={`${report.pillars.day} 일주`}>
-          <span aria-hidden="true">{dayPillarHanja}</span>
-          <strong>{report.pillars.day} 일주</strong>
-        </div>
-        <blockquote>{report.heroNote}</blockquote>
+        <div className="gs-cover-layout">
+          <div className="gs-cover-copy">
+            <p className="gs-eyebrow">PREMIUM MYEONGRI REPORT</p>
+            <h1 id="gs-cover-title">
+              <span>{report.customerName}님의</span>
+              종합 사주 분석서
+            </h1>
+            <p className="gs-cover-subtitle">
+              사람의 흐름과 선택의 패턴을 읽어,<br />앞으로의 방향을 정리한 개인 명리 리포트입니다.
+            </p>
 
-        <ul className="gs-keywords" aria-label="핵심 키워드">
-          {keywords.map((keyword) => <li key={keyword}>{keyword}</li>)}
-        </ul>
+            <dl className="gs-cover-facts" aria-label="분석에 사용한 출생정보">
+              {coverFacts.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
 
-        <div className="gs-current-flow">
-          <span>현재 10년의 흐름</span>
-          <strong>{report.currentDayun.name} 대운</strong>
-          <p>{report.currentDayun.range}</p>
+            <blockquote>“{report.heroNote}”</blockquote>
+
+            <div className="gs-current-flow">
+              <span>현재 10년의 흐름</span>
+              <strong>{report.currentDayun.name} 대운</strong>
+              <p>{report.currentDayun.range}</p>
+            </div>
+          </div>
+
+          <figure className="gs-cover-visual">
+            <picture>
+              <source media="(min-width: 700px)" srcSet="/home-general-saju-premium-cover-941.jpg" />
+              <img
+                src="/home-general-saju-premium-cover-600.jpg"
+                alt="운월당 종합사주 분석서 표지"
+                width="600"
+                height="1067"
+                loading="eager"
+                fetchPriority="high"
+              />
+            </picture>
+            <figcaption>
+              <span>PRIVATE MYEONGRI REPORT</span>
+              <strong>{currentYear?.year || 'CURRENT'} EDITION</strong>
+            </figcaption>
+          </figure>
         </div>
+
+        <div className="gs-cover-signature" aria-label="사주 원국 서명">
+          <span>四柱原局</span>
+          <strong>{pillarSignature}</strong>
+          <em>{report.pillars.day} 일주 · {report.dayMaster} 일간</em>
+        </div>
+
+        <p className="gs-input-summary">{report.birthLabel}</p>
 
         <div className="gs-precision-note" role="note">
           {precision === 'unknown' ? (
@@ -151,30 +193,23 @@ export default function GeneralSignatureReportIntro({
             <p><strong>{input.birthTime} 분 단위 입력 기준</strong> — 입력한 시간과 설정한 날짜 경계 정책을 계산에 반영했습니다.</p>
           )}
         </div>
-
-        <div className="gs-important" aria-labelledby="gs-important-title">
-          <h2 id="gs-important-title">이번 인생 설계서에서 가장 중요한 3가지</h2>
-          <ol>
-            {important.map((item) => (
-              <li key={item.title}>
-                <strong>{item.title}</strong>
-                <span>{item.body}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        <nav className="gs-cover-actions" aria-label="인생 설계서 바로가기">
-          <a href="#briefing">30초 핵심 브리핑</a>
-          <a href="#toc">전체 목차</a>
-          {report.questionAnswers.length > 0 ? <a href="#qa">내 질문 답변</a> : null}
-        </nav>
       </section>
+
+      <div className="gs-reading-nav-shell">
+        <nav className="gs-reading-nav" aria-label="리포트 주요 장 이동">
+          <a href="#briefing"><span>01</span><strong>핵심 요약</strong></a>
+          <a href="#glance"><span>02</span><strong>사주 원국</strong></a>
+          <a href="#fortune"><span>03</span><strong>대운·세운</strong></a>
+          <a href="#summary"><span>04</span><strong>핵심 주제</strong></a>
+          {report.questionAnswers.length > 0 ? <a href="#qa"><span>05</span><strong>질문 답변</strong></a> : null}
+          <a href="#plan"><span>06</span><strong>실행 전략</strong></a>
+        </nav>
+      </div>
 
       <section className="gs-briefing" id="briefing" aria-labelledby="gs-briefing-title">
         <div className="gs-section-heading">
-          <span>핵심 요약</span>
-          <h2 id="gs-briefing-title">30초 핵심 브리핑</h2>
+          <span>01 · ESSENTIAL SUMMARY</span>
+          <h2 id="gs-briefing-title">한눈에 보는 핵심 요약</h2>
           <p>원국·월령·십성·대운에서 지금 가장 먼저 읽어야 할 결론만 모았습니다.</p>
         </div>
         <div className="gs-briefing-grid">
@@ -185,52 +220,54 @@ export default function GeneralSignatureReportIntro({
             </a>
           ))}
         </div>
+
+        <div className="gs-important" aria-labelledby="gs-important-title">
+          <h3 id="gs-important-title">이번 분석서에서 가장 중요한 세 가지</h3>
+          <ol>
+            {important.map((item) => (
+              <li key={item.title}>
+                <strong>{item.title}</strong>
+                <span>{item.body}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
       <section className="gs-timeline" aria-labelledby="gs-timeline-title">
         <div className="gs-section-heading">
-          <span>시간 흐름</span>
-          <h2 id="gs-timeline-title">시간의 설계</h2>
-          <p>지금에서 다음 대운까지, 먼저 방향을 잡고 뒤에서 상세 흐름을 확인하세요.</p>
+          <span>FLOW PREVIEW · 10-YEAR &amp; YEARLY LUCK</span>
+          <h2 id="gs-timeline-title">대운·세운 미리보기</h2>
+          <p>지금의 대운에서 다음 흐름까지, 먼저 방향을 잡고 뒤에서 세부 시기를 확인하세요.</p>
         </div>
         <ol>
           <li>
-            <span>지금</span>
+            <span>현재 대운</span>
             <strong>{report.currentDayun.name} 대운</strong>
             <p>{report.currentDayun.focus}</p>
           </li>
           {currentYear ? (
             <li>
-              <span>올해 · {currentYear.year}</span>
+              <span>{currentYear.year} 세운</span>
               <strong>{currentYear.ganzhi}년</strong>
               <p>{currentYear.focus}</p>
             </li>
           ) : null}
           {nextYear ? (
             <li>
-              <span>내년 · {nextYear.year}</span>
+              <span>{nextYear.year} 세운</span>
               <strong>{nextYear.ganzhi}년</strong>
               <p>{nextYear.focus}</p>
             </li>
           ) : null}
           <li>
-            <span>다음 10년</span>
+            <span>다음 대운</span>
             <strong>{report.nextDayun.name} 대운</strong>
             <p>{report.nextDayun.focus}</p>
           </li>
         </ol>
         <a className="gs-inline-link" href="#fortune">대운·세운·월운 자세히 보기</a>
       </section>
-
-      <div className="gs-reading-nav-shell">
-        <nav className="gs-reading-nav" aria-label="리포트 주요 장 이동">
-          <a href="#summary">핵심 결론</a>
-          <a href="#glance">원국 지표</a>
-          <a href="#fortune">운의 흐름</a>
-          <a href="#qa">질문 답변</a>
-          <a href="#plan">실행 전략</a>
-        </nav>
-      </div>
     </>
   );
 }

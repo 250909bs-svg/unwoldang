@@ -124,6 +124,36 @@ describe('general-signature canonical current dayun contract', () => {
 });
 
 describe('general-signature comparison question classifier', () => {
+  it('answers an existing sales-role fit question and annual priorities as different situations', () => {
+    const salesQuestion = '영업일 하고있는데 지금 나한테 잘 맞는걸까?';
+    const annualQuestion = '2026년도 중요한것들과 하지말아야될것들 알려줘';
+    const { basis, report } = buildWithBasis(makeInput({ q1: salesQuestion, q2: annualQuestion }));
+    const [sales, annual] = report.questionAnswers;
+    const salesText = [sales.analysis, ...sales.advice].join(' ');
+    const annualText = [annual.analysis, ...annual.advice].join(' ');
+    const annualFact = basis.seun.find((item) => item.year === 2026);
+
+    expect(sales.question).toBe(salesQuestion);
+    expect(sales.title).toContain('영업');
+    expect(sales.analysis).toContain('이미 영업을 하고 있고');
+    expect(salesText).toContain('상담 전환율');
+    expect(salesText).not.toContain('현재 고민의 핵심과 우선순위를 정리하는 상황');
+
+    expect(annual.question).toBe(annualQuestion);
+    expect(annual.title).toContain('2026년');
+    expect(annual.analysis).toContain(`2026년 세운은`);
+    expect(annual.analysis).toContain(`(${annualFact?.ganzhi})`);
+    expect(annual.analysis).toContain('지지 오의 본기는 비견');
+    expect(annualText).toContain('확인된 성과는 키우고');
+    expect(annualText).not.toBe(salesText);
+    expect(sales.advice.filter((item) => annual.advice.includes(item))).toEqual([]);
+    expect(report.actionPlan.priorities.join(' ')).toContain('상담 전환');
+    expect(report.actionPlan.priorities.join(' ')).toContain('2026년');
+    expect(report.actionPlan.dos.join(' ')).toContain('인센티브 산식');
+    expect(report.actionPlan.avoids.join(' ')).toContain('권한과 보상');
+    assertCanonicalDayun(report, basis);
+  });
+
   it('preserves an open-ended money question without inventing comparison options', () => {
     const question = '앞으로 돈을 남기려면 무엇을 주의해야 하나요?';
     expect(extractQuestionOptions(question)).toEqual([]);

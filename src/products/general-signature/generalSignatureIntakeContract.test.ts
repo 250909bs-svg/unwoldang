@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canContinueManualReviewInLocalPreview,
   isGeneralSignatureGenderSelected,
   isGeneralSignatureQuestionReady,
   isGeneralSignatureRelationshipReady
@@ -28,4 +29,23 @@ describe('general-signature intake contract', () => {
       expect(isGeneralSignatureRelationshipReady(status, '')).toBe(false);
     }
   );
+
+  it('continues manual-review results only in an explicit local development preview', () => {
+    expect(canContinueManualReviewInLocalPreview('manual-review-required', {
+      isDevelopment: true,
+      hostname: '127.0.0.1'
+    })).toBe(true);
+    expect(canContinueManualReviewInLocalPreview('manual-review-required', {
+      isDevelopment: false,
+      hostname: '127.0.0.1'
+    })).toBe(false);
+    expect(canContinueManualReviewInLocalPreview('manual-review-required', {
+      isDevelopment: true,
+      hostname: 'unwoldang.com'
+    })).toBe(false);
+    expect(canContinueManualReviewInLocalPreview('blocked', {
+      isDevelopment: true,
+      hostname: 'localhost'
+    })).toBe(false);
+  });
 });

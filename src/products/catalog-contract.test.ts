@@ -29,7 +29,7 @@ describe('product catalog compatibility', () => {
     expect(
       activeProducts.map(({ id, displayName, price }) => ({ id, displayName, price }))
     ).toEqual([
-      { id: 'general-signature', displayName: '운월선생 정통 종합사주', price: 79_000 },
+      { id: 'general-signature', displayName: '정통 종합사주', price: 990 },
       { id: 'past-life-goblin', displayName: 'MZ 도깨비 전생사주', price: 49_000 },
       { id: 'love-reading', displayName: 'MZ무당 팩폭 연애운', price: 49_000 },
       { id: 'love-reunion', displayName: '홍연아씨 재회 가능성', price: 55_000 },

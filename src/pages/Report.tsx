@@ -45,6 +45,20 @@ const PAST_LIFE_STORY_SECTION_IDS = new Set([
   'pastlife-release'
 ]);
 
+const GENERAL_SIGNATURE_TOPIC_ORDER = [
+  'trait',
+  'money',
+  'career',
+  'business',
+  'love',
+  'health',
+  'element',
+  'ten',
+  'detail12',
+  'detailRel',
+  'detailSal'
+] as const;
+
 const createSafeReportFileName = (value: string) =>
   value
     .replace(/[\\/:*?"<>|]+/g, '-')
@@ -52,6 +66,14 @@ const createSafeReportFileName = (value: string) =>
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 90) || 'unwoldang-report';
+
+const escapeHtmlText = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 const isMobileDownloadBrowser = () =>
   typeof navigator !== 'undefined' &&
@@ -120,7 +142,7 @@ async function inlineExportImageSources(root: HTMLElement) {
   root.querySelectorAll('picture source').forEach((source) => source.remove());
 }
 
-function prepareStaticReportExport(source: HTMLElement, clone: HTMLElement) {
+function prepareStaticReportExport(source: HTMLElement, clone: HTMLElement, expandDetails = true) {
   clone.classList.add('is-export-static');
 
   const sourceCheckboxes = Array.from(source.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
@@ -135,8 +157,8 @@ function prepareStaticReportExport(source: HTMLElement, clone: HTMLElement) {
   });
 
   clone.querySelectorAll<HTMLDetailsElement>('details').forEach((details) => {
-    details.open = true;
-    details.setAttribute('open', '');
+    details.open = expandDetails;
+    details.toggleAttribute('open', expandDetails);
   });
 
   clone.querySelectorAll<HTMLElement>('[data-export-reveal="true"]').forEach((element) => {
@@ -390,33 +412,45 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
   return (
     <article className="premium-distribution-card premium-element-compass">
       <div className="premium-distribution-head">
-        <span>五行</span>
-        <h3>사주팔자 겉글자 구성</h3>
+        <div>
+          <span>원국 기준</span>
+          <h3>오행 분포</h3>
+        </div>
+        <strong className="premium-distribution-total">{totalValue}글자</strong>
       </div>
       <div className="premium-element-compass-core">
-        <span>총 {totalValue}칸 기준</span>
+        <span>겉글자 구성</span>
         <strong>{balanceLabel}</strong>
-        <em>천간·지지 8글자의 단순 합계이며, 월령·지장간 가중 세력과는 구분합니다.</em>
+        <p>천간·지지 8글자의 단순 개수이며, 신강·신약과 용희 판단에 쓰는 가중 세력 점수와는 구분합니다.</p>
       </div>
-      <div className="premium-element-medallions">
-        {report.fiveElements.map((item, index) => (
-          <div
-            key={item.label}
-            className={item.value === 0 ? 'premium-element-medallion empty' : 'premium-element-medallion'}
-            style={
-              {
-                '--element-color': item.color,
-                '--element-level': `${Math.max(14, (item.value / totalValue) * 100)}%`,
-                '--element-index': index + 1
-              } as React.CSSProperties & Record<'--element-index', number>
-            }
-          >
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-            <em>{Math.round((item.value / totalValue) * 100)}%</em>
-            <small>{getElementReading(item.value)}</small>
-          </div>
-        ))}
+      <div className="premium-element-list" aria-label="오행별 겉글자 분포">
+        {report.fiveElements.map((item) => {
+          const ratio = Math.round((item.value / totalValue) * 100);
+
+          return (
+            <div
+              key={item.label}
+              className={item.value === 0 ? 'premium-element-row empty' : 'premium-element-row'}
+              style={
+                {
+                  '--element-color': item.color,
+                  '--element-level': `${ratio}%`
+                } as React.CSSProperties
+              }
+            >
+              <div className="premium-element-label">
+                <i aria-hidden="true" />
+                <strong>{item.label}</strong>
+                <span>{getElementReading(item.value)}</span>
+              </div>
+              <div className="premium-element-bar" aria-hidden="true"><span /></div>
+              <div className="premium-element-value">
+                <strong>{item.value}</strong>
+                <span>{ratio}%</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </article>
   );
@@ -425,31 +459,36 @@ function ElementDistributionBoard({ report }: { report: SajuReportData }) {
 function TenGodDistributionBoard({ report }: { report: SajuReportData }) {
   const tenGods = report.tenGods.slice(0, 8);
   const maxValue = Math.max(...tenGods.map((item) => item.value), 1);
+  const totalValue = tenGods.reduce((sum, item) => sum + item.value, 0);
   const topThree = tenGods.slice(0, 3).map((item) => item.label).join(' · ');
 
   return (
     <article className="premium-distribution-card ten premium-tengod-board">
       <div className="premium-distribution-head">
-        <span>十星</span>
-        <h3>지장간 포함 십성 구성</h3>
+        <div>
+          <span>지장간 포함</span>
+          <h3>십성 구성</h3>
+        </div>
+        <strong className="premium-distribution-total">{totalValue}회</strong>
       </div>
       <div className="premium-tengod-lead">
         <span>상위 흐름</span>
         <strong>{topThree}</strong>
       </div>
-      <div className="premium-tengod-seals">
+      <ol className="premium-tengod-list" aria-label="십성별 분포 순위">
         {tenGods.map((item, index) => (
-          <div
+          <li
             key={item.label}
-            className={index < 3 ? 'premium-tengod-seal major' : 'premium-tengod-seal'}
-            style={{ '--seal-level': `${Math.max(16, (item.value / maxValue) * 100)}%` } as React.CSSProperties}
+            className={index < 3 ? 'premium-tengod-row major' : 'premium-tengod-row'}
+            style={{ '--ten-god-level': `${(item.value / maxValue) * 100}%` } as React.CSSProperties}
           >
             <small>{String(index + 1).padStart(2, '0')}</small>
             <strong>{item.label}</strong>
-            <span>{item.value}</span>
-          </div>
+            <span className="premium-tengod-bar" aria-hidden="true"><i /></span>
+            <em>{item.value}</em>
+          </li>
         ))}
-      </div>
+      </ol>
     </article>
   );
 }
@@ -485,24 +524,6 @@ function FortuneTimeline({ report }: { report: SajuReportData }) {
             {item.ganzhi} · {getLuckPhase(item.score)}
           </strong>
           <p>{item.headline}</p>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function MonthRibbon({ report }: { report: SajuReportData }) {
-  return (
-    <div className="premium-month-ribbon">
-      {report.monthLuck.slice(0, 6).map((item) => (
-        <article key={`${item.year}-${item.month}`}>
-          <span>
-            {item.year}.{String(item.month).padStart(2, '0')}
-          </span>
-          <div className="premium-month-meter">
-            <em style={{ width: `${item.score}%` }} />
-          </div>
-          <strong>{getLuckPhase(item.score)}</strong>
         </article>
       ))}
     </div>
@@ -563,10 +584,8 @@ function PremiumMonthCalendar({ report }: { report: SajuReportData }) {
           <span>
             {item.year}.{String(item.month).padStart(2, '0')}
           </span>
-          <div className="premium-month-meter">
-            <em style={{ width: `${item.score}%` }} />
-          </div>
           <strong>{getLuckPhase(item.score)}</strong>
+          <small>{item.ganzhi}</small>
         </article>
       ))}
     </div>
@@ -575,7 +594,6 @@ function PremiumMonthCalendar({ report }: { report: SajuReportData }) {
 
 void DayunCards;
 void FortuneTimeline;
-void MonthRibbon;
 
 function getLuckPhase(score: number) {
   if (score >= 82) return '공개기';
@@ -1179,16 +1197,35 @@ function polishRepeatedReportLanguage(report: SajuReportData, repeatedCaution: s
 function SectionBlock({
   section,
   number,
-  report
+  report,
+  hideHeading = false,
+  embedded = false
 }: {
   section: ReportSection;
   number: string;
   report: SajuReportData;
+  hideHeading?: boolean;
+  embedded?: boolean;
 }) {
+  const customerFacingDetails = section.details?.map((detail, index) => {
+    if (report.serviceId !== 'general-signature' || section.id !== 'month') {
+      return detail;
+    }
+
+    const month = report.monthLuck[index];
+    if (!month) {
+      return detail;
+    }
+
+    return {
+      ...detail,
+      summary: `${month.year}.${String(month.month).padStart(2, '0')} · ${getLuckPhase(month.score)} · ${month.ganzhi}`
+    };
+  });
   const visibleDetails = (
     section.id === 'element'
-      ? section.details?.filter((detail) => detail.summary !== '오행 강약 보기')
-      : section.details
+      ? customerFacingDetails?.filter((detail) => detail.summary !== '오행 강약 보기')
+      : customerFacingDetails
   )?.filter((detail) => detail.summary.trim() && detail.content.trim());
   const visibleTable = section.id === 'saju' || !section.table?.headers.length || !section.table.rows.length
     ? null
@@ -1198,8 +1235,9 @@ function SectionBlock({
       };
   const visibleCards = section.cards?.filter((card) => card.title.trim() && card.body.trim());
   const pastLifeChapter = pastLifeChapters.find((chapter) => section.id === `pastlife-${chapter.id}`);
-  const sectionClassName =
-    section.id === 'love' ? 'premium-report-section premium-love-section' : 'premium-report-section';
+  const sectionClassName = `${
+    section.id === 'love' ? 'premium-report-section premium-love-section' : 'premium-report-section'
+  }${embedded ? ' gs-embedded-section' : ''}`;
   const cardGridClassName =
     section.id === 'love'
       ? 'premium-love-card-grid'
@@ -1209,15 +1247,17 @@ function SectionBlock({
 
   return (
     <section className={sectionClassName} id={section.id}>
-      <div className="premium-section-heading">
-        <div className="premium-section-title-wrap">
-          <span className="premium-section-index">{number}</span>
-          <div>
-            <h2>{section.title}</h2>
-            {section.subtitle ? <p className="premium-muted">{section.subtitle}</p> : null}
+      {!hideHeading ? (
+        <div className="premium-section-heading">
+          <div className={`premium-section-title-wrap${number ? '' : ' without-index'}`}>
+            {number ? <span className="premium-section-index">{number}</span> : null}
+            <div>
+              <h2>{section.title}</h2>
+              {section.subtitle ? <p className="premium-muted">{section.subtitle}</p> : null}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       {pastLifeChapter ? (
         <figure className="past-life-chapter-art">
@@ -1231,8 +1271,6 @@ function SectionBlock({
 
       {section.id === 'fortune' ? <PremiumDayunFlow report={report} /> : null}
       {section.id === 'year' ? <PremiumFortuneTimeline report={report} /> : null}
-      {section.id === 'month' ? <PremiumMonthCalendar report={report} /> : null}
-
       {section.callout ? (
         <div className="premium-callout">
           {section.callout.title ? <h3>{section.callout.title}</h3> : null}
@@ -1258,7 +1296,7 @@ function SectionBlock({
 
       {visibleTable ? (
         <div className="premium-table-wrap">
-          <table className="premium-table">
+          <table className="premium-table" aria-label={`${section.title} 상세표`}>
             <thead>
               <tr>
                 {visibleTable.headers.map((header) => (
@@ -1270,7 +1308,12 @@ function SectionBlock({
               {visibleTable.rows.map((row, rowIndex) => (
                 <tr key={`${section.id}-row-${rowIndex}`}>
                   {row.map((cell, cellIndex) => (
-                    <td key={`${section.id}-cell-${rowIndex}-${cellIndex}`}>{cell}</td>
+                    <td
+                      key={`${section.id}-cell-${rowIndex}-${cellIndex}`}
+                      data-label={visibleTable.headers[cellIndex] || `항목 ${cellIndex + 1}`}
+                    >
+                      {cell}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -1302,7 +1345,11 @@ function SectionBlock({
       {visibleDetails?.length ? (
         <div className="premium-accordion-group">
           {visibleDetails.map((detail, detailIndex) => (
-            <details key={`${section.id}-${detail.summary}-${detailIndex}`} className="premium-accordion" open={detail.open}>
+            <details
+              key={`${section.id}-${detail.summary}-${detailIndex}`}
+              className="premium-accordion"
+              open={report.serviceId === 'general-signature' ? false : detail.open}
+            >
               <summary>
                 <span>{detail.summary}</span>
                 <span className="premium-details-hint">자세히 보기</span>
@@ -1317,6 +1364,42 @@ function SectionBlock({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function getGeneralSignatureChapterNumber(section: ReportSection) {
+  if (section.id === 'fortune') return '03';
+  return '';
+}
+
+function GeneralSignatureQuestionAnswer({
+  qa,
+  index
+}: {
+  qa: SajuReportData['questionAnswers'][number];
+  index: number;
+}) {
+  const answerTitle = qa.title.replace(/^\d+\.\s*/, '');
+
+  return (
+    <details className="premium-qa-block gs-question-disclosure">
+      <summary>
+        <span>Q{index + 1}</span>
+        <strong>{qa.question}</strong>
+        <i aria-hidden="true">＋</i>
+      </summary>
+      <div className="premium-card premium-answer-card">
+        <h3>결론 · {answerTitle}</h3>
+        <h4>왜 그렇게 읽는가</h4>
+        <p>{qa.analysis}</p>
+        <h4>지금 해야 할 행동</h4>
+        <ol className="premium-list gs-question-action-list">
+          {qa.advice.map((item) => (
+            <li key={item}>{item.replace(/^\d+[\).]\s*/, '')}</li>
+          ))}
+        </ol>
+      </div>
+    </details>
   );
 }
 
@@ -4465,7 +4548,7 @@ function getReportBasisText(report: SajuReportData) {
   const hour = report.pillars.hour ? `시주 ${report.pillars.hour}` : '시주 미상';
   const topTenGods = report.tenGods
     .slice(0, 3)
-    .map((item) => `${item.label} ${item.value}점`)
+    .map((item) => `${item.label} ${item.value}`)
     .join(', ');
   const elements = report.fiveElements.map((item) => `${item.label}${item.value}`).join('·');
 
@@ -4485,11 +4568,11 @@ function hasBranchPair(report: SajuReportData, left: string, right: string) {
 }
 
 function getSignatureSharpPattern(report: SajuReportData) {
-  if (hasBranchPair(report, '子', '酉')) {
+  if (hasBranchPair(report, '자', '유') || hasBranchPair(report, '子', '酉')) {
     return '子酉 파가 보여서 사람을 오래 붙잡기보다, 피로가 쌓이면 답장이 짧아지고 마음속에서 먼저 정리하는 패턴이 강합니다.';
   }
 
-  if (hasBranchPair(report, '巳', '申')) {
+  if (hasBranchPair(report, '사', '신') || hasBranchPair(report, '巳', '申')) {
     return '巳申 합형이 보여서 일이 멈춰도 머리가 계속 돌아가고, 밤에 정산·일정·사람 문제를 한꺼번에 생각하기 쉽습니다.';
   }
 
@@ -4843,6 +4926,7 @@ function getRelationDigest(report: SajuReportData) {
 
 function buildExpertSatisfactionReport(report: SajuReportData, options: { preserveQuestionAnswers?: boolean } = {}): SajuReportData {
   const weakestElement = [...report.fiveElements].sort((left, right) => left.value - right.value)[0];
+  const strongestElement = [...report.fiveElements].sort((left, right) => right.value - left.value)[0];
   const dominantTenGod = report.tenGods[0];
   const secondTenGod = report.tenGods[1];
   const currentYear = report.yearLuck[0];
@@ -4853,6 +4937,7 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
   const cautionGuidance = formatCautionElements(report);
   const cautionScenes = buildCautionSceneBank(report);
   const weakestLabel = weakestElement?.label || report.cautiousElements[0];
+  const strongestLabel = strongestElement?.label || report.helpfulElements[0];
   const dominantLabel = dominantTenGod?.label || '주요 십성';
   const secondLabel = secondTenGod?.label || '보조 십성';
   const climate = buildMyeongriClimate(report);
@@ -4984,7 +5069,7 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
         title: '십성 생활 장면 해석',
         subtitle: '십성은 점수표가 아니라 말투, 돈 쓰임, 책임 반응, 관계 거리로 드러납니다.',
         details: report.tenGods.slice(0, 6).map((item, index) => ({
-          summary: `${item.label} ${item.value}점 · 실제 작동 장면`,
+          summary: `${item.label} · 실제 작동 장면`,
           content: buildTenGodSceneDetail(item.label, report),
           open: index < 2
         }))
@@ -5024,8 +5109,8 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
         },
         paragraphs: [
           signatureStrengthLine,
-          `이 명식은 금수 환경에서 판단과 계산이 빨라지지만, 피곤하면 말투가 차가워지고 관계를 먼저 정리하고 싶어집니다.`,
-          `목 기운이 비면 성장 방향과 관계 조율이 늦어져, 좋은 사람을 만나도 다음 단계 제안이 애매해질 수 있습니다.`
+          `${strongestLabel} 흐름은 이 명식에서 가장 쉽게 드러나는 반응입니다. 장점이 선명한 만큼 과로하거나 감정이 급해질 때 같은 기운이 부담으로 바뀌지 않는지 함께 살펴야 합니다.`,
+          `${weakestLabel} 기운은 상대적으로 약하게 드러납니다. 부족함을 운명처럼 단정하기보다, 관계와 일에서 이 기운에 해당하는 역할을 의식적으로 보완하는 편이 안전합니다.`
         ],
         details: section.details
       };
@@ -5138,7 +5223,7 @@ function buildExpertSatisfactionReport(report: SajuReportData, options: { preser
         body: climate.wood
       },
       {
-        title: '무토 일간의 체감',
+        title: `${report.dayMaster} 일간의 체감`,
         body: climate.dayMaster
       },
       {
@@ -6733,6 +6818,26 @@ function ReportContent({ id, locationState }: { id: string; locationState: Repor
     );
   }
 
+  const visibleReportSections = isPastLifeShowcase
+    ? report.sections.filter((section) => !PAST_LIFE_STORY_SECTION_IDS.has(section.id))
+    : report.sections;
+  const primaryReportSections = isGeneralSignature
+    ? visibleReportSections.filter((section) => !section.id.endsWith('-v2'))
+    : visibleReportSections;
+  const generalSignatureLuckSections = isGeneralSignature
+    ? primaryReportSections.filter((section) => ['fortune', 'year', 'month'].includes(section.id))
+    : [];
+  const generalSignatureTopicSections = isGeneralSignature
+    ? primaryReportSections
+      .filter((section) => !['fortune', 'year', 'month', 'saju', 'logic'].includes(section.id))
+      .sort((left, right) => {
+        const leftIndex = GENERAL_SIGNATURE_TOPIC_ORDER.indexOf(left.id as (typeof GENERAL_SIGNATURE_TOPIC_ORDER)[number]);
+        const rightIndex = GENERAL_SIGNATURE_TOPIC_ORDER.indexOf(right.id as (typeof GENERAL_SIGNATURE_TOPIC_ORDER)[number]);
+        return (leftIndex < 0 ? Number.MAX_SAFE_INTEGER : leftIndex) -
+          (rightIndex < 0 ? Number.MAX_SAFE_INTEGER : rightIndex);
+      })
+    : [];
+
   const tocItems = isPastLifeShowcase
     ? [
         { id: 'pastlife-prologue', label: '도깨비의 첫마디', number: '서문' },
@@ -6846,7 +6951,7 @@ function ReportContent({ id, locationState }: { id: string; locationState: Repor
 
       const clonedPaper = reportPaper.cloneNode(true) as HTMLElement;
 
-      prepareStaticReportExport(reportPaper, clonedPaper);
+      prepareStaticReportExport(reportPaper, clonedPaper, !isGeneralSignature);
       clonedPaper.querySelectorAll('[data-export-remove="true"]').forEach((element) => {
         element.remove();
       });
@@ -6876,7 +6981,7 @@ function ReportContent({ id, locationState }: { id: string; locationState: Repor
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>운월당 리포트</title>
+  <title>${isGeneralSignature ? `${escapeHtmlText(report.customerName)} · 개인 종합사주 | 운월당` : '운월당 리포트'}</title>
   <style>
 ${getCurrentPageCssText()}
 
@@ -6890,7 +6995,7 @@ body {
   z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 1px solid rgba(138, 114, 88, 0.18);
@@ -6919,9 +7024,7 @@ body {
   </style>
 </head>
 <body>
-  <div class="export-html-topbar">
-    <strong>운월당 리포트</strong>
-  </div>
+  ${isGeneralSignature ? '' : '<div class="export-html-topbar"><strong>운월당 리포트</strong></div>'}
   <main class="${pageClassName}">
     <div class="${shellClassName}">
       ${clonedPaper.outerHTML}
@@ -7140,6 +7243,50 @@ body {
     );
   }
 
+  const summaryChapter = (
+    <section className="premium-report-section" id="summary">
+      <div className="premium-section-heading">
+        <div className="premium-section-title-wrap">
+          {isGeneralSignature ? <span className="premium-section-index">04</span> : null}
+          <div>
+            {isGeneralSignature ? <span className="gs-chapter-kicker">IN-DEPTH ANALYSIS</span> : null}
+            <h2>{report.summary.title}</h2>
+            <p className="premium-muted">{pageCopy.summaryCaption}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="premium-callout">
+        {report.summary.analysis.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
+
+      <div className="premium-grid3">
+        {report.keyTakeaways.map((item) => (
+          <article key={item.title} className={`premium-card premium-key-card ${item.tone ? `tone-${item.tone}` : ''}`}>
+            <span className="premium-key-label">{item.title}</span>
+            <p>{item.body}</p>
+          </article>
+        ))}
+      </div>
+
+      <details className="premium-accordion" open={!isGeneralSignature}>
+        <summary>
+          <span>실천 과제</span>
+          <span className="premium-details-hint">자세히 보기</span>
+        </summary>
+        <div className="premium-accordion-body">
+          <ul className="premium-list">
+            {report.summary.advice.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </details>
+    </section>
+  );
+
   return (
     <main className={
       isYearlyShowcase
@@ -7160,7 +7307,12 @@ body {
             <button type="button" className="premium-icon-action" aria-label="리포트 공유" onClick={handleShareReport}>
               <Share2 size={16} />
             </button>
-            <button type="button" className="premium-icon-action" aria-label="PDF로 저장" onClick={handlePrintReport}>
+            <button
+              type="button"
+              className="premium-icon-action"
+              aria-label={isGeneralSignature ? 'HTML 다운로드' : 'PDF로 저장'}
+              onClick={isGeneralSignature ? handleDownloadHtmlReport : handlePrintReport}
+            >
               <Download size={16} />
             </button>
             <Link to="/my" className="app-profile-button" aria-label="마이페이지">
@@ -7188,7 +7340,7 @@ body {
                 ? 'premium-report-paper general-signature-report-paper'
                 : 'premium-report-paper'
         }>
-          {reportProvider === 'deterministic-fallback' ? (
+          {reportProvider === 'deterministic-fallback' && !isGeneralSignature ? (
             <section className="premium-report-section" aria-label="리포트 생성 상태">
               <div className="premium-callout">
                 <strong>검증된 내부 명리 엔진 리포트</strong>
@@ -7198,6 +7350,13 @@ body {
           ) : null}
 
           {isGeneralSignature ? <GeneralSignatureReportIntro report={report} input={reportInput} /> : null}
+
+          {isGeneralSignature && reportProvider === 'deterministic-fallback' ? (
+            <aside className="gs-generation-note" aria-label="리포트 생성 상태">
+              <strong>검증된 내부 명리 엔진 리포트</strong>
+              <p>AI 문장 보강이 일시적으로 지연되어 계산·근거가 잠긴 내부 엔진 결과로 제공되었습니다.</p>
+            </aside>
+          ) : null}
 
           {isYearlyShowcase && yearlyLead ? (
             <section className="premium-report-cover yearly-report-cover">
@@ -7256,7 +7415,7 @@ body {
                     </div>
                     <p>
                       {monthlyHotMonths[0]
-                        ? `순서는 월운 점수와 사건성을 함께 본 결과입니다. ${formatBestMonthReasonList(monthlyHotMonths)}으로 읽습니다. ${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')}은 움직임을 가장 먼저 열어보기 좋은 구간입니다.`
+                        ? `순서는 월운의 상대 흐름과 사건성을 함께 본 결과입니다. ${formatBestMonthReasonList(monthlyHotMonths)}으로 읽습니다. ${monthlyHotMonths[0].year}.${String(monthlyHotMonths[0].month).padStart(2, '0')}은 움직임을 가장 먼저 열어보기 좋은 구간입니다.`
                         : '월운 하이라이트를 구성 중입니다.'}
                     </p>
                   </article>
@@ -7311,7 +7470,7 @@ body {
             </section>
           ) : null}
 
-          {reportCharacterVideo ? (
+          {!isGeneralSignature && reportCharacterVideo ? (
             <section className="premium-report-character" aria-label="운월당 사주 리포트 캐릭터">
               <video
                 ref={reportVideoRef}
@@ -7356,42 +7515,46 @@ body {
             </>
           ) : null}
 
-          <section className="premium-report-section" id="toc">
-            <button
-              type="button"
-              className={isTocOpen ? 'premium-toc-header open' : 'premium-toc-header'}
-              aria-expanded={isTocOpen}
-              onClick={() => setIsTocOpen((value) => !value)}
-            >
-              <div>
-                <span>목차</span>
-                <strong>{pageCopy.tocTitle}</strong>
-                <em>필요한 부분만 빠르게 이동할 수 있습니다.</em>
-              </div>
-              <span className="premium-toc-arrow" aria-hidden="true">
-                &gt;
-              </span>
-            </button>
+          {!isGeneralSignature ? (
+            <>
+              <section className="premium-report-section" id="toc">
+                <button
+                  type="button"
+                  className={isTocOpen ? 'premium-toc-header open' : 'premium-toc-header'}
+                  aria-expanded={isTocOpen}
+                  onClick={() => setIsTocOpen((value) => !value)}
+                >
+                  <div>
+                    <span>목차</span>
+                    <strong>{pageCopy.tocTitle}</strong>
+                    <em>필요한 부분만 빠르게 이동할 수 있습니다.</em>
+                  </div>
+                  <span className="premium-toc-arrow" aria-hidden="true">
+                    &gt;
+                  </span>
+                </button>
 
-            {isTocOpen ? (
-              <div className="premium-toc">
-                {tocItems.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="premium-toc-item"
-                    data-export-target={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                  >
-                    <span className="premium-toc-label">{item.label}</span>
-                    <span className="premium-toc-number">{item.number}</span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </section>
+                {isTocOpen ? (
+                  <div className="premium-toc">
+                    {tocItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="premium-toc-item"
+                        data-export-target={item.id}
+                        onClick={() => scrollToSection(item.id)}
+                      >
+                        <span className="premium-toc-label">{item.label}</span>
+                        <span className="premium-toc-number">{item.number}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
 
-          <div className="premium-divider" />
+              <div className="premium-divider" />
+            </>
+          ) : null}
 
           {isPastLifeShowcase && report.pastLifeProfile ? (
             <>
@@ -7400,51 +7563,76 @@ body {
             </>
           ) : null}
 
-          <section className="premium-report-section" id="summary">
+          {!isGeneralSignature ? summaryChapter : null}
+
+          <div className="premium-divider" />
+
+          <section className="premium-report-section" id="glance">
             <div className="premium-section-heading">
-              <div>
-                <h2>{report.summary.title}</h2>
-                <p className="premium-muted">{pageCopy.summaryCaption}</p>
+              <div className="premium-section-title-wrap">
+                {isGeneralSignature ? <span className="premium-section-index">02</span> : null}
+                <div>
+                  {isGeneralSignature ? <span className="gs-chapter-kicker">FOUR PILLARS</span> : null}
+                  <h2>{pageCopy.glanceTitle}</h2>
+                  <p className="premium-muted">{pageCopy.glanceCaption}</p>
+                </div>
               </div>
             </div>
 
-            <div className="premium-callout">
-              {report.summary.analysis.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
+            <SajuWonGukBoard report={report} />
+            <SajuWonGukReading report={report} />
 
-            <div className="premium-grid3">
-              {report.keyTakeaways.map((item) => (
-                <article key={item.title} className={`premium-card premium-key-card ${item.tone ? `tone-${item.tone}` : ''}`}>
-                  <span className="premium-key-label">{item.title}</span>
-                  <p>{item.body}</p>
-                </article>
-              ))}
+            <div className="premium-grid2 premium-glance-chart-grid">
+              <ElementDistributionBoard report={report} />
+              <TenGodDistributionBoard report={report} />
             </div>
-
-            <details className="premium-accordion" open>
-              <summary>
-                <span>실천 과제</span>
-                <span className="premium-details-hint">자세히 보기</span>
-              </summary>
-              <div className="premium-accordion-body">
-                <ul className="premium-list">
-                  {report.summary.advice.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </details>
           </section>
+
+          {(isGeneralSignature ? generalSignatureLuckSections : primaryReportSections).map((section, index) => (
+                <div key={section.id}>
+                  <div className="premium-divider" />
+                  <SectionBlock
+                    section={section}
+                    number={
+                      isPastLifeShowcase
+                        ? `근거 ${index + 1}`
+                        : isGeneralSignature
+                          ? getGeneralSignatureChapterNumber(section)
+                          : String(index + 3).padStart(2, '0')
+                    }
+                    report={report}
+                  />
+                </div>
+              ))}
+
+          {isGeneralSignature ? (
+            <>
+              <div className="premium-divider" />
+              {summaryChapter}
+              {generalSignatureTopicSections.map((section) => (
+                <div key={section.id}>
+                  <div className="premium-divider" />
+                  <SectionBlock
+                    section={section}
+                    number={getGeneralSignatureChapterNumber(section)}
+                    report={report}
+                  />
+                </div>
+              ))}
+            </>
+          ) : null}
 
           <div className="premium-divider" />
 
           <section className="premium-report-section" id="qa">
             <div className="premium-section-heading">
-              <div>
-                <h2>{pageCopy.qaTitle}</h2>
-                <p className="premium-muted">{pageCopy.qaCaption}</p>
+              <div className="premium-section-title-wrap">
+                {isGeneralSignature ? <span className="premium-section-index">05</span> : null}
+                <div>
+                  {isGeneralSignature ? <span className="gs-chapter-kicker">YOUR QUESTIONS</span> : null}
+                  <h2>{pageCopy.qaTitle}</h2>
+                  <p className="premium-muted">{pageCopy.qaCaption}</p>
+                </div>
               </div>
             </div>
 
@@ -7452,24 +7640,21 @@ body {
               report.questionAnswers.map((qa, index) => (
                 report.serviceId === 'concern-reading' ? (
                   <ConcernQuestionAnswerCard key={`${qa.question}-${index}`} qa={qa} index={index} report={report} />
+                ) : isGeneralSignature ? (
+                  <GeneralSignatureQuestionAnswer key={`${qa.question}-${index}`} qa={qa} index={index} />
                 ) : (
                   <div key={`${qa.question}-${index}`} className="premium-qa-block">
                     <div className="premium-card premium-question-card">
                       <h3>Q. {qa.question}</h3>
                     </div>
                     <div className="premium-card premium-answer-card">
-                      <h3>{isGeneralSignature ? `결론 · ${qa.title}` : qa.title}</h3>
-                      {isGeneralSignature ? <h4>왜 그렇게 읽는가</h4> : null}
+                      <h3>{qa.title}</h3>
                       <p>{qa.analysis}</p>
-                      {isGeneralSignature ? <h4>지금 해야 할 행동</h4> : null}
                       <ul className="premium-list">
                         {qa.advice.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
-                      {isGeneralSignature ? (
-                        <p className="gs-answer-evidence">명리 근거는 원국·십성·대운의 해당 장에서 교차 확인할 수 있습니다.</p>
-                      ) : null}
                     </div>
                   </div>
                 )
@@ -7483,59 +7668,17 @@ body {
 
           <div className="premium-divider" />
 
-          <section className="premium-report-section" id="glance">
-            <div className="premium-section-heading">
-              <div>
-                <h2>{pageCopy.glanceTitle}</h2>
-                <p className="premium-muted">{pageCopy.glanceCaption}</p>
-              </div>
-            </div>
-
-            <SajuWonGukBoard report={report} />
-            <SajuWonGukReading report={report} />
-
-            <div className="premium-grid2 premium-glance-chart-grid">
-              <ElementDistributionBoard report={report} />
-              <TenGodDistributionBoard report={report} />
-            </div>
-          </section>
-
-          {(isPastLifeShowcase
-            ? report.sections.filter((section) => !PAST_LIFE_STORY_SECTION_IDS.has(section.id))
-            : report.sections
-          ).map((section, index) => (
-                <div key={section.id}>
-                  <div className="premium-divider" />
-                  {isGeneralSignature && section.id.endsWith('-v2') ? (
-                    <details className="gs-expert-disclosure">
-                      <summary><span>명리 근거 자세히 보기</span><strong>{section.title}</strong></summary>
-                      <SectionBlock section={section} number={`근거 ${index + 1}`} report={report} />
-                    </details>
-                  ) : (
-                    <SectionBlock
-                      section={section}
-                      number={isPastLifeShowcase ? `근거 ${index + 1}` : String(index + 3).padStart(2, '0')}
-                      report={report}
-                    />
-                  )}
-                </div>
-              ))}
-
-          <div className="premium-divider" />
-
           <section className="premium-report-section" id="plan">
             <div className="premium-section-heading">
-              <div>
-                <h2>{report.actionPlan.title}</h2>
-                <p className="premium-muted">지금 바로 실행할 우선순위를 정리했습니다.</p>
+              <div className="premium-section-title-wrap">
+                {isGeneralSignature ? <span className="premium-section-index">06</span> : null}
+                <div>
+                  {isGeneralSignature ? <span className="gs-chapter-kicker">ACTION GUIDE</span> : null}
+                  <h2>{report.actionPlan.title}</h2>
+                  <p className="premium-muted">지금 바로 실행할 우선순위를 정리했습니다.</p>
+                </div>
               </div>
             </div>
-
-            <details className="premium-accordion" open>
-              <summary>
-                <span>우선순위 3가지</span>
-                <span className="premium-details-hint">자세히 보기</span>
-              </summary>
 
             {isGeneralSignature ? (
               <div className="gs-action-horizons" aria-labelledby="gs-action-horizons-title">
@@ -7554,15 +7697,21 @@ body {
                   ))}
                 </ol>
               </div>
-            ) : null}
-              <div className="premium-accordion-body">
-                <ul className="premium-list">
-                  {report.actionPlan.priorities.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </details>
+            ) : (
+              <details className="premium-accordion" open>
+                <summary>
+                  <span>우선순위 3가지</span>
+                  <span className="premium-details-hint">자세히 보기</span>
+                </summary>
+                <div className="premium-accordion-body">
+                  <ul className="premium-list">
+                    {report.actionPlan.priorities.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
+            )}
 
             <div className="premium-grid2">
               <article className="premium-card tone-good">
@@ -7658,69 +7807,93 @@ body {
             </>
           ) : null}
 
-          <div className="premium-divider" />
+          {!isGeneralSignature ? (
+            <>
+              <div className="premium-divider" />
 
-          <section className="premium-report-section" id="legal">
-            <div className="premium-section-heading">
-              <div>
-                <h2>안전 안내</h2>
-                <p className="premium-muted">리포트 이용 전 함께 확인해야 할 안내입니다.</p>
-              </div>
-            </div>
+              <section className="premium-report-section" id="legal">
+                <div className="premium-section-heading">
+                  <div>
+                    <h2>안전 안내</h2>
+                    <p className="premium-muted">리포트 이용 전 함께 확인해야 할 안내입니다.</p>
+                  </div>
+                </div>
 
-            <div className="premium-grid3">
-              {report.legalNotice.map((item) => (
-                <article key={item} className="premium-card premium-legal-card">
-                  <p>{item}</p>
-                </article>
-              ))}
-            </div>
+                <div className="premium-grid3">
+                  {report.legalNotice.map((item) => (
+                    <article key={item} className="premium-card premium-legal-card">
+                      <p>{item}</p>
+                    </article>
+                  ))}
+                </div>
 
-            <div className="premium-report-support-card">
-              <div>
-                <strong>결과가 이상하거나 오타가 있나요?</strong>
-                <p>리포트 번호와 함께 보내주시면 검수 기준에 따라 개선할 수 있습니다.</p>
-              </div>
-              <div className="premium-report-support-actions">
-                <a href={issueMailHref} className="app-black-button">
-                  오타·불일치 신고
+                <div className="premium-report-support-card">
+                  <div>
+                    <strong>결과가 이상하거나 오타가 있나요?</strong>
+                    <p>리포트 번호와 함께 보내주시면 검수 기준에 따라 개선할 수 있습니다.</p>
+                  </div>
+                  <div className="premium-report-support-actions">
+                    <a href={issueMailHref} className="app-black-button">
+                      오타·불일치 신고
+                    </a>
+                    <button type="button" className="premium-html-download-button" onClick={handleDownloadHtmlReport} data-export-remove="true">
+                      <Download size={16} />
+                      HTML 다운로드
+                    </button>
+                    {htmlDownloadUrl ? (
+                      <>
+                        <a
+                          href={htmlDownloadUrl}
+                          download={htmlDownloadFileName || undefined}
+                          rel="noopener"
+                          className="premium-html-open-link"
+                          aria-label={`${htmlDownloadFileName} 다운로드 다시 시도`}
+                          data-export-remove="true"
+                        >
+                          다운로드 다시 시도
+                        </a>
+                        <a
+                          href={htmlDownloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="premium-html-open-link"
+                          aria-label={`${htmlDownloadFileName} HTML 바로 보기`}
+                          data-export-remove="true"
+                        >
+                          HTML 바로 보기
+                        </a>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+                {htmlDownloadMessage ? <p className="premium-html-download-message">{htmlDownloadMessage}</p> : null}
+              </section>
+            </>
+          ) : null}
+
+          {isGeneralSignature ? (
+            <section className="gs-report-download" aria-label="리포트 저장" data-export-remove="true">
+              <button type="button" className="gs-report-download-button" onClick={handleDownloadHtmlReport}>
+                <Download size={17} aria-hidden="true" />
+                HTML 리포트 다운로드
+              </button>
+              {htmlDownloadUrl ? (
+                <a
+                  href={htmlDownloadUrl}
+                  download={htmlDownloadFileName || undefined}
+                  rel="noopener"
+                  className="gs-report-download-retry"
+                >
+                  다운로드 다시 받기
                 </a>
-                <button type="button" className="premium-html-download-button" onClick={handleDownloadHtmlReport} data-export-remove="true">
-                  <Download size={16} />
-                  HTML 다운로드
-                </button>
-                {htmlDownloadUrl ? (
-                  <>
-                    <a
-                      href={htmlDownloadUrl}
-                      download={htmlDownloadFileName || undefined}
-                      rel="noopener"
-                      className="premium-html-open-link"
-                      aria-label={`${htmlDownloadFileName} 다운로드 다시 시도`}
-                      data-export-remove="true"
-                    >
-                      다운로드 다시 시도
-                    </a>
-                    <a
-                      href={htmlDownloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="premium-html-open-link"
-                      aria-label={`${htmlDownloadFileName} HTML 바로 보기`}
-                      data-export-remove="true"
-                    >
-                      HTML 바로 보기
-                    </a>
-                  </>
-                ) : null}
-              </div>
-            </div>
-            {htmlDownloadMessage ? <p className="premium-html-download-message">{htmlDownloadMessage}</p> : null}
-          </section>
+              ) : null}
+            </section>
+          ) : null}
 
           <footer className="premium-report-footer">
-            운월당 리포트는 입력한 생년월일시와 질문을 기준으로 작성된 개인 감정서입니다. 실제 선택은 현재의 상황과 함께
-            종합해 판단해 주세요.
+            {isGeneralSignature
+              ? '운월당 종합사주는 입력 정보를 바탕으로 한 전통 명리학 참고 자료이며, 특정 결과를 보장하거나 의료·법률·세무·투자 판단을 대신하지 않습니다.'
+              : '운월당 리포트는 입력한 생년월일시와 질문을 기준으로 작성된 개인 감정서입니다. 실제 선택은 현재의 상황과 함께 종합해 판단해 주세요.'}
           </footer>
         </article>
       </div>
