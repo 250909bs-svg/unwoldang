@@ -15,17 +15,15 @@ import {
 } from './registry';
 import { productIds, productStatuses } from './types';
 
-const activeIds = [
-  'general-signature',
-  'past-life-goblin',
-  'love-reading',
-  'love-reunion',
-  'match-couple'
-] as const;
+const activeIds = ['general-signature'] as const;
 
 const archivedIds = [
   'life-flow',
   'concern-reading',
+  'past-life-goblin',
+  'love-reading',
+  'love-reunion',
+  'match-couple',
   'match-destiny',
   'marriage-blueprint',
   'marriage-timing',

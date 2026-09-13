@@ -15,7 +15,7 @@ describe('admin sample order policy', () => {
     const pendingOrder = buildSampleOrders(Date.UTC(2026, 6, 22, 12)).find((order) => order.status === 'pending');
 
     expect(pendingOrder).toMatchObject({
-      productId: 'past-life-goblin',
+      productId: 'general-signature',
       productStatus: 'active',
       reportStatus: 'generating'
     });

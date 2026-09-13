@@ -24,24 +24,24 @@ export type SampleOrderSeed = {
 export const sampleSeeds: SampleOrderSeed[] = [
   { productId: 'concern-reading', name: '차민호', offsetHours: 1440.35, readRate: 96, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 19 },
   { productId: 'general-signature', name: '김서연', offsetHours: 1.1, readRate: 91, channel: '네이버검색', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 42 },
-  { productId: 'love-reading', name: '이하준', offsetHours: 2.2, readRate: 78, issueCount: 1, channel: '인스타그램', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 36 },
+  { productId: 'love-reading', name: '이하준', offsetHours: 1450, readRate: 78, issueCount: 1, channel: '인스타그램', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 36 },
   { productId: 'life-flow', name: '박지아', offsetHours: 1460, readRate: 83, channel: '직접방문', device: 'desktop', ageRange: '40대 초반', reportLatencySec: 28 },
   { productId: 'marriage-blueprint', name: '정도윤', offsetHours: 1500, readRate: 94, channel: '재방문', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 31 },
-  { productId: 'match-couple', name: '한유진', offsetHours: 5.6, readRate: 87, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 24 },
-  { productId: 'past-life-goblin', name: '오민재', offsetHours: 7.5, status: 'pending', reportStatus: 'generating', readRate: 38, channel: '네이버검색', device: 'mobile', ageRange: '비공개', reportLatencySec: 68 },
-  { productId: 'love-reunion', name: '윤하린', offsetHours: 9.2, readRate: 82, channel: '인스타그램', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 33 },
+  { productId: 'match-couple', name: '한유진', offsetHours: 1470, readRate: 87, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 24 },
+  { productId: 'general-signature', name: '오민재', offsetHours: 7.5, status: 'pending', reportStatus: 'generating', readRate: 38, channel: '네이버검색', device: 'mobile', ageRange: '비공개', reportLatencySec: 68 },
+  { productId: 'love-reunion', name: '윤하린', offsetHours: 1490, readRate: 82, channel: '인스타그램', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 33 },
   { productId: 'concern-reading', name: '서지후', offsetHours: 1600, readRate: 93, channel: '카카오', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 21 },
   { productId: 'general-signature', name: '강나은', offsetHours: 29.1, readRate: 89, channel: '재방문', device: 'desktop', ageRange: '40대 초반', reportLatencySec: 47 },
   { productId: 'marriage-timing', name: '문도현', offsetHours: 1650, readRate: 72, channel: '네이버검색', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 39 },
   { productId: 'match-destiny', name: '배수아', offsetHours: 1700, readRate: 86, channel: '직접방문', device: 'desktop', ageRange: '30대 초반', reportLatencySec: 34 },
   { productId: 'concern-reading', name: '차민호', offsetHours: 1750, readRate: 98, channel: '재방문', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 18 },
-  { productId: 'love-reading', name: '김서연', offsetHours: 66.4, readRate: 76, channel: '인스타그램', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 41 },
+  { productId: 'love-reading', name: '김서연', offsetHours: 1510, readRate: 76, channel: '인스타그램', device: 'mobile', ageRange: '30대 후반', reportLatencySec: 41 },
   { productId: 'life-flow', name: '이하준', offsetHours: 1800, status: 'failed', reportStatus: 'failed', readRate: 0, issueCount: 1, channel: '네이버검색', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 120 },
   { productId: 'concern-reading', name: '박지아', offsetHours: 1850, readRate: 90, channel: '카카오', device: 'mobile', ageRange: '40대 초반', reportLatencySec: 20 },
   { productId: 'general-signature', name: '정도윤', offsetHours: 111.5, readRate: 92, channel: '직접방문', device: 'desktop', ageRange: '30대 후반', reportLatencySec: 46 },
-  { productId: 'love-reunion', name: '한유진', offsetHours: 130.2, readRate: 81, channel: '인스타그램', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 35 },
+  { productId: 'love-reunion', name: '한유진', offsetHours: 1530, readRate: 81, channel: '인스타그램', device: 'mobile', ageRange: '30대 초반', reportLatencySec: 35 },
   { productId: 'concern-reading', name: '오민재', offsetHours: 1900, readRate: 84, channel: '카카오', device: 'mobile', ageRange: '비공개', reportLatencySec: 22 },
-  { productId: 'match-couple', name: '윤하린', offsetHours: 166.7, readRate: 88, channel: '재방문', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 37 }
+  { productId: 'match-couple', name: '윤하린', offsetHours: 1550, readRate: 88, channel: '재방문', device: 'mobile', ageRange: '20대 후반', reportLatencySec: 37 }
 ];
 
 export function buildSampleOrders(referenceTime = Date.now()): AdminOrder[] {

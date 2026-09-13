@@ -1,6 +1,7 @@
 import { Grid2x2, Heart, ScrollText } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { canDiscoverProduct } from '../products/registry';
 
 export default function Navbar() {
   const location = useLocation();
@@ -32,13 +33,15 @@ export default function Navbar() {
             <ScrollText size={14} />
             종합사주
           </NavLink>
-          <NavLink
-            to="/detail/love-reading"
-            className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-          >
-            <Heart size={14} />
-            연애운
-          </NavLink>
+          {canDiscoverProduct('love-reading') ? (
+            <NavLink
+              to="/detail/love-reading"
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+            >
+              <Heart size={14} />
+              연애운
+            </NavLink>
+          ) : null}
         </nav>
 
         {isAuthenticated && user ? (
