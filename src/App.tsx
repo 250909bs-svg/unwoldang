@@ -33,6 +33,8 @@ const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
 const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
 const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
+const GuiyeondoPage = lazy(() => import('./features/guiyeondo/GuiyeondoPage'));
+const GuiyeondoGuestPage = lazy(() => import('./features/guiyeondo/GuiyeondoGuestPage'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -51,7 +53,13 @@ function RouteLoadingFallback() {
   );
 }
 
-function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean }) {
+function AppRoutes({
+  hideGlobalChrome = false,
+  hideFooter = false
+}: {
+  hideGlobalChrome?: boolean;
+  hideFooter?: boolean;
+}) {
   return (
     <>
       <Seo />
@@ -62,6 +70,8 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
           <Route path="/test" element={<Test />} />
           <Route path="/test/face-ai" element={<FaceAI />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/guiyeondo" element={<GuiyeondoPage />} />
+          <Route path="/g/:publicId" element={<GuiyeondoGuestPage />} />
           <Route path="/tarot" element={<Navigate to="/" replace />} />
           <Route path="/my" element={<My />} />
           <Route path="/admin" element={<Admin />} />
@@ -164,7 +174,7 @@ function AppRoutes({ hideGlobalChrome = false }: { hideGlobalChrome?: boolean })
         </Routes>
       </Suspense>
 
-      {!hideGlobalChrome ? <Footer /> : null}
+      {!hideGlobalChrome && !hideFooter ? <Footer /> : null}
       {!hideGlobalChrome ? <BottomTabBar /> : null}
     </>
   );
@@ -182,6 +192,8 @@ function AppShell() {
   const isLoveFormRoute = location.pathname === '/form/love-reading';
   const isLovePreviewRoute = location.pathname === '/preview/love-reading';
   const isLoveReportRoute = location.pathname === '/report/love-reading';
+  const isGuiyeondoRoute = location.pathname === '/guiyeondo';
+  const isGuiyeondoGuestRoute = location.pathname.startsWith('/g/');
   const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
   const usesDarkAppShell =
@@ -190,6 +202,8 @@ function AppShell() {
     location.pathname.startsWith('/search') ||
     location.pathname.startsWith('/my') ||
     location.pathname.startsWith('/login') ||
+    isGuiyeondoRoute ||
+    isGuiyeondoGuestRoute ||
     isPastLifeLandingRoute ||
     isGeneralDetailRoute ||
     isGeneralFormRoute ||
@@ -215,6 +229,8 @@ function AppShell() {
             ? 'app-container general-saju-intake-app-container'
           : isGeneralReportRoute
             ? 'app-container general-signature-report-app-container'
+          : isGuiyeondoRoute || isGuiyeondoGuestRoute
+            ? 'app-container guiyeondo-app-container'
           : isLoveDetailRoute
             ? 'app-container mz-love-app-container'
             : isLoveFormRoute || isLovePreviewRoute
@@ -229,12 +245,14 @@ function AppShell() {
       }
     >
       <AppRoutes
+        hideFooter={isGuiyeondoRoute}
         hideGlobalChrome={
           isPastLifeLandingRoute ||
           isImmersiveLoveRoute ||
           isGeneralDetailRoute ||
           isGeneralFormRoute ||
-          isGeneralReportRoute
+          isGeneralReportRoute ||
+          isGuiyeondoGuestRoute
         }
       />
     </div>

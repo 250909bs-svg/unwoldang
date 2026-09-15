@@ -13,6 +13,7 @@ import {
 import { KakaoService } from './domains/auth/kakaoService.ts';
 import { TokenService } from './domains/auth/tokenService.ts';
 import { HealthService } from './domains/health/healthService.ts';
+import { GuiyeondoService, type GuiyeondoApi } from './domains/guiyeondo/guiyeondoService.ts';
 import {
   PaymentService,
   type PaymentLedgerRepository as PaymentLedgerServiceRepository
@@ -28,12 +29,14 @@ import { createAdminLoginRateLimit } from './middleware/adminLoginRateLimit.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
+import { GuiyeondoFirestoreRepository } from './repositories/guiyeondoRepository.ts';
 
 export type CreateAppOptions = {
   config?: AppConfig;
   fetchImplementation?: typeof fetch;
   reportGenerator?: typeof generateGeminiSajuReport;
   releasePreflightEvaluator?: typeof evaluateGeneralSignatureReleasePreflight;
+  guiyeondoService?: GuiyeondoApi;
 };
 
 export function createApp(options: CreateAppOptions = {}): RequestListener {
@@ -56,6 +59,16 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     firestoreRepository,
     config.firestore.archiveCollection
   );
+  const guiyeondoRepository = new GuiyeondoFirestoreRepository(
+    firestoreRepository,
+    config.guiyeondo.inviteCollection,
+    config.guiyeondo.responseCollection,
+    config.guiyeondo.rateLimitCollection
+  );
+  const guiyeondoService = options.guiyeondoService || new GuiyeondoService({
+    repository: guiyeondoRepository,
+    config: config.guiyeondo
+  });
 
   const paymentLedgerAdapter: PaymentLedgerServiceRepository = {
     createPaymentLedger(record) {
@@ -125,6 +138,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     },
     kakao: kakaoService,
     archives: archiveService,
-    admin: adminService
+    admin: adminService,
+    guiyeondo: guiyeondoService
   });
 }

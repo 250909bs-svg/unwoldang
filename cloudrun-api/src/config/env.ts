@@ -12,6 +12,13 @@ function numeric(env: RuntimeEnv, name: string, fallback: number) {
   return Number(env[name] || fallback);
 }
 
+function boundedGuiyeondoRateMax(env: RuntimeEnv, name: string, fallback: number, minimum: number, maximum: number) {
+  const configured = numeric(env, name, fallback);
+  return Number.isFinite(configured)
+    ? Math.min(maximum, Math.max(minimum, Math.floor(configured)))
+    : fallback;
+}
+
 function resolvePaymentProvider(env: RuntimeEnv, production: boolean): PaymentProviderName {
   const requested = trimmed(env, 'PAYMENT_PROVIDER');
   if (requested === 'disabled' || requested === 'hyphen' || requested === 'legacy-portone') {
@@ -27,6 +34,8 @@ export function loadConfig(env: RuntimeEnv = process.env) {
   const configuredGenerationLockTtl = numeric(env, 'REPORT_GENERATION_LOCK_TTL_MS', 2 * 60 * 1000);
   const configuredAdminRateWindow = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000);
   const configuredAdminRateMax = numeric(env, 'ADMIN_LOGIN_RATE_LIMIT_MAX', 5);
+  const configuredGuiyeondoTtl = numeric(env, 'GUIYEONDO_INVITE_TTL_MS', 14 * 24 * 60 * 60 * 1000);
+  const configuredGuiyeondoRateWindow = numeric(env, 'GUIYEONDO_RATE_LIMIT_WINDOW_MS', 60 * 1000);
   const legacyKasiKey = trimmed(env, 'KASI_SERVICE_KEY')
     || trimmed(env, 'DATA_GO_KR_SERVICE_KEY')
     || trimmed(env, 'PUBLIC_DATA_SERVICE_KEY');
@@ -96,6 +105,22 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       databaseId: trimmed(env, 'FIRESTORE_DATABASE_ID') || '(default)',
       archiveCollection: trimmed(env, 'FIRESTORE_ARCHIVE_COLLECTION') || 'reportArchives',
       accessToken: trimmed(env, 'FIRESTORE_ACCESS_TOKEN')
+    },
+    guiyeondo: {
+      enabled: env.ENABLE_FIRESTORE_ARCHIVE === 'true' && env.ENABLE_GUIYEONDO === 'true',
+      inviteCollection: trimmed(env, 'GUIYEONDO_INVITE_COLLECTION') || 'guiyeondoInvites',
+      responseCollection: trimmed(env, 'GUIYEONDO_RESPONSE_COLLECTION') || 'guiyeondoResponses',
+      rateLimitCollection: trimmed(env, 'GUIYEONDO_RATE_LIMIT_COLLECTION') || 'guiyeondoRateLimits',
+      inviteTtlMs: Number.isFinite(configuredGuiyeondoTtl)
+        ? Math.min(14 * 24 * 60 * 60 * 1000, Math.max(60 * 60 * 1000, configuredGuiyeondoTtl))
+        : 14 * 24 * 60 * 60 * 1000,
+      rateLimitWindowMs: Number.isFinite(configuredGuiyeondoRateWindow)
+        ? Math.min(10 * 60 * 1000, Math.max(10 * 1000, configuredGuiyeondoRateWindow))
+        : 60 * 1000,
+      createRateLimitMax: boundedGuiyeondoRateMax(env, 'GUIYEONDO_CREATE_RATE_LIMIT_MAX', 10, 1, 30),
+      readRateLimitMax: boundedGuiyeondoRateMax(env, 'GUIYEONDO_READ_RATE_LIMIT_MAX', 120, 10, 300),
+      responseRateLimitMax: boundedGuiyeondoRateMax(env, 'GUIYEONDO_RESPONSE_RATE_LIMIT_MAX', 10, 1, 30),
+      ownerRateLimitMax: boundedGuiyeondoRateMax(env, 'GUIYEONDO_OWNER_RATE_LIMIT_MAX', 60, 5, 120)
     },
     gemini: {
       configured: Boolean(trimmed(env, 'GEMINI_API_KEY')),

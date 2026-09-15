@@ -1,5 +1,25 @@
-import { Archive, FlaskConical, Home, Search } from 'lucide-react';
+import { Archive, FlaskConical, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+
+function GuiyeondoIcon({ size = 18, strokeWidth = 2.1 }: { size?: number; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth={strokeWidth} />
+      <circle cx="5" cy="7" r="1.55" fill="currentColor" />
+      <circle cx="19" cy="7" r="1.55" fill="currentColor" />
+      <circle cx="5" cy="17" r="1.55" fill="currentColor" />
+      <circle cx="19" cy="17" r="1.55" fill="currentColor" />
+      <path d="M7 8.2 9.6 10M17 8.2 14.4 10M7 15.8 9.6 14M17 15.8 14.4 14" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const discoveryItem = {
+  to: '/guiyeondo',
+  label: '귀연도',
+  match: (pathname: string) => pathname.startsWith('/guiyeondo'),
+  icon: GuiyeondoIcon
+};
 
 const navItems = [
   {
@@ -14,12 +34,7 @@ const navItems = [
     match: (pathname: string) => pathname.startsWith('/test'),
     icon: FlaskConical
   },
-  {
-    to: '/search',
-    label: '검색',
-    match: (pathname: string) => pathname.startsWith('/search'),
-    icon: Search
-  },
+  discoveryItem,
   {
     to: '/my',
     label: '보관함',
@@ -41,7 +56,7 @@ export default function BottomTabBar() {
     '/terms',
     '/privacy',
     '/refund'
-  ].some((path) => location.pathname.startsWith(path));
+  ].some((routePath) => location.pathname.startsWith(routePath));
 
   const isPastLifeExperience =
     location.pathname.startsWith('/detail/past-life-goblin') ||

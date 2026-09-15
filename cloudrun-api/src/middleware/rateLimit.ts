@@ -4,7 +4,7 @@ import { ReportRequestError } from '../contracts/errors.ts';
 
 type RateLimitBucket = { count: number; resetAt: number };
 
-function getClientIp(req: IncomingMessage) {
+export function getClientIp(req: IncomingMessage) {
   const forwarded = String(req.headers['x-forwarded-for'] || '').split(',').map((value) => value.trim()).filter(Boolean);
   const trustedClient = forwarded.length >= 2
     ? forwarded[forwarded.length - 2]

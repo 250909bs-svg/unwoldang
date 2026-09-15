@@ -1,5 +1,6 @@
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http';
 import type { AuthenticatedUser, ReportAccessClaims } from '../contracts/auth.ts';
+import { GuiyeondoRequestError, type GuiyeondoApi } from '../domains/guiyeondo/guiyeondoService.ts';
 import {
   KakaoAuthError,
   PaymentRequestError,
@@ -9,6 +10,7 @@ import {
 import { readJsonBody } from './body.ts';
 import type { AdminLoginRateLimit } from '../middleware/adminLoginRateLimit.ts';
 import { sendJson } from '../middleware/error.ts';
+import { getClientIp } from '../middleware/rateLimit.ts';
 
 export const PUBLIC_ROUTES = Object.freeze([
   'GET /health',
@@ -24,7 +26,12 @@ export const PUBLIC_ROUTES = Object.freeze([
   'GET /api/archive/reports',
   'POST /api/archive/reports',
   'POST /api/admin/login',
-  'GET /api/admin/reports'
+  'GET /api/admin/reports',
+  'POST /api/guiyeondo/invites',
+  'GET /api/guiyeondo/invites/:publicId',
+  'POST /api/guiyeondo/invites/:publicId/responses',
+  'GET /api/guiyeondo/invites/:publicId/responses',
+  'POST /api/guiyeondo/invites/:publicId/revoke'
 ]);
 
 type AuthMiddleware = {
@@ -57,6 +64,7 @@ type RouterDependencies = {
     save(userId: string, body: Record<string, unknown>): Promise<unknown>;
   };
   admin: { login(body: Record<string, unknown>): unknown };
+  guiyeondo: GuiyeondoApi;
 };
 
 function isPath(pathname: string, barePath: string) {
@@ -65,6 +73,30 @@ function isPath(pathname: string, barePath: string) {
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function bearerToken(req: IncomingMessage) {
+  const value = String(req.headers.authorization || '');
+  return value.startsWith('Bearer ') ? value.slice(7).trim() : '';
+}
+
+function guiyeondoPath(pathname: string) {
+  const match = pathname.match(/^\/api\/guiyeondo\/invites\/([a-fA-F0-9]{32})(?:\/(responses|revoke))?$/);
+  return match ? { publicId: match[1], action: match[2] || '' } : null;
+}
+
+function sendGuiyeondoError(res: ServerResponse, error: unknown) {
+  if (error instanceof GuiyeondoRequestError) {
+    sendJson(res, error.status, { message: error.message, code: error.code });
+    return;
+  }
+  if (error instanceof ReportRequestError && (error.status === 400 || error.status === 413)) {
+    sendJson(res, error.status, { message: error.message, code: error.status === 413 ? 'PAYLOAD_TOO_LARGE' : 'INVALID_JSON' });
+    return;
+  }
+  sendJson(res, 500, {
+    message: '귀연도 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+  });
 }
 
 export function createRouter(dependencies: RouterDependencies): RequestListener {
@@ -81,6 +113,62 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     if (req.method === 'GET' && url.pathname === '/health') {
       sendJson(res, 200, dependencies.health.getStatus());
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/guiyeondo/invites') {
+      try {
+        const body = await readJsonBody(req);
+        sendJson(res, 201, await dependencies.guiyeondo.createInvite(body, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    const guiyeondo = guiyeondoPath(url.pathname);
+    if (guiyeondo && req.method === 'GET' && !guiyeondo.action) {
+      try {
+        sendJson(res, 200, await dependencies.guiyeondo.getInvite(guiyeondo.publicId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (guiyeondo?.action === 'responses' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req);
+        sendJson(res, 201, await dependencies.guiyeondo.submitResponse(guiyeondo.publicId, body, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (guiyeondo?.action === 'responses' && req.method === 'GET') {
+      try {
+        sendJson(res, 200, await dependencies.guiyeondo.listResponses(
+          guiyeondo.publicId,
+          bearerToken(req),
+          getClientIp(req)
+        ));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (guiyeondo?.action === 'revoke' && req.method === 'POST') {
+      try {
+        sendJson(res, 200, await dependencies.guiyeondo.revokeInvite(
+          guiyeondo.publicId,
+          bearerToken(req),
+          getClientIp(req)
+        ));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
       return;
     }
 

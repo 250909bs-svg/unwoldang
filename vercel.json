@@ -66,6 +66,20 @@
       ]
     },
     {
+      "source": "/guiyeondo",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/g/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "private, no-store" }
+      ]
+    },
+    {
       "source": "/login",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
@@ -208,6 +222,14 @@
     },
     {
       "source": "/search",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/guiyeondo",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/g/:publicId",
       "destination": "/index.html"
     },
     {

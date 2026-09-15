@@ -29,6 +29,8 @@ export {
   buildBirthTimeScenarios,
   parseBirthTime
 } from './timeParser';
+export { selectStableNatalBazi } from './selectStableBazi';
+export type { StableNatalSelection } from './selectStableBazi';
 export type {
   BirthContext,
   BirthContextOptions,
