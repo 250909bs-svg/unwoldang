@@ -32,6 +32,8 @@
         const usesDarkShell =
           pathname === '/' ||
           darkPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)) ||
+          pathname === '/guiyeondo' ||
+          pathname.startsWith('/g/') ||
           pathname === '/detail/past-life-goblin' ||
           pathname === '/detail/general-saju' ||
           pathname === '/detail/love-reading' ||
