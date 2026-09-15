@@ -149,4 +149,23 @@ describe('general-signature release fixtures', () => {
     expect(visibleText).not.toMatch(/은\(는\)|이\(가\)|을\(를\)|과\(와\)|님가|미상로|편인와/);
     expect(visibleText).not.toMatch(/not-configured|supported|conditional|insufficient|balanced|MRE-V2|eokbu|tonggwan|undefined|null|\[object Object\]/i);
   });
+
+  it('uses natural particles and an explicit hour-pillar label in customer copy', () => {
+    const report = build({
+      name: '세빈',
+      gender: 'female',
+      birthDate: '2001-01-17',
+      birthTime: '10:24',
+      q1: '영업일을 하고 있는데 지금 저한테 잘 맞는 일인가요?',
+      q2: '2026년에 중요한 것들과 하지 말아야 할 것들을 알려주세요.'
+    });
+    const visibleText = customerVisibleText(report);
+
+    expect(visibleText).not.toContain('승부을');
+    expect(visibleText).toContain('압박과 승부를 만듭니다');
+    expect(visibleText).toContain(`${report.pillars.hour}시로`);
+    expect(findCustomerReportTextViolations(report)).toEqual([]);
+    expect(report.qualityAudit.repeatedSentences).toEqual([]);
+    expect(report.qualityAudit.status).toBe('pass');
+  });
 });

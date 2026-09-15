@@ -8,6 +8,7 @@ import {
   TG,
   type FiveElement
 } from '../../constants';
+import { withKoreanParticle } from '../../../koreanText';
 import type { Bazi, GZ } from '../../types';
 import {
   BRANCH_CLIMATE,
@@ -167,8 +168,8 @@ export function analyzeStemRoots(bazi: Bazi): RuleResult<StemRootProfile[]> {
     `${profile.pillar}-${profile.stem}`,
     profile.rooted ? 'support' : 'opposition',
     profile.rooted
-      ? `${profile.pillar} 천간 ${profile.stem}은(는) 지지 지장간에서 ${profile.level} 수준의 뿌리 후보 ${profile.sources.length}개가 확인된다.`
-      : `${profile.pillar} 천간 ${profile.stem}과(와) 같은 오행의 지장간이 없어 무근 후보로 기록한다.`,
+      ? `${profile.pillar} 천간 ${withKoreanParticle(profile.stem, '은/는')} 지지 지장간에서 ${profile.level} 수준의 뿌리 후보 ${profile.sources.length}개가 확인된다.`
+      : `${profile.pillar} 천간 ${withKoreanParticle(profile.stem, '과/와')} 같은 오행의 지장간이 없어 무근 후보로 기록한다.`,
     profile.rooted ? Math.max(0.35, profile.score) : 0.7,
     [PILLAR_PATH[profile.pillar], ...profile.sources.map((source) => `${PILLAR_PATH[source.branchPosition]}.dz`)]
   ));
@@ -218,8 +219,8 @@ export function analyzeExposures(bazi: Bazi): RuleResult<ExposureAnalysis> {
     `${profile.pillar}-${profile.stem}`,
     profile.exposedFromHidden ? 'support' : 'context',
     profile.exposedFromHidden
-      ? `${profile.pillar} 천간 ${profile.stem}은(는) ${profile.sources.map((source) => source.branchPosition).join('·')} 지지의 지장간과 일치해 투간 연결이 있다.`
-      : `${profile.pillar} 천간 ${profile.stem}과(와) 정확히 일치하는 지장간은 확인되지 않는다.`,
+      ? `${profile.pillar} 천간 ${withKoreanParticle(profile.stem, '은/는')} ${profile.sources.map((source) => source.branchPosition).join('·')} 지지의 지장간과 일치해 투간 연결이 있다.`
+      : `${profile.pillar} 천간 ${withKoreanParticle(profile.stem, '과/와')} 정확히 일치하는 지장간은 확인되지 않는다.`,
     profile.exposedFromHidden ? 0.75 : 0.45,
     [PILLAR_PATH[profile.pillar], ...profile.sources.map((source) => `${PILLAR_PATH[source.branchPosition]}.dz`)]
   ));

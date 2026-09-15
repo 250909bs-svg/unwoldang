@@ -368,7 +368,7 @@ function buildHiddenComboDetails(basis: DeterministicSajuBasis) {
 
       if (combo) {
         details.push(
-          `${visible.label}의 ${visible.stem} 천간이 ${hiddenHost.label} ${hiddenHost.branch} 지장간과 암합 흐름을 만듭니다. 겉으로 드러나기보다 내부 동기, 숨은 관계, 오래 쌓인 욕구로 작동하기 쉽습니다.`
+          `${visible.label}의 ${visible.stem} 천간이 ${hiddenHost.label} ${hiddenHost.branch} 지장간과 암합 흐름을 만듭니다. ${visible.label}과 ${hiddenHost.label} 사이에서는 겉으로 드러난 반응보다 내부 동기와 오래 쌓인 욕구를 함께 확인해야 합니다.`
         );
       }
     }
@@ -514,7 +514,8 @@ function describeDayunTenGodFlow(row: DeterministicSajuBasis['dayun'][number], b
   const stemGod = getTenGodByStem(basis.dayMaster.stem, stem);
   const hiddenStems = HIDDEN_STEMS_KO[branch] || [];
   const stemGodLabel = stemGod || '십성';
-  const stemText = `${STEM_HANJA[stem] || stem} ${stemGodLabel}${getSubjectParticle(stemGodLabel)} ${TEN_GOD_ROLE[stemGod] || '대운의 겉주제'}을 만듭니다`;
+  const stemRole = TEN_GOD_ROLE[stemGod] || '대운의 겉주제';
+  const stemText = `${STEM_HANJA[stem] || stem} ${stemGodLabel}${getSubjectParticle(stemGodLabel)} ${withKoreanParticle(stemRole, '을/를')} 만듭니다`;
   const hiddenText = hiddenStems
     .map((hiddenStem) => {
       const hiddenGod = getTenGodByStem(basis.dayMaster.stem, hiddenStem);
@@ -605,8 +606,12 @@ function getYearLuckSummary(
   const branchGod = mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '';
   const support = helpful.includes(stemElement) || helpful.includes(branchElement);
 
-  return `${item.year}년 ${ganzhiHanja}의 천간 ${stem}은 ${stemGod || '십성 미판정'}(${TEN_GOD_ROLE[stemGod] || '겉주제'}), ` +
-    `지지 ${branch}의 본기는 ${branchGod || '십성 미판정'}(${TEN_GOD_ROLE[branchGod] || '바탕주제'})로 작동합니다. ` +
+  const stemReading = stemGod || '십성 미판정';
+  const branchReading = branchGod || '십성 미판정';
+  const branchRole = TEN_GOD_ROLE[branchGod] || '바탕주제';
+
+  return `${item.year}년 ${ganzhiHanja}의 천간 ${withKoreanParticle(stem, '은/는')} ${stemReading}(${TEN_GOD_ROLE[stemGod] || '겉주제'}), ` +
+    `지지 ${branch}의 본기는 ${withKoreanParticle(`${branchReading}(${branchRole})`, '으로/로')} 작동합니다. ` +
     `${item.ganzhi} 세운의 ${stemElement}·${branchElement} 흐름은 ${support ? '현재 도움 오행과 연결되어 활용 여지가 커지지만' : '현재 균형축과 직접 맞지 않아 조건 점검이 더 필요하며'}, ` +
     `${item.ganzhi} 세운에서는 사건을 단정하기보다 실제 선택·관계·업무에서 두 주제가 반복되는지를 확인해야 합니다.`;
 }
@@ -642,7 +647,7 @@ function getYearLuckWarning(
   const mainHiddenStem = hidden[0];
   const branchGod = mainHiddenStem ? getTenGodByStem(basis.dayMaster.stem, mainHiddenStem) : '';
 
-  return `${item.ganzhi} 세운에서는 ${stemGod || '천간 주제'}와 ${branchGod || '지지 주제'}가 동시에 과열될 때 한 가지 신호만 보고 결론 내리지 마세요. ` +
+  return `${item.ganzhi} 세운에서는 ${withKoreanParticle(stemGod || '천간 주제', '과/와')} ${withKoreanParticle(branchGod || '지지 주제', '이/가')} 동시에 과열될 때 한 가지 신호만 보고 결론 내리지 마세요. ` +
     `${item.ganzhi} 세운의 주의 기준은 ${cautionGuidance} ${item.ganzhi} 세운의 계약·결제·이직·관계 정리는 비용·사람·마감·체력 조건을 따로 적어 비교해야 합니다.`;
 }
 
@@ -1462,7 +1467,7 @@ function buildPremiumQuestionAnalysis(
         : annualIsHelpful
           ? '도움축과 맞닿는 흐름이므로 준비한 제안과 결과물을 밖으로 꺼내되, 반응이 확인된 일에만 범위를 넓혀야 합니다.'
           : '도움과 부담이 한쪽으로 확정되지 않으므로, 실제 성과와 피로를 월별로 확인하며 범위를 조정해야 합니다.';
-      return `${customerLabel}이 묻는 것은 막연한 연운이 아니라 ${annual.year}년에 무엇을 먼저 하고 무엇을 멈춰야 하는지입니다. ${annual.year}년 세운은 ${annual.ganzhiHanja}(${annual.ganzhi})이며, ${basis.dayMaster.stem} 일간 기준 천간 ${annual.stem}은 ${annual.stemGod}, 지지 ${annual.branch}의 본기는 ${annual.branchGod}으로 읽습니다. 그래서 올해의 중요한 일은 성과·거래·책임을 눈에 보이는 숫자와 약속으로 남기는 것이고, 하지 말아야 할 일은 성과가 확인되기 전에 고정비와 책임 범위를 동시에 키우는 것입니다. ${balanceReading} 현재 ${currentDayunName} 대운과 겹쳐 보면 새 제안 자체를 피할 해는 아니지만, 수입보다 먼저 계약 범위·입금일·마감·회복 시간을 고정해야 남는 결과가 생깁니다. 사람 관계에서도 좋은 말보다 약속 이행을 보고, 일에서는 매출이나 칭찬보다 실제 이익·재구매·지속 가능한 업무량을 기준으로 판단하세요.`;
+      return `${customerLabel}이 묻는 것은 막연한 연운이 아니라 ${annual.year}년에 무엇을 먼저 하고 무엇을 멈춰야 하는지입니다. ${annual.year}년 세운은 ${annual.ganzhiHanja}(${annual.ganzhi})이며, ${basis.dayMaster.stem} 일간 기준 천간 ${withKoreanParticle(annual.stem, '은/는')} ${annual.stemGod}, 지지 ${annual.branch}의 본기는 ${withKoreanParticle(annual.branchGod, '으로/로')} 읽습니다. 그래서 올해의 중요한 일은 성과·거래·책임을 눈에 보이는 숫자와 약속으로 남기는 것이고, 하지 말아야 할 일은 성과가 확인되기 전에 고정비와 책임 범위를 동시에 키우는 것입니다. ${balanceReading} 현재 ${currentDayunName} 대운과 겹쳐 보면 새 제안 자체를 피할 해는 아니지만, 수입보다 먼저 계약 범위·입금일·마감·회복 시간을 고정해야 남는 결과가 생깁니다. 사람 관계에서도 좋은 말보다 약속 이행을 보고, 일에서는 매출이나 칭찬보다 실제 이익·재구매·지속 가능한 업무량을 기준으로 판단하세요.`;
     }
   }
   const options = extractQuestionOptions(answer.question);
@@ -1471,7 +1476,7 @@ function buildPremiumQuestionAnalysis(
     : `이번 질문은 “${intent}”에 관한 열린 질문이므로 선택지를 억지로 나누지 않고, 질문의 원래 의미를 유지한 채 실제 행동으로 확인해야 답이 선명합니다.`;
   const basisLine = isSecondQuestion
     ? `${customerLabel}의 명식은 ${basis.pillars.day} 일주를 중심으로 보고, ${basis.pillars.month} 월령과 ${currentDayunName} 대운을 겹쳐 판단합니다.`
-    : `${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다.`;
+    : `${customerLabel}의 원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour ? `${basis.pillars.hour}시` : '시주 미상'}로 잡히며, ${basis.dayMaster.stem} 일간의 판단 방식과 ${currentDayunName} 대운이 함께 작동합니다.`;
   const elementLine = isSecondQuestion
     ? `오행 체감은 ${fiveElementText}로 보되, 실제 판단은 월령과 대운에서 다시 힘을 받는 기운까지 함께 봐야 합니다. 지장간 포함 십성은 ${tenGodText} 순서로 올라옵니다.`
     : `오행은 ${fiveElementText}, 지장간 포함 십성 상위 흐름은 ${tenGodText}입니다.`;
@@ -2709,7 +2714,7 @@ function buildSections(
             },
             ...Object.entries(basis.shensha).map(([name, content]) => ({
               summary: name,
-              content: `${content}\n\n현실 적용: 이 기운은 크게 과시하기보다 사람을 만나는 방식, 소개와 평판, 중요한 제안이 들어오는 통로를 관리할 때 더 좋게 쓰입니다.`,
+              content: `${content}\n\n현실 적용: ${withKoreanParticle(name, '은/는')} 크게 과시하기보다 사람을 만나는 방식, 소개와 평판, 중요한 제안이 들어오는 통로를 관리할 때 더 좋게 쓰입니다.`,
               open: false
             }))
           ]
@@ -2742,7 +2747,7 @@ function buildYearlySummary(customerName: string, serviceLabel: string, basis: D
     title: `${serviceLabel} 핵심 요약`,
     analysis: [
       `${customerName}님의 핵심은 “더 많이 벌리는 것”이 아니라 들어온 기회와 관계를 내 구조로 남기는 데 있습니다. ${basis.dayMaster.stem} 일간은 기준이 분명할수록 강해지고, 기준이 흐리면 사람·돈·일정을 혼자 떠안는 쪽으로 피로가 쌓입니다.`,
-      `원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour || '시주 미상'}로 고정해 읽었습니다. 겉글자 십성은 ${visibleTenGodText}이며, 숫자 분포는 지장간 포함 기준으로 따로 봅니다.`,
+      `원국은 ${basis.pillars.year}년주, ${basis.pillars.month}월주, ${basis.pillars.day}일주, ${basis.pillars.hour ? `${basis.pillars.hour}시` : '시주 미상'}로 고정해 읽었습니다. 겉글자 십성은 ${visibleTenGodText}이며, 숫자 분포는 지장간 포함 기준으로 따로 봅니다.`,
       `현재 대운은 ${currentDayun.name} 흐름입니다. 지금은 감정적 확장보다 예산, 정산일, 책임 범위, 역할 분리, 회복 루틴을 먼저 고정할수록 돈과 관계가 안정됩니다.`,
       `명리적으로는 월령, 조후, 십성, 대운을 함께 봐야 합니다. ${cautionGuidance} 그래서 좋은 운을 기다리는 방식보다 실제 선택 기준을 좁히는 방식이 더 정확합니다.`
     ],
@@ -2921,7 +2926,7 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
       title: '월령·조후·용신 전문 판정',
       subtitle: '다섯 용신법을 독립 계산하고 찬반 근거를 삭제하지 않은 합의 결과',
       paragraphs: [
-        `${month.monthBranch}월의 사령 오행은 ${month.commandingElement}이며, 일간 ${month.dayMaster}은(는) ${month.obtainsCommand ? '득령' : month.receivesSeasonalSupport ? '계절 생조' : '계절 비득령'} 상태입니다.`,
+        `${month.monthBranch}월의 사령 오행은 ${month.commandingElement}이며, 일간 ${withKoreanParticle(month.dayMaster, '은/는')} ${month.obtainsCommand ? '득령' : month.receivesSeasonalSupport ? '계절 생조' : '계절 비득령'} 상태입니다.`,
         `지장간 계절 가중까지 반영한 상대세력은 ${shareText}입니다. 한난은 ${{ cold: '추운 편', balanced: '비교적 균형적인 편', hot: '더운 편' }[climate.temperature]}, 조습은 ${{ dry: '건조한 편', balanced: '비교적 균형적인 편', wet: '습한 편' }[climate.moisture]}으로 판정했습니다.`,
         `천간 ${roots.filter((item) => item.rooted).length}개가 통근하고, 투간 연결은 ${exposures.visibleStems.filter((item) => item.exposedFromHidden).length}개 천간에서 확인했습니다.`,
         consensus.value.summary

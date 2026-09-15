@@ -1,3 +1,4 @@
+import { withKoreanParticle } from '../../../koreanText';
 import { ELEM_ORDER, type FiveElement } from '../../constants';
 import { RULES, clamp, makeConfidence, makeEvidence, round } from './rules';
 import type {
@@ -10,6 +11,18 @@ import type {
   YongsinMethod,
   YongsinOpinion
 } from './types';
+
+const YONGSIN_METHOD_LABELS: Record<YongsinMethod, string> = {
+  eokbu: '억부',
+  johu: '조후',
+  tonggwan: '통관',
+  byeongyak: '병약',
+  special: '특수격'
+};
+
+function methodLabel(method: YongsinMethod) {
+  return YONGSIN_METHOD_LABELS[method];
+}
 
 function uniqueEvidence(items: Evidence[]): Evidence[] {
   return [...new Map(items.map((item) => [item.id, item])).values()];
@@ -82,7 +95,7 @@ function buildDirectConflicts(ranking: ConsensusElement[]): ConsensusConflict[] 
       type: 'direct-opposition',
       element: item.element,
       methods,
-      description: `${item.element}은(는) ${item.supporting.map((entry) => entry.method).join('·')} 관점의 후보인 동시에 ${item.opposing.map((entry) => entry.method).join('·')} 관점의 주의 요소다.`,
+      description: `${withKoreanParticle(item.element, '은/는')} ${item.supporting.map((entry) => methodLabel(entry.method)).join('·')} 관점의 후보인 동시에 ${item.opposing.map((entry) => methodLabel(entry.method)).join('·')} 관점의 주의 요소다.`,
       evidence: uniqueEvidence([
         ...item.supporting.flatMap((entry) => entry.evidence),
         ...item.opposing.flatMap((entry) => entry.evidence)
@@ -102,7 +115,7 @@ function buildPriorityDivergence(opinions: YongsinOpinion[]): ConsensusConflict[
     type: 'priority-divergence',
     element: null,
     methods: tops.map((item) => item.method),
-    description: `독립 용신법의 1순위가 ${tops.map((item) => `${item.method}:${item.candidate.element}`).join(', ')}로 갈린다. 이는 오류로 삭제하지 않고 판단 순서가 필요한 쟁점으로 남긴다.`,
+    description: `독립 용신법의 1순위가 ${tops.map((item) => `${methodLabel(item.method)}:${item.candidate.element}`).join(', ')}로 갈린다. 이는 오류로 삭제하지 않고 판단 순서가 필요한 쟁점으로 남긴다.`,
     evidence: uniqueEvidence(tops.flatMap((item) => [
       ...item.candidate.supportingEvidence,
       ...item.candidate.opposingEvidence

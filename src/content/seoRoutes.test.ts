@@ -27,6 +27,18 @@ const routeSeo = seoRouteData as Record<string, { indexable: boolean; serviceId?
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
 describe('retired detail page indexing', () => {
+  it('keeps the production home metadata focused on the only active product', () => {
+    const homeSeo = seoRouteData['/'];
+    const homeCopy = JSON.stringify(homeSeo);
+    const indexSource = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+    const structuredData = indexSource.match(/<script id="route-structured-data"[^>]*>([\s\S]*?)<\/script>/)?.[1] || '';
+
+    expect(homeCopy).toContain('종합사주');
+    expect(homeCopy).not.toMatch(/도깨비 전생사주|팩폭 연애운/);
+    expect(structuredData).toContain('https://www.unwoldang.com/detail/general-saju');
+    expect(structuredData).not.toMatch(/detail\/(?:past-life-goblin|love-reading)/);
+  });
+
   it('keeps only the general signature product detail page indexable', () => {
     const indexableDetailPaths = Object.entries(seoRouteData)
       .filter(([path, seo]) => path.startsWith('/detail/') && seo.indexable)

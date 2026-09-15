@@ -16,7 +16,6 @@ import {
   getRequiredString
 } from '../../http/validation.ts';
 import type { PaymentProvider } from './paymentProvider.ts';
-import type { PortOnePayment } from './portoneClient.ts';
 
 export type PaymentServiceConfig = {
   storeId: string;
@@ -157,32 +156,6 @@ function readLedgerTimestamp(record: PaymentLedgerRecord | null, field: string) 
 
 function getPaymentLedgerDocumentId(paymentId: string) {
   return createHash('sha256').update(`portone:${paymentId}`).digest('hex');
-}
-
-function getCustomData(payment: PortOnePayment) {
-  const rawCustomData = payment.customData;
-
-  if (rawCustomData && typeof rawCustomData === 'object' && !Array.isArray(rawCustomData)) {
-    return rawCustomData as Record<string, unknown>;
-  }
-
-  if (typeof rawCustomData === 'string' && rawCustomData.trim()) {
-    try {
-      const parsedCustomData = JSON.parse(rawCustomData) as unknown;
-
-      if (
-        parsedCustomData &&
-        typeof parsedCustomData === 'object' &&
-        !Array.isArray(parsedCustomData)
-      ) {
-        return parsedCustomData as Record<string, unknown>;
-      }
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
 }
 
 export class PaymentService {
