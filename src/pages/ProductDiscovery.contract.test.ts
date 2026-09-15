@@ -17,7 +17,7 @@ describe('product discovery source contract', () => {
     expect(menuSource).not.toContain('to={`/form/${service.id}`}');
   });
 
-  it('adds every active product module to the default Home and Search collections', () => {
+  it('derives local Home discovery and production Search collections from the registry', () => {
     expect(activeProducts.length).toBeGreaterThan(0);
 
     activeProducts.forEach((product) => {
@@ -30,7 +30,7 @@ describe('product discovery source contract', () => {
       expect(product.routes.detail).toBeTruthy();
     });
 
-    expect(homeSource).toContain('const homeProductCards = activeProducts.map((product) => ({');
+    expect(homeSource).toContain('const homeProductCards = discoverableProducts.map((product) => ({');
     expect(homeSource).toContain('...product.home');
     expect(homeSource).toContain('to: product.routes.detail');
     expect(searchSource).toContain(
