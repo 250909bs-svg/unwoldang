@@ -43,6 +43,11 @@ export class FirestoreRepository {
     return this.config.projectId;
   }
 
+  documentName(collection: string, documentId: string) {
+    const projectId = this.assertEnabled();
+    return `projects/${projectId}/databases/${this.config.databaseId}/documents/${collection}/${documentId}`;
+  }
+
   private async getAccessToken() {
     if (this.config.accessToken) {
       return this.config.accessToken;
@@ -100,13 +105,21 @@ export class FirestoreRepository {
       }
     });
     const payload = (await response.json().catch(() => null)) as
-      | (T & { error?: { message?: string }; message?: string })
+      | (T & { error?: { message?: string; status?: string }; message?: string })
       | null;
 
     if (!response.ok) {
       const message =
         payload?.error?.message || payload?.message || 'Firestore request failed.';
-      throw new ReportRequestError(response.status || 502, message);
+      const firestoreStatus = payload?.error?.status;
+      const normalizedStatus = firestoreStatus === 'FAILED_PRECONDITION'
+        ? 412
+        : firestoreStatus === 'ALREADY_EXISTS'
+          ? 409
+          : response.status === 400 && firestoreStatus
+            ? 502
+            : response.status || 502;
+      throw new ReportRequestError(normalizedStatus, message);
     }
 
     return payload as T;

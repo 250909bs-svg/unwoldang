@@ -7,10 +7,12 @@ import {
   canPurchaseProduct,
   canReadHistoricalReport,
   canStartProduct,
+  discoverableProducts,
   getProductById,
   getProductByRoute,
   getProductIdByRoute,
   isProductActive,
+  isLocalPreviewProduct,
   productRegistry
 } from './registry';
 import { productIds, productStatuses } from './types';
@@ -51,11 +53,23 @@ describe('product registry contract', () => {
 
     archivedIds.forEach((id) => {
       expect(isProductActive(id)).toBe(false);
-      expect(canDiscoverProduct(id)).toBe(false);
-      expect(canStartProduct(id)).toBe(false);
+      expect(canDiscoverProduct(id)).toBe(id === 'love-reading');
+      expect(canStartProduct(id)).toBe(id === 'love-reading');
       expect(canPurchaseProduct(id)).toBe(false);
       expect(canIndexProduct(id)).toBe(false);
     });
+  });
+
+  it('exposes only love-reading as a local preview without making it purchasable or indexable', () => {
+    expect(import.meta.env.DEV).toBe(true);
+    expect(isLocalPreviewProduct('love-reading')).toBe(true);
+    expect(discoverableProducts.map((product) => product.id)).toEqual([
+      'general-signature',
+      'love-reading'
+    ]);
+    expect(canPurchaseProduct('love-reading')).toBe(false);
+    expect(canIndexProduct('love-reading')).toBe(false);
+    expect(isLocalPreviewProduct('past-life-goblin')).toBe(false);
   });
 
   it('keeps historical report reads for archived products without accepting unknown IDs', () => {

@@ -13,11 +13,8 @@ export function createCorsMiddleware(config: AppConfig) {
       return;
     }
 
-    if (
-      (!config.allowedOrigins.length && isLocalDevelopmentOrigin(origin)) ||
-      config.allowedOrigins.includes(origin) ||
-      isLocalDevelopmentOrigin(origin)
-    ) {
+    if (config.allowedOrigins.includes(origin) ||
+      (!config.production && isLocalDevelopmentOrigin(origin))) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     }
 

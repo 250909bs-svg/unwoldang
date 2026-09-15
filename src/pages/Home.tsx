@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
 import { readStoredAuthUser } from '../lib/auth';
-import { activeProducts, canDiscoverProduct, getProductById } from '../products/registry';
+import { canDiscoverProduct, discoverableProducts, getProductById } from '../products/registry';
 import type { ProductId } from '../products/types';
 
 const illustrationDeck = {
@@ -144,7 +144,7 @@ const discoverableCardNewsSlides = cardNewsSlides
   }));
 
 type HomeCategoryId = (typeof homeCategoryTabs)[number]['id'];
-const homeProductCards = activeProducts.map((product) => ({
+const homeProductCards = discoverableProducts.map((product) => ({
   id: product.id,
   ...product.home,
   to: product.routes.detail

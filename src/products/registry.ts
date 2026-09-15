@@ -81,6 +81,8 @@ export const activeProducts = Object.freeze(
   productIds.map((id) => productRegistry[id]).filter((product) => product.status === 'active')
 );
 
+const localPreviewProductIds = new Set<ProductId>(['love-reading']);
+
 export function getProductById(id: ProductId): ProductDefinition;
 export function getProductById(id?: string): ProductDefinition | undefined;
 export function getProductById(id?: string): ProductDefinition | undefined {
@@ -93,12 +95,21 @@ export function isProductActive(id?: string): id is ProductId {
   return getProductById(id)?.status === 'active';
 }
 
+export function isLocalPreviewProduct(id?: string): id is ProductId {
+  return Boolean(
+    import.meta.env.DEV &&
+      id &&
+      Object.prototype.hasOwnProperty.call(productRegistry, id) &&
+      localPreviewProductIds.has(id as ProductId)
+  );
+}
+
 export function canDiscoverProduct(id?: string): boolean {
-  return isProductActive(id);
+  return isProductActive(id) || isLocalPreviewProduct(id);
 }
 
 export function canStartProduct(id?: string): boolean {
-  return isProductActive(id);
+  return isProductActive(id) || isLocalPreviewProduct(id);
 }
 
 export function canPurchaseProduct(id?: string): boolean {
@@ -113,6 +124,10 @@ export function canReadHistoricalReport(id?: string): boolean {
   const product = getProductById(id);
   return product?.status === 'active' || product?.status === 'archived';
 }
+
+export const discoverableProducts = Object.freeze(
+  productIds.map((id) => productRegistry[id]).filter((product) => canDiscoverProduct(product.id))
+);
 
 function normalizeRoute(pathname: string): string {
   const [path] = pathname.split(/[?#]/, 1);

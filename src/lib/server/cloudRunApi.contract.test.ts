@@ -30,7 +30,12 @@ const EXPECTED_PUBLIC_ROUTES = [
   'GET /api/archive/reports',
   'POST /api/archive/reports',
   'POST /api/admin/login',
-  'GET /api/admin/reports'
+  'GET /api/admin/reports',
+  'POST /api/guiyeondo/invites',
+  'GET /api/guiyeondo/invites/:publicId',
+  'POST /api/guiyeondo/invites/:publicId/responses',
+  'GET /api/guiyeondo/invites/:publicId/responses',
+  'POST /api/guiyeondo/invites/:publicId/revoke'
 ] as const;
 
 const productionConfig = loadConfig({
