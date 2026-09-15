@@ -2706,21 +2706,37 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   margin-top: 12px;
 }
 
 .home-cardnews-dot {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  background: transparent;
+}
+
+.home-cardnews-dot::before {
   width: 8px;
   height: 8px;
   border-radius: 999px;
   background: #d4d8de;
+  content: '';
   transition: width 0.22s ease, background 0.22s ease;
 }
 
-.home-cardnews-dot.active {
+.home-cardnews-dot.active::before {
   width: 22px;
   background: #111827;
+}
+
+.home-cardnews-dot:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -4px;
 }
 
 .home-block {
@@ -16322,11 +16338,11 @@ body.home-all-black .home-cardnews-card {
   box-shadow: 0 20px 44px rgba(0, 0, 0, 0.42);
 }
 
-body.home-all-black .home-cardnews-dot {
+body.home-all-black .home-cardnews-dot::before {
   background: #3f3f46;
 }
 
-body.home-all-black .home-cardnews-dot.active {
+body.home-all-black .home-cardnews-dot.active::before {
   background: #fafafa;
 }
 
@@ -16845,8 +16861,8 @@ body.home-all-black .app-header-actions {
 }
 
 body.home-all-black .app-home-header .app-menu-button {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -16865,7 +16881,7 @@ body.home-all-black .app-home-header .app-menu-button svg {
 }
 
 .home-category-nav {
-  height: 50px;
+  height: 54px;
   margin: 0 -8px;
   padding: 4px 0 6px 16px;
   overflow: hidden;
@@ -16875,7 +16891,7 @@ body.home-all-black .app-home-header .app-menu-button svg {
 .home-category-rail {
   display: flex;
   width: 100%;
-  height: 40px;
+  height: 44px;
   gap: 4px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -16894,7 +16910,7 @@ body.home-all-black .app-home-header .app-menu-button svg {
 .home-category-tab {
   flex: 0 0 63px;
   width: 63px;
-  height: 40px;
+  height: 44px;
   padding: 0;
   border: 1px solid transparent;
   border-radius: 24px;
@@ -16960,7 +16976,7 @@ body.home-all-black .primary-topbar {
 }
 
 .primary-topbar .mobile-topbar-right {
-  min-width: 36px;
+  min-width: 44px;
 }
 
 .primary-topbar .primary-topbar-menu,
@@ -16968,8 +16984,8 @@ body.home-all-black .primary-topbar .primary-topbar-menu {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 0;
   border-radius: 0;
