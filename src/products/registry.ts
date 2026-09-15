@@ -81,7 +81,24 @@ export const activeProducts = Object.freeze(
   productIds.map((id) => productRegistry[id]).filter((product) => product.status === 'active')
 );
 
-const localPreviewProductIds = new Set<ProductId>(['love-reading']);
+const localPreviewProductIds = new Set<ProductId>(['love-reading', 'love-reunion']);
+
+type LocalPreviewRuntime = {
+  isDevelopment: boolean;
+  hostname?: string;
+};
+
+export function isLoopbackPreviewHostname(hostname?: string) {
+  const normalized = hostname?.trim().toLowerCase().replace(/^\[|\]$/g, '');
+  return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1';
+}
+
+export function isLocalPreviewRuntime(runtime: LocalPreviewRuntime = {
+  isDevelopment: import.meta.env.DEV,
+  hostname: typeof window === 'undefined' ? undefined : window.location.hostname
+}) {
+  return runtime.isDevelopment || isLoopbackPreviewHostname(runtime.hostname);
+}
 
 export function getProductById(id: ProductId): ProductDefinition;
 export function getProductById(id?: string): ProductDefinition | undefined;
@@ -97,7 +114,7 @@ export function isProductActive(id?: string): id is ProductId {
 
 export function isLocalPreviewProduct(id?: string): id is ProductId {
   return Boolean(
-    import.meta.env.DEV &&
+    isLocalPreviewRuntime() &&
       id &&
       Object.prototype.hasOwnProperty.call(productRegistry, id) &&
       localPreviewProductIds.has(id as ProductId)

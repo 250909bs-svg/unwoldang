@@ -56,8 +56,8 @@ function expectRouteWiring(path: string, ...tokens: string[]) {
 }
 
 describe('active product flow contract', () => {
-  it('keeps general signature as the only active product flow', () => {
-    expect(activeProducts.map((product) => product.id)).toEqual(['general-signature']);
+  it('keeps every active product flow fully wired', () => {
+    expect(activeProducts.map((product) => product.id)).toEqual(['general-signature', 'love-reunion']);
 
     activeProducts.forEach((product) => {
       expect([
@@ -90,11 +90,21 @@ describe('active product flow contract', () => {
       'ProductRouteBoundary productId="love-reading"',
       '<LoveReadingEntry />'
     );
+    expectRouteWiring(
+      '/detail/love-reunion',
+      'ProductRouteBoundary productId="love-reunion"',
+      '<ReunionLanding />'
+    );
     expectRouteWiring('/detail/:id', '<GenericProductDetail />');
     expectRouteWiring(
       '/form/love-reading',
       'ProductRouteBoundary productId="love-reading"',
       '<LoveReadingIntake />'
+    );
+    expectRouteWiring(
+      '/form/love-reunion',
+      'ProductRouteBoundary productId="love-reunion"',
+      '<ReunionIntake />'
     );
     expectRouteWiring('/form/:id', '<ProductIntakeRouteBoundary>', '<Form />');
   });

@@ -25,11 +25,12 @@ describe('product catalog compatibility', () => {
     });
   });
 
-  it('keeps general signature as the only active sale contract', () => {
+  it('keeps active sale contracts aligned with their launch prices', () => {
     expect(
       activeProducts.map(({ id, displayName, price }) => ({ id, displayName, price }))
     ).toEqual([
       { id: 'general-signature', displayName: '정통 종합사주', price: 990 },
+      { id: 'love-reunion', displayName: '운월당 재회운', price: 990 },
     ]);
   });
 });

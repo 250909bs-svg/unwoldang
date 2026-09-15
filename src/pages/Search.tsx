@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
 import MobileTopBar from '../components/MobileTopBar';
-import { activeProducts, canDiscoverProduct } from '../products/registry';
+import { canDiscoverProduct, discoverableProducts } from '../products/registry';
 import type { ProductId } from '../products/types';
 
 type SearchProduct = {
@@ -14,17 +14,18 @@ type SearchProduct = {
   keywords: readonly string[];
 };
 
-const searchProducts: SearchProduct[] = activeProducts.map((product) => ({
+const searchProducts: SearchProduct[] = discoverableProducts.map((product) => ({
   id: product.id,
   ...product.search,
   to: product.routes.detail
 }));
-const livePopularIds = ['past-life-goblin', 'concern-reading', 'love-reading', 'general-signature', 'match-couple'] as const;
+const livePopularIds = ['general-signature', 'love-reading', 'love-reunion', 'past-life-goblin', 'concern-reading'] as const;
 const recommendedKeywords = [
   { label: '전생', productId: 'past-life-goblin' },
   { label: '재물', productId: 'money-reading' },
   { label: '연애', productId: 'love-reading' },
   { label: '궁합', productId: 'match-couple' },
+  { label: '재회', productId: 'love-reunion' },
   { label: '고민', productId: 'concern-reading' }
 ] as const;
 const discoverableRecommendedKeywords = recommendedKeywords.filter((keyword) =>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { findServiceById, type IntakeFormData, type ServiceId } from '../api/mockData';
 import MobileTopBar from '../components/MobileTopBar';
+import ReunionLoadingScene from '../features/reunion/ReunionLoadingScene';
 import { useAuth } from '../context/AuthContext';
 import { readPendingPayment, renewPaymentEntitlement, savePendingPayment } from '../lib/auth';
 import { getAiReportEndpoint, requestAiReport, type AiReportProvider } from '../lib/aiReport';
@@ -11,6 +12,7 @@ import {
   normalizeIntakeFormData
 } from '../lib/intakeDataContract';
 import { getPaymentMode, getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
+import { validateReunionContext, type ReunionContext } from '../lib/reunion';
 import { buildSajuReport } from '../lib/saju/reportBuilder';
 import type { SajuReportData } from '../lib/saju/report';
 import { getProductById } from '../products/registry';
@@ -25,6 +27,7 @@ type LoadingLocationState = {
   reportAccessToken?: string;
   reportData?: SajuReportData;
   reportProvider?: AiReportProvider;
+  reunionContext?: ReunionContext;
 };
 
 const LOADING_FALLBACK_TIMEOUT_MS = 100000;
@@ -51,11 +54,16 @@ export default function Loading() {
   const isMissingProduct = !requestedProductDefinition;
   const rawFormData = locationState?.formData || recoveredPayment?.formData;
   const formData = useMemo(() => normalizeIntakeFormData(rawFormData), [rawFormData]);
+  const reunionContext = locationState?.reunionContext || formData.reunionContext;
   const intakeValidation = useMemo(
     () => validateIntakeBirthInputs(formData, { requirePartner: productDefinition.flow.requiresPartnerBirth }),
     [formData, productDefinition.flow.requiresPartnerBirth]
   );
-  const inputRecoveryRequired = !intakeValidation.self.valid;
+  const reunionContextValidation = useMemo(
+    () => productDefinition.id === 'love-reunion' ? validateReunionContext(reunionContext) : { valid: true, errors: [] },
+    [productDefinition.id, reunionContext]
+  );
+  const inputRecoveryRequired = !intakeValidation.valid || !reunionContextValidation.valid;
   const paymentMethod = locationState?.paymentMethod || recoveredPayment?.paymentMethod;
   const orderId = locationState?.orderId || recoveredPayment?.orderId;
   const tabOrigin = locationState?.tabOrigin || recoveredPayment?.tabOrigin;
@@ -63,6 +71,7 @@ export default function Loading() {
   const service = findServiceById(productDefinition.id);
   const isPastLifeProduct = productDefinition.flow.intakeVariant === 'past-life';
   const isGeneralSignatureProduct = productDefinition.id === 'general-signature';
+  const isReunionProduct = productDefinition.id === 'love-reunion';
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [reportData, setReportData] = useState<SajuReportData | null>(locationState?.reportData || null);
@@ -108,7 +117,14 @@ export default function Loading() {
             '현생에 남은 반복 장면을 읽고 있습니다.',
             '마지막 봉인을 풀고 있습니다.'
           ]
-        : isGeneralSignatureProduct
+        : isReunionProduct
+          ? [
+              '두 사람의 명식을 각각 확인하고 있어요.',
+              '사주 근거와 입력한 관계 상황을 나누어 정리하고 있어요.',
+              '연락해도 되는 조건과 멈춰야 할 신호를 점검하고 있어요.',
+              '과장된 단정이 없는지 마지막으로 확인하고 있어요.'
+            ]
+          : isGeneralSignatureProduct
         ? [
             `${previewReport?.customerName || '고객'}님의 사주 원국을 정밀하게 세우고 있습니다.`,
             '태어난 계절과 오행의 흐름을 차분히 살피고 있습니다.',
@@ -128,7 +144,7 @@ export default function Loading() {
             '질문 2개와 사주 입력값을 묶어서 결과 구조를 정리하고 있습니다.',
             '분석이 거의 완료되었습니다. 결과 화면으로 이동합니다.'
           ],
-    [canRequestAiReport, isGeneralSignatureProduct, isPastLifeProduct, previewReport?.customerName, service.advisor]
+    [canRequestAiReport, isGeneralSignatureProduct, isPastLifeProduct, isReunionProduct, previewReport?.customerName, service.advisor]
   );
 
   useEffect(() => {
@@ -149,13 +165,15 @@ export default function Loading() {
         return;
       }
 
-      if (!intakeValidation.valid) {
+      if (!intakeValidation.valid || !reunionContextValidation.valid) {
         if (import.meta.env.DEV) {
           console.warn('[report-flow] invalid intake', getIntakeFlowDiagnostics(formData));
         }
         setAnalysisFailed(true);
         setAnalysisNotice(
+          reunionContextValidation.errors[0]?.message ||
           intakeValidation.self.errors[0]?.message ||
+          intakeValidation.partner?.errors[0]?.message ||
           '출생정보를 불러오지 못했습니다. 입력 정보를 다시 확인해 주세요.'
         );
         setAnalysisFinished(true);
@@ -239,7 +257,7 @@ export default function Loading() {
     }
 
     void generationRunRef.current.promise;
-  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, isMissingLiveReportAccess, isMissingProduct, locationState?.reportData, orderId, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, service.id, user?.authToken]);
+  }, [analysisFinished, canRequestAiReport, confirmEndpoint, formData, intakeValidation, isMissingLiveReportAccess, isMissingProduct, locationState?.reportData, orderId, product, recoveredPayment, reportAccessToken, requiresVerifiedPayment, reunionContextValidation, service.id, user?.authToken]);
 
   useEffect(() => {
     if (analysisFinished) {
@@ -297,7 +315,8 @@ export default function Loading() {
           state: {
             product,
             formData,
-            tabOrigin
+            tabOrigin,
+            reunionContext
           }
         });
         return;
@@ -309,6 +328,7 @@ export default function Loading() {
           ...locationState,
           product,
           formData,
+          reunionContext,
           paymentMethod,
           orderId,
           tabOrigin,
@@ -322,7 +342,24 @@ export default function Loading() {
     return () => {
       window.clearTimeout(moveTimer);
     };
-  }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, reportProvider, service.id, tabOrigin]);
+  }, [analysisFailed, analysisFinished, formData, isMissingLiveReportAccess, locationState, navigate, orderId, paymentMethod, product, progress, reportAccessToken, reportData, reportProvider, reunionContext, service.id, tabOrigin]);
+
+  if (isReunionProduct) {
+    return (
+      <main className="reunion-page reunion-loading-page">
+        <ReunionLoadingScene
+          progress={progress}
+          message={messages[messageIndex]}
+          error={analysisFailed ? analysisNotice : null}
+          onRetry={analysisFailed
+            ? () => inputRecoveryRequired
+              ? navigate(productDefinition.routes.intake, { state: { formData, reunionContext, tabOrigin } })
+              : window.location.reload()
+            : undefined}
+        />
+      </main>
+    );
+  }
 
   return (
     <main
@@ -427,7 +464,7 @@ export default function Loading() {
                   onClick={() => isMissingProduct
                     ? navigate('/')
                     : inputRecoveryRequired
-                      ? navigate(productDefinition.routes.intake, { state: { formData, tabOrigin } })
+                      ? navigate(productDefinition.routes.intake, { state: { formData, reunionContext, tabOrigin } })
                       : window.location.reload()}
                 >
                   {isMissingProduct ? '상품 다시 선택' : inputRecoveryRequired ? '출생정보 다시 확인' : 'AI 분석 다시 시도'}

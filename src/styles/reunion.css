@@ -1,0 +1,1924 @@
+.reunion-page {
+  --reunion-ink: #23171b;
+  --reunion-muted: #79686e;
+  --reunion-wine: #711f38;
+  --reunion-wine-dark: #431322;
+  --reunion-rose: #b96379;
+  --reunion-blush: #f5e5e4;
+  --reunion-cream: #fffaf4;
+  --reunion-paper: #fffdf9;
+  --reunion-line: rgba(101, 55, 67, 0.16);
+  --reunion-safe: #35634d;
+  min-height: 100svh;
+  color: var(--reunion-ink);
+  background: var(--reunion-cream);
+  font-family: var(--font-body);
+  overflow: clip;
+}
+
+.reunion-page *,
+.reunion-page *::before,
+.reunion-page *::after {
+  box-sizing: border-box;
+}
+
+.reunion-page button,
+.reunion-page a,
+.reunion-page input,
+.reunion-page textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reunion-page button:focus-visible,
+.reunion-page a:focus-visible,
+.reunion-page input:focus-visible,
+.reunion-page textarea:focus-visible,
+.reunion-page summary:focus-visible {
+  outline: 3px solid rgba(177, 82, 108, 0.42);
+  outline-offset: 3px;
+}
+
+.reunion-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reunion-topbar,
+.reunion-intake-header {
+  display: flex;
+  position: relative;
+  z-index: 20;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 60px;
+  padding: max(8px, env(safe-area-inset-top)) 18px 8px;
+  background: rgba(255, 250, 244, 0.94);
+  border-bottom: 1px solid var(--reunion-line);
+  backdrop-filter: blur(14px);
+}
+
+.reunion-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+.reunion-wordmark > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  color: #fff8f2;
+  background: var(--reunion-wine-dark);
+  border-radius: 50%;
+  place-items: center;
+  font-family: serif;
+}
+
+.reunion-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--reunion-wine);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.reunion-hero {
+  position: relative;
+  min-height: min(780px, calc(100svh - 60px));
+  color: #fffaf7;
+  background: #3a1721;
+}
+
+.reunion-hero-picture,
+.reunion-hero-picture img,
+.reunion-preview-picture,
+.reunion-preview-picture img,
+.reunion-report-hero-picture,
+.reunion-report-hero-picture img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.reunion-hero-picture img,
+.reunion-preview-picture img,
+.reunion-report-hero-picture img {
+  object-fit: cover;
+  object-position: center 32%;
+}
+
+.reunion-hero-shade,
+.reunion-preview-shade,
+.reunion-report-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(28, 12, 17, 0.06) 24%, rgba(28, 12, 17, 0.46) 57%, rgba(28, 12, 17, 0.96) 100%);
+}
+
+.reunion-hero-copy {
+  display: flex;
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 40px 20px max(34px, env(safe-area-inset-bottom));
+}
+
+.reunion-eyebrow,
+.reunion-section-heading > span,
+.reunion-intake-heading > span,
+.reunion-report-heading > span,
+.reunion-sustain-copy > span {
+  margin: 0 0 13px;
+  color: var(--reunion-rose);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.reunion-hero-copy .reunion-eyebrow {
+  color: #f1bdc8;
+}
+
+.reunion-hero h1 {
+  max-width: 640px;
+  margin: 0;
+  font-family: Georgia, 'Noto Serif KR', serif;
+  font-size: clamp(2.15rem, 10vw, 4.7rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.reunion-hero-copy > p:not(.reunion-eyebrow) {
+  max-width: 560px;
+  margin: 18px 0 24px;
+  color: rgba(255, 248, 245, 0.84);
+  font-size: 15px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.reunion-primary-cta,
+.reunion-primary-button,
+.reunion-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.reunion-primary-cta {
+  justify-content: space-between;
+  width: 100%;
+  max-width: 430px;
+  padding: 10px 17px;
+  color: #fffaf7;
+  background: var(--reunion-wine);
+  box-shadow: 0 15px 34px rgba(39, 8, 18, 0.34);
+}
+
+.reunion-primary-cta > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.reunion-primary-cta small {
+  color: rgba(255, 244, 241, 0.74);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.reunion-primary-cta strong {
+  overflow-wrap: anywhere;
+  font-size: 15px;
+}
+
+.reunion-hero-note {
+  display: block;
+  align-self: center;
+  width: 100%;
+  max-width: 430px;
+  margin-top: 11px;
+  color: rgba(255, 248, 245, 0.62);
+  font-size: 11px;
+  text-align: center;
+}
+
+.reunion-section {
+  width: min(1080px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 76px 0;
+}
+
+.reunion-section-heading h2,
+.reunion-path-copy h2,
+.reunion-final-cta h2,
+.reunion-intake-heading h1,
+.reunion-report-heading h2,
+.reunion-sustain-copy h2 {
+  margin: 0;
+  color: var(--reunion-ink);
+  font-family: Georgia, 'Noto Serif KR', serif;
+  font-size: clamp(1.75rem, 7vw, 3rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+
+.reunion-section-heading > p,
+.reunion-path-copy > p,
+.reunion-intake-heading > p,
+.reunion-report-heading > p {
+  margin: 17px 0 0;
+  color: var(--reunion-muted);
+  font-size: 14px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.reunion-section-heading.is-centered {
+  text-align: center;
+}
+
+.reunion-editorial-picture {
+  display: block;
+  width: 100%;
+  margin-top: 32px;
+  overflow: hidden;
+  background: #ead9d4;
+  border-radius: 26px;
+  box-shadow: 0 22px 60px rgba(67, 19, 34, 0.12);
+}
+
+.reunion-editorial-picture img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.reunion-contents {
+  border-top: 1px solid var(--reunion-line);
+}
+
+.reunion-report-list {
+  display: grid;
+  gap: 0;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--reunion-line);
+}
+
+.reunion-report-list li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 8px;
+  min-height: 70px;
+  border-bottom: 1px solid var(--reunion-line);
+}
+
+.reunion-report-list li > span {
+  color: var(--reunion-rose);
+  font-family: Georgia, serif;
+  font-size: 13px;
+}
+
+.reunion-report-list li > strong {
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.reunion-report-list li svg {
+  color: var(--reunion-safe);
+}
+
+.reunion-standards {
+  width: 100%;
+  padding-right: 18px;
+  padding-left: 18px;
+  background: #f1e3df;
+}
+
+.reunion-standards > * {
+  max-width: 1080px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.reunion-standard-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.reunion-standard-grid article {
+  padding: 24px 21px;
+  background: rgba(255, 253, 249, 0.76);
+  border: 1px solid rgba(113, 31, 56, 0.1);
+  border-radius: 19px;
+}
+
+.reunion-standard-grid svg {
+  color: var(--reunion-wine);
+}
+
+.reunion-standard-grid h3 {
+  margin: 15px 0 8px;
+  font-size: 16px;
+}
+
+.reunion-standard-grid p {
+  margin: 0;
+  color: var(--reunion-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.reunion-two-paths {
+  display: grid;
+  gap: 32px;
+}
+
+.reunion-path-visuals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.reunion-path-picture {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 120px 120px 18px 18px;
+}
+
+.reunion-path-picture:nth-child(2) {
+  margin-top: 38px;
+}
+
+.reunion-path-picture img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 5;
+  object-fit: cover;
+}
+
+.reunion-path-copy > svg {
+  margin-bottom: 18px;
+  color: var(--reunion-wine);
+}
+
+.reunion-safety-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 24px;
+  padding: 16px;
+  color: #4d363d;
+  background: #f5e8e3;
+  border-radius: 15px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.reunion-safety-note svg {
+  flex: 0 0 auto;
+  color: var(--reunion-wine);
+}
+
+.reunion-final-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 74px 20px calc(88px + env(safe-area-inset-bottom));
+  color: #fff7f3;
+  background: var(--reunion-wine-dark);
+  text-align: center;
+}
+
+.reunion-final-cta > span {
+  margin-bottom: 9px;
+  color: #d9a9b5;
+  font-size: 12px;
+}
+
+.reunion-final-cta h2 {
+  color: #fff8f4;
+}
+
+.reunion-final-cta .reunion-primary-cta {
+  margin-top: 28px;
+  color: var(--reunion-wine-dark);
+  background: #fff9f3;
+}
+
+.reunion-final-cta .reunion-primary-cta small {
+  color: #906c76;
+}
+
+.reunion-final-cta > p {
+  max-width: 550px;
+  margin: 17px 0 0;
+  color: rgba(255, 247, 243, 0.62);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* Intake */
+.reunion-intake-page {
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  background: #f7efea;
+}
+
+.reunion-intake-header {
+  position: sticky;
+  top: 0;
+}
+
+.reunion-intake-header > button,
+.reunion-intake-header > span {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--reunion-ink);
+  background: transparent;
+  place-items: center;
+}
+
+.reunion-intake-header > strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reunion-progress {
+  display: grid;
+  gap: 7px;
+  width: min(680px, calc(100% - 36px));
+  margin: 18px auto 0;
+}
+
+.reunion-progress > span {
+  color: var(--reunion-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.reunion-progress progress,
+.reunion-loading-meter progress {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  appearance: none;
+  background: #dfd2d0;
+  border: 0;
+  border-radius: 99px;
+}
+
+.reunion-progress progress::-webkit-progress-bar,
+.reunion-loading-meter progress::-webkit-progress-bar {
+  background: #dfd2d0;
+}
+
+.reunion-progress progress::-webkit-progress-value,
+.reunion-loading-meter progress::-webkit-progress-value {
+  background: var(--reunion-wine);
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+.reunion-progress progress::-moz-progress-bar,
+.reunion-loading-meter progress::-moz-progress-bar {
+  background: var(--reunion-wine);
+  border-radius: 99px;
+}
+
+.reunion-intake-card {
+  width: min(680px, calc(100% - 28px));
+  margin: 20px auto;
+  padding: 26px 18px 32px;
+  background: var(--reunion-paper);
+  border: 1px solid var(--reunion-line);
+  border-radius: 22px;
+  box-shadow: 0 16px 50px rgba(67, 19, 34, 0.06);
+}
+
+.reunion-intake-heading {
+  margin-bottom: 29px;
+}
+
+.reunion-intake-heading h1 {
+  font-size: clamp(1.65rem, 7.3vw, 2.45rem);
+}
+
+.reunion-person-fields,
+.reunion-choice-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.reunion-person-fields,
+.reunion-context-fields,
+.reunion-question-fields {
+  display: grid;
+  gap: 23px;
+}
+
+.reunion-field {
+  display: grid;
+  position: relative;
+  gap: 9px;
+  min-width: 0;
+  color: var(--reunion-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reunion-field > span,
+.reunion-choice-field > legend {
+  color: var(--reunion-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reunion-field > span small {
+  color: var(--reunion-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.reunion-field input,
+.reunion-field textarea {
+  min-width: 0;
+  min-height: 50px;
+  padding: 13px 14px;
+  color: var(--reunion-ink);
+  background: #fff;
+  border: 1px solid #ddcfcc;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.reunion-field textarea {
+  min-height: 104px;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.reunion-field input:focus,
+.reunion-field textarea:focus {
+  border-color: var(--reunion-rose);
+  box-shadow: 0 0 0 3px rgba(185, 99, 121, 0.12);
+  outline: none;
+}
+
+.reunion-field input:disabled {
+  color: var(--reunion-muted);
+  background: #eee8e4;
+}
+
+.reunion-birth-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.reunion-choice-field > legend {
+  margin-bottom: 10px;
+}
+
+.reunion-segmented {
+  display: grid;
+  gap: 8px;
+}
+
+.reunion-segmented.is-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reunion-segmented label,
+.reunion-option-list label {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 12px;
+  color: var(--reunion-muted);
+  background: #fff;
+  border: 1px solid #ded2cf;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.reunion-segmented label.is-selected,
+.reunion-option-list label.is-selected {
+  color: var(--reunion-wine);
+  background: #fbefef;
+  border-color: var(--reunion-rose);
+}
+
+.reunion-segmented input,
+.reunion-option-list input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reunion-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 15px;
+  color: var(--reunion-ink);
+  background: #f8f1ed;
+  border-radius: 13px;
+  cursor: pointer;
+}
+
+.reunion-checkbox input {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--reunion-wine);
+}
+
+.reunion-checkbox > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reunion-checkbox strong {
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.reunion-checkbox small {
+  color: var(--reunion-muted);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.reunion-checkbox.is-compact {
+  margin-top: 9px;
+  padding: 10px 12px;
+}
+
+.reunion-option-list {
+  display: grid;
+  gap: 8px;
+}
+
+.reunion-option-list label {
+  justify-content: space-between;
+  padding-right: 14px;
+  padding-left: 15px;
+  text-align: left;
+}
+
+.reunion-option-list label svg {
+  flex: 0 0 auto;
+  opacity: 0;
+}
+
+.reunion-option-list label.is-selected svg {
+  opacity: 1;
+}
+
+.reunion-option-list.is-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reunion-option-list.is-compact label:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.reunion-privacy-note {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  color: #4b6156;
+  background: #edf3ee;
+  border-radius: 12px;
+}
+
+.reunion-privacy-note svg {
+  flex: 0 0 auto;
+}
+
+.reunion-privacy-note p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.reunion-character-count {
+  color: var(--reunion-muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.reunion-inline-error {
+  min-height: 20px;
+  margin: 16px 0 -15px;
+  color: #a2283e;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.reunion-intake-actions {
+  display: grid;
+  position: fixed;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  grid-template-columns: minmax(92px, 0.36fr) minmax(0, 1fr);
+  gap: 9px;
+  padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+  background: rgba(255, 250, 244, 0.95);
+  border-top: 1px solid var(--reunion-line);
+  backdrop-filter: blur(14px);
+}
+
+.reunion-primary-button,
+.reunion-secondary-button {
+  min-width: 0;
+  padding: 0 16px;
+}
+
+.reunion-primary-button {
+  gap: 7px;
+  color: #fff;
+  background: var(--reunion-wine);
+}
+
+.reunion-primary-button:disabled {
+  color: #9d9093;
+  background: #ddd5d3;
+  cursor: not-allowed;
+}
+
+.reunion-secondary-button {
+  color: var(--reunion-muted);
+  background: #fff;
+  border: 1px solid var(--reunion-line);
+}
+
+/* Preview */
+.reunion-preview-page {
+  background: #f7efea;
+}
+
+.reunion-intake-header.is-overlay {
+  position: absolute;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(30, 10, 16, 0.72), transparent);
+  border: 0;
+  backdrop-filter: none;
+}
+
+.reunion-intake-header.is-overlay > button,
+.reunion-intake-header.is-overlay > strong {
+  color: #fff;
+}
+
+.reunion-preview-hero {
+  position: relative;
+  min-height: 520px;
+  color: #fff;
+  background: #37141f;
+}
+
+.reunion-preview-heading {
+  position: absolute;
+  z-index: 2;
+  right: 20px;
+  bottom: 42px;
+  left: 20px;
+}
+
+.reunion-preview-heading > span {
+  display: block;
+  margin-bottom: 10px;
+  color: #efbcc7;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.reunion-preview-heading h1 {
+  margin: 0;
+  color: #fff8f5;
+  font-family: Georgia, 'Noto Serif KR', serif;
+  font-size: clamp(2rem, 9vw, 3.8rem);
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: -0.045em;
+}
+
+.reunion-preview-body {
+  width: min(720px, calc(100% - 28px));
+  margin: -16px auto 0;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+.reunion-preview-facts,
+.reunion-teaser-card,
+.reunion-unlock-card {
+  position: relative;
+  z-index: 3;
+  margin-bottom: 14px;
+  padding: 24px 19px;
+  background: var(--reunion-paper);
+  border: 1px solid var(--reunion-line);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(67, 19, 34, 0.07);
+}
+
+.reunion-preview-facts > span,
+.reunion-unlock-card > span,
+.reunion-teaser-readable > small {
+  color: var(--reunion-rose);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.reunion-preview-facts h2,
+.reunion-teaser-readable h2,
+.reunion-unlock-card h2 {
+  margin: 8px 0 18px;
+  font-family: Georgia, 'Noto Serif KR', serif;
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+}
+
+.reunion-preview-facts dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid var(--reunion-line);
+}
+
+.reunion-preview-facts dl > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--reunion-line);
+}
+
+.reunion-preview-facts dt {
+  color: var(--reunion-muted);
+  font-size: 11px;
+}
+
+.reunion-preview-facts dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.reunion-teaser-readable > p {
+  margin: 0;
+  color: var(--reunion-muted);
+  font-size: 13px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.reunion-teaser-readable > p strong {
+  color: var(--reunion-ink);
+}
+
+.reunion-teaser-blur {
+  max-height: 122px;
+  margin-top: 20px;
+  overflow: hidden;
+  color: #45373b;
+  filter: blur(5px);
+  opacity: 0.48;
+  user-select: none;
+}
+
+.reunion-teaser-blur p {
+  margin: 0 0 9px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.reunion-teaser-lock {
+  display: flex;
+  position: absolute;
+  right: 14px;
+  bottom: 23px;
+  left: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 60px;
+  padding: 10px 13px;
+  color: #fff;
+  background: rgba(67, 19, 34, 0.92);
+  border-radius: 14px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.reunion-unlock-card ul,
+.reunion-report-section ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reunion-unlock-card li,
+.reunion-report-section li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #57474c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.reunion-unlock-card li svg,
+.reunion-report-section li svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--reunion-safe);
+}
+
+.reunion-unlock-card .reunion-primary-cta {
+  margin-top: 24px;
+}
+
+.reunion-payment-note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 13px;
+  color: var(--reunion-muted);
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.reunion-payment-note svg {
+  flex: 0 0 auto;
+  color: var(--reunion-safe);
+}
+
+.reunion-text-button {
+  display: block;
+  min-height: 44px;
+  margin: 6px auto 0;
+  padding: 0 12px;
+  color: var(--reunion-muted);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Loading */
+.reunion-loading-scene {
+  display: grid;
+  min-height: 100svh;
+  color: var(--reunion-ink);
+  background: #f7efea;
+}
+
+.reunion-loading-visual {
+  position: relative;
+  min-height: 44svh;
+  overflow: hidden;
+  background: #35131e;
+}
+
+.reunion-loading-picture,
+.reunion-loading-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.reunion-loading-picture {
+  position: absolute;
+  inset: 0;
+}
+
+.reunion-loading-picture img {
+  object-fit: cover;
+  opacity: 0.7;
+}
+
+.reunion-loading-visual::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, #f7efea 100%);
+  content: '';
+}
+
+.reunion-thread-line {
+  position: absolute;
+  z-index: 2;
+  top: 54%;
+  right: 16%;
+  left: 16%;
+  height: 2px;
+  background: #e995a9;
+  box-shadow: 0 0 18px rgba(233, 149, 169, 0.85);
+  transform-origin: left;
+  animation: reunion-thread-draw 2.4s ease-in-out infinite alternate;
+}
+
+.reunion-loading-visual > i {
+  position: absolute;
+  z-index: 3;
+  top: 52%;
+  width: 8px;
+  height: 8px;
+  background: #f0a9b8;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(240, 169, 184, 0.9);
+  animation: reunion-pulse 1.8s ease-in-out infinite;
+}
+
+.reunion-loading-visual > i:nth-of-type(1) { left: 16%; }
+.reunion-loading-visual > i:nth-of-type(2) { left: 49%; animation-delay: 0.3s; }
+.reunion-loading-visual > i:nth-of-type(3) { right: 16%; animation-delay: 0.6s; }
+
+.reunion-loading-copy {
+  position: relative;
+  z-index: 3;
+  width: min(600px, calc(100% - 36px));
+  margin: -20px auto 0;
+  padding: 0 0 calc(48px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.reunion-loading-copy > span {
+  color: var(--reunion-rose);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.reunion-loading-copy h1 {
+  margin: 11px 0 15px;
+  font-family: Georgia, 'Noto Serif KR', serif;
+  font-size: clamp(1.85rem, 8vw, 3rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+}
+
+.reunion-loading-copy > p {
+  margin: 0;
+  color: var(--reunion-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.reunion-loading-meter {
+  display: grid;
+  gap: 8px;
+  margin-top: 29px;
+}
+
+.reunion-loading-meter > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--reunion-muted);
+  font-size: 11px;
+}
+
+.reunion-loading-meter strong {
+  color: var(--reunion-wine);
+}
+
+.reunion-loading-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin: 28px 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.reunion-loading-steps li {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  color: #ad9fa2;
+  font-size: 9px;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.reunion-loading-steps li > span {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  background: #e1d6d3;
+  border-radius: 50%;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.reunion-loading-steps li.is-active {
+  color: var(--reunion-ink);
+}
+
+.reunion-loading-steps li.is-active > span {
+  color: #fff;
+  background: var(--reunion-wine);
+}
+
+.reunion-loading-copy > small {
+  color: var(--reunion-muted);
+  font-size: 10px;
+}
+
+.reunion-loading-scene.is-error .reunion-loading-copy > svg {
+  color: #a2283e;
+}
+
+.reunion-loading-scene.is-error .reunion-primary-button {
+  gap: 8px;
+  margin: 24px auto 0;
+}
+
+/* Report */
+.reunion-report-page {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  background: #f5ede8;
+}
+
+.reunion-report-hero {
+  position: relative;
+  min-height: 620px;
+  color: #fff;
+  background: #35131e;
+}
+
+.reunion-report-hero-copy {
+  position: absolute;
+  z-index: 2;
+  right: 20px;
+  bottom: 40px;
+  left: 20px;
+}
+
+.reunion-report-hero-copy > span {
+  color: #efbac6;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.reunion-report-hero-copy h1 {
+  max-width: 650px;
+  margin: 11px 0 14px;
+  font-family: Georgia, 'Noto Serif KR', serif;
+  font-size: clamp(2rem, 9vw, 4.6rem);
+  font-weight: 600;
+  line-height: 1.13;
+  letter-spacing: -0.045em;
+  word-break: keep-all;
+}
+
+.reunion-report-hero-copy p {
+  max-width: 600px;
+  margin: 0 0 12px;
+  color: rgba(255, 248, 245, 0.83);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.reunion-report-hero-copy small {
+  color: rgba(255, 248, 245, 0.58);
+  font-size: 9px;
+}
+
+.reunion-report-shell {
+  width: min(820px, calc(100% - 28px));
+  margin: -16px auto 0;
+}
+
+.reunion-report-principle,
+.reunion-report-section,
+.reunion-report-share {
+  position: relative;
+  z-index: 3;
+  margin-bottom: 14px;
+  padding: 24px 18px;
+  background: var(--reunion-paper);
+  border: 1px solid var(--reunion-line);
+  border-radius: 20px;
+  box-shadow: 0 16px 46px rgba(67, 19, 34, 0.055);
+}
+
+.reunion-report-principle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #385d4b;
+  background: #edf4ef;
+  border-color: #d5e4da;
+}
+
+.reunion-report-principle svg {
+  flex: 0 0 auto;
+}
+
+.reunion-report-principle strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #264b39;
+  font-size: 13px;
+}
+
+.reunion-report-principle p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.reunion-report-heading {
+  margin-bottom: 22px;
+}
+
+.reunion-report-heading h2,
+.reunion-sustain-copy h2 {
+  font-size: clamp(1.55rem, 6.5vw, 2.5rem);
+}
+
+.reunion-context-list,
+.reunion-saju-fact-grid {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.reunion-context-list > div,
+.reunion-saju-fact-grid > div {
+  padding: 15px;
+  background: #f8f2ee;
+  border-radius: 13px;
+}
+
+.reunion-context-list dt,
+.reunion-saju-fact-grid dt {
+  color: var(--reunion-muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.reunion-context-list dd,
+.reunion-saju-fact-grid dd {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.reunion-context-list small {
+  display: block;
+  margin-top: 7px;
+  color: #a09295;
+  font-size: 9px;
+}
+
+.reunion-saju-fact-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reunion-empty-state {
+  margin: 0;
+  padding: 18px;
+  color: var(--reunion-muted);
+  background: #f7f1ed;
+  border-radius: 13px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.reunion-empty-state.is-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #795b34;
+  background: #faf1df;
+}
+
+.reunion-empty-state.is-warn svg {
+  flex: 0 0 auto;
+}
+
+.reunion-empty-state.is-warn p {
+  margin: 0;
+}
+
+.reunion-evidence-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.reunion-evidence-list details {
+  background: #fff;
+  border: 1px solid var(--reunion-line);
+  border-radius: 13px;
+}
+
+.reunion-evidence-list summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 13px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  list-style: none;
+}
+
+.reunion-evidence-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.reunion-evidence-list details[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.reunion-evidence-list details > p {
+  margin: 0;
+  padding: 13px;
+  color: #55464a;
+  border-top: 1px solid var(--reunion-line);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.reunion-evidence-list details > small {
+  display: block;
+  padding: 0 13px 14px;
+  color: #95878a;
+  font-size: 9px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.reunion-contact-decision {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  background: #f1ece9;
+  border-left: 4px solid #90787e;
+  border-radius: 13px;
+}
+
+.reunion-contact-decision.is-open {
+  color: #325743;
+  background: #edf4ef;
+  border-left-color: #4e8468;
+}
+
+.reunion-contact-decision.is-conditional {
+  color: #715428;
+  background: #faf2df;
+  border-left-color: #b6873f;
+}
+
+.reunion-contact-decision.is-withheld {
+  color: #80273b;
+  background: #f9e9eb;
+  border-left-color: #a9364e;
+}
+
+.reunion-contact-decision > svg {
+  flex: 0 0 auto;
+}
+
+.reunion-contact-decision strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.reunion-contact-decision p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.reunion-condition-columns {
+  display: grid;
+  gap: 10px;
+  margin-top: 13px;
+}
+
+.reunion-condition-columns article,
+.reunion-action-timeline article,
+.reunion-limitations {
+  padding: 17px;
+  background: #f7f1ed;
+  border-radius: 14px;
+}
+
+.reunion-condition-columns article.is-prohibited {
+  background: #f8ebed;
+}
+
+.reunion-condition-columns h3,
+.reunion-action-timeline h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+.reunion-condition-columns .is-prohibited svg,
+.reunion-condition-columns .is-prohibited li svg {
+  color: #a52f47;
+}
+
+.reunion-timing-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 13px;
+  padding: 16px;
+  color: #534249;
+  background: #efe6e3;
+  border-radius: 13px;
+}
+
+.reunion-timing-note > svg {
+  flex: 0 0 auto;
+  color: var(--reunion-wine);
+}
+
+.reunion-timing-note strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+
+.reunion-timing-note p {
+  margin: 0;
+  color: var(--reunion-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.reunion-action-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.reunion-action-timeline article {
+  position: relative;
+  padding-top: 52px;
+}
+
+.reunion-action-timeline article > span {
+  display: inline-flex;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  align-items: center;
+  min-height: 25px;
+  padding: 0 9px;
+  color: #fff;
+  background: var(--reunion-wine);
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.reunion-report-section.is-sustain {
+  padding: 0;
+  overflow: hidden;
+}
+
+.reunion-sustain-picture {
+  display: block;
+  width: 100%;
+  background: #dfcbc7;
+}
+
+.reunion-sustain-picture img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+}
+
+.reunion-sustain-copy {
+  padding: 25px 18px;
+}
+
+.reunion-sustain-copy > svg {
+  margin-bottom: 13px;
+  color: var(--reunion-wine);
+}
+
+.reunion-sustain-copy ul {
+  margin-top: 20px;
+}
+
+.reunion-limitations {
+  display: grid;
+  gap: 14px;
+}
+
+.reunion-limitations > svg {
+  color: var(--reunion-wine);
+}
+
+.reunion-recommendation-grid {
+  display: grid;
+  gap: 9px;
+}
+
+.reunion-recommendation-grid > a {
+  display: grid;
+  min-width: 0;
+  min-height: 150px;
+  padding: 17px;
+  background: #f7f0ec;
+  border: 1px solid transparent;
+  border-radius: 14px;
+}
+
+.reunion-recommendation-grid small {
+  color: var(--reunion-rose);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.reunion-recommendation-grid strong {
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.reunion-recommendation-grid p {
+  margin: 8px 0 13px;
+  color: var(--reunion-muted);
+  font-size: 11px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.reunion-recommendation-grid a > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: auto;
+  color: var(--reunion-wine);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.reunion-report-share {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  gap: 9px 10px;
+  align-items: start;
+}
+
+.reunion-report-share > svg {
+  color: var(--reunion-wine);
+}
+
+.reunion-report-share strong {
+  display: block;
+  font-size: 12px;
+}
+
+.reunion-report-share p {
+  margin: 5px 0 0;
+  color: var(--reunion-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.reunion-report-share button {
+  display: inline-flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 48px;
+  color: #fff;
+  background: var(--reunion-wine);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reunion-report-share > small {
+  grid-column: 1 / -1;
+  min-height: 14px;
+  color: var(--reunion-muted);
+  font-size: 9px;
+  text-align: center;
+}
+
+.reunion-report-disclaimer {
+  padding: 19px 12px 0;
+  color: #94878a;
+  font-size: 9px;
+  line-height: 1.65;
+  text-align: center;
+  word-break: keep-all;
+}
+
+@keyframes reunion-thread-draw {
+  from { transform: scaleX(0.2); opacity: 0.38; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes reunion-pulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.45; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+@media (min-width: 560px) {
+  .reunion-intake-card,
+  .reunion-report-principle,
+  .reunion-report-section,
+  .reunion-report-share,
+  .reunion-preview-facts,
+  .reunion-teaser-card,
+  .reunion-unlock-card {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .reunion-birth-grid,
+  .reunion-condition-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reunion-context-list,
+  .reunion-recommendation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .reunion-topbar {
+    padding-right: max(32px, calc((100% - 1080px) / 2));
+    padding-left: max(32px, calc((100% - 1080px) / 2));
+  }
+
+  .reunion-hero-copy,
+  .reunion-preview-heading,
+  .reunion-report-hero-copy {
+    right: max(40px, calc((100% - 1080px) / 2));
+    left: max(40px, calc((100% - 1080px) / 2));
+  }
+
+  .reunion-hero-copy {
+    padding-bottom: 66px;
+  }
+
+  .reunion-intro,
+  .reunion-contents-layout,
+  .reunion-two-paths {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    align-items: center;
+    gap: 68px;
+  }
+
+  .reunion-editorial-picture,
+  .reunion-report-list {
+    margin-top: 0;
+  }
+
+  .reunion-contents-layout {
+    margin-top: 38px;
+  }
+
+  .reunion-standard-grid,
+  .reunion-action-timeline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reunion-intake-actions {
+    position: sticky;
+    grid-template-columns: 140px minmax(0, 1fr);
+    width: min(680px, calc(100% - 36px));
+    margin: 0 auto;
+    padding: 10px 0 24px;
+    background: transparent;
+    border: 0;
+    backdrop-filter: none;
+  }
+
+  .reunion-intake-page {
+    padding-bottom: 30px;
+  }
+
+  .reunion-preview-hero,
+  .reunion-report-hero {
+    min-height: 680px;
+  }
+
+  .reunion-report-shell {
+    margin-top: -34px;
+  }
+
+  .reunion-context-list,
+  .reunion-saju-fact-grid,
+  .reunion-recommendation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reunion-report-section,
+  .reunion-report-principle,
+  .reunion-report-share {
+    padding-top: 34px;
+    padding-bottom: 34px;
+  }
+
+  .reunion-report-section.is-sustain {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .reunion-sustain-picture img {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .reunion-sustain-copy {
+    padding: 42px 34px;
+  }
+
+  .reunion-report-share {
+    grid-template-columns: 25px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .reunion-report-share button {
+    grid-column: auto;
+    min-width: 130px;
+  }
+
+  .reunion-report-share > small {
+    grid-column: 2 / -1;
+    text-align: left;
+  }
+
+  .reunion-loading-scene {
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 0.82fr);
+    align-items: center;
+  }
+
+  .reunion-loading-visual {
+    min-height: 100svh;
+  }
+
+  .reunion-loading-visual::after {
+    background: linear-gradient(90deg, transparent 55%, #f7efea 100%);
+  }
+
+  .reunion-loading-copy {
+    margin: 0 auto;
+    padding: 60px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .reunion-recommendation-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reunion-hero-picture img,
+  .reunion-preview-picture img,
+  .reunion-report-hero-picture img {
+    object-position: center 28%;
+  }
+}
+
+@media (max-width: 374px) {
+  .reunion-hero-copy,
+  .reunion-preview-heading,
+  .reunion-report-hero-copy {
+    right: 16px;
+    left: 16px;
+  }
+
+  .reunion-hero-copy {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .reunion-primary-cta strong {
+    font-size: 14px;
+  }
+
+  .reunion-intake-card,
+  .reunion-preview-body,
+  .reunion-report-shell {
+    width: calc(100% - 20px);
+  }
+
+  .reunion-option-list.is-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .reunion-option-list.is-compact label:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .reunion-saju-fact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reunion-page *,
+  .reunion-page *::before,
+  .reunion-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .reunion-thread-line {
+    transform: scaleX(1);
+  }
+}

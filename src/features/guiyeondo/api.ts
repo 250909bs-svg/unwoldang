@@ -49,12 +49,19 @@ async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
   }
 }
 
-export async function createGuiyeondoInviteRemote(ownerProfile: GuiyeondoBirthProfile) {
-  const payload = await requestJson<{ invite: GuiyeondoInvite; ownerKey: string }>(inviteEndpoint(), {
+export async function createGuiyeondoInviteRemote(ownerProfile: GuiyeondoBirthProfile, authToken: string) {
+  const payload = await requestJson<{ invite: GuiyeondoInvite }>(inviteEndpoint(), {
     method: 'POST',
+    headers: { Authorization: `Bearer ${authToken}` },
     body: JSON.stringify({ ownerProfile })
   });
-  return { ...payload.invite, ownerKey: payload.ownerKey } satisfies GuiyeondoOwnedInvite;
+  return payload.invite satisfies GuiyeondoOwnedInvite;
+}
+
+export async function fetchGuiyeondoOwnedInvites(authToken: string) {
+  return requestJson<{ invites: GuiyeondoOwnedInvite[] }>(inviteEndpoint(), {
+    headers: { Authorization: `Bearer ${authToken}` }
+  });
 }
 
 export async function fetchGuiyeondoInvite(publicId: string) {
@@ -76,15 +83,15 @@ export async function submitGuiyeondoInviteResponse(options: {
   });
 }
 
-export async function fetchGuiyeondoInviteResponses(invite: GuiyeondoOwnedInvite) {
+export async function fetchGuiyeondoInviteResponses(invite: GuiyeondoOwnedInvite, authToken: string) {
   return requestJson<{ people: GuiyeondoPerson[] }>(`${inviteEndpoint(invite.publicId)}/responses`, {
-    headers: { Authorization: `Bearer ${invite.ownerKey}` }
+    headers: { Authorization: `Bearer ${authToken}` }
   });
 }
 
-export async function revokeGuiyeondoInvite(invite: GuiyeondoOwnedInvite) {
+export async function revokeGuiyeondoInvite(invite: GuiyeondoOwnedInvite, authToken: string) {
   return requestJson<{ ok: true; publicId: string; revokedAt: string }>(`${inviteEndpoint(invite.publicId)}/revoke`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${invite.ownerKey}` }
+    headers: { Authorization: `Bearer ${authToken}` }
   });
 }

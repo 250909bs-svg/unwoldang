@@ -35,6 +35,16 @@ function getTimestampValue(value?: unknown) {
   return new Date().toISOString();
 }
 
+function projectReunionArchiveEntry(entry: ArchiveEntry): ArchiveEntry {
+  if (entry.productId !== 'love-reunion' || !entry.formData || typeof entry.formData !== 'object' || Array.isArray(entry.formData)) {
+    return entry;
+  }
+
+  const sessionSafeFormData = { ...(entry.formData as Record<string, unknown>) };
+  delete sessionSafeFormData.partner;
+  return { ...entry, formData: sessionSafeFormData };
+}
+
 export class ArchiveService {
   constructor(
     private readonly config: AppConfig,
@@ -57,7 +67,7 @@ export class ArchiveService {
       throw new ReportRequestError(400, 'Archive entry is incomplete.');
     }
 
-    return {
+    return projectReunionArchiveEntry({
       ...raw,
       id,
       productId,
@@ -68,7 +78,7 @@ export class ArchiveService {
       subtitle: typeof raw.subtitle === 'string' ? raw.subtitle.trim() : '',
       createdAt: getTimestampValue(raw.createdAt),
       paymentMethod: typeof raw.paymentMethod === 'string' ? raw.paymentMethod.trim() : undefined
-    };
+    });
   }
 
   private assertReportToken(entry: ArchiveEntry, body: Record<string, unknown>, userId: string) {
@@ -110,7 +120,14 @@ export class ArchiveService {
     return entry;
   }
 
-  list(whereUserId?: string) {
-    return this.repository.list(whereUserId);
+  async list(whereUserId?: string) {
+    const entries = await this.repository.list(whereUserId);
+    return entries.flatMap((entry) => {
+      try {
+        return [this.normalizeEntry(entry)];
+      } catch {
+        return [];
+      }
+    });
   }
 }

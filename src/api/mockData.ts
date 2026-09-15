@@ -1,5 +1,6 @@
 import { getReportCallName } from '../lib/customerName';
 import { getRelationshipStatusLabel } from '../lib/relationshipIntake';
+import type { ReunionContext } from '../lib/reunion/types';
 import { productIds, type ProductId } from '../products/types';
 
 export const serviceIds = productIds;
@@ -97,6 +98,7 @@ export interface IntakeFormData {
   hiddenDesire?: string;
   chosenSymbol?: string;
   readingTone?: string;
+  reunionContext?: ReunionContext;
 }
 
 export interface CategoryDefinition {
@@ -309,21 +311,21 @@ export const serviceCatalog: ServiceDefinition[] = [
   {
     id: 'love-reunion',
     category: 'love',
-    label: '홍연아씨 재회 가능성',
-    advisor: '홍연아씨',
-    subtitle: '남아 있는 감정과 다시 이어질 가능성을 현실적으로 읽는 재회 리포트',
-    teaser: '미련인지 가능성인지 구분하고, 다시 이어질 수 있는 흐름을 정리합니다.',
+    label: '운월당 재회운',
+    advisor: '운월당',
+    subtitle: '사주·궁합 계산 근거와 사용자가 제공한 관계 맥락을 나눠 보는 재회 리포트',
+    teaser: '확인된 근거와 알 수 없는 부분을 나누고, 현실에서 확인할 관계 신호를 정리합니다.',
     description:
-      '재회에 대한 기대와 불안이 동시에 있을 때 필요한 리포트입니다. 감정만 따라가지 않도록 현재 거리감과 상대의 반응 가능성을 나눠 읽고, 다시 연결될 때와 멈춰야 할 때를 구체적으로 설명합니다.',
-    price: '55,000원',
+      '두 사람의 명식에서 계산된 관계 흐름과 사용자가 제공한 이별·연락 맥락을 서로 다른 출처로 표시합니다. 상대의 속마음이나 재회 확률을 만들어 내지 않고, 근거가 부족한 항목은 알 수 없음으로 남깁니다.',
+    price: '990원',
     accent: '#d08f77',
     theme: 'reunion',
     heroTag: 'REUNION',
     badge: '재회 집중',
     spotlight: '다시 이어질지, 정리할지를 현실적으로 보고 싶을 때 선택하는 리포트',
-    bullets: ['남은 감정 분석', '연락 가능성 확인', '재접촉 적기 체크', '멈춰야 할 신호'],
-    process: ['관계 거리감 분석', '감정 잔존도 확인', '재접촉 시기 체크', '연락 문장과 거리 조절 조언'],
-    output: ['재회 분석 리포트', '감정 거리 카드', '재접촉 타이밍', '주의해야 할 연락 패턴']
+    bullets: ['사주·궁합 근거', '사용자 제공 관계 맥락', '근거별 신뢰 상태', '현실에서 확인할 신호'],
+    process: ['두 사람의 출생 정보 확인', '명리·궁합 근거 분리', '이별·연락 맥락 정리', '확실함과 알 수 없음 표시'],
+    output: ['정성적 재회 리포트', '계산 근거 카드', '사용자 제공 맥락', '한계와 확인 포인트']
   },
   {
     id: 'match-couple',

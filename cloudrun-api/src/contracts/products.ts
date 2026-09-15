@@ -44,7 +44,7 @@ export const SERVER_PRODUCT_CATALOG = Object.freeze({
   'concern-reading': { amount: 2_900, currency: 'KRW', status: getManifestStatus('concern-reading') },
   'past-life-goblin': { amount: 49_000, currency: 'KRW', status: getManifestStatus('past-life-goblin') },
   'love-reading': { amount: 49_000, currency: 'KRW', status: getManifestStatus('love-reading') },
-  'love-reunion': { amount: 55_000, currency: 'KRW', status: getManifestStatus('love-reunion') },
+  'love-reunion': { amount: 990, currency: 'KRW', status: getManifestStatus('love-reunion') },
   'match-couple': { amount: 69_000, currency: 'KRW', status: getManifestStatus('match-couple') },
   'match-destiny': { amount: 63_000, currency: 'KRW', status: getManifestStatus('match-destiny') },
   'marriage-blueprint': { amount: 72_000, currency: 'KRW', status: getManifestStatus('marriage-blueprint') },

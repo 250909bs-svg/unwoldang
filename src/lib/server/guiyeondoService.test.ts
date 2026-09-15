@@ -9,6 +9,8 @@ import {
 } from '../../../cloudrun-api/src/domains/guiyeondo/guiyeondoService.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const OWNER_USER_ID = 'kakao-owner-a';
+const OTHER_USER_ID = 'kakao-owner-b';
 
 function profile(name: string, birthDate = '1992-09-09', birthTime = '10:24') {
   return {
@@ -45,6 +47,10 @@ class MemoryGuiyeondoRepository implements GuiyeondoRepository {
 
   async getInvite(publicId: string) {
     return this.invites.get(publicId) || null;
+  }
+
+  async listInvitesByOwner(ownerUserIdHash: string, limit: number) {
+    return [...this.invites.values()].filter((item) => item.ownerUserIdHash === ownerUserIdHash).slice(0, limit);
   }
 
   async getResponse(responseId: string) {
@@ -120,9 +126,9 @@ function serviceFixture(overrides: Partial<ConstructorParameters<typeof Guiyeond
 describe('GuiyeondoService privacy and capability contracts', () => {
   it('stores only a natal pillar snapshot and returns a 14-day public invite', async () => {
     const { service, repository } = serviceFixture();
-    const result = await service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const result = await service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
 
-    expect(result.ownerKey).toMatch(/^[a-f0-9]{64}$/);
+    expect(result).not.toHaveProperty('ownerKey');
     expect(result.invite).toEqual({
       publicId: 'a'.repeat(32),
       hostName: '초대자',
@@ -135,8 +141,10 @@ describe('GuiyeondoService privacy and capability contracts', () => {
     expect(serialized).not.toContain('1992-09-09');
     expect(serialized).not.toContain('10:24');
     expect(serialized).not.toContain('Asia/Seoul');
-    expect(serialized).not.toContain(result.ownerKey);
-    expect(serialized).toContain(createHash('sha256').update(result.ownerKey).digest('hex'));
+    expect(serialized).not.toContain(OWNER_USER_ID);
+    expect(serialized).toContain(createHash('sha256').update(`guiyeondo-owner:v1:${OWNER_USER_ID}`).digest('hex'));
+    expect(await service.listInvites(OWNER_USER_ID, '198.51.100.2')).toEqual({ invites: [result.invite] });
+    expect(await service.listInvites(OTHER_USER_ID, '198.51.100.2')).toEqual({ invites: [] });
 
     const publicResult = await service.getInvite(result.invite.publicId, '198.51.100.2');
     expect(publicResult).toEqual({ invite: result.invite });
@@ -145,7 +153,7 @@ describe('GuiyeondoService privacy and capability contracts', () => {
 
   it('does not persist guest birth input and protects owner response retrieval', async () => {
     const { service, repository } = serviceFixture();
-    const created = await service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const created = await service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     const response = await service.submitResponse(created.invite.publicId, {
       guestProfile: profile('응답자', '2000-01-01', '09:10'),
       idempotencyKey: 'guest-response-0001'
@@ -165,11 +173,11 @@ describe('GuiyeondoService privacy and capability contracts', () => {
     expect(serialized).toContain('guiyeondo-share-v1');
     expect(serialized).toContain('2026-09-15T00:00:00.000Z');
 
-    await expect(service.listResponses(created.invite.publicId, '0'.repeat(64), '198.51.100.3'))
-      .rejects.toMatchObject({ status: 403, code: 'OWNER_KEY_INVALID' });
+    await expect(service.listResponses(created.invite.publicId, OTHER_USER_ID, '198.51.100.3'))
+      .rejects.toMatchObject({ status: 403, code: 'OWNER_ACCOUNT_MISMATCH' });
     const ownerView = await service.listResponses(
       created.invite.publicId,
-      created.ownerKey,
+      OWNER_USER_ID,
       '198.51.100.3'
     );
     expect(ownerView.people).toEqual([response.person]);
@@ -177,7 +185,7 @@ describe('GuiyeondoService privacy and capability contracts', () => {
 
   it('is idempotent and rejects reuse of an idempotency key with different input', async () => {
     const { service, repository } = serviceFixture();
-    const created = await service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const created = await service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     const body = {
       guestProfile: profile('응답자', '2000-01-01', '09:10'),
       idempotencyKey: 'guest-response-0001'
@@ -214,7 +222,7 @@ describe('GuiyeondoService privacy and capability contracts', () => {
 
   it('never exceeds the 100-response cap under concurrent different submissions', async () => {
     const { service, repository } = serviceFixture();
-    const created = await service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const created = await service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     const stored = repository.invites.get(created.invite.publicId);
     if (!stored) throw new Error('fixture invite missing');
     repository.invites.set(stored.publicId, { ...stored, responseCount: 99 });
@@ -244,27 +252,27 @@ describe('GuiyeondoService privacy and capability contracts', () => {
 
   it('enforces immediate revocation, expiry, response cap, and distributed rate decisions', async () => {
     const first = serviceFixture({ readRateLimitMax: 1 });
-    const created = await first.service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const created = await first.service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     await first.service.getInvite(created.invite.publicId, '198.51.100.2');
     await expect(first.service.getInvite(created.invite.publicId, '198.51.100.2'))
       .rejects.toMatchObject({ status: 429, code: 'RATE_LIMITED' });
 
-    await first.service.revokeInvite(created.invite.publicId, created.ownerKey, '198.51.100.3');
-    const repeated = await first.service.revokeInvite(created.invite.publicId, created.ownerKey, '198.51.100.3');
+    await first.service.revokeInvite(created.invite.publicId, OWNER_USER_ID, '198.51.100.3');
+    const repeated = await first.service.revokeInvite(created.invite.publicId, OWNER_USER_ID, '198.51.100.3');
     expect(repeated).toMatchObject({ ok: true, revokedAt: '2026-09-15T00:00:00.000Z' });
-    await expect(first.service.revokeInvite(created.invite.publicId, '0'.repeat(64), '198.51.100.3'))
-      .rejects.toMatchObject({ status: 403, code: 'OWNER_KEY_INVALID' });
+    await expect(first.service.revokeInvite(created.invite.publicId, OTHER_USER_ID, '198.51.100.3'))
+      .rejects.toMatchObject({ status: 403, code: 'OWNER_ACCOUNT_MISMATCH' });
     await expect(first.service.getInvite(created.invite.publicId, '198.51.100.4'))
       .rejects.toMatchObject({ status: 410, code: 'INVITE_REVOKED' });
 
     const expired = serviceFixture();
-    const expiringInvite = await expired.service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const expiringInvite = await expired.service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     expired.advance(14 * DAY_MS + 1);
     await expect(expired.service.getInvite(expiringInvite.invite.publicId, '198.51.100.2'))
       .rejects.toMatchObject({ status: 410, code: 'INVITE_EXPIRED' });
 
     const capped = serviceFixture();
-    const cappedInvite = await capped.service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const cappedInvite = await capped.service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     const stored = capped.repository.invites.get(cappedInvite.invite.publicId);
     if (!stored) throw new Error('fixture invite missing');
     capped.repository.invites.set(stored.publicId, { ...stored, responseCount: 100 });
@@ -280,17 +288,17 @@ describe('GuiyeondoService privacy and capability contracts', () => {
     await expect(service.createInvite({ ownerProfile: {
       ...profile('초대자'),
       birthLocation: { ...profile('초대자').birthLocation, timezone: 'Not/A_Timezone' }
-    } }, '198.51.100.1')).rejects.toBeInstanceOf(GuiyeondoRequestError);
+    } }, OWNER_USER_ID, '198.51.100.1')).rejects.toBeInstanceOf(GuiyeondoRequestError);
     expect(repository.invites.size).toBe(0);
   });
 
   it('rejects under-14 birth data and missing guest sharing consent before saving', async () => {
     const { service, repository } = serviceFixture();
-    await expect(service.createInvite({ ownerProfile: profile('미성년자', '2013-01-01') }, '198.51.100.1'))
+    await expect(service.createInvite({ ownerProfile: profile('미성년자', '2013-01-01') }, OWNER_USER_ID, '198.51.100.1'))
       .rejects.toMatchObject({ status: 422, code: 'AGE_RESTRICTED' });
     expect(repository.invites.size).toBe(0);
 
-    const created = await service.createInvite({ ownerProfile: profile('초대자') }, '198.51.100.1');
+    const created = await service.createInvite({ ownerProfile: profile('초대자') }, OWNER_USER_ID, '198.51.100.1');
     await expect(service.submitResponse(created.invite.publicId, {
       guestProfile: profile('응답자', '2000-01-01', '09:10'),
       idempotencyKey: 'guest-response-0001'

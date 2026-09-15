@@ -43,8 +43,15 @@ function isValidArchiveEntry(value: unknown): value is ReportArchiveEntry {
   );
 }
 
-function normalizeArchiveEntry(entry: ReportArchiveEntry): ReportArchiveEntry {
-  return { ...entry, formData: entry.formData ? normalizeIntakeFormData(entry.formData) : undefined };
+export function projectReportArchiveEntry(entry: ReportArchiveEntry): ReportArchiveEntry {
+  const normalizedFormData = entry.formData ? normalizeIntakeFormData(entry.formData) : undefined;
+  if (entry.productId !== 'love-reunion' || !normalizedFormData) {
+    return { ...entry, formData: normalizedFormData };
+  }
+
+  const sessionSafeFormData = { ...normalizedFormData };
+  delete sessionSafeFormData.partner;
+  return { ...entry, formData: sessionSafeFormData };
 }
 
 export function getReportArchiveStorageKey(ownerId?: string) {
@@ -99,7 +106,7 @@ export const readReportArchiveEntries = (ownerId?: string) => {
 
     return parsed
       .filter(isValidArchiveEntry)
-      .map(normalizeArchiveEntry);
+      .map(projectReportArchiveEntry);
   } catch {
     storage.removeItem(storageKey);
     return [] as ReportArchiveEntry[];
@@ -112,7 +119,7 @@ export const saveReportArchiveEntry = (entry: ReportArchiveEntry, ownerId?: stri
   }
 
   const storage = getReportArchiveStorage(ownerId);
-  const next = mergeReportArchiveEntries([normalizeArchiveEntry(entry)], readReportArchiveEntries(ownerId));
+  const next = mergeReportArchiveEntries([projectReportArchiveEntry(entry)], readReportArchiveEntries(ownerId));
   storage.setItem(getReportArchiveStorageKey(ownerId), JSON.stringify(next));
 };
 
@@ -124,7 +131,7 @@ export const writeReportArchiveEntries = (entries: ReportArchiveEntry[], ownerId
   const storage = getReportArchiveStorage(ownerId);
   storage.setItem(
     getReportArchiveStorageKey(ownerId),
-    JSON.stringify(mergeReportArchiveEntries(entries.map(normalizeArchiveEntry)))
+    JSON.stringify(mergeReportArchiveEntries(entries.map(projectReportArchiveEntry)))
   );
 };
 
@@ -136,7 +143,7 @@ async function readArchiveResponse(response: Response) {
   }
 
   return Array.isArray(payload?.entries)
-    ? payload.entries.filter(isValidArchiveEntry).map(normalizeArchiveEntry)
+    ? payload.entries.filter(isValidArchiveEntry).map(projectReportArchiveEntry)
     : [];
 }
 
@@ -174,7 +181,7 @@ export async function saveRemoteReportArchiveEntry(
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      entry,
+      entry: projectReportArchiveEntry(entry),
       reportAccessToken: options.reportAccessToken
     })
   });

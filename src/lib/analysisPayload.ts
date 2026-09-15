@@ -9,6 +9,7 @@ import { INTAKE_DATA_CONTRACT_VERSION, normalizeIntakeFormData } from './intakeD
 import { normalizeLoveFocus } from './loveFocus';
 import { normalizeLoveReaction } from './mz-love-fact/microChoice';
 import { getRelationshipSummary } from './relationshipIntake';
+import type { ReunionContext } from './reunion/types';
 
 export interface PastLifeAnalysisContext {
   topic: string;
@@ -48,6 +49,7 @@ export interface AnalysisRequestPayload {
     summary: string;
   };
   pastLifeContext: PastLifeAnalysisContext | null;
+  reunionContext: ReunionContext | null;
   questions: string[];
 }
 
@@ -104,6 +106,7 @@ export function buildAnalysisRequestPayload(serviceId: ServiceId, formData: Part
             readingTone: normalized.readingTone?.trim() || ''
           }
         : null,
+    reunionContext: serviceId === 'love-reunion' ? normalized.reunionContext || null : null,
     questions: [normalized.q1, normalized.q2]
       .filter((question): question is string => Boolean(question?.trim()))
       .map((question) => question.trim())

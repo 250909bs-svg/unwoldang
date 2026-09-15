@@ -30,6 +30,7 @@ const invite = {
   natalSnapshot: { yGz: { tg: '壬', dz: '申' }, mGz: { tg: '己', dz: '酉' }, dGz: { tg: '戊', dz: '子' }, hGz: null, status: 'partial', calendarVersion: 'calendar-v2.2.0' },
   sigilSeed: 'gy-test',
   ownerKeyHash: 'b'.repeat(64),
+  ownerUserIdHash: 'e'.repeat(64),
   createdAt: '2026-09-15T00:00:00Z',
   expiresAt: '2026-09-29T00:00:00Z',
   revokedAt: '',
