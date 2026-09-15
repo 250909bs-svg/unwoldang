@@ -18,7 +18,7 @@ const illustrationDeck = {
   yearlyFortune: '/home-yearly-fortune-card.png',
   concernReading: '/home-concern-reading-card.png',
   loveReading: '/home-love-reading-card.png',
-  loveReunion: '/home-love-reunion-card.png',
+  loveReunion: '/assets/reunion/hero-640.webp',
   matchCouple: '/home-match-couple-card.png',
   sunlight: '/intake-sunlight-girl.png',
   red: '/intake-beauty-red.png',
@@ -173,10 +173,10 @@ const homeDiscoverySections = [
       {
         id: 'love-reunion',
         image: illustrationDeck.loveReunion,
-        coverKicker: '홍연아씨',
-        coverTitle: '재회비책',
-        title: '홍연아씨 재회비책',
-        summary: '나의 재회 가능성은?'
+        coverKicker: '운월당',
+        coverTitle: '재회운',
+        title: '운월당 재회운',
+        summary: '다시 연락해도 되는 조건과 멈춰야 할 신호'
       },
       {
         id: 'match-couple',

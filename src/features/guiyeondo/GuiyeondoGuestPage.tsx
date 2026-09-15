@@ -1,6 +1,7 @@
 import { ArrowLeft, ChevronRight, LockKeyhole, Share2, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { createSecureRandomPart } from '../../shared/security/secureRandom';
 import { fetchGuiyeondoInvite, submitGuiyeondoInviteResponse } from './api';
 import GuiyeondoBirthFlow from './GuiyeondoBirthFlow';
@@ -11,7 +12,6 @@ import { trackGuiyeondoEvent } from './events';
 import { fateRoomImage } from './media';
 import { GUIYEONDO_RELATIONSHIP_VISUALS } from './relationshipVisuals';
 import { shareGuiyeondoResult } from './share';
-import { createGuiyeondoPreviewOwnerId, guiyeondoPreviewOwnerPath } from './storage';
 import type {
   GuiyeondoBirthProfile,
   GuiyeondoInvite,
@@ -47,6 +47,7 @@ function personalizeGuestStatement(statement: string, hostName: string, guestNam
 export default function GuiyeondoGuestPage() {
   const { publicId = '' } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [invite, setInvite] = useState<GuiyeondoInvite | null>(null);
   const [stage, setStage] = useState<'loading' | 'missing' | 'landing' | 'input' | 'revealing' | 'result'>('loading');
   const [person, setPerson] = useState<GuiyeondoPerson | null>(null);
@@ -104,10 +105,16 @@ export default function GuiyeondoGuestPage() {
       return;
     }
     try {
-      const ownerStorageId = createGuiyeondoPreviewOwnerId();
-      window.sessionStorage.setItem(GUEST_OWN_PROFILE_KEY, JSON.stringify({ ownerStorageId, profile: guestProfile }));
+      window.sessionStorage.setItem(GUEST_OWN_PROFILE_KEY, JSON.stringify({ profile: guestProfile }));
       trackGuiyeondoEvent('guiyeondo_create_own');
-      navigate(guiyeondoPreviewOwnerPath(ownerStorageId));
+      const returnTo = '/guiyeondo?start=1';
+      if (isAuthenticated) {
+        navigate(returnTo);
+        return;
+      }
+      navigate('/login', {
+        state: { returnTo, tabOrigin: invite ? `/g/${invite.publicId}` : '/guiyeondo' }
+      });
     } catch {
       setError('이 브라우저에 출생정보를 임시 저장하지 못했습니다. 개인정보 보호 설정을 확인해 주세요.');
     }

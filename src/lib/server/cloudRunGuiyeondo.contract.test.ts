@@ -1,12 +1,17 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../../cloudrun-api/src/app.ts';
 import { loadConfig } from '../../../cloudrun-api/src/config/env.ts';
-import type { GuiyeondoApi } from '../../../cloudrun-api/src/domains/guiyeondo/guiyeondoService.ts';
+import { TokenService } from '../../../cloudrun-api/src/domains/auth/tokenService.ts';
+import {
+  GuiyeondoRequestError,
+  type GuiyeondoApi
+} from '../../../cloudrun-api/src/domains/guiyeondo/guiyeondoService.ts';
 
 const publicId = 'a'.repeat(32);
-const ownerKey = 'b'.repeat(64);
+const ownerUserId = 'kakao-owner-a';
+const otherUserId = 'kakao-owner-b';
 const invite = {
   publicId,
   hostName: '초대자',
@@ -23,31 +28,42 @@ const person = {
 };
 
 const guiyeondo: GuiyeondoApi = {
-  createInvite: vi.fn(async () => ({ invite, ownerKey })),
+  createInvite: vi.fn(async (_body, userId) => {
+    if (userId !== ownerUserId) throw new GuiyeondoRequestError(403, '권한이 없습니다.', 'OWNER_ACCOUNT_MISMATCH');
+    return { invite };
+  }),
+  listInvites: vi.fn(async (userId) => ({ invites: userId === ownerUserId ? [invite] : [] })),
   getInvite: vi.fn(async () => ({ invite })),
   submitResponse: vi.fn(async () => ({ person })),
-  listResponses: vi.fn(async (_publicId, key) => {
-    if (key !== ownerKey) {
-      const error = new Error('초대 관리 권한이 필요합니다.') as Error & { status: number; code: string };
-      error.status = 401;
-      error.code = 'OWNER_KEY_REQUIRED';
-      throw error;
+  listResponses: vi.fn(async (_publicId, userId) => {
+    if (userId !== ownerUserId) {
+      throw new GuiyeondoRequestError(403, '이 초대장을 관리할 권한이 없습니다.', 'OWNER_ACCOUNT_MISMATCH');
     }
     return { people: [person] };
   }),
-  revokeInvite: vi.fn(async () => ({
-    ok: true,
-    publicId,
-    revokedAt: '2026-09-15T00:02:00.000Z'
-  }))
+  revokeInvite: vi.fn(async (_publicId, userId) => {
+    if (userId !== ownerUserId) {
+      throw new GuiyeondoRequestError(403, '이 초대장을 관리할 권한이 없습니다.', 'OWNER_ACCOUNT_MISMATCH');
+    }
+    return { ok: true, publicId, revokedAt: '2026-09-15T00:02:00.000Z' };
+  })
 };
+
+const config = loadConfig({
+  NODE_ENV: 'development',
+  ALLOW_UNVERIFIED_REPORTS: 'true',
+  USER_ACCESS_SECRET: 'guiyeondo-contract-user-access-secret'
+});
+const tokens = new TokenService(config);
+const ownerToken = tokens.createUserAccessToken({ id: ownerUserId, nickname: '초대자' });
+const otherToken = tokens.createUserAccessToken({ id: otherUserId, nickname: '다른 사용자' });
 
 let server: Server;
 let baseUrl = '';
 
 beforeAll(async () => {
   server = createServer(createApp({
-    config: loadConfig({ NODE_ENV: 'development', ALLOW_UNVERIFIED_REPORTS: 'true' }),
+    config,
     guiyeondoService: guiyeondo,
     fetchImplementation: vi.fn(async () => { throw new Error('unexpected external request'); }) as unknown as typeof fetch
   }));
@@ -59,24 +75,52 @@ beforeAll(async () => {
   baseUrl = `http://127.0.0.1:${address.port}`;
 });
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 afterAll(async () => {
   await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 });
 
-describe('Cloud Run Guiyeondo HTTP contract', () => {
-  it('creates an invite without exposing natal or birth input', async () => {
-    const response = await fetch(`${baseUrl}/api/guiyeondo/invites`, {
+describe('Cloud Run Guiyeondo HTTP account ownership contract', () => {
+  it('requires Kakao user auth to create and does not expose private source data', async () => {
+    const denied = await fetch(`${baseUrl}/api/guiyeondo/invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ownerProfile: { name: '초대자', birthDate: '1992-09-09' } })
     });
+    expect(denied.status).toBe(401);
+    expect(await denied.json()).toMatchObject({ code: 'OWNER_LOGIN_REQUIRED' });
+
+    const response = await fetch(`${baseUrl}/api/guiyeondo/invites`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
+      body: JSON.stringify({ ownerProfile: { name: '초대자', birthDate: '1992-09-09' } })
+    });
     const body = await response.json();
     expect(response.status).toBe(201);
-    expect(body).toEqual({ invite, ownerKey });
-    expect(JSON.stringify(body.invite)).not.toMatch(/birth|natal|ownerKey/i);
+    expect(body).toEqual({ invite });
+    expect(JSON.stringify(body)).not.toMatch(/birth|natal|ownerKey/i);
+    expect(guiyeondo.createInvite).toHaveBeenCalledWith(expect.any(Object), ownerUserId, expect.any(String));
   });
 
-  it('keeps public invite and guest result payloads free of source profiles', async () => {
+  it('recovers only the authenticated owner account invite list', async () => {
+    const ownerResponse = await fetch(`${baseUrl}/api/guiyeondo/invites`, {
+      headers: { Authorization: `Bearer ${ownerToken}` }
+    });
+    expect(ownerResponse.status).toBe(200);
+    expect(await ownerResponse.json()).toEqual({ invites: [invite] });
+    expect(guiyeondo.listInvites).toHaveBeenCalledWith(ownerUserId, expect.any(String));
+
+    const otherResponse = await fetch(`${baseUrl}/api/guiyeondo/invites`, {
+      headers: { Authorization: `Bearer ${otherToken}` }
+    });
+    expect(otherResponse.status).toBe(200);
+    expect(await otherResponse.json()).toEqual({ invites: [] });
+  });
+
+  it('keeps public invite and guest result payloads unauthenticated and profile-free', async () => {
     const publicResponse = await fetch(`${baseUrl}/api/guiyeondo/invites/${publicId}`);
     expect(publicResponse.status).toBe(200);
     expect(await publicResponse.json()).toEqual({ invite });
@@ -92,26 +136,35 @@ describe('Cloud Run Guiyeondo HTTP contract', () => {
     expect(JSON.stringify(guestBody)).not.toMatch(/birthDate|birthTime|privateBirthProfile/);
   });
 
-  it('passes the owner capability only through Authorization and supports revoke', async () => {
+  it('allows the owner to read and revoke but blocks another valid user token', async () => {
     const ownerResponse = await fetch(`${baseUrl}/api/guiyeondo/invites/${publicId}/responses`, {
-      headers: { Authorization: `Bearer ${ownerKey}` }
+      headers: { Authorization: `Bearer ${ownerToken}` }
     });
     expect(ownerResponse.status).toBe(200);
     expect(await ownerResponse.json()).toEqual({ people: [person] });
-    expect(guiyeondo.listResponses).toHaveBeenCalledWith(publicId, ownerKey, expect.any(String));
+    expect(guiyeondo.listResponses).toHaveBeenCalledWith(publicId, ownerUserId, expect.any(String));
+
+    const forbidden = await fetch(`${baseUrl}/api/guiyeondo/invites/${publicId}/responses`, {
+      headers: { Authorization: `Bearer ${otherToken}` }
+    });
+    expect(forbidden.status).toBe(403);
+    expect(await forbidden.json()).toEqual({
+      message: '이 초대장을 관리할 권한이 없습니다.',
+      code: 'OWNER_ACCOUNT_MISMATCH'
+    });
 
     const revokeResponse = await fetch(`${baseUrl}/api/guiyeondo/invites/${publicId}/revoke`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${ownerKey}` }
+      headers: { Authorization: `Bearer ${ownerToken}` }
     });
     expect(revokeResponse.status).toBe(200);
     expect(await revokeResponse.json()).toMatchObject({ ok: true, publicId });
   });
 
-  it('rejects malformed JSON with a masked, actionable 400 response', async () => {
+  it('rejects malformed JSON with a masked, actionable 400 response after auth', async () => {
     const response = await fetch(`${baseUrl}/api/guiyeondo/invites`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
       body: '{'
     });
     expect(response.status).toBe(400);

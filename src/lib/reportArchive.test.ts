@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   getReportArchiveStorageKey,
+  projectReportArchiveEntry,
   readReportArchiveEntries,
   saveReportArchiveEntry,
   type ReportArchiveEntry
@@ -129,5 +130,38 @@ describe('local report archive isolation', () => {
       id: entry.id,
       productId: entry.productId
     }))).toEqual([{ id: 'valid-report', productId: 'general-signature' }]);
+  });
+
+  it('never archives raw partner birth information for love-reunion', () => {
+    const entry: ReportArchiveEntry = {
+      ...buildEntry('reunion-private', '재회 사용자'),
+      productId: 'love-reunion',
+      formData: {
+        ...buildEntry('base', '재회 사용자').formData!,
+        partner: {
+          name: '상대 사용자',
+          gender: 'female',
+          calendar: 'solar',
+          isLeapMonth: false,
+          birthDate: '1991-05-14',
+          birthTime: '08:30',
+          isUnknownTime: false
+        },
+        reunionContext: {
+          schemaVersion: 'reunion-context-v1',
+          breakupDuration: 'oneTo3m',
+          contactStatus: 'no-contact',
+          breakupReason: '대화 차이',
+          desiredOutcome: 'clarity',
+          notes: '',
+          consentToUsePartnerData: true
+        }
+      }
+    };
+    expect(projectReportArchiveEntry(entry).formData?.partner).toBeUndefined();
+    saveReportArchiveEntry(entry, 'reunion-owner');
+    const raw = JSON.parse(window.localStorage.getItem(getReportArchiveStorageKey('reunion-owner')) || '[]');
+    expect(raw[0]?.formData?.partner).toBeUndefined();
+    expect(raw[0]?.formData?.reunionContext).toMatchObject({ contactStatus: 'no-contact' });
   });
 });

@@ -12,19 +12,20 @@ import {
   getProductByRoute,
   getProductIdByRoute,
   isProductActive,
+  isLocalPreviewRuntime,
   isLocalPreviewProduct,
+  isLoopbackPreviewHostname,
   productRegistry
 } from './registry';
 import { productIds, productStatuses } from './types';
 
-const activeIds = ['general-signature'] as const;
+const activeIds = ['general-signature', 'love-reunion'] as const;
 
 const archivedIds = [
   'life-flow',
   'concern-reading',
   'past-life-goblin',
   'love-reading',
-  'love-reunion',
   'match-couple',
   'match-destiny',
   'marriage-blueprint',
@@ -60,16 +61,29 @@ describe('product registry contract', () => {
     });
   });
 
-  it('exposes only love-reading as a local preview without making it purchasable or indexable', () => {
+  it('keeps archived MZ love reading local-only while reunion remains a purchasable release product', () => {
     expect(import.meta.env.DEV).toBe(true);
     expect(isLocalPreviewProduct('love-reading')).toBe(true);
     expect(discoverableProducts.map((product) => product.id)).toEqual([
       'general-signature',
-      'love-reading'
+      'love-reading',
+      'love-reunion'
     ]);
     expect(canPurchaseProduct('love-reading')).toBe(false);
+    expect(canPurchaseProduct('love-reunion')).toBe(true);
     expect(canIndexProduct('love-reading')).toBe(false);
+    expect(canIndexProduct('love-reunion')).toBe(true);
     expect(isLocalPreviewProduct('past-life-goblin')).toBe(false);
+  });
+
+  it('keeps built local previews on loopback without exposing archived products on production hosts', () => {
+    expect(isLoopbackPreviewHostname('localhost')).toBe(true);
+    expect(isLoopbackPreviewHostname('127.0.0.1')).toBe(true);
+    expect(isLoopbackPreviewHostname('::1')).toBe(true);
+    expect(isLoopbackPreviewHostname('[::1]')).toBe(true);
+    expect(isLocalPreviewRuntime({ isDevelopment: false, hostname: '127.0.0.1' })).toBe(true);
+    expect(isLocalPreviewRuntime({ isDevelopment: false, hostname: 'www.unwoldang.com' })).toBe(false);
+    expect(isLocalPreviewRuntime({ isDevelopment: true, hostname: 'www.unwoldang.com' })).toBe(true);
   });
 
   it('keeps historical report reads for archived products without accepting unknown IDs', () => {
@@ -102,7 +116,7 @@ describe('product registry contract', () => {
       (id) => productRegistry[id].flow.requiresPartnerBirth
     );
 
-    expect(partnerBirthProducts).toEqual(['match-couple', 'match-destiny']);
+    expect(partnerBirthProducts).toEqual(['love-reunion', 'match-couple', 'match-destiny']);
     expect(productRegistry['past-life-goblin'].flow.intakeVariant).toBe('past-life');
     expect(productRegistry['love-reading'].flow.intakeVariant).toBe('love-reading');
   });

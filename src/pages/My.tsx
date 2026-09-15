@@ -51,10 +51,10 @@ const replayPromoCandidates: ReplayPromo[] = [
     tone: '#a80e30'
   },
   {
-    title: '재회비책',
-    subtitle: '다시 이어질 가능성은?',
+    title: '운월당 재회운',
+    subtitle: '다시 연락해도 되는 조건은?',
     productId: 'love-reunion',
-    image: '/intake-lantern-night.png',
+    image: '/assets/reunion/hero-640.webp',
     to: getProductById('love-reunion').routes.detail,
     tone: '#6d4de8'
   },

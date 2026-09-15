@@ -75,7 +75,6 @@ function isOwnedInvite(value: unknown): value is GuiyeondoOwnedInvite {
   if (!value || typeof value !== 'object') return false;
   const invite = value as Partial<GuiyeondoOwnedInvite>;
   return /^[a-f0-9]{32}$/i.test(invite.publicId || '')
-    && /^[a-f0-9]{64}$/i.test(invite.ownerKey || '')
     && Boolean(invite.hostName && invite.createdAt && invite.expiresAt && invite.sigilSeed);
 }
 

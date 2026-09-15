@@ -11,12 +11,15 @@ import { normalizeIntakeFormData } from '../intakeDataContract';
 import { normalizeLoveFocus } from '../loveFocus';
 import { normalizeLoveReaction } from '../mz-love-fact/microChoice';
 import { validateIntakeBirthInputs } from '../birthInputValidation';
+import type { ReunionContext } from '../reunion/types';
+import { validateReunionContext } from '../reunion/validation';
 import { buildDeterministicSajuBasis, type DeterministicSajuBasis } from '../saju/deterministicBasis';
 import { buildQuestionContext, buildRelationshipPersonalizationContext } from '../personalizationContext';
 import { buildPastLifeProfile } from '../saju/pastLifeProfile';
 import { normalizeFormDataWithKasi } from './kasiCalendarService';
 import {
   buildPremiumSajuPromptContext,
+  LOVE_REUNION_OUTPUT_SAFETY_OVERRIDE,
   PREMIUM_SAJU_HUMAN_SENSORY_POLICY,
   PREMIUM_SAJU_PROMPT_VERSION,
   PREMIUM_SAJU_REPORT_MODE,
@@ -30,7 +33,7 @@ import {
   type ReportSection,
   type SajuReportData
 } from '../saju/report';
-import { buildSajuReport } from '../saju/reportBuilder';
+import { assertLoveReunionReportSafety, buildSajuReport } from '../saju/reportBuilder';
 import { assertCustomerReportQuality, finalizeCustomerReport } from '../saju/reportPresentation';
 import {
   hasMalformedReportEvidenceReference,
@@ -71,6 +74,7 @@ export type ReportRequestBody = {
       focus?: IntakeFormData['loveFocus'];
     };
     pastLifeContext?: PastLifeAnalysisContext | null;
+    reunionContext?: ReunionContext | null;
     questions?: string[];
   };
   reportMode?: string;
@@ -714,6 +718,7 @@ export function toFormData(body: ReportRequestBody): Partial<IntakeFormData> {
     hiddenDesire: pastLifeContext?.hiddenDesire || '',
     chosenSymbol: pastLifeContext?.chosenSymbol || '',
     readingTone: pastLifeContext?.readingTone || '',
+    reunionContext: body.payload?.reunionContext || undefined,
     q1: body.payload?.questions?.[0] || '',
     q2: body.payload?.questions?.[1] || ''
   });
@@ -745,10 +750,23 @@ function hasInvariantDay(calculation: NonNullable<ReturnType<typeof validateInta
 export function assertCommercialReportRequest(
   serviceId: ServiceId,
   formData: Partial<IntakeFormData>,
-  options: { allowUnstableDay?: boolean } = {}
+  options: { allowUnstableDay?: boolean; reunionContext?: unknown } = {}
 ) {
-  const requirePartner = serviceId === 'match-couple' || serviceId === 'match-destiny';
+  const requirePartner = serviceId === 'match-couple' || serviceId === 'match-destiny' || serviceId === 'love-reunion';
   const validation = validateIntakeBirthInputs(formData, { requirePartner });
+
+  if (serviceId === 'love-reunion') {
+    const reunionValidation = validateReunionContext(
+      options.reunionContext ?? formData.reunionContext
+    );
+
+    if (!reunionValidation.valid) {
+      throw new ReportRequestError(
+        422,
+        reunionValidation.errors.map((error) => error.message).join(' ')
+      );
+    }
+  }
 
   if (!validation.valid) {
     throw new ReportRequestError(
@@ -815,7 +833,10 @@ export async function prepareCommercialReportRequest(
   }
 
   const inputFormData = toFormData(body);
-  assertCommercialReportRequest(serviceId, inputFormData, options);
+  assertCommercialReportRequest(serviceId, inputFormData, {
+    ...options,
+    reunionContext: body.payload?.reunionContext
+  });
   const { formData, verification } = await normalizeFormDataWithKasi(inputFormData);
 
   if (inputFormData.calendar === 'lunar' && verification.status !== 'verified') {
@@ -970,7 +991,7 @@ function mergeGeminiDraft(base: SajuReportData, draft?: GeminiDraft | null): Saj
   };
 }
 
-function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: DeterministicSajuBasis) {
+export function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasis: DeterministicSajuBasis) {
   const relationshipContext = buildRelationshipPersonalizationContext({
     relationshipStatus: deterministicBasis.input.relationshipStatus || '',
     relationshipDuration: deterministicBasis.input.relationshipDuration || ''
@@ -1105,7 +1126,13 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
 
   return {
     systemInstruction: {
-      parts: [{ text: PREMIUM_SAJU_SYSTEM_PROMPT }, { text: PREMIUM_SAJU_HUMAN_SENSORY_POLICY }]
+      parts: [
+        { text: PREMIUM_SAJU_SYSTEM_PROMPT },
+        { text: PREMIUM_SAJU_HUMAN_SENSORY_POLICY },
+        ...(baseReport.serviceId === 'love-reunion'
+          ? [{ text: LOVE_REUNION_OUTPUT_SAFETY_OVERRIDE }]
+          : [])
+      ]
     },
     contents: [
       {
@@ -1183,6 +1210,9 @@ function buildGeminiRequestPayload(baseReport: SajuReportData, deterministicBasi
                   'Use premium Korean copywriting: concrete, calm, emotionally accurate, and useful. Avoid fear marketing, childish expressions, excessive pink-romance tone, and generic AI phrasing.',
                   'Never overpromise perfect accuracy. Increase trust by showing what is certain from the chart, what is conditional, and what the customer should verify in real life.',
                   'Do not claim a guaranteed spouse, exact face, exact job, exact wedding date, pregnancy, divorce, affair, illness, accident, or legal/financial outcome.',
+                  ...(baseReport.serviceId === 'love-reunion'
+                    ? [LOVE_REUNION_OUTPUT_SAFETY_OVERRIDE]
+                    : []),
                   'Top rule: the user wants life resonance, not abstract explanation. Prioritize visceral realism over textbook wording.',
                   'Answer in a scene-first style. Convert traits into concrete moments from daily life (reply delay, pricing ambiguity, over-responsibility burnout, sudden distancing, emotional shutdown).',
                   'For each major section include: user behavior, others perception, repeated failure loop, a blow-up scene (money/love/relationship), and one immediate habit change.',
@@ -1341,6 +1371,7 @@ export async function generateGeminiSajuReport(body: ReportRequestBody): Promise
     : customerReport;
 
   assertCustomerReportQuality(customerReport);
+  assertLoveReunionReportSafety(reportWithUsage);
 
 
   return {

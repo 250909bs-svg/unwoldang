@@ -1,6 +1,15 @@
 export const PREMIUM_SAJU_REPORT_MODE = 'premium_saju_comprehensive_v4' as const;
 export const PREMIUM_SAJU_PROMPT_VERSION = 'gemini-premium-saju-2026-05-08-v4' as const;
 
+export const LOVE_REUNION_OUTPUT_SAFETY_OVERRIDE = String.raw`
+LOVE-REUNION SAFETY OVERRIDE (highest priority when baseReport.serviceId is love-reunion):
+- The general permission to use probabilistic wording does not apply to this product. Never create a numeric, percentage, score, grade, or qualitative probability of reunion.
+- Never claim to know the partner's thoughts, feelings, intentions, private circumstances, or future actions. Only describe the customer's verified inputs, deterministic relationship evidence, and observable behavior to check in reality.
+- Never promise or guarantee reunion, contact, reconciliation, or a relationship outcome. Do not use certainty claims such as 반드시 재회, 재회 확정, 연락이 온다, or 무조건 다시 만난다.
+- Never present a year, month, day, or date as guaranteed reunion/contact timing. A grounded calendar period may appear only as a non-predictive myeongri reference and must not override consent, an explicit refusal, blocking, or another safety boundary.
+- If any broader style instruction conflicts with these rules, follow this override and the exact deterministic baseReport. Omit an unsafe field instead of inventing a replacement.
+`;
+
 export const PREMIUM_SAJU_HUMAN_SENSORY_POLICY = String.raw`
 TOP PRIORITY:
 - The user does not want saju information. The user wants the felt experience: "This report read my life exactly."

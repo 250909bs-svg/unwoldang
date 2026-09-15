@@ -48,6 +48,7 @@ function parseInvite(document: FirestoreDocument): StoredGuiyeondoInvite {
     natalSnapshot: JSON.parse(readString(document, 'natalSnapshotJson')),
     sigilSeed: readString(document, 'sigilSeed'),
     ownerKeyHash: readString(document, 'ownerKeyHash'),
+    ownerUserIdHash: readString(document, 'ownerUserIdHash'),
     createdAt: readTimestamp(document, 'createdAt'),
     expiresAt: readTimestamp(document, 'expiresAt'),
     revokedAt: readTimestamp(document, 'revokedAt'),
@@ -97,6 +98,7 @@ export class GuiyeondoFirestoreRepository implements GuiyeondoRepository {
               natalSnapshotJson: { stringValue: JSON.stringify(invite.natalSnapshot) },
               sigilSeed: { stringValue: invite.sigilSeed },
               ownerKeyHash: { stringValue: invite.ownerKeyHash },
+              ownerUserIdHash: { stringValue: invite.ownerUserIdHash },
               createdAt: { timestampValue: invite.createdAt },
               expiresAt: { timestampValue: invite.expiresAt },
               responseCount: { integerValue: String(invite.responseCount) }
@@ -118,6 +120,30 @@ export class GuiyeondoFirestoreRepository implements GuiyeondoRepository {
       if (isNotFound(error)) return null;
       throw error;
     }
+  }
+
+  async listInvitesByOwner(ownerUserIdHash: string, limit: number) {
+    const rows = await this.firestore.request<FirestoreRunQueryRow[]>(':runQuery', {
+      method: 'POST',
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: this.inviteCollection }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'ownerUserIdHash' },
+              op: 'EQUAL',
+              value: { stringValue: ownerUserIdHash }
+            }
+          },
+          limit: Math.min(20, Math.max(1, limit))
+        }
+      })
+    });
+    return (Array.isArray(rows) ? rows : [])
+      .map((row) => row.document)
+      .filter((document): document is FirestoreDocument => Boolean(document))
+      .map(parseInvite)
+      .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
   }
 
   async getResponse(responseId: string) {

@@ -93,8 +93,8 @@ export interface GuiyeondoInvite {
 }
 
 export interface GuiyeondoOwnedInvite extends GuiyeondoInvite {
-  /** Local owner capability only. Never put this value in a URL or public response. */
-  ownerKey: string;
+  /** Legacy local capability, ignored by the account-bound server API. */
+  ownerKey?: string;
 }
 
 export interface GuiyeondoMapState {

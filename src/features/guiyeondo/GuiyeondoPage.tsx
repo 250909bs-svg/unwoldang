@@ -1,9 +1,9 @@
 import { ArrowLeft, Info, Plus, RefreshCw, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { createSecureRandomPart } from '../../shared/security/secureRandom';
-import { createGuiyeondoInviteRemote, fetchGuiyeondoInviteResponses, revokeGuiyeondoInvite } from './api';
+import { createGuiyeondoInviteRemote, fetchGuiyeondoInviteResponses, fetchGuiyeondoOwnedInvites, revokeGuiyeondoInvite } from './api';
 import GuiyeondoBirthFlow from './GuiyeondoBirthFlow';
 import GuiyeondoDetailPanel from './GuiyeondoDetailPanel';
 import GuiyeondoIntro from './GuiyeondoIntro';
@@ -25,7 +25,6 @@ import {
   clearGuiyeondoMap,
   mergeGuiyeondoInvitePeople,
   createGuiyeondoMap,
-  normalizeGuiyeondoPreviewOwnerId,
   readGuiyeondoMap,
   removeGuiyeondoPerson,
   removeGuiyeondoOwnedInvite,
@@ -42,15 +41,15 @@ import '../../styles/guiyeondo.css';
 const GUEST_OWN_PROFILE_KEY = 'unwoldang.guiyeondo.guest-own-profile';
 
 export default function GuiyeondoPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
-  const previewOwnerId = useMemo(() => normalizeGuiyeondoPreviewOwnerId(
-    new URLSearchParams(location.search).get('owner')
-  ), [location.search]);
-  const ownerId = previewOwnerId || user?.id;
-  const [introOpen, setIntroOpen] = useState(() => !previewOwnerId);
-  const [mapState, setMapState] = useState<GuiyeondoMapState | null>(() => readGuiyeondoMap(ownerId));
-  const [recovered] = useState(() => recoverGuiyeondoOwnerProfile(ownerId));
+  const navigate = useNavigate();
+  const ownerId = user?.id;
+  const startRequested = useMemo(() => new URLSearchParams(location.search).get('start') === '1', [location.search]);
+  const authToken = user?.authToken || '';
+  const [introOpen, setIntroOpen] = useState(() => !startRequested);
+  const [mapState, setMapState] = useState<GuiyeondoMapState | null>(() => user?.id ? readGuiyeondoMap(user.id) : null);
+  const [recovered] = useState(() => user?.id ? recoverGuiyeondoOwnerProfile(user.id) : null);
   const [setupOpen, setSetupOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [directPermission, setDirectPermission] = useState(false);
@@ -68,16 +67,50 @@ export default function GuiyeondoPage() {
   const mapStateRef = useRef<GuiyeondoMapState | null>(mapState);
 
   useEffect(() => {
+    if (!isAuthenticated || !authToken) {
+      navigate('/login', {
+        replace: true,
+        state: { returnTo: `${location.pathname}${location.search}`, tabOrigin: '/' }
+      });
+      return;
+    }
     trackGuiyeondoEvent('guiyeondo_tab_open');
-  }, []);
+  }, [authToken, isAuthenticated, location.pathname, location.search, navigate]);
 
   useEffect(() => {
-    setMapState(readGuiyeondoMap(ownerId));
+    setMapState(ownerId ? readGuiyeondoMap(ownerId) : null);
   }, [ownerId]);
 
   useEffect(() => {
     mapStateRef.current = mapState;
   }, [mapState]);
+
+  useEffect(() => {
+    if (!authToken || !ownerId || !mapState) return;
+    let cancelled = false;
+    void fetchGuiyeondoOwnedInvites(authToken)
+      .then(({ invites }) => {
+        if (cancelled) return;
+        const current = mapStateRef.current;
+        if (!current) return;
+        const byPublicId = new Map(current.invites.map((item) => [item.publicId, item]));
+        for (const ownedInvite of invites) byPublicId.set(ownedInvite.publicId, ownedInvite);
+        const recoveredInvites = [...byPublicId.values()]
+          .filter((item) => Date.parse(item.expiresAt) > Date.now())
+          .slice(-20);
+        if (recoveredInvites.length === current.invites.length
+          && recoveredInvites.every((item, index) => item.publicId === current.invites[index]?.publicId)) return;
+        const next = saveGuiyeondoMap({ ...current, invites: recoveredInvites }, ownerId);
+        mapStateRef.current = next;
+        setMapState(next);
+      })
+      .catch(() => {
+        // Local map remains usable while an authenticated server recovery is retried later.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authToken, mapState?.version, ownerId]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 959px)');
@@ -98,20 +131,23 @@ export default function GuiyeondoPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (mapState || typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !ownerId) return;
     try {
       const raw = window.sessionStorage.getItem(GUEST_OWN_PROFILE_KEY);
       if (!raw) return;
-      const handoff = JSON.parse(raw) as { ownerStorageId?: string; profile?: GuiyeondoBirthProfile };
-      const handoffOwnerId = normalizeGuiyeondoPreviewOwnerId(handoff.ownerStorageId || null);
-      if (!handoff.profile || !handoffOwnerId || handoffOwnerId !== ownerId) return;
+      if (mapState) {
+        window.sessionStorage.removeItem(GUEST_OWN_PROFILE_KEY);
+        return;
+      }
+      const handoff = JSON.parse(raw) as { profile?: GuiyeondoBirthProfile };
+      if (!handoff.profile) return;
       const stability = assessGuiyeondoProfileStability(handoff.profile);
       if (stability.status === 'blocked') {
         window.sessionStorage.removeItem(GUEST_OWN_PROFILE_KEY);
         setToast(`귀연도를 만들려면 출생시간 확인이 필요합니다. ${stability.reason}`);
         return;
       }
-      const next = saveGuiyeondoMap(createGuiyeondoMap(handoff.profile), handoffOwnerId);
+      const next = saveGuiyeondoMap(createGuiyeondoMap(handoff.profile), ownerId);
       setMapState(next);
       window.sessionStorage.removeItem(GUEST_OWN_PROFILE_KEY);
       trackGuiyeondoEvent('guiyeondo_map_created', { source: 'guest-handoff' });
@@ -139,10 +175,10 @@ export default function GuiyeondoPage() {
 
   const syncInviteResponses = useCallback(async (silent = true) => {
     const current = mapStateRef.current;
-    if (!current?.invites.length) return;
+    if (!authToken || !current?.invites.length) return;
     setSyncing(true);
     try {
-      const settled = await Promise.allSettled(current.invites.map(fetchGuiyeondoInviteResponses));
+      const settled = await Promise.allSettled(current.invites.map((item) => fetchGuiyeondoInviteResponses(item, authToken)));
       const people = settled.flatMap((result) => result.status === 'fulfilled' ? result.value.people : []);
       const latest = mapStateRef.current;
       if (latest && people.length > 0) {
@@ -157,7 +193,7 @@ export default function GuiyeondoPage() {
     } finally {
       setSyncing(false);
     }
-  }, [ownerId]);
+  }, [authToken, ownerId]);
 
   useEffect(() => {
     if (!inviteSyncKey) return;
@@ -279,7 +315,7 @@ export default function GuiyeondoPage() {
     }
     setInviteBusy(true);
     try {
-      const created = await createGuiyeondoInviteRemote(current.owner);
+      const created = await createGuiyeondoInviteRemote(current.owner, authToken);
       const latest = mapStateRef.current;
       if (!latest) return;
       const next = addGuiyeondoOwnedInvite(latest, created, ownerId);
@@ -313,7 +349,7 @@ export default function GuiyeondoPage() {
     if (!window.confirm('이 초대 링크를 취소할까요? 취소하면 더 이상 새 응답을 받을 수 없습니다.')) return;
     setInviteBusy(true);
     try {
-      await revokeGuiyeondoInvite(invite);
+      await revokeGuiyeondoInvite(invite, authToken);
       const current = mapStateRef.current;
       if (current) {
         const next = removeGuiyeondoOwnedInvite(current, invite.publicId, ownerId);
@@ -336,7 +372,7 @@ export default function GuiyeondoPage() {
     setInviteBusy(true);
     try {
       for (const ownedInvite of current.invites.filter((item) => Date.parse(item.expiresAt) > Date.now())) {
-        await revokeGuiyeondoInvite(ownedInvite);
+        await revokeGuiyeondoInvite(ownedInvite, authToken);
       }
       clearGuiyeondoMap(ownerId);
       mapStateRef.current = null;
@@ -352,6 +388,7 @@ export default function GuiyeondoPage() {
     }
   };
 
+  if (!isAuthenticated || !user || !authToken) return null;
   if (introOpen) return <main className="guiyeondo-page"><GuiyeondoIntro onEnter={() => setIntroOpen(false)} /></main>;
   if (!mapState) {
     return (

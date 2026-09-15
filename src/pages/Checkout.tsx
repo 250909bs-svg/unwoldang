@@ -9,6 +9,7 @@ import { buildAnalysisRequestPayload } from '../lib/analysisPayload';
 import { getAiReportEndpoint } from '../lib/aiReport';
 import { validateIntakeBirthInputs } from '../lib/birthInputValidation';
 import { normalizeIntakeFormData } from '../lib/intakeDataContract';
+import { validateReunionContext, type ReunionContext } from '../lib/reunion';
 import {
   buildPortOneRedirectUrl,
   confirmAuthenticatedPortOnePayment,
@@ -33,6 +34,7 @@ type CheckoutState = {
   formData?: Partial<IntakeFormData>;
   tabOrigin?: string;
   draftOwnerId?: string;
+  reunionContext?: ReunionContext;
 };
 
 export default function Checkout() {
@@ -52,6 +54,12 @@ export default function Checkout() {
   const service = findServiceById(product.id);
   const isPastLifeProduct = product.flow.intakeVariant === 'past-life';
   const isLoveReadingProduct = product.flow.intakeVariant === 'love-reading';
+  const isReunionProduct = product.id === 'love-reunion';
+  const reunionContext = (ownsLocationDraft ? locationState?.reunionContext : undefined)
+    || formData.reunionContext;
+  const checkoutFormData = isReunionProduct
+    ? normalizeIntakeFormData({ ...formData, reunionContext })
+    : formData;
   const [agreeService, setAgreeService] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
@@ -69,8 +77,8 @@ export default function Checkout() {
   const amount = product.price;
   const customerKey = createCustomerKey(user?.id);
   const analysisPayload = useMemo(
-    () => buildAnalysisRequestPayload(product.id, formData || {}),
-    [formData, product.id]
+    () => buildAnalysisRequestPayload(product.id, checkoutFormData),
+    [checkoutFormData, product.id]
   );
   const portOneStoreId = import.meta.env.VITE_PORTONE_STORE_ID?.trim();
   const portOneChannelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY?.trim();
@@ -83,11 +91,18 @@ export default function Checkout() {
   const canUsePortOneRuntime = Boolean(paymentProvider === 'legacy-portone' && paymentMode === 'live' && hasPortOneRuntimeConfig());
   const requiresPartnerBirth = product.flow.requiresPartnerBirth;
   const birthInputValidation = useMemo(
-    () => validateIntakeBirthInputs(formData || {}, { requirePartner: requiresPartnerBirth }),
-    [formData, requiresPartnerBirth]
+    () => validateIntakeBirthInputs(checkoutFormData, { requirePartner: requiresPartnerBirth }),
+    [checkoutFormData, requiresPartnerBirth]
+  );
+  const reunionContextValidation = useMemo(
+    () => isReunionProduct
+      ? validateReunionContext(reunionContext)
+      : { valid: true, errors: [] },
+    [isReunionProduct, reunionContext]
   );
   const hasRequiredBirthInfo = birthInputValidation.self.valid;
   const hasRequiredPartnerBirth = !requiresPartnerBirth || Boolean(birthInputValidation.partner?.valid);
+  const hasRequiredReunionContext = !isReunionProduct || reunionContextValidation.valid;
   const hasTwoQuestions = analysisPayload.questions.length === 2;
   const reportReady = isDemoPayment || Boolean(getAiReportEndpoint());
   const paymentReady = paymentProvider !== 'disabled' && paymentProvider !== 'hyphen' && (isDemoPayment || (canUsePortOneRuntime && Boolean(user?.authToken)));
@@ -99,6 +114,7 @@ export default function Checkout() {
       amount > 0 &&
       hasRequiredBirthInfo &&
       hasRequiredPartnerBirth &&
+      hasRequiredReunionContext &&
       hasTwoQuestions &&
       reportReady &&
       paymentReady
@@ -128,6 +144,8 @@ export default function Checkout() {
             ? birthInputValidation.self.errors[0]?.message || '사주 정보를 먼저 입력해 주세요.'
             : !hasRequiredPartnerBirth
               ? birthInputValidation.partner?.errors[0]?.message || '정밀 궁합을 위해 상대방의 생년월일과 출생 시각을 입력해 주세요.'
+              : !hasRequiredReunionContext
+                ? reunionContextValidation.errors[0]?.message || '재회 정보를 다시 확인해 주세요.'
             : !hasTwoQuestions
               ? '질문 2개를 모두 입력해 주세요.'
               : !reportReady
@@ -145,7 +163,7 @@ export default function Checkout() {
       paymentMethod: 'portone',
       amount,
       customerKey,
-      formData,
+      formData: checkoutFormData,
       analysisPayload,
       tabOrigin,
       createdAt: new Date().toISOString()
@@ -235,11 +253,12 @@ export default function Checkout() {
         replace: true,
         state: {
           product: service.id,
-          formData,
+          formData: checkoutFormData,
           paymentMethod: 'portone',
           orderId: confirmed.orderId,
           tabOrigin,
-          reportAccessToken: confirmed.reportAccessToken
+          reportAccessToken: confirmed.reportAccessToken,
+          reunionContext
         }
       });
     } catch (caughtError) {
@@ -259,11 +278,13 @@ export default function Checkout() {
           ? 'mobile-page-shell checkout-luxe-page past-life-checkout-page'
           : isLoveReadingProduct
             ? 'mobile-page-shell checkout-luxe-page love-reading-checkout-page'
-            : 'mobile-page-shell checkout-luxe-page'
+            : isReunionProduct
+              ? 'mobile-page-shell checkout-luxe-page reunion-checkout-page'
+              : 'mobile-page-shell checkout-luxe-page'
       }
     >
       <div className="mobile-page-card checkout-luxe-card">
-        <MobileTopBar title="운월당" backTo={product.routes.intake} backLabel="이전" backState={{ formData, tabOrigin, draftOwnerId }} />
+        <MobileTopBar title="운월당" backTo={product.routes.intake} backLabel="이전" backState={{ formData: checkoutFormData, reunionContext, tabOrigin, draftOwnerId }} />
 
         <section className="checkout-luxe-stage" aria-label="결제 상품 미리보기">
           <div className="checkout-luxe-copy">
@@ -272,14 +293,18 @@ export default function Checkout() {
                 ? '흑장부에 이름을 새기기 전'
                 : isLoveReadingProduct
                   ? '붉은 실의 결말을 열기 전'
-                  : '잠들어 있던 내 운의 흐름'}
+                  : isReunionProduct
+                    ? '두 사람의 흐름을 다시 읽기 전'
+                    : '잠들어 있던 내 운의 흐름'}
             </span>
             <strong>
               {formData?.name || '고객'}님의 {isPastLifeProduct
                 ? '전생장부'
                 : isLoveReadingProduct
                   ? '연애 패턴 리포트'
-                  : '사주 리포트'}
+                  : isReunionProduct
+                    ? '재회 흐름 리포트'
+                    : '사주 리포트'}
             </strong>
           </div>
           <div className="checkout-luxe-preview-row">
@@ -289,12 +314,14 @@ export default function Checkout() {
                   ? '/media/dokkaebi-poster.webp'
                   : isLoveReadingProduct
                     ? '/images/mz-love-fact/generated/hero-fan-closed.webp'
-                    : '/intake-beauty-red.png'}
-                alt={isLoveReadingProduct ? '접힌 부채를 들고 연애운 장부를 여는 MZ무당' : ''}
+                    : isReunionProduct
+                      ? '/assets/reunion/reflection-640.webp'
+                      : '/intake-beauty-red.png'}
+                alt={isLoveReadingProduct ? '접힌 부채를 들고 연애운 장부를 여는 MZ무당' : isReunionProduct ? '거울과 붉은 실로 표현한 재회 흐름' : ''}
               />
               <div>
-                <span>{isPastLifeProduct ? '다섯 권' : isLoveReadingProduct ? '13개 챕터' : '질문 2개'}</span>
-                <strong>{isPastLifeProduct ? '26개 주제' : isLoveReadingProduct ? '맞춤 연애 분석' : '맞춤 분석'}</strong>
+                <span>{isPastLifeProduct ? '다섯 권' : isLoveReadingProduct ? '13개 챕터' : isReunionProduct ? '7개 분석' : '질문 2개'}</span>
+                <strong>{isPastLifeProduct ? '26개 주제' : isLoveReadingProduct ? '맞춤 연애 분석' : isReunionProduct ? '명리 근거와 행동 가이드' : '맞춤 분석'}</strong>
               </div>
             </article>
             <article className="checkout-luxe-preview-card featured">
@@ -303,8 +330,10 @@ export default function Checkout() {
                   ? '/media/dokkaebi-poster.webp'
                   : isLoveReadingProduct
                     ? '/images/mz-love-fact/generated/room-consultation.webp'
-                    : '/intake-night-blue.png'}
-                alt={isLoveReadingProduct ? '붉은 촛불과 부채가 놓인 MZ무당 연애 상담실' : ''}
+                    : isReunionProduct
+                      ? '/assets/reunion/contact-640.webp'
+                      : '/intake-night-blue.png'}
+                alt={isLoveReadingProduct ? '붉은 촛불과 부채가 놓인 MZ무당 연애 상담실' : isReunionProduct ? '연락 가능성을 상징하는 밤의 편지와 붉은 실' : ''}
               />
               <div>
                 <span>운월당</span>
@@ -314,7 +343,9 @@ export default function Checkout() {
                     ? '전생의 상징을 현생의 행동으로 연결하는 개인 장부'
                     : isLoveReadingProduct
                       ? '끌림·관계 신호·12개월 흐름·30일 행동을 잇는 웹툰형 리포트'
-                      : '내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서'}
+                      : isReunionProduct
+                        ? '두 사람의 명리 구조와 현재 상황을 분리해 읽고, 억지 확률 없이 다음 행동을 정리하는 개인 리포트'
+                        : '내 사주 속 흐름을 정밀하게 읽는 프리미엄 감정서'}
                 </p>
               </div>
             </article>
@@ -327,19 +358,21 @@ export default function Checkout() {
               <h1>{service.label} 결제 안내</h1>
               <p>{birthSummary} · {calendarSummary}</p>
             </div>
-            <Link to={product.routes.intake} state={{ formData, tabOrigin, draftOwnerId }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
+            <Link to={product.routes.intake} state={{ formData: checkoutFormData, reunionContext, tabOrigin, draftOwnerId }} className="checkout-luxe-close" aria-label="입력 화면으로 돌아가기">
               <X size={18} />
             </Link>
           </div>
 
           <div className="checkout-luxe-benefit-pill">
-            <span>{isPastLifeProduct ? '개인 장부 구성' : isLoveReadingProduct ? '개인 리포트 구성' : '혜택 적용'}</span>
+            <span>{isPastLifeProduct ? '개인 장부 구성' : isLoveReadingProduct || isReunionProduct ? '개인 리포트 구성' : '혜택 적용'}</span>
             <strong>
               {isPastLifeProduct
                 ? '한 번 결제로 다섯 권 전체를 받아요'
                 : isLoveReadingProduct
                   ? '결제 후 13개 연애 챕터 전체를 바로 열어요'
-                  : '결제 후 결과를 바로 확인할 수 있어요'}
+                  : isReunionProduct
+                    ? '결제 후 두 사람의 흐름과 행동 가이드를 바로 열어요'
+                    : '결제 후 결과를 바로 확인할 수 있어요'}
             </strong>
           </div>
 
@@ -356,7 +389,9 @@ export default function Checkout() {
                     ? '봉인록·인연록·업록·현생록·해원록, 30일 봉인 해제'
                     : isLoveReadingProduct
                       ? '연애 패턴, 끌림·장기 인연 비교, 관계 신호, 12개월 흐름, 30일 행동 플랜'
-                      : '성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석'}
+                      : isReunionProduct
+                        ? '관계 구조, 이별 맥락, 연락 판단, 재회에 유리한 조건, 주의 신호, 오늘·7일·30일 행동 가이드'
+                        : '성향, 재물, 직업, 연애·결혼, 대운·세운, 질문 2개 분석'}
                 </p>
               </div>
               <b>{service.price}</b>
@@ -379,7 +414,7 @@ export default function Checkout() {
               <strong>{service.price}</strong>
             </div>
             <div>
-              <span>{isPastLifeProduct ? '다섯 권 26개 맞춤 해석' : isLoveReadingProduct ? '13개 맞춤 연애 챕터' : '질문 맞춤 분석'}</span>
+              <span>{isPastLifeProduct ? '다섯 권 26개 맞춤 해석' : isLoveReadingProduct ? '13개 맞춤 연애 챕터' : isReunionProduct ? '7개 재회 흐름 분석' : '질문 맞춤 분석'}</span>
               <strong>포함</strong>
             </div>
             <div className="total">

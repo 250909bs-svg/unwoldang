@@ -34,6 +34,9 @@ const LoveReadingEntry = lazy(() => import('./pages/LoveReadingEntry'));
 const LoveReadingIntake = lazy(() => import('./pages/LoveReadingIntake'));
 const LoveReadingPreview = lazy(() => import('./pages/LoveReadingPreview'));
 const GuiyeondoPage = lazy(() => import('./features/guiyeondo/GuiyeondoPage'));
+const ReunionLanding = lazy(() => import('./features/reunion/ReunionLanding'));
+const ReunionIntake = lazy(() => import('./features/reunion/ReunionIntake'));
+const ReunionPreview = lazy(() => import('./features/reunion/ReunionPreview'));
 const GuiyeondoGuestPage = lazy(() => import('./features/guiyeondo/GuiyeondoGuestPage'));
 const GenericProductDetail = lazy(() => import('./products/components/GenericProductDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -118,12 +121,36 @@ function AppRoutes({
               </ProductRouteBoundary>
             }
           />
+          <Route
+            path="/detail/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <ReunionLanding />
+              </ProductRouteBoundary>
+            }
+          />
           <Route path="/detail/:id" element={<GenericProductDetail />} />
           <Route
             path="/form/love-reading"
             element={
               <ProductRouteBoundary productId="love-reading">
                 <LoveReadingIntake />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/form/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <ReunionIntake />
+              </ProductRouteBoundary>
+            }
+          />
+          <Route
+            path="/preview/love-reunion"
+            element={
+              <ProductRouteBoundary productId="love-reunion">
+                <ReunionPreview />
               </ProductRouteBoundary>
             }
           />
@@ -196,6 +223,11 @@ function AppShell() {
   const isGuiyeondoGuestRoute = location.pathname.startsWith('/g/');
   const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
   const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
+  const isReunionDetailRoute = location.pathname === '/detail/love-reunion';
+  const isReunionFormRoute = location.pathname === '/form/love-reunion';
+  const isReunionPreviewRoute = location.pathname === '/preview/love-reunion';
+  const isReunionReportRoute = location.pathname === '/report/love-reunion';
+  const isImmersiveReunionRoute = isReunionDetailRoute || isReunionFormRoute || isReunionPreviewRoute || isReunionReportRoute;
   const usesDarkAppShell =
     location.pathname === '/' ||
     location.pathname.startsWith('/test') ||
@@ -208,6 +240,7 @@ function AppShell() {
     isGeneralDetailRoute ||
     isGeneralFormRoute ||
     isImmersiveLoveRoute ||
+    isImmersiveReunionRoute ||
     isLegalRoute;
 
   useLayoutEffect(() => {
@@ -237,6 +270,8 @@ function AppShell() {
               ? 'app-container mz-love-intake-app-container'
               : isLoveReportRoute
                 ? 'app-container mz-love-report-app-container'
+                : isImmersiveReunionRoute
+                  ? 'app-container reunion-app-container'
           : isPastLifeLandingRoute
             ? 'app-container past-life-app-container'
             : isPastLifeReportRoute
@@ -252,6 +287,7 @@ function AppShell() {
           isGeneralDetailRoute ||
           isGeneralFormRoute ||
           isGeneralReportRoute ||
+          isImmersiveReunionRoute ||
           isGuiyeondoGuestRoute
         }
       />

@@ -7,13 +7,12 @@ import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
 import seoRouteData from './seoRoutes.json';
 import { activeProducts, getProductByRoute, productRegistry } from '../products/registry';
 
-const activeDetailPaths = ['/detail/general-saju'] as const;
+const activeDetailPaths = ['/detail/general-saju', '/detail/love-reunion'] as const;
 const archivedDetailPaths = [
   '/detail/life-flow',
   '/detail/concern-reading',
   '/detail/past-life-goblin',
   '/detail/love-reading',
-  '/detail/love-reunion',
   '/detail/match-couple',
   '/detail/match-destiny',
   '/detail/marriage-blueprint',
@@ -27,7 +26,7 @@ const routeSeo = seoRouteData as Record<string, { indexable: boolean; serviceId?
 const redirectedLegacyPaths = ['/menu', '/tarot'] as const;
 
 describe('retired detail page indexing', () => {
-  it('keeps the production home metadata focused on the only active product', () => {
+  it('keeps the production home metadata focused on active products', () => {
     const homeSeo = seoRouteData['/'];
     const homeCopy = JSON.stringify(homeSeo);
     const indexSource = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
@@ -36,10 +35,11 @@ describe('retired detail page indexing', () => {
     expect(homeCopy).toContain('종합사주');
     expect(homeCopy).not.toMatch(/도깨비 전생사주|팩폭 연애운/);
     expect(structuredData).toContain('https://www.unwoldang.com/detail/general-saju');
+    expect(structuredData).toContain('https://www.unwoldang.com/detail/love-reunion');
     expect(structuredData).not.toMatch(/detail\/(?:past-life-goblin|love-reading)/);
   });
 
-  it('keeps only the general signature product detail page indexable', () => {
+  it('keeps only active product detail pages indexable', () => {
     const indexableDetailPaths = Object.entries(seoRouteData)
       .filter(([path, seo]) => path.startsWith('/detail/') && seo.indexable)
       .map(([path]) => path)
@@ -52,7 +52,7 @@ describe('retired detail page indexing', () => {
     });
   });
 
-  it('keeps the active general signature detail rewrite on its static SEO page', () => {
+  it('keeps active product detail rewrites on their static SEO pages', () => {
     const activeRewrites = new Map(
       vercelConfig.rewrites
         .filter((rewrite) => activeDetailPaths.includes(rewrite.source as (typeof activeDetailPaths)[number]))
@@ -60,6 +60,7 @@ describe('retired detail page indexing', () => {
     );
 
     expect(activeRewrites.get('/detail/general-saju')).toBe('/seo/detail-general-saju.html');
+    expect(activeRewrites.get('/detail/love-reunion')).toBe('/seo/detail-love-reunion.html');
     expect(vercelConfig.trailingSlash).toBe(false);
   });
 

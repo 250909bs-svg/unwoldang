@@ -34,7 +34,7 @@ describe('product discovery source contract', () => {
     expect(homeSource).toContain('...product.home');
     expect(homeSource).toContain('to: product.routes.detail');
     expect(searchSource).toContain(
-      'const searchProducts: SearchProduct[] = activeProducts.map((product) => ({'
+      'const searchProducts: SearchProduct[] = discoverableProducts.map((product) => ({'
     );
     expect(searchSource).toContain('...product.search');
     expect(searchSource).toContain('to: product.routes.detail');

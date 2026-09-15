@@ -4,6 +4,7 @@ import type {
   IntakeFormData,
   PartnerBirthData
 } from '../api/mockData';
+import { normalizeReunionContext } from './reunion/validation';
 
 export const INTAKE_DATA_CONTRACT_VERSION = 'unwoldang-intake-v2' as const;
 
@@ -88,6 +89,7 @@ export function normalizeIntakeFormData(
       : source.birthTime?.trim() || '';
   const birthLocation = normalizeLocation(source);
   const relationshipDuration = source.relationshipDuration || '';
+  const reunionContext = normalizeReunionContext(source.reunionContext);
 
   return {
     ...source,
@@ -104,7 +106,8 @@ export function normalizeIntakeFormData(
     longitude: birthLocation?.longitude,
     applySolarTimeCorrection: birthLocation?.applySolarTimeCorrection,
     partner: normalizePartner(source.partner),
-    relationshipDuration
+    relationshipDuration,
+    reunionContext: reunionContext || undefined
   };
 }
 

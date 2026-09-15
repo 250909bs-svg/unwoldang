@@ -18,6 +18,7 @@ import { finalizeCustomerReport } from '../lib/saju/reportPresentation';
 import { scoreReportQuality } from '../lib/saju/reportQuality';
 import type { ReportSection, SajuReportData } from '../lib/saju/report';
 import GeneralSignatureReportIntro from '../products/general-signature/GeneralSignatureReportIntro';
+import ReunionReportView from '../features/reunion/ReunionReportView';
 import {
   isRecoverableGeneralSignatureInput,
   readGeneralSignatureDraft,
@@ -6563,6 +6564,7 @@ function ReportContent({ id, locationState }: { id: string; locationState: Repor
   const isYearlyShowcase = report.serviceId === 'life-flow';
   const isPastLifeShowcase = report.serviceId === 'past-life-goblin';
   const isLoveReadingShowcase = report.serviceId === 'love-reading';
+  const isReunionShowcase = report.serviceId === 'love-reunion';
   const isGeneralSignature = report.serviceId === 'general-signature';
   const loveRelationshipStatus = mapIntakeRelationshipStatus(reportInput.relationshipStatus);
   const loveBirthTimeKnown = reportInput.isUnknownTime === true
@@ -7153,6 +7155,16 @@ body {
   )}&body=${encodeURIComponent(
     `리포트 번호: ${report.serialNumber}\n상품: ${report.title}\n이름: ${report.customerName}\n\n오타/불일치/개선이 필요한 부분을 적어주세요.\n`
   )}`;
+
+  if (isReunionShowcase) {
+    return (
+      <ReunionReportView
+        report={report}
+        formData={reportInput}
+        reunionContext={reportInput.reunionContext}
+      />
+    );
+  }
 
   if (isLoveReadingShowcase) {
     return (

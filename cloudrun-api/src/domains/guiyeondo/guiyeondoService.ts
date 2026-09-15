@@ -9,7 +9,6 @@ import {
 } from '../../../../src/lib/guiyeondo/serverAnalysis.ts';
 
 const PUBLIC_ID_PATTERN = /^[a-f0-9]{32}$/;
-const OWNER_KEY_PATTERN = /^[a-f0-9]{64}$/;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{16,128}$/;
 const MAX_RESPONSES = 100;
 const GUEST_CONSENT_VERSION = 'guiyeondo-share-v1';
@@ -19,6 +18,9 @@ export interface StoredGuiyeondoInvite {
   hostName: string;
   natalSnapshot: GuiyeondoNatalSnapshot;
   sigilSeed: string;
+  /** One-way server-side binding to the authenticated Kakao user id. */
+  ownerUserIdHash: string;
+  /** Legacy capability hash. Kept so existing Firestore documents remain parseable. */
   ownerKeyHash: string;
   createdAt: string;
   expiresAt: string;
@@ -50,6 +52,7 @@ export interface GuiyeondoRepository {
   createInvite(invite: Omit<StoredGuiyeondoInvite, 'updateTime'>): Promise<boolean>;
   getInvite(publicId: string): Promise<StoredGuiyeondoInvite | null>;
   getResponse(responseId: string): Promise<StoredGuiyeondoResponse | null>;
+  listInvitesByOwner(ownerUserIdHash: string, limit: number): Promise<StoredGuiyeondoInvite[]>;
   createResponseWithSlot(invite: StoredGuiyeondoInvite, response: StoredGuiyeondoResponse): Promise<boolean>;
   listResponses(publicId: string, limit: number): Promise<StoredGuiyeondoResponse[]>;
   revokeInvite(invite: StoredGuiyeondoInvite, revokedAt: string): Promise<boolean>;
@@ -83,11 +86,12 @@ export type GuiyeondoServiceConfig = {
 };
 
 export interface GuiyeondoApi {
-  createInvite(body: unknown, clientIp: string): Promise<unknown>;
+  createInvite(body: unknown, ownerUserId: string, clientIp: string): Promise<unknown>;
+  listInvites(ownerUserId: string, clientIp: string): Promise<unknown>;
   getInvite(publicId: string, clientIp: string): Promise<unknown>;
   submitResponse(publicId: string, body: unknown, clientIp: string): Promise<unknown>;
-  listResponses(publicId: string, ownerKey: string, clientIp: string): Promise<unknown>;
-  revokeInvite(publicId: string, ownerKey: string, clientIp: string): Promise<unknown>;
+  listResponses(publicId: string, ownerUserId: string, clientIp: string): Promise<unknown>;
+  revokeInvite(publicId: string, ownerUserId: string, clientIp: string): Promise<unknown>;
 }
 
 type GuiyeondoServiceOptions = {
@@ -99,6 +103,14 @@ type GuiyeondoServiceOptions = {
 
 function hash(value: string) {
   return createHash('sha256').update(value).digest('hex');
+}
+
+function ownerIdentityHash(ownerUserId: string) {
+  const normalized = ownerUserId.trim();
+  if (!normalized || normalized.length > 256) {
+    throw new GuiyeondoRequestError(401, '카카오 로그인이 필요합니다.', 'OWNER_LOGIN_REQUIRED');
+  }
+  return hash(`guiyeondo-owner:v1:${normalized}`);
 }
 
 function normalizePublicId(value: string) {
@@ -173,15 +185,14 @@ export class GuiyeondoService implements GuiyeondoApi {
     return invite;
   }
 
-  private assertOwner(invite: StoredGuiyeondoInvite, ownerKeyValue: string) {
-    const ownerKey = ownerKeyValue.trim().toLowerCase();
-    if (!OWNER_KEY_PATTERN.test(ownerKey)) {
-      throw new GuiyeondoRequestError(401, '초대 관리 권한이 필요합니다.', 'OWNER_KEY_REQUIRED');
+  private assertOwner(invite: StoredGuiyeondoInvite, ownerUserId: string) {
+    if (!/^[a-f0-9]{64}$/.test(invite.ownerUserIdHash)) {
+      throw new GuiyeondoRequestError(403, '이 초대장은 현재 로그인 계정에 연결되어 있지 않습니다.', 'OWNER_BINDING_REQUIRED');
     }
-    const actual = Buffer.from(hash(ownerKey), 'hex');
-    const expected = Buffer.from(invite.ownerKeyHash, 'hex');
+    const actual = Buffer.from(ownerIdentityHash(ownerUserId), 'hex');
+    const expected = Buffer.from(invite.ownerUserIdHash, 'hex');
     if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
-      throw new GuiyeondoRequestError(403, '초대 관리 권한이 올바르지 않습니다.', 'OWNER_KEY_INVALID');
+      throw new GuiyeondoRequestError(403, '이 초대장을 관리할 권한이 없습니다.', 'OWNER_ACCOUNT_MISMATCH');
     }
   }
 
@@ -211,7 +222,7 @@ export class GuiyeondoService implements GuiyeondoApi {
     }
   }
 
-  async createInvite(body: unknown, clientIp: string) {
+  async createInvite(body: unknown, ownerUserId: string, clientIp: string) {
     await this.enforceRateLimit('create', clientIp, this.options.config.createRateLimitMax);
     if (!isRecord(body)) {
       throw new GuiyeondoRequestError(400, '요청 형식이 올바르지 않습니다.', 'INVALID_REQUEST');
@@ -220,24 +231,25 @@ export class GuiyeondoService implements GuiyeondoApi {
     const parsed = this.parseSnapshot(body.ownerProfile);
     const createdAt = this.now().toISOString();
     const expiresAt = new Date(this.now().getTime() + this.options.config.inviteTtlMs).toISOString();
+    const ownerUserIdHash = ownerIdentityHash(ownerUserId);
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const publicId = this.randomHex(16).toLowerCase();
-      const ownerKey = this.randomHex(32).toLowerCase();
-      if (!PUBLIC_ID_PATTERN.test(publicId) || !OWNER_KEY_PATTERN.test(ownerKey)) continue;
+      if (!PUBLIC_ID_PATTERN.test(publicId)) continue;
       const invite: Omit<StoredGuiyeondoInvite, 'updateTime'> = {
         publicId,
         hostName: parsed.profile.name,
         natalSnapshot: parsed.snapshot,
         sigilSeed: `gy-${hash(`sigil:${publicId}`).slice(0, 16)}`,
-        ownerKeyHash: hash(ownerKey),
+        ownerUserIdHash,
+        ownerKeyHash: '',
         createdAt,
         expiresAt,
         revokedAt: '',
         responseCount: 0
       };
       if (await this.options.repository.createInvite(invite)) {
-        return { invite: publicInvite({ ...invite, updateTime: '' }), ownerKey };
+        return { invite: publicInvite({ ...invite, updateTime: '' }) };
       }
     }
     throw new GuiyeondoRequestError(503, '초대 링크를 만들지 못했습니다. 다시 시도해 주세요.', 'INVITE_CREATE_FAILED');
@@ -246,6 +258,17 @@ export class GuiyeondoService implements GuiyeondoApi {
   async getInvite(publicId: string, clientIp: string) {
     await this.enforceRateLimit('read', clientIp, this.options.config.readRateLimitMax);
     return { invite: publicInvite(await this.requireInvite(publicId)) };
+  }
+
+  async listInvites(ownerUserId: string, clientIp: string) {
+    await this.enforceRateLimit('owner', clientIp, this.options.config.ownerRateLimitMax);
+    const invites = await this.options.repository.listInvitesByOwner(ownerIdentityHash(ownerUserId), 20);
+    const now = this.now().getTime();
+    return {
+      invites: invites
+        .filter((invite) => !invite.revokedAt && Date.parse(invite.expiresAt) > now)
+        .map(publicInvite)
+    };
   }
 
   async submitResponse(publicIdValue: string, body: unknown, clientIp: string) {
@@ -312,23 +335,23 @@ export class GuiyeondoService implements GuiyeondoApi {
     throw new GuiyeondoRequestError(409, '응답이 동시에 처리되고 있습니다. 다시 시도해 주세요.', 'RESPONSE_CREATE_CONFLICT');
   }
 
-  async listResponses(publicIdValue: string, ownerKey: string, clientIp: string) {
+  async listResponses(publicIdValue: string, ownerUserId: string, clientIp: string) {
     const publicId = normalizePublicId(publicIdValue);
     await this.enforceRateLimit('owner', clientIp, this.options.config.ownerRateLimitMax);
     const invite = await this.requireInvite(publicId);
-    this.assertOwner(invite, ownerKey);
+    this.assertOwner(invite, ownerUserId);
     const responses = await this.options.repository.listResponses(publicId, MAX_RESPONSES);
     return { people: responses.map((response) => response.person) };
   }
 
-  async revokeInvite(publicIdValue: string, ownerKey: string, clientIp: string) {
+  async revokeInvite(publicIdValue: string, ownerUserId: string, clientIp: string) {
     const publicId = normalizePublicId(publicIdValue);
     await this.enforceRateLimit('owner', clientIp, this.options.config.ownerRateLimitMax);
     let invite = await this.options.repository.getInvite(publicId);
     if (!invite) {
       throw new GuiyeondoRequestError(404, '초대장을 찾을 수 없습니다.', 'INVITE_NOT_FOUND');
     }
-    this.assertOwner(invite, ownerKey);
+    this.assertOwner(invite, ownerUserId);
     if (invite.revokedAt) return { ok: true, publicId, revokedAt: invite.revokedAt };
     const revokedAt = this.now().toISOString();
     for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -338,7 +361,7 @@ export class GuiyeondoService implements GuiyeondoApi {
       const refreshed = await this.options.repository.getInvite(publicId);
       if (!refreshed) break;
       if (refreshed.revokedAt) return { ok: true, publicId, revokedAt: refreshed.revokedAt };
-      this.assertOwner(refreshed, ownerKey);
+      this.assertOwner(refreshed, ownerUserId);
       invite = refreshed;
     }
     throw new GuiyeondoRequestError(409, '초대 철회가 동시에 처리되고 있습니다. 다시 시도해 주세요.', 'REVOKE_CONFLICT');

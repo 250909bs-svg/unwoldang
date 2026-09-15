@@ -46,7 +46,7 @@ const KIND_META: Record<ReportKind, { title: string; subtitle: string; badge: st
   },
   reunion: {
     title: '재회운 프리미엄 리포트',
-    subtitle: '다시 이어질 가능성과 거리 조절 포인트를 차분하게 정리한 재회 리포트',
+    subtitle: '관계의 계산 근거와 연락 경계를 분리해 살펴보는 재회 리포트',
     badge: '재회 감정서'
   },
   marriage: {
@@ -103,6 +103,58 @@ const EMPTY_QUALITY_AUDIT: SajuReportData['qualityAudit'] = {
   bannedTerms: [],
   typoSignals: []
 };
+
+const LOVE_REUNION_LEGAL_NOTICE = [
+  '재회 확률이나 상대의 속마음은 명리 계산으로 만들거나 확정하지 않습니다.',
+  '연도·월·일은 명리 흐름을 살펴보는 참고 구간이며 연락 동의나 재회를 보장하지 않습니다.',
+  '차단, 연락 거부, 안전 문제처럼 현실에서 확인된 경계가 명리 해석보다 우선합니다.'
+] as const;
+
+/** Keeps the raw paid reunion report within the same safety boundary as its dedicated UI. */
+export function applyLoveReunionSafetyContract(report: SajuReportData): SajuReportData {
+  if (report.serviceId !== 'love-reunion') return report;
+
+  return {
+    ...report,
+    subtitle: KIND_META.reunion.subtitle,
+    heroNote: '재회 여부를 예언하기보다 계산된 관계 흐름과 현실에서 확인할 연락·경계 기준을 나누어 살펴봅니다.',
+    legalNotice: [...report.legalNotice, ...LOVE_REUNION_LEGAL_NOTICE],
+    sections: report.sections.map((section) => ({
+      ...section,
+      cards: section.cards?.filter((card) => card.title !== '상대가 느끼는 나'),
+      details: section.details?.filter((detail) => detail.summary !== '상대가 보는 나의 연애 스타일')
+    }))
+  };
+}
+
+export function findLoveReunionSafetyViolations(report: SajuReportData) {
+  if (report.serviceId !== 'love-reunion') return [];
+
+  const authoredReport = {
+    ...report,
+    questionPreview: '',
+    questionAnswers: report.questionAnswers.map((answer) => ({ ...answer, question: '' }))
+  };
+  const text = JSON.stringify(authoredReport);
+  const checks: ReadonlyArray<[RegExp, string]> = [
+    [/재회\s*(?:확률|가능성)\s*(?::|은|는|이|가)?\s*\d+(?:\.\d+)?\s*%/u, '재회 확률 수치'],
+    [/재회\s*(?:확률|가능성)(?:은|는|이|가)?\s*(?:매우\s*)?(?:높|낮|크|작|충분|희박)/u, '재회 가능성 등급'],
+    [/(?:반드시|무조건|확실히|틀림없이)\s*(?:재회|연락|다시 만)/u, '재회 결과 보장'],
+    [/(?:재회|연락)(?:가|이|은|는)?\s*(?:확정|성공|온다|옵니다|하게 된다)/u, '재회·연락 결과 단정'],
+    [/(?:상대|그 사람)(?:방|방은|는|가|은)?[^.!?\n]{0,24}(?:당신|나|고객)[^.!?\n]{0,24}(?:생각|그리워|사랑|미련|마음|느낍니다|느끼고)/u, '상대 속마음 단정'],
+    [/(?:상대방?|그 사람)(?:은|는|이|가)\s*[^.!?\n]{0,24}(?:그리워|사랑|미련이|후회|생각하고|마음이 남)/u, '상대 속마음 단정'],
+    [/\d{4}년\s*\d{1,2}월\s*\d{1,2}일[^.!?\n]{0,30}(?:재회|연락)(?:합니다|됩니다|옵니다|온다|하게 된다)/u, '근거 없는 정확 날짜 단정']
+  ];
+
+  return checks.filter(([pattern]) => pattern.test(text)).map(([, label]) => label);
+}
+
+export function assertLoveReunionReportSafety(report: SajuReportData) {
+  const violations = findLoveReunionSafetyViolations(report);
+  if (violations.length > 0) {
+    throw new Error(`재회 리포트 안전 계약을 통과하지 못했습니다: ${violations.join(', ')}`);
+  }
+}
 
 const HIDDEN_STEMS_KO: Record<string, string[]> = {
   자: ['계'],
@@ -3192,7 +3244,8 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     }
   };
 
-  const polishedReport = diversifyRepeatedReportPhrases(report, cautionGuidance);
+  const safetyBoundReport = applyLoveReunionSafetyContract(report);
+  const polishedReport = diversifyRepeatedReportPhrases(safetyBoundReport, cautionGuidance);
   const customerReport = finalizeCustomerReport(polishedReport);
   assertReportConsistency(customerReport);
   const auditedReport = {
@@ -3200,6 +3253,7 @@ export function buildSajuReport(serviceId: ServiceId, formData: Partial<IntakeFo
     qualityAudit: scoreReportQuality(customerReport)
   };
 
+  assertLoveReunionReportSafety(auditedReport);
   assertCustomerReportQuality(auditedReport);
   return auditedReport;
 }

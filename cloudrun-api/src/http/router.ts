@@ -28,6 +28,7 @@ export const PUBLIC_ROUTES = Object.freeze([
   'POST /api/admin/login',
   'GET /api/admin/reports',
   'POST /api/guiyeondo/invites',
+  'GET /api/guiyeondo/invites',
   'GET /api/guiyeondo/invites/:publicId',
   'POST /api/guiyeondo/invites/:publicId/responses',
   'GET /api/guiyeondo/invites/:publicId/responses',
@@ -75,10 +76,6 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-function bearerToken(req: IncomingMessage) {
-  const value = String(req.headers.authorization || '');
-  return value.startsWith('Bearer ') ? value.slice(7).trim() : '';
-}
 
 function guiyeondoPath(pathname: string) {
   const match = pathname.match(/^\/api\/guiyeondo\/invites\/([a-fA-F0-9]{32})(?:\/(responses|revoke))?$/);
@@ -88,6 +85,13 @@ function guiyeondoPath(pathname: string) {
 function sendGuiyeondoError(res: ServerResponse, error: unknown) {
   if (error instanceof GuiyeondoRequestError) {
     sendJson(res, error.status, { message: error.message, code: error.code });
+    return;
+  }
+  if (error instanceof ReportRequestError && (error.status === 401 || error.status === 403)) {
+    sendJson(res, error.status, {
+      message: error.status === 401 ? '카카오 로그인이 필요합니다.' : '이 귀연도를 관리할 권한이 없습니다.',
+      code: error.status === 401 ? 'OWNER_LOGIN_REQUIRED' : 'OWNER_ACCOUNT_MISMATCH'
+    });
     return;
   }
   if (error instanceof ReportRequestError && (error.status === 400 || error.status === 413)) {
@@ -118,8 +122,9 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     if (req.method === 'POST' && url.pathname === '/api/guiyeondo/invites') {
       try {
+        const user = dependencies.auth.verifyUserAccess(req);
         const body = await readJsonBody(req);
-        sendJson(res, 201, await dependencies.guiyeondo.createInvite(body, getClientIp(req)));
+        sendJson(res, 201, await dependencies.guiyeondo.createInvite(body, user.userId, getClientIp(req)));
       } catch (error) {
         sendGuiyeondoError(res, error);
       }
@@ -127,6 +132,16 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
     }
 
     const guiyeondo = guiyeondoPath(url.pathname);
+
+    if (req.method === 'GET' && url.pathname === '/api/guiyeondo/invites') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.guiyeondo.listInvites(user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
     if (guiyeondo && req.method === 'GET' && !guiyeondo.action) {
       try {
         sendJson(res, 200, await dependencies.guiyeondo.getInvite(guiyeondo.publicId, getClientIp(req)));
@@ -148,9 +163,10 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     if (guiyeondo?.action === 'responses' && req.method === 'GET') {
       try {
+        const user = dependencies.auth.verifyUserAccess(req);
         sendJson(res, 200, await dependencies.guiyeondo.listResponses(
           guiyeondo.publicId,
-          bearerToken(req),
+          user.userId,
           getClientIp(req)
         ));
       } catch (error) {
@@ -161,9 +177,10 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     if (guiyeondo?.action === 'revoke' && req.method === 'POST') {
       try {
+        const user = dependencies.auth.verifyUserAccess(req);
         sendJson(res, 200, await dependencies.guiyeondo.revokeInvite(
           guiyeondo.publicId,
-          bearerToken(req),
+          user.userId,
           getClientIp(req)
         ));
       } catch (error) {
