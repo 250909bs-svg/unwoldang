@@ -8,6 +8,7 @@ import {
   TG,
   type FiveElement
 } from '../../constants';
+import { withKoreanParticle } from '../../../koreanText';
 import { daymasterStrength } from '../../baziCalcs';
 import type { Bazi } from '../../types';
 import { analyzeInterpretationFoundations } from './foundations';
@@ -102,6 +103,12 @@ function analyzeEokbu(bazi: Bazi, foundations: InterpretationFoundations): Yongs
   const wealth = ELEM_CTRL[dayElement];
   const authority = CTRL_BY[dayElement];
   const dayRoot = findDayRoot(foundations);
+  const dayRootPhrase = {
+    none: '일간 통근이 확인되지 않은 상태를',
+    weak: '일간 통근이 약한 상태를',
+    moderate: '일간 통근이 일부 확인된 상태를',
+    strong: '일간 통근이 뚜렷한 상태를'
+  }[dayRoot.level];
   const evidence: Evidence[] = [
     makeEvidence(
       rule,
@@ -184,7 +191,7 @@ function analyzeEokbu(bazi: Bazi, foundations: InterpretationFoundations): Yongs
     rule,
     distance >= 0.06 ? 'supported' : 'conditional',
     {
-      summary: `억부 관점은 ${label} 비율과 일간의 ${dayRoot.level} 통근을 함께 보고 후보를 정했다.`,
+      summary: `억부 관점은 ${label} 비율과 ${dayRootPhrase} 함께 보고 후보를 정했다.`,
       candidates,
       cautions: mergeRecommendations(cautions)
     },
@@ -221,7 +228,7 @@ function analyzeJohu(bazi: Bazi, foundations: InterpretationFoundations): Yongsi
     rule,
     `${need.axis}-${need.element}-${index}`,
     'support',
-    `${need.axis === 'temperature' ? '한난' : '조습'} 축에서 ${need.element}을(를) ${need.rationale}로 검토한다.`,
+    `${need.axis === 'temperature' ? '한난' : '조습'} 축에서 ${withKoreanParticle(need.element, '을/를')} ${need.rationale}로 검토한다.`,
     need.score,
     [foundations.climate.ruleId]
   ));
@@ -337,7 +344,7 @@ function analyzeTonggwan(bazi: Bazi, foundations: InterpretationFoundations): Yo
     'tonggwan',
     rule,
     'conditional',
-    { summary: `${selected.controller}–${selected.controlled} 대립의 통관 후보로 ${selected.bridge}을(를) 제시한다.`, candidates: [candidate], cautions: [] },
+    { summary: `${selected.controller}–${selected.controlled} 대립의 통관 후보로 ${withKoreanParticle(selected.bridge, '을/를')} 제시한다.`, candidates: [candidate], cautions: [] },
     clamp(0.5 + Math.min(0.24, selected.score * 0.2) - (bazi.h_gz ? 0 : 0.08)),
     ['상극 쌍의 양쪽 세력과 중간 오행의 현재 비중을 함께 계산했다.'],
     ['원국의 위치 관계와 합충 성립은 별도 상호작용 엔진이 필요하다.'],

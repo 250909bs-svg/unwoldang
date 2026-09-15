@@ -362,7 +362,7 @@ function SajuWonGukReading({ report }: { report: SajuReportData }) {
         {dayPillar} 일주와 {monthPillar} 월령을 먼저 봅니다
       </h3>
       <p>
-        {report.customerName}님의 원국은 성격표가 아니라 반복되는 선택 습관을 보는 지도입니다. 일간 {report.dayMaster}은
+        {report.customerName}님의 원국은 성격표가 아니라 반복되는 선택 습관을 보는 지도입니다. 일간 {withTopicParticle(report.dayMaster)}
         결정의 중심이고, {monthPillar} 월령은 사회에서 압박을 받는 방식입니다. 그래서 같은 질문도 월령과 일간을 같이 놓아야
         실제 체감에 가까워집니다.
       </p>

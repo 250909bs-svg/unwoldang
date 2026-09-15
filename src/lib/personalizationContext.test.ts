@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { IntakeFormData } from '../api/mockData';
 import {
   buildQuestionContext,
   buildRelationshipPersonalizationContext

@@ -91,6 +91,8 @@ describe('general signature premium report UI contract', () => {
     expect(cssSource).toContain('font-size: 1rem;');
     expect(cssSource).toContain('width: 44px;');
     expect(cssSource).toContain('height: 44px;');
+    expect(reportSource).toContain('withTopicParticle(report.dayMaster)');
+    expect(reportSource).not.toContain('일간 {report.dayMaster}은');
   });
 
   it('labels surface element counts separately from weighted strength analysis', () => {
