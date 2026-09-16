@@ -148,7 +148,7 @@
       ]
     },
     {
-      "source": "/detail/:id(life-flow|concern-reading|past-life-goblin|love-reading|match-couple|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
+      "source": "/detail/:id(life-flow|concern-reading|past-life-goblin|love-reading|love-reunion|match-couple|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
         { "key": "Cache-Control", "value": "no-store" }
@@ -185,10 +185,6 @@
       "destination": "/seo/detail-general-saju.html"
     },
     {
-      "source": "/detail/love-reunion",
-      "destination": "/seo/detail-love-reunion.html"
-    },
-    {
       "source": "/detail/past-life-goblin/immersion",
       "destination": "/index.html"
     },
@@ -197,7 +193,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/detail/:id(life-flow|concern-reading|past-life-goblin|love-reading|match-couple|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
+      "source": "/detail/:id(life-flow|concern-reading|past-life-goblin|love-reading|love-reunion|match-couple|match-destiny|marriage-blueprint|marriage-timing|career-reading|money-reading)",
       "destination": "/index.html"
     },
     {
