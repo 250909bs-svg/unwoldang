@@ -180,51 +180,30 @@ describe('love-reunion Cloud Run release contract', () => {
     }
   });
 
-  it('keeps the server-authoritative catalog active at exactly 990 KRW', () => {
+  it('keeps the server-authoritative catalog archived at exactly 990 KRW', () => {
     expect(SERVER_PRODUCT_CATALOG[PRODUCT_ID]).toEqual({
       amount: PRODUCT_PRICE,
       currency: 'KRW',
-      status: 'active'
+      status: 'archived'
     });
   });
 
-  it('rejects client amount tampering before creating or confirming a payment', async () => {
+  it('rejects new orders while the product is available only in local preview', () => {
     const tokenService = new TokenService(config);
     const payments = createPaymentService(tokenService);
 
     expect(() => payments.createOrderIntent(USER, {
       orderId: ORDER_ID,
       productId: PRODUCT_ID,
-      amount: PRODUCT_PRICE - 1
-    })).toThrow('주문 금액이 서버 상품 가격과 일치하지 않습니다.');
-
-    await expect(payments.confirmPayment(USER, {
-      paymentId: ORDER_ID,
-      orderId: ORDER_ID,
-      productId: PRODUCT_ID,
-      amount: PRODUCT_PRICE + 1
-    })).rejects.toMatchObject({ status: 409 });
+      amount: PRODUCT_PRICE
+    })).toThrow(expect.objectContaining({
+      status: 409,
+      message: '현재 신규 판매 중인 상품이 아닙니다.'
+    }));
   });
 
-  it('binds order and report access to the signed reunion entitlement', async () => {
+  it('keeps historical report access bound to the signed reunion entitlement', () => {
     const tokenService = new TokenService(config);
-    const payments = createPaymentService(tokenService);
-    const order = payments.createOrderIntent(USER, {
-      orderId: ORDER_ID,
-      productId: PRODUCT_ID
-    });
-
-    expect(order).toMatchObject({ productId: PRODUCT_ID, amount: PRODUCT_PRICE });
-    await expect(payments.confirmPayment(USER, {
-      paymentId: `${ORDER_ID}-other`,
-      orderId: ORDER_ID,
-      productId: PRODUCT_ID,
-      amount: PRODUCT_PRICE
-    })).rejects.toMatchObject({
-      status: 409,
-      message: '결제 ID와 주문번호가 일치하지 않습니다.'
-    });
-
     const reportToken = tokenService.createReportAccessToken({
       userId: USER.userId,
       orderId: ORDER_ID,

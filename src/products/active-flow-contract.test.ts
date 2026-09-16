@@ -57,7 +57,7 @@ function expectRouteWiring(path: string, ...tokens: string[]) {
 
 describe('active product flow contract', () => {
   it('keeps every active product flow fully wired', () => {
-    expect(activeProducts.map((product) => product.id)).toEqual(['general-signature', 'love-reunion']);
+    expect(activeProducts.map((product) => product.id)).toEqual(['general-signature']);
 
     activeProducts.forEach((product) => {
       expect([

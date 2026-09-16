@@ -7,12 +7,13 @@ import { PAST_LIFE_PRODUCT } from './pastLifeExperience';
 import seoRouteData from './seoRoutes.json';
 import { activeProducts, getProductByRoute, productRegistry } from '../products/registry';
 
-const activeDetailPaths = ['/detail/general-saju', '/detail/love-reunion'] as const;
+const activeDetailPaths = ['/detail/general-saju'] as const;
 const archivedDetailPaths = [
   '/detail/life-flow',
   '/detail/concern-reading',
   '/detail/past-life-goblin',
   '/detail/love-reading',
+  '/detail/love-reunion',
   '/detail/match-couple',
   '/detail/match-destiny',
   '/detail/marriage-blueprint',
@@ -35,8 +36,7 @@ describe('retired detail page indexing', () => {
     expect(homeCopy).toContain('종합사주');
     expect(homeCopy).not.toMatch(/도깨비 전생사주|팩폭 연애운/);
     expect(structuredData).toContain('https://www.unwoldang.com/detail/general-saju');
-    expect(structuredData).toContain('https://www.unwoldang.com/detail/love-reunion');
-    expect(structuredData).not.toMatch(/detail\/(?:past-life-goblin|love-reading)/);
+    expect(structuredData).not.toMatch(/detail\/(?:past-life-goblin|love-reading|love-reunion)/);
   });
 
   it('keeps only active product detail pages indexable', () => {
@@ -60,7 +60,7 @@ describe('retired detail page indexing', () => {
     );
 
     expect(activeRewrites.get('/detail/general-saju')).toBe('/seo/detail-general-saju.html');
-    expect(activeRewrites.get('/detail/love-reunion')).toBe('/seo/detail-love-reunion.html');
+    expect(vercelConfig.rewrites.some((rewrite) => rewrite.destination === '/seo/detail-love-reunion.html')).toBe(false);
     expect(vercelConfig.trailingSlash).toBe(false);
   });
 

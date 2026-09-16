@@ -544,7 +544,7 @@ describe('Cloud Run API HTTP contracts', () => {
       'concern-reading': { amount: 2_900, currency: 'KRW', status: 'archived' },
       'past-life-goblin': { amount: 49_000, currency: 'KRW', status: 'archived' },
       'love-reading': { amount: 49_000, currency: 'KRW', status: 'archived' },
-      'love-reunion': { amount: 990, currency: 'KRW', status: 'active' },
+      'love-reunion': { amount: 990, currency: 'KRW', status: 'archived' },
       'match-couple': { amount: 69_000, currency: 'KRW', status: 'archived' },
       'match-destiny': { amount: 63_000, currency: 'KRW', status: 'archived' },
       'marriage-blueprint': { amount: 72_000, currency: 'KRW', status: 'archived' },
@@ -574,6 +574,11 @@ describe('Cloud Run API HTTP contracts', () => {
       nickname: 'Fixture Product Policy User'
     });
     const cases = [
+      {
+        productId: 'love-reunion',
+        status: 409,
+        message: '현재 신규 판매 중인 상품이 아닙니다.'
+      },
       {
         productId: 'life-flow',
         status: 409,

@@ -250,7 +250,7 @@
     "productName": "운월당 재회운",
     "price": 990,
     "priceCurrency": "KRW",
-    "indexable": true,
+    "indexable": false,
     "lastmod": "2026-09-15"
   },
   "/detail/match-couple": {

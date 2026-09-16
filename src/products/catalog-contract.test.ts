@@ -29,8 +29,7 @@ describe('product catalog compatibility', () => {
     expect(
       activeProducts.map(({ id, displayName, price }) => ({ id, displayName, price }))
     ).toEqual([
-      { id: 'general-signature', displayName: '정통 종합사주', price: 990 },
-      { id: 'love-reunion', displayName: '운월당 재회운', price: 990 },
+      { id: 'general-signature', displayName: '정통 종합사주', price: 990 }
     ]);
   });
 });

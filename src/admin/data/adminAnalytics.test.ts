@@ -58,8 +58,8 @@ describe('admin real-data analytics boundaries', () => {
 
   it('keeps all registry statuses and archived historical revenue', () => {
     const rows = buildProductRows([realArchivedOrder]);
-    expect(rows.filter((row) => row.status === 'active')).toHaveLength(2);
-    expect(rows.filter((row) => row.status === 'archived')).toHaveLength(10);
+    expect(rows.filter((row) => row.status === 'active')).toHaveLength(1);
+    expect(rows.filter((row) => row.status === 'archived')).toHaveLength(11);
     expect(rows.filter((row) => row.status === 'draft')).toHaveLength(0);
     expect(rows.find((row) => row.id === 'life-flow')).toMatchObject({
       status: 'archived',
