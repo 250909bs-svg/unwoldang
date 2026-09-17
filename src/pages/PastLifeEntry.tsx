@@ -32,7 +32,7 @@ export default function PastLifeEntry() {
       />
 
       <article className="dokkaebi-entry-seo" aria-labelledby="dokkaebi-entry-seo-title">
-        <header className="dokkaebi-entry-seo-hero">
+        <div className="dokkaebi-entry-seo-hero">
           <span>MZ 도깨비 전생사주 · 웹툰형 전생장부</span>
           <h1 id="dokkaebi-entry-seo-title">전생의 나와 인연, 현생에 남은 반복을 읽는 봉인록</h1>
           <p>{seoContent.intro}</p>
@@ -55,7 +55,7 @@ export default function PastLifeEntry() {
               </li>
             ))}
           </ul>
-        </header>
+        </div>
 
         <section id="dokkaebi-entry-method" className="dokkaebi-entry-seo-method" aria-labelledby="dokkaebi-method-title">
           <div>
@@ -86,11 +86,11 @@ export default function PastLifeEntry() {
         </section>
 
         <section className="dokkaebi-entry-seo-faq" aria-labelledby="dokkaebi-entry-faq-title">
-          <header>
+          <div className="dokkaebi-entry-seo-faq-head">
             <span>FAQ</span>
             <h2 id="dokkaebi-entry-faq-title">전생 장부를 열기 전에</h2>
-          </header>
-          <div>
+          </div>
+          <div className="dokkaebi-entry-seo-faq-list">
             {seoContent.faqs.map((item, index) => (
               <details key={item.question} open={index === 0}>
                 <summary>

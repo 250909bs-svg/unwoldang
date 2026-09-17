@@ -1,11 +1,5 @@
-.general-saju-intake-app-container {
-  width: 100%;
-  max-width: none;
-  min-height: 100svh;
-  margin: 0;
-  padding: 0;
-  background: #080a09;
-}
+/* Container width, background and padding are owned by
+   src/app/shell/appShell.css (surface `general-signature`). */
 
 .gs-intake-page {
   position: relative;
@@ -22,6 +16,29 @@
 .gs-intake-page *::before,
 .gs-intake-page *::after {
   box-sizing: border-box;
+}
+
+/* Height, safe-area inset and the 44px brand hit area come from
+   src/app/shell/appShell.css, the same as every other product top bar. */
+.gs-intake-topbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  padding-inline: 20px;
+  background: linear-gradient(180deg, rgba(4, 6, 5, 0.62), transparent);
+  pointer-events: none;
+}
+
+.gs-intake-brand {
+  color: #f4f1ea;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  pointer-events: auto;
 }
 
 .gs-intake-video {

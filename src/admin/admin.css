@@ -1,11 +1,6 @@
-/* Administrator route shell */
-.app-container.admin-app-container {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: #f4f1eb;
-  box-shadow: none;
-}
+/* Administrator route shell.
+   Container width and background are owned by src/app/shell/appShell.css
+   (theme `light`, width `full`, surface `admin`). */
 
 .admin-page {
   min-height: 100vh;
@@ -2426,10 +2421,6 @@
 }
 
 /* Enterprise admin operations workspace */
-.app-container.admin-app-container {
-  background: #f4f6f8;
-}
-
 .admin-page {
   --admin-ink: #172033;
   --admin-muted: #667085;

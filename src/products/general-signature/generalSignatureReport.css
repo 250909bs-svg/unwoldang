@@ -25,16 +25,11 @@
 
 body:has(.general-signature-report) {
   overflow-x: clip;
-  background: var(--report-bg);
 }
 
-.general-signature-report-app-container {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: var(--report-bg);
-  box-shadow: none;
-}
+/* Container width, background and box-shadow are owned by
+   src/app/shell/appShell.css (surface `general-signature`).
+   The body background is owned by the shell rail token. */
 
 .general-signature-report .premium-report-topbar {
   position: sticky;

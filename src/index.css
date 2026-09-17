@@ -34,14 +34,12 @@ html {
 }
 
 body {
+  /* The page background is owned by `--app-rail-bg` in
+     src/app/shell/appShell.css, so the rail colour cannot disagree per route. */
   margin: 0;
   min-width: 320px;
   color: var(--ink);
   font-family: var(--font-body);
-  background:
-    radial-gradient(circle at top left, rgba(250, 242, 226, 0.9), transparent 28%),
-    radial-gradient(circle at top right, rgba(245, 230, 208, 0.75), transparent 22%),
-    linear-gradient(180deg, #f7f3eb 0%, #f1ebdf 48%, #eee6d9 100%);
   overflow-x: hidden;
 }
 
@@ -74,9 +72,8 @@ textarea {
   min-height: 100vh;
 }
 
-.app-container {
-  min-height: 100vh;
-}
+/* `.app-container` geometry, background and min-height belong to
+   src/app/shell/appShell.css. */
 
 .app-route-loading {
   display: grid;
@@ -283,44 +280,9 @@ body.home-all-black .app-route-loading strong {
   cursor: not-allowed;
 }
 
-.bottom-tabbar {
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  z-index: 60;
-  width: min(520px, calc(100% - 16px));
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.bottom-tabbar-inner {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  padding: 8px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid #eceff3;
-  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
-  backdrop-filter: blur(18px);
-  pointer-events: auto;
-}
-
-.bottom-tab {
-  display: grid;
-  place-items: center;
-  gap: 5px;
-  min-height: 58px;
-  border-radius: 16px;
-  color: #98a2b3;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.bottom-tab.active {
-  background: linear-gradient(180deg, #f4f7ff 0%, #eef2ff 100%);
-  color: #111827;
-}
+/* The bottom tab bar has exactly one definition, in
+   src/app/shell/appShell.css under :root[data-shell-tabbar='visible'].
+   Four competing definitions used to live in this file. */
 
 .home-shell,
 .page-shell,
@@ -1443,7 +1405,7 @@ body.home-all-black .app-route-loading strong {
 }
 
 .site-footer {
-  padding: 16px 0 104px;
+  /* Bottom padding comes from `--app-tabbar-h` in src/app/shell/appShell.css. */
   background: linear-gradient(180deg, rgba(248, 245, 239, 0) 0%, #f5f1ea 24%, #f3efe7 100%);
 }
 
@@ -1756,16 +1718,6 @@ body.home-all-black .app-route-loading strong {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .bottom-tabbar-inner {
-    gap: 6px;
-    padding: 8px;
-  }
-
-  .bottom-tab {
-    min-height: 54px;
-    font-size: 10px;
-  }
-
   .toc-bar {
     top: 72px;
   }
@@ -1807,24 +1759,9 @@ body.home-all-black .app-route-loading strong {
     font-size: 30px;
   }
 
-  .bottom-tabbar {
-    bottom: 10px;
-    width: calc(100% - 12px);
-  }
 }
 
 /* Live unwoldang-style mobile shell overrides */
-
-body {
-  background: #f5f6f8;
-}
-
-.app-container {
-  max-width: 520px;
-  margin: 0 auto;
-  background: #ffffff;
-  box-shadow: 0 0 0 1px rgba(228, 232, 238, 0.8);
-}
 
 .site-nav {
   background: rgba(255, 255, 255, 0.96);
@@ -1860,35 +1797,6 @@ body {
 .btn-secondary {
   background: #f5f7f9;
   border-color: #e7ebf0;
-}
-
-.bottom-tabbar {
-  bottom: 0;
-  left: 50%;
-  width: min(520px, 100%);
-  transform: translateX(-50%);
-}
-
-.bottom-tabbar-inner {
-  gap: 0;
-  padding: 4px 2px calc(4px + env(safe-area-inset-bottom, 0px));
-  border-radius: 0;
-  border: 0;
-  border-top: 1px solid #e8edf2;
-  box-shadow: none;
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.bottom-tab {
-  min-height: 56px;
-  border-radius: 14px;
-  color: #98a2b3;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.bottom-tab.active {
-  background: linear-gradient(180deg, #f4f7ff 0%, #eef2ff 100%);
-  color: #111827;
 }
 
 .app-home-shell {
@@ -5009,11 +4917,6 @@ body {
 }
 
 @media (max-width: 520px) {
-  .app-container {
-    max-width: 100%;
-    box-shadow: none;
-  }
-
   .site-nav-inner,
   .page-shell,
   .report-shell,
@@ -6894,34 +6797,6 @@ body {
   background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.92), transparent 36%),
     linear-gradient(135deg, #fffaf2 0%, #ffffff 100%);
-}
-
-.bottom-tabbar {
-  bottom: 0;
-  width: min(520px, 100%);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.bottom-tabbar-inner {
-  gap: 0;
-  padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
-  border-radius: 0;
-  border: 0;
-  border-top: 1px solid #eef0f3;
-  box-shadow: 0 -10px 26px rgba(15, 23, 42, 0.045);
-  background: rgba(255, 255, 255, 0.99);
-}
-
-.bottom-tab {
-  min-height: 58px;
-  border-radius: 18px;
-  color: #98a2b3;
-}
-
-.bottom-tab.active {
-  background: #f8fafc;
-  color: #111827;
-  box-shadow: inset 0 0 0 1px #eef2f7;
 }
 
 .mobile-topbar {
@@ -13416,8 +13291,11 @@ body {
 }
 
 .my-replay-page {
+  /* The top bar breaks out of this gutter to sit flush with the shell frame,
+     so the breakout below has to read the same number. */
+  --my-page-gutter: 14px;
   min-height: 100vh;
-  padding: 0 14px 96px;
+  padding: 0 var(--my-page-gutter) 96px;
   background: #ffffff;
   color: #111827;
 }
@@ -14035,8 +13913,7 @@ body {
 
 @media (max-width: 420px) {
   .my-replay-page {
-    padding-right: 10px;
-    padding-left: 10px;
+    --my-page-gutter: 10px;
   }
 
   .my-login-portrait-wrap {
@@ -16173,9 +16050,8 @@ body {
     font-size: 16px !important;
   }
 
-  .app-container:has(.intake-story-page) .bottom-tabbar {
-    display: none;
-  }
+  /* The tab bar is no longer rendered on funnel routes at all
+     (routeShellPolicy: bottomTab 'flow-hidden'), so this :has() hack is gone. */
 
   .search-page-shell,
   .mobile-page-shell,
@@ -16307,18 +16183,12 @@ body.home-all-black {
   color-scheme: dark;
 }
 
-body.home-all-black .app-container,
 body.home-all-black .app-home-shell,
 body.home-all-black .app-mobile-shell,
 body.home-all-black .app-home-header,
 body.home-all-black .home-showcase-stack {
   background: #000000;
   color: #fafafa;
-}
-
-body.home-all-black .app-container {
-  max-width: 400px;
-  box-shadow: none;
 }
 
 body.home-all-black .mobile-topbar-brand {
@@ -16408,66 +16278,8 @@ body.home-all-black .site-footer-links.compact span {
   color: #a1a1aa;
 }
 
-body.home-all-black .bottom-tabbar {
-  display: flex;
-  justify-content: center;
-  bottom: 0;
-  width: min(400px, 100%);
-  padding: 0 0 calc(12px + env(safe-area-inset-bottom, 0px));
-}
-
-body.home-all-black .bottom-tabbar-inner {
-  display: flex;
-  align-items: center;
-  width: 298px;
-  height: 58px;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid rgba(244, 244, 245, 0.5);
-  border-radius: 32px;
-  background: rgba(18, 18, 18, 0.5);
-  box-shadow: none;
-  backdrop-filter: blur(6px);
-}
-
-body.home-all-black .bottom-tab {
-  position: relative;
-  display: flex;
-  flex: 0 0 68px;
-  align-items: center;
-  justify-content: center;
-  width: 68px;
-  min-height: 44px;
-  height: 44px;
-  gap: 0;
-  padding: 10px 22px;
-  border-radius: 40px;
-  background: transparent;
-  color: #ffffff;
-}
-
-body.home-all-black .bottom-tab.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  box-shadow: none;
-}
-
-body.home-all-black .bottom-tab svg {
-  width: 24px;
-  height: 24px;
-  stroke: currentColor;
-}
-
-body.home-all-black .bottom-tab span {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+/* The floating pill tab bar moved to src/app/shell/appShell.css, where it is
+   keyed to the shell policy instead of the dark-theme body class. */
 
 body.home-all-black .mobile-page-shell,
 body.home-all-black .mobile-page-card,
@@ -17157,9 +16969,9 @@ body.home-all-black .login-visual-page {
 }
 
 body.home-all-black .my-replay-page > .primary-topbar {
-  width: calc(100% + 28px);
-  margin-right: -14px;
-  margin-left: -14px;
+  width: calc(100% + var(--my-page-gutter) * 2);
+  margin-right: calc(var(--my-page-gutter) * -1);
+  margin-left: calc(var(--my-page-gutter) * -1);
 }
 
 @media (max-width: 360px) {

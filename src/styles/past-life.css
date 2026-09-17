@@ -1,21 +1,7 @@
 /* MZ dokkaebi past-life experience. Every rule is scoped to the dedicated product. */
 
-.app-container.past-life-app-container,
-body.home-all-black .app-container.past-life-app-container {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: #05070a;
-  box-shadow: none;
-}
-
-.app-container.past-life-report-app-container {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: #05070a;
-  box-shadow: none;
-}
+/* Container width, background and box-shadow are owned by
+   src/app/shell/appShell.css (surface `past-life-goblin`). */
 
 .home-cardnews-card.artwork-title-card .home-cardnews-rank,
 .home-cardnews-card.artwork-title-card .home-cardnews-copy,
@@ -3065,7 +3051,7 @@ body.home-all-black .app-container.past-life-app-container {
   top: 0;
   bottom: 0;
   z-index: -1;
-  width: max(0px, calc((100vw - 480px) / 2));
+  width: max(0px, calc((100% - 480px) / 2));
   background:
     linear-gradient(180deg, rgba(12, 24, 33, 0.34), transparent 34%),
     #030507;
@@ -3145,7 +3131,7 @@ body.home-all-black .app-container.past-life-app-container {
   position: relative;
   z-index: 1;
   display: block;
-  width: min(100vw, 480px);
+  width: min(100%, 480px);
   height: 100svh;
   margin: 0 auto;
 }
@@ -3528,7 +3514,7 @@ body.home-all-black .app-container.past-life-app-container {
 
 .dokkaebi-immersion-stage {
   position: relative;
-  width: min(100vw, 480px);
+  width: min(100%, 480px);
   height: 100svh;
   margin: 0;
   overflow: hidden;
@@ -3718,7 +3704,7 @@ body.home-all-black .app-container.past-life-app-container {
 
 .dokkaebi-entry-seo-hero > span,
 .dokkaebi-entry-seo-method > div > span,
-.dokkaebi-entry-seo-faq header > span {
+.dokkaebi-entry-seo-faq-head > span {
   color: #d5a84f;
   font-size: 12px;
   font-weight: 800;
@@ -3905,7 +3891,7 @@ body.home-all-black .app-container.past-life-app-container {
   padding: 80px 0 100px;
 }
 
-.dokkaebi-entry-seo-faq > div {
+.dokkaebi-entry-seo-faq-list {
   margin-top: 34px;
   border-top: 1px solid rgba(213, 168, 79, 0.19);
 }

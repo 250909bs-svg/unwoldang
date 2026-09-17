@@ -1,4 +1,4 @@
-import { Hand, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Hand, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { storylinePoster, storylineVideo } from './media';
@@ -27,6 +27,16 @@ export default function GuiyeondoIntro({ onEnter }: { onEnter: () => void }) {
 
   return (
     <section className="gy-intro" aria-labelledby="gy-intro-title">
+      {/* The other two guiyeondo stages render `.gy-topbar`; the intro did not,
+          which left /guiyeondo with no top bar on first load. */}
+      <header className="gy-topbar gy-intro-topbar">
+        <Link to="/" aria-label="홈으로">
+          <ArrowLeft size={20} />
+        </Link>
+        <strong>귀연도 <span>貴緣圖</span></strong>
+        <span />
+      </header>
+
       <div className="gy-intro-media" aria-hidden="true">
         {reducedMotion ? (
           <img src={storylinePoster} alt="" />

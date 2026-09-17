@@ -1,14 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-const hiddenPrefixes = ['/form/', '/checkout', '/loading', '/report/', '/admin', '/detail/past-life-goblin'];
-
+/* Whether this footer renders is decided by the route shell policy in App.tsx.
+   It used to keep a second, diverging route list of its own. */
 export default function Footer() {
-  const location = useLocation();
-
-  if (hiddenPrefixes.some((prefix) => location.pathname.startsWith(prefix))) {
-    return null;
-  }
-
   return (
     <footer className="site-footer">
       <div className="site-footer-inner compact">

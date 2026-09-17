@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { getRouteShellPolicy, getShellContainerClassName } from '../../app/shell';
 
 const readSource = (relativePath: string) =>
   readFileSync(new URL(relativePath, import.meta.url), 'utf8');
@@ -31,8 +32,11 @@ describe('general signature premium report UI contract', () => {
   });
 
   it('uses the report-specific full-width shell and avoids loading character video', () => {
-    expect(appSource).toContain("location.pathname === '/report/general-signature'");
-    expect(appSource).toContain("'app-container general-signature-report-app-container'");
+    // The shell decision moved out of App.tsx into the declarative route table.
+    expect(appSource).toContain('getRouteShellPolicy');
+    expect(getShellContainerClassName(getRouteShellPolicy('/report/general-signature'))).toBe(
+      'app-container general-signature-report-app-container'
+    );
     expect(reportSource).toContain('!isGeneralSignature && reportCharacterVideo');
     expect(cssSource).toContain('max-width: 980px');
     expect(cssSource).toContain('@media (max-width: 767px)');

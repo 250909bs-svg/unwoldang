@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSPropertie
 import { ChevronLeft, ChevronRight, Download, Share2, User, Volume2, VolumeX } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { findServiceById, type IntakeFormData } from '../api/mockData';
+import MobileTopBar from '../components/MobileTopBar';
 import PastLifeStoryReport from '../components/PastLifeStoryReport';
 import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
@@ -6447,6 +6448,7 @@ function drawWrappedCanvasText(
 function MissingGeneralSignatureReport() {
   return (
     <main className="mobile-page-shell">
+      <MobileTopBar title="종합사주 리포트" />
       <div className="mobile-page-card">
         <section className="mobile-page-content centered">
           <div className="mobile-loading-card" role="status" aria-live="polite">
@@ -6807,6 +6809,7 @@ function ReportContent({ id, locationState }: { id: string; locationState: Repor
   if (shouldBlockPreview) {
     return (
       <main className="mobile-page-shell">
+        <MobileTopBar title="리포트 안내" />
         <div className="mobile-page-card">
           <section className="mobile-page-content centered">
             <div className="mobile-loading-card">

@@ -3,15 +3,11 @@
    ReunionIntake / ReunionPreview / ReunionReportView 가 함께 쓰는 reunion.css 의
    클래스 의미는 건드리지 않는다. 여기서 만드는 클래스는 전부 rw- 프리픽스다. */
 
-/* ── 컨테이너 해제 (App.tsx 무수정, :has() 로만) ─────────────────── */
-.app-container.reunion-app-container:has(.reunion-webtoon),
-body.home-all-black .app-container.reunion-app-container:has(.reunion-webtoon) {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: #0b0707;
-  box-shadow: none;
-}
+/* ── 컨테이너 ───────────────────────────────────────────────────────
+   전폭(max-width:none)·배경(#0b0707)은 이제 셸 정책이 소유한다.
+   src/app/shell/routeShellPolicy.ts 의 '/detail/love-reunion' 이
+   width:'canvas' + surface:'love-reunion' 을 선언하고
+   src/app/shell/appShell.css 가 적용한다. 여기서 다시 주장하지 않는다. */
 
 /* ── 루트 토큰 ─────────────────────────────────────────────────── */
 .reunion-page.reunion-webtoon {

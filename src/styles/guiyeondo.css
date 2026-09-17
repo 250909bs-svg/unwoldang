@@ -69,6 +69,21 @@
 
 /* Intro */
 .gy-intro { position: relative; min-height: 100svh; isolation: isolate; }
+/* Overlay so the cinematic intro keeps its full 100svh while still offering the
+   same escape hatch as the other two stages. Height comes from appShell.css. */
+.gy-topbar.gy-intro-topbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 6;
+  border-bottom: 0;
+  background: linear-gradient(180deg, rgba(4, 3, 5, .72), transparent);
+  backdrop-filter: none;
+}
+/* The bar now owns the top 64px, so the sound toggle moves under it instead of
+   being covered by the title. */
+.gy-intro .gy-sound-button { top: calc(var(--app-topbar-h) + 10px); }
 .gy-intro-media,
 .gy-intro-media video,
 .gy-intro-media img,
@@ -441,8 +456,8 @@
 @keyframes gy-reveal-pulse { 0%, 100% { transform: scale(.94); box-shadow: 0 0 0 rgba(207, 73, 85, 0); } 50% { transform: scale(1.06); box-shadow: 0 0 34px rgba(207, 73, 85, .32); } }
 
 @media (min-width: 960px) {
-  .app-container.guiyeondo-app-container { width: 100%; max-width: 1440px; min-height: 100vh; }
-  body.home-all-black .app-container.guiyeondo-app-container { max-width: 1440px; }
+  /* 1440px at >=960px is declared by the shell width token `wide`
+     (src/app/shell/appShell.css). */
   .gy-intro-copy { right: auto; bottom: 70px; left: clamp(50px, 8vw, 130px); align-items: flex-start; text-align: left; }
   .gy-intro-copy h1 { font-size: 48px; }
   .gy-intro-enter { width: 300px; }

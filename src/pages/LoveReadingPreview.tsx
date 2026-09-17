@@ -237,6 +237,19 @@ export default function LoveReadingPreview() {
 
     return (
       <main ref={previewRef} className="mz-love-preview-page mz-love-preview-error">
+        {/* The success branch below renders this bar; without it here the error
+            branch was the only route in the app with no shell chrome at all. */}
+        <header className="mz-love-preview-header">
+          <button type="button" onClick={editForm} aria-label="입력 정보 수정하기">
+            <ArrowLeft size={25} aria-hidden="true" />
+          </button>
+          <div>
+            <span>무료 사주 미리보기</span>
+            <strong>MZ무당 팩폭 연애운</strong>
+          </div>
+          <i aria-hidden="true" />
+        </header>
+
         <section>
           <span>원국 확인이 필요해요</span>
           <h1>한 가지만 다시 볼게</h1>

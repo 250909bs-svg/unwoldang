@@ -103,6 +103,19 @@ export default function ReunionReportView({
 
   return (
     <main className="reunion-page reunion-report-page">
+      {/* Report.tsx returns this view before it reaches the shared
+          `.premium-report-topbar`, so /report/love-reunion had no top bar and no
+          way back to the app. `.reunion-topbar` is the cream sibling of the
+          funnel's `.reunion-intake-header`, sized by appShell.css like the rest. */}
+      <header className="reunion-topbar">
+        <Link to="/" className="reunion-topbar-link" aria-label="운월당 홈">
+          운월당
+        </Link>
+        <Link to="/my" className="reunion-topbar-link">
+          보관함
+        </Link>
+      </header>
+
       <section className="reunion-report-hero" aria-labelledby="reunion-report-title">
         <ReunionPicture
           image="reunion"

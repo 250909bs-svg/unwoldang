@@ -3,10 +3,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import './index.css';
+import './app/shell/appShell.css';
 
 function AppReadyBoundary({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
-    document.documentElement.classList.remove('app-booting', 'app-booting-dark');
+    document.documentElement.classList.remove('app-booting', 'app-booting-light');
   }, []);
 
   return children;

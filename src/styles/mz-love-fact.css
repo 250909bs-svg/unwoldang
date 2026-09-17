@@ -1,23 +1,7 @@
 /* MZ무당 팩폭 연애운 — all rules are scoped to the dedicated landing experience. */
 
-.app-container.mz-love-app-container,
-.app-container.mz-love-report-app-container,
-body.home-all-black .app-container.mz-love-app-container,
-body.home-all-black .app-container.mz-love-report-app-container {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  background: #070305;
-  box-shadow: none;
-}
-
-.app-container.mz-love-intake-app-container,
-body.home-all-black .app-container.mz-love-intake-app-container {
-  width: 100%;
-  max-width: 520px;
-  background: #070305;
-  box-shadow: 0 0 70px rgba(0, 0, 0, 0.54);
-}
+/* Container width, background and box-shadow are owned by
+   src/app/shell/appShell.css (surface `love-reading`). */
 
 .mz-love-intake-app-container .love-reading-video-flow-page {
   background:
@@ -64,11 +48,12 @@ body.home-all-black .app-container.mz-love-intake-app-container {
   --mz-love-ivory: #f8f0e8;
   --mz-love-muted: #bba7ac;
   --mz-love-line: rgba(240, 216, 162, 0.18);
+  /* This used to break out of the container with left:50%/100vw/-50vw, which
+     only worked while the container was max-width:none. The shell frame is the
+     container now, so the landing simply fills it. */
   position: relative;
-  left: 50%;
-  width: 100vw;
-  min-height: 100vh;
-  margin-left: -50vw;
+  width: 100%;
+  min-height: 100svh;
   overflow: clip;
   background:
     radial-gradient(circle at 50% 0%, rgba(99, 8, 31, 0.25), transparent 22rem),
@@ -2186,11 +2171,13 @@ body.home-all-black .app-container.mz-love-intake-app-container {
   }
 }
 
+/* The page background is owned by the shell rail token (`--app-rail-bg`).
+   Painting it here is what made /detail/love-reading the only route whose body
+   was rgb(8,7,9) while every other route was rgb(24,25,26). */
 html:has(.mz-love-landing),
 body:has(.mz-love-landing),
 html:has(.mz-love-premium-page),
 body:has(.mz-love-premium-page) {
-  background: #080709;
   scrollbar-color: rgba(170, 57, 78, 0.72) #100d10;
 }
 

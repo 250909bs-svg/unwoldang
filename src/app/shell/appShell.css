@@ -1,0 +1,505 @@
+/* src/app/shell/appShell.css
+ *
+ * The one place that owns the app shell: container width, surface background,
+ * top-bar height, bottom-tab bar, footer spacing, safe-area insets and z-index.
+ *
+ * Every unifying rule is prefixed with :root[data-shell-*], which
+ * `useShellDocumentAttributes` writes from `routeShellPolicy`. Product CSS is
+ * loaded from lazy route chunks and can be injected after this file, so the
+ * rules here never depend on source order - they win on specificity alone
+ * ((0,3,0) beats the (0,1,0)/(0,2,0)/(0,2,1) selectors product sheets use).
+ *
+ * Product sheets no longer re-declare `.app-container` width/background. They
+ * set the `--app-shell-bg` token on their own container class instead, and this
+ * file applies it. That is why nothing here needs `!important`.
+ */
+
+:root {
+  /* ── safe-area ──────────────────────────────────────────────────────────
+     Defined unconditionally so every shell rule can read the inset without
+     repeating `env()`. This is the shell's own source; product sheets still
+     carry raw `env(safe-area-inset-*)` of their own (see
+     `shellStyleContract.test.ts`, which caps that count so the number can only
+     go down). */
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+
+  /* ── top bar: the home shell's 64px bar is the reference ──────────────── */
+  --app-topbar-content-h: 64px;
+  --app-topbar-h: calc(var(--app-topbar-content-h) + var(--app-safe-top));
+  --app-topbar-pad-top: 14px;
+  --app-topbar-pad-bottom: 6px;
+  --app-topbar-pad-x: 16px;
+
+  /* ── bottom tab bar: 0 by default, real height only where it renders ──── */
+  --app-tabbar-content-h: 70px;
+  --app-tabbar-h: 0px; /* already includes safe-bottom; never re-add it downstream */
+  --app-page-bottom-gap: 24px;
+
+  /* ── width: one value for max-width (may be none), one always a length ── */
+  --app-shell-width: 400px;
+  --app-shell-width-px: 400px;
+  /* Letterbox rail on one side of the centred frame. The safe-area inset only
+     eats into the frame when it is wider than this. */
+  --app-rail-gutter: max(0px, calc((100vw - min(100vw, var(--app-shell-width-px))) / 2));
+  /* Inner content column. Keeps one reading rhythm even on canvas width. */
+  --app-col: 440px;
+
+  /* ── colour ───────────────────────────────────────────────────────────── */
+  --app-rail-bg: #18191a; /* outside the frame (desktop letterbox) */
+  --app-shell-bg: #000000; /* inside the frame; product containers override */
+  --app-shell-ink: #fafafa;
+
+  /* ── z-index ──────────────────────────────────────────────────────────── */
+  --z-topbar: 45;
+  --z-page-cta: 50;
+  --z-tabbar: 60;
+  --z-page-dock: 70; /* .rw-dock / .dokkaebi-sticky-purchase already use 70 */
+  --z-overlay: 80;
+  --z-modal: 90;
+}
+
+/* ── axis → token ───────────────────────────────────────────────────────── */
+
+:root[data-shell-tabbar='visible'] {
+  --app-tabbar-h: calc(var(--app-tabbar-content-h) + var(--app-safe-bottom));
+}
+
+:root[data-shell-topbar='none'] {
+  --app-topbar-h: 0px;
+}
+
+:root[data-shell-width='phone'] {
+  --app-shell-width: 400px;
+  --app-shell-width-px: 400px;
+}
+:root[data-shell-width='card'] {
+  --app-shell-width: 520px;
+  --app-shell-width-px: 520px;
+}
+:root[data-shell-width='canvas'] {
+  --app-shell-width: none;
+  --app-shell-width-px: 100%;
+}
+:root[data-shell-width='full'] {
+  --app-shell-width: none;
+  --app-shell-width-px: 100%;
+}
+/* `wide` is phone-sized until the guiyeondo two-column layout actually turns on. */
+:root[data-shell-width='wide'] {
+  --app-shell-width: 400px;
+  --app-shell-width-px: 400px;
+}
+
+@media (min-width: 960px) {
+  :root[data-shell-width='wide'] {
+    --app-shell-width: 1440px;
+    --app-shell-width-px: 1440px;
+  }
+}
+
+:root[data-shell-theme='light'] {
+  --app-rail-bg: #f5f6f8;
+  --app-shell-bg: #ffffff;
+  --app-shell-ink: #111827;
+}
+
+:root[data-shell-surface='general-signature'] {
+  --app-shell-bg: #030806;
+}
+:root[data-shell-surface='love-reading'] {
+  --app-shell-bg: #070305;
+}
+:root[data-shell-surface='love-reunion'] {
+  --app-shell-bg: #0b0707;
+}
+:root[data-shell-surface='past-life-goblin'] {
+  --app-shell-bg: #05070a;
+}
+:root[data-shell-surface='guiyeondo'] {
+  --app-shell-bg: #070608;
+}
+:root[data-shell-surface='admin'] {
+  --app-shell-bg: #f4f6f8;
+  --app-shell-ink: #111827;
+}
+
+/* ── frame ──────────────────────────────────────────────────────────────── */
+
+:root[data-shell-theme='dark'] {
+  color-scheme: dark;
+}
+:root[data-shell-theme='light'] {
+  color-scheme: light;
+}
+
+/* Unconditional, so the rail colour is right before the boot script runs and
+   still right when the client has JavaScript off (SEO static fallback, crawlers).
+   `--app-rail-bg` defaults to the dark rail on `:root` above; the theme axis
+   only re-points the token. */
+body {
+  margin: 0;
+  background: var(--app-rail-bg);
+  color: var(--app-shell-ink);
+}
+
+:root[data-shell-width] .app-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--app-shell-width);
+  min-height: 100svh;
+  margin-inline: auto;
+  /* The frame is centred, so it only needs the part of the inset the letterbox
+     rail does not already absorb. Without this, landscape on a notched phone
+     lost 47px of reading width to a notch that never touches the frame. */
+  padding-inline:
+    max(0px, calc(var(--app-safe-left) - var(--app-rail-gutter)))
+    max(0px, calc(var(--app-safe-right) - var(--app-rail-gutter)));
+  background: var(--app-shell-bg);
+  color: var(--app-shell-ink);
+  box-shadow: none;
+}
+
+/* ── top bars: every measured height collapses into `--app-topbar-h` ────── */
+/* The selector list is the contract. `routeShellAppContract.test.ts` derives it
+   from the policy table, so a route that declares `topBar: 'product'` cannot
+   ship a bar that is missing from this list (that is how `.intake-story-topbar`
+   stayed at 58px) and a bar nothing renders cannot linger here (that is what
+   `.reunion-topbar` was until `ReunionReportView` started using it). */
+
+:root[data-shell-topbar] .primary-topbar,
+:root[data-shell-topbar] .reunion-topbar,
+:root[data-shell-topbar] .reunion-intake-header,
+:root[data-shell-topbar] .gy-topbar,
+:root[data-shell-topbar] .gs-intake-topbar,
+:root[data-shell-topbar] .intake-story-topbar,
+:root[data-shell-topbar] .dokkaebi-entry-head,
+:root[data-shell-topbar] .dokkaebi-immersion-head,
+:root[data-shell-topbar] .dokkaebi-site-head,
+:root[data-shell-topbar] .mz-love-intake-header,
+:root[data-shell-topbar] .mz-love-preview-header,
+:root[data-shell-topbar] .premium-report-topbar,
+:root[data-shell-topbar] .rw-topbar {
+  box-sizing: border-box;
+  min-height: var(--app-topbar-h);
+  padding-top: max(var(--app-topbar-pad-top), var(--app-safe-top));
+  padding-bottom: var(--app-topbar-pad-bottom);
+  align-items: center;
+}
+
+/* A 1px hairline is part of the 64px budget, not an extra pixel on top of it.
+   Without this these three measured 65px against everyone else's 64px. */
+:root[data-shell-topbar] .reunion-intake-header,
+:root[data-shell-topbar] .dokkaebi-site-head,
+:root[data-shell-topbar] .premium-report-topbar {
+  --app-topbar-pad-bottom: 5px;
+}
+
+/* The report bar is the outer element, so it owns the height; its inner column
+   only owns the reading width. Sizing the inner one left the outer 1px taller. */
+:root[data-shell-topbar] .premium-report-topbar-inner {
+  box-sizing: border-box;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-inline: auto;
+  align-items: center;
+}
+
+/* Overlay bars follow the frame width instead of their old 480px constant. */
+:root[data-shell-topbar] .dokkaebi-entry-head,
+:root[data-shell-topbar] .dokkaebi-immersion-head {
+  width: min(100%, var(--app-shell-width-px));
+}
+
+/* Bars on canvas-width pages keep the reading column. */
+:root[data-shell-topbar] .dokkaebi-site-head,
+:root[data-shell-topbar] .rw-topbar {
+  margin-inline: auto;
+}
+
+:root[data-shell-topbar] .primary-topbar {
+  z-index: var(--z-topbar);
+}
+
+/* The brand link is the only way out of a door-hidden or immersive route, so it
+   carries the 44px touch target even though the type stays at its design size. */
+:root[data-shell-topbar] .mobile-topbar-brand,
+:root[data-shell-topbar] .dokkaebi-entry-brand,
+:root[data-shell-topbar] .dokkaebi-site-brand,
+:root[data-shell-topbar] .intake-story-brand,
+:root[data-shell-topbar] .gs-intake-brand,
+:root[data-shell-topbar] .rw-wordmark {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+
+/* This bar wraps its row in a div with its own min-height, which pushed the
+   bar to 72px. Size the row from the same token so the total stays 64px. */
+:root[data-shell-topbar] .mz-love-intake-header > div {
+  min-height: calc(
+    var(--app-topbar-content-h) - var(--app-topbar-pad-top) - var(--app-topbar-pad-bottom)
+  );
+}
+
+/* /search stacked two bars (64 + 66 = 130px). The second one is page content:
+   `.search-page-inner` already consumes safe-top, so this bar takes none. */
+:root[data-shell-topbar] .search-topbar {
+  min-height: 0;
+  padding-top: 4px;
+}
+:root[data-shell-topbar] .search-page-inner {
+  padding-top: 0;
+}
+
+/* Single-screen entry cuts must fit inside the viewport minus the bar. */
+:root[data-shell-tabbar='door-hidden'] .general-saju-entry-stage,
+:root[data-shell-tabbar='door-hidden'] .mz-love-entry-only .mz-love-intro,
+:root[data-shell-tabbar='door-hidden'] .mz-love-entry-only .mz-love-intro-stage {
+  min-height: calc(100svh - var(--app-topbar-h));
+}
+:root[data-shell-tabbar='door-hidden'] .mz-love-entry-only .mz-love-intro-stage {
+  height: calc(100svh - var(--app-topbar-h));
+}
+
+/* ── bottom tab bar: one floating black pill, nothing else ──────────────── */
+
+:root[data-shell-tabbar='visible'] .bottom-tabbar {
+  position: fixed;
+  z-index: var(--z-tabbar);
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  width: min(var(--app-shell-width-px), 100%);
+  padding: 0 0 calc(12px + var(--app-safe-bottom));
+  transform: translateX(-50%);
+  pointer-events: none; /* outside the pill the page CTA stays clickable */
+}
+
+:root[data-shell-tabbar='visible'] .bottom-tabbar-inner {
+  display: flex;
+  align-items: center;
+  width: 298px;
+  height: 58px;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid rgba(244, 244, 245, 0.5);
+  border-radius: 32px;
+  background: rgba(18, 18, 18, 0.5);
+  box-shadow: none;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+:root[data-shell-tabbar='visible'] .bottom-tab {
+  position: relative;
+  display: flex;
+  flex: 0 0 68px;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  min-height: 44px;
+  height: 44px;
+  gap: 0;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 40px;
+  background: transparent;
+  color: #ffffff;
+}
+
+:root[data-shell-tabbar='visible'] .bottom-tab.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+/* The fill is the only colour difference between tabs, and forced-colours mode
+   replaces it with a system colour. `aria-current="page"` carries the state for
+   assistive tech; this carries it for anyone whose colours are overridden. */
+@media (forced-colors: active) {
+  :root[data-shell-tabbar='visible'] .bottom-tab.active {
+    outline: 2px solid;
+    outline-offset: -2px;
+    forced-color-adjust: none;
+  }
+}
+
+:root[data-shell-tabbar='visible'] .bottom-tab svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+}
+
+/* Without this the label text joins the icon and bursts the 298px pill. */
+:root[data-shell-tabbar='visible'] .bottom-tab span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Belt and braces: the bar is not rendered at all in these states. */
+:root[data-shell-tabbar='flow-hidden'] .bottom-tabbar,
+:root[data-shell-tabbar='door-hidden'] .bottom-tabbar,
+:root[data-shell-tabbar='immersive-hidden'] .bottom-tabbar,
+:root[data-shell-tabbar='hidden'] .bottom-tabbar {
+  display: none;
+}
+
+/* ── shared simple-page primitives on the dark shell ────────────────────── */
+/* NotFound, the checkout/loading route boundaries, the Kakao and PortOne
+   callbacks, ProductUnavailable and the generic detail page all reuse the
+   `.mobile-*` card primitives, which were only ever styled for the cream shell.
+   Bringing those routes onto the dark shell left white cards carrying
+   near-white text, so the primitives get a dark treatment here. */
+
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-hero-card,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-section-card,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-loading-card,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-mini-card,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-report-card {
+  border-color: #2f3033;
+  background: #121212;
+  box-shadow: none;
+}
+
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-hero-card h1,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-loading-card h1,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-loading-card strong,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-section-title {
+  color: #fafafa;
+}
+
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-hero-card p,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-loading-card p,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-muted-copy,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-notice-box,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-bullet-list {
+  color: #a1a1aa;
+}
+
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-chip,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-inline-label,
+:root[data-shell-theme='dark'] .mobile-page-shell .mobile-meta-pill {
+  border-color: #3f3f46;
+  background: #202024;
+  color: #d4d4d8;
+}
+
+:root[data-shell-theme='dark'] .mobile-page-shell .app-black-button {
+  background: #fafafa;
+  color: #09090b;
+  box-shadow: none;
+}
+
+:root[data-shell-theme='dark'] .mobile-page-shell .app-muted-button {
+  border: 1px solid #2f3033;
+  background: #18181b;
+  color: #d4d4d8;
+}
+
+/* ── footer: replaces the hardcoded 104px bottom padding ────────────────── */
+
+:root[data-shell-footer='visible'] .site-footer {
+  padding: 16px 0 calc(var(--app-tabbar-h) + var(--app-page-bottom-gap));
+  background: var(--app-shell-bg);
+}
+
+/* ── shared helpers for pages that reserve bottom space ─────────────────── */
+
+.app-bottom-safe {
+  padding-bottom: calc(var(--app-tabbar-h) + var(--app-page-bottom-gap));
+}
+
+.app-cta-dock {
+  position: fixed;
+  z-index: var(--z-page-cta);
+  right: 0;
+  bottom: var(--app-tabbar-h);
+  left: 0;
+  width: min(var(--app-shell-width-px), 100%);
+  margin-inline: auto;
+  padding-bottom: var(--app-safe-bottom);
+}
+
+.app-fullbleed {
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* ── magic bottom numbers reclaimed by the token ────────────────────────── */
+/* All of these routes are flow-hidden, so `--app-tabbar-h` resolves to 0px and
+   the dead 116px / 96px / 92px gaps disappear. */
+
+:root[data-shell-tabbar] .intake-story-page {
+  padding-bottom: calc(var(--app-tabbar-h) + 46px + var(--app-safe-bottom));
+}
+/* `max()`, not `+`: with the bar visible `--app-tabbar-h` already contains
+   safe-bottom, so adding it again would double-count. With the bar hidden the
+   token is 0 and the inset is all that keeps this dock off the home indicator
+   (`viewport-fit=cover` lets the page run under it). */
+:root[data-shell-tabbar] .intake-story-actions {
+  bottom: calc(max(var(--app-tabbar-h), var(--app-safe-bottom)) + 8px);
+}
+:root[data-shell-tabbar] .past-life-goblin-flow-page {
+  min-height: calc(100dvh - var(--app-tabbar-h));
+}
+:root[data-shell-tabbar] .reunion-intake-page {
+  padding-bottom: calc(var(--app-tabbar-h) + 92px + var(--app-safe-bottom));
+}
+:root[data-shell-tabbar] .reunion-intake-actions {
+  z-index: var(--z-page-cta);
+  bottom: var(--app-tabbar-h);
+}
+:root[data-shell-tabbar] .mz-love-intake-footer {
+  z-index: var(--z-page-cta);
+  bottom: var(--app-tabbar-h);
+}
+
+/* ── viewport-keyed rules that must follow the frame instead ────────────── */
+/* A `position: fixed` element inside a 400px frame is still laid out against
+   the viewport, so on desktop it escapes the frame. These three all did.
+   `left: 0; right: 0` + an explicit width + `margin-inline: auto` centres a
+   fixed box on its containing block, the same trick `.app-cta-dock` uses; it
+   needs no transform, so the backdrop's own animation stays intact. */
+
+:root[data-shell-width='phone'] .intake-story-backdrop,
+:root[data-shell-width='phone'] .intake-story-shade,
+:root[data-shell-width='phone'] .dokkaebi-immersion-page {
+  width: min(var(--app-shell-width-px), 100%);
+  margin-inline: auto;
+}
+
+/* `reunion.css` puts the funnel's desktop layout behind `@media (min-width: 768px)`,
+   which is keyed to the viewport and not to the frame, so a 400px funnel page
+   inside a 1280px window flips to the desktop layout. Restore the base rule
+   wholesale - overriding only `position`/`width` left the action bar stretched
+   across the window, transparent and borderless. Remove this block once those
+   rules move to a container query. */
+@media (min-width: 768px) {
+  :root[data-shell-width='phone'] .reunion-intake-actions {
+    position: fixed;
+    width: min(var(--app-shell-width-px), 100%);
+    grid-template-columns: minmax(92px, 0.36fr) minmax(0, 1fr);
+    margin-inline: auto;
+    padding: 10px 14px max(10px, var(--app-safe-bottom));
+    border-top: 1px solid var(--reunion-line);
+    background: rgba(255, 250, 244, 0.95);
+    backdrop-filter: blur(14px);
+  }
+  :root[data-shell-width='phone'] .reunion-preview-heading,
+  :root[data-shell-width='phone'] .reunion-report-hero-copy {
+    right: 18px;
+    left: 18px;
+  }
+}
