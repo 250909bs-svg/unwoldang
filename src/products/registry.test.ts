@@ -53,28 +53,33 @@ describe('product registry contract', () => {
       expect(canIndexProduct(id)).toBe(true);
     });
 
+    const localPreviewIds = ['love-reading', 'love-reunion', 'past-life-goblin'];
+
     archivedIds.forEach((id) => {
       expect(isProductActive(id)).toBe(false);
-      expect(canDiscoverProduct(id)).toBe(id === 'love-reading' || id === 'love-reunion');
-      expect(canStartProduct(id)).toBe(id === 'love-reading' || id === 'love-reunion');
+      expect(canDiscoverProduct(id)).toBe(localPreviewIds.includes(id));
+      expect(canStartProduct(id)).toBe(localPreviewIds.includes(id));
       expect(canPurchaseProduct(id)).toBe(false);
       expect(canIndexProduct(id)).toBe(false);
     });
   });
 
-  it('keeps archived MZ love reading and reunion available only in local preview', () => {
+  it('keeps archived MZ love reading, reunion and past life available only in local preview', () => {
     expect(import.meta.env.DEV).toBe(true);
     expect(isLocalPreviewProduct('love-reading')).toBe(true);
+    expect(isLocalPreviewProduct('past-life-goblin')).toBe(true);
     expect(discoverableProducts.map((product) => product.id)).toEqual([
       'general-signature',
+      'past-life-goblin',
       'love-reading',
       'love-reunion'
     ]);
     expect(canPurchaseProduct('love-reading')).toBe(false);
     expect(canPurchaseProduct('love-reunion')).toBe(false);
+    expect(canPurchaseProduct('past-life-goblin')).toBe(false);
     expect(canIndexProduct('love-reading')).toBe(false);
     expect(canIndexProduct('love-reunion')).toBe(false);
-    expect(isLocalPreviewProduct('past-life-goblin')).toBe(false);
+    expect(canIndexProduct('past-life-goblin')).toBe(false);
   });
 
   it('keeps built local previews on loopback without exposing archived products on production hosts', () => {

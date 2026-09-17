@@ -81,7 +81,11 @@ export const activeProducts = Object.freeze(
   productIds.map((id) => productRegistry[id]).filter((product) => product.status === 'active')
 );
 
-const localPreviewProductIds = new Set<ProductId>(['love-reading', 'love-reunion']);
+const localPreviewProductIds = new Set<ProductId>([
+  'love-reading',
+  'love-reunion',
+  'past-life-goblin'
+]);
 
 type LocalPreviewRuntime = {
   isDevelopment: boolean;
