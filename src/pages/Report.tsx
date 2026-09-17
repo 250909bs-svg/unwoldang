@@ -8,6 +8,7 @@ import { pastLifeChapters } from '../content/pastLifeExperience';
 import type { AiReportProvider } from '../lib/aiReport';
 import { clearPendingPayment, readStoredAuthUser } from '../lib/auth';
 import { normalizeIntakeFormData } from '../lib/intakeDataContract';
+import { REUNION_CONTEXT_VERSION } from '../lib/reunion';
 import { readReportArchiveEntries, saveRemoteReportArchiveEntry, saveReportArchiveEntry } from '../lib/reportArchive';
 import { createLoveReadingProductShareData } from '../lib/loveReadingShare';
 import { evaluateReportAccess } from '../lib/reportAccessGate';
@@ -199,6 +200,39 @@ const LOVE_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
   loveFocus: 'my-attraction',
   q1: '지금 마음에 걸리는 사람과 관계가 더 깊어질 수 있을까요?',
   q2: '제가 놓치면 안 될 사람의 행동 신호는 무엇인가요?'
+};
+
+/* 재회운은 상대 명식과 `reunionContext` 가 없으면 궁합 근거·연락 조건이 전부 보류로 착지한다.
+   로컬 미리보기(`evaluateReportAccess` 의 local-preview, 개발 모드 + 루프백에서만 참)에서만
+   쓰는 값이며, 결제 경로에서는 인테이크가 넣어 준 실제 값이 그대로 들어온다. */
+const REUNION_PREVIEW_FORM_DATA: Partial<IntakeFormData> = {
+  ...PREVIEW_FORM_DATA,
+  name: '김하린',
+  relationshipStatus: 'breakup-reunion',
+  relationshipDuration: 'under3',
+  partner: {
+    name: '이서연',
+    gender: 'male',
+    calendar: 'solar',
+    isLeapMonth: false,
+    birthDate: '1991-04-18',
+    birthTime: '07:40',
+    isUnknownTime: false,
+    birthTimePrecision: 'exact',
+    dayBoundaryPolicy: 'midnight'
+  },
+  q1: '먼저 안부를 물어도 될까요?',
+  q2: '이별 후 기간: 3~6개월 · 현재 연락: 가끔 안부만 주고받아요',
+  reunionContext: {
+    schemaVersion: REUNION_CONTEXT_VERSION,
+    breakupDuration: 'threeTo6m',
+    contactStatus: 'occasional',
+    lastContactAt: '2026-08-20',
+    breakupReason: '대화 방식이 달라 같은 자리에서 여러 번 부딪혔어요.',
+    desiredOutcome: 'clarity',
+    notes: '돌려받을 물건이 하나 남아 있어요.',
+    consentToUsePartnerData: true
+  }
 };
 
 const PILLAR_LABELS = [
@@ -6506,9 +6540,11 @@ function ReportContent({ id, locationState }: { id: string; locationState: Repor
       : reportAccess.usesPreviewData
         ? service.id === 'love-reading'
           ? LOVE_PREVIEW_FORM_DATA
-          : service.id === 'general-signature'
-            ? {}
-            : PREVIEW_FORM_DATA
+          : service.id === 'love-reunion'
+            ? REUNION_PREVIEW_FORM_DATA
+            : service.id === 'general-signature'
+              ? {}
+              : PREVIEW_FORM_DATA
         : formData || {}),
     [formData, reportAccess.usesPreviewData, service.id]
   );

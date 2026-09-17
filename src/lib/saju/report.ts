@@ -116,6 +116,16 @@ export interface FortuneWindow {
   summary: string;
   focus: string;
   caution: string;
+  /**
+   * 대운 시작·종료 시각(ISO). `DayunData.startsAt`/`endsAt` 를 그대로 싣는다.
+   *
+   * `range` 는 `30세 ~ 39세` 형태의 **나이 문자열**이고, 입운이 정수 나이가 아니라
+   * 소수 나이(절기 기준 시각)에서 시작하므로 `생년 + 시작 나이` 로 연도를 되짚으면
+   * 실제 구간과 최대 2년까지 어긋난다. 연도 표기가 필요한 화면은 이 두 값만 쓴다.
+   * 첫 대운 진입 전처럼 대응하는 행이 없으면 비운다.
+   */
+  startsAt?: string;
+  endsAt?: string;
 }
 
 export interface ActionPlan {

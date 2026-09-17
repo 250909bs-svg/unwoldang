@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, Check, LockKeyhole, ShieldCheck } from 'lucide-r
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { readReunionContext, type ReunionContext } from '../../lib/reunion';
+import { buildReunionGate, readReunionContext, type ReunionContext } from '../../lib/reunion';
 import '../../styles/reunion.css';
 import { readReunionDraft, writeReunionDraft } from './intakeStorage';
 import ReunionPicture from './ReunionPicture';
@@ -55,6 +55,10 @@ export default function ReunionPreview() {
   }, [formData, navigate, reunionContext]);
 
   if (!formData || !reunionContext) return null;
+
+  /* 결제 지점의 판단 게이트. 리포트 안의 게이트와 **같은 함수**를 쓴다 —
+     두 벌로 만들면 두 화면의 판정이 조용히 갈라진다. */
+  const gate = buildReunionGate({ context: reunionContext });
 
   const continueToCheckout = () => {
     if (storedDraft?.draft) {
@@ -178,17 +182,38 @@ export default function ReunionPreview() {
               </li>
             ))}
           </ul>
-          <button type="button" className="reunion-primary-cta" onClick={continueToCheckout}>
-            <span>
-              <small>첫 공개가 · 1회 결제</small>
-              <strong>{REUNION_PRICE.toLocaleString('ko-KR')}원으로 전체 리포트 보기</strong>
-            </span>
-            <ArrowRight size={20} aria-hidden="true" />
-          </button>
-          <div className="reunion-payment-note">
-            <ShieldCheck size={17} aria-hidden="true" />
-            <span>{isAuthenticated ? '결제 전 주문 정보를 다시 확인할 수 있어요.' : '카카오 로그인 뒤 이 화면으로 돌아와 결제를 이어갑니다.'}</span>
-          </div>
+          {/* §6-C-2. 판단 게이트가 보류로 나온 독자에게는 결제 유도를 하지 않는다.
+              게이트를 리포트 안에만 두면 이미 결제한 사람에게 교차판매를 줄이는 효과만 있고,
+              정작 취약한 상태에서 결제하는 지점은 그대로 열려 있다.
+              길을 막지는 않는다 — 가격을 앞세운 CTA 대신 보류 카드와 눌러 두는 문장만 둔다. */}
+          {gate.state === 'deferred' ? (
+            <div className="reunion-preview-hold" role="note">
+              <strong>오늘은 결제를 권하지 않을게요</strong>
+              <ul>
+                {gate.hardReasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+              <p>리포트는 사라지지 않아요. 잠과 끼니가 돌아온 뒤 다시 열어 보셔도 됩니다.</p>
+              <button type="button" className="reunion-text-button" onClick={continueToCheckout}>
+                그래도 지금 이어서 볼게요
+              </button>
+            </div>
+          ) : (
+            <>
+              <button type="button" className="reunion-primary-cta" onClick={continueToCheckout}>
+                <span>
+                  <small>첫 공개가 · 1회 결제</small>
+                  <strong>{REUNION_PRICE.toLocaleString('ko-KR')}원으로 전체 리포트 보기</strong>
+                </span>
+                <ArrowRight size={20} aria-hidden="true" />
+              </button>
+              <div className="reunion-payment-note">
+                <ShieldCheck size={17} aria-hidden="true" />
+                <span>{isAuthenticated ? '결제 전 주문 정보를 다시 확인할 수 있어요.' : '카카오 로그인 뒤 이 화면으로 돌아와 결제를 이어갑니다.'}</span>
+              </div>
+            </>
+          )}
           <button type="button" className="reunion-text-button" onClick={editAnswers}>입력 정보 수정하기</button>
         </section>
       </section>

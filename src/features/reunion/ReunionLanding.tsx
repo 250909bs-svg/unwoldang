@@ -11,6 +11,12 @@ import {
 import { Link } from 'react-router-dom';
 import ReunionPanelPicture from './ReunionPanelPicture';
 import { reunionPanelArt, type ReunionPanelId } from './reunionPanelAssets';
+import {
+  ReunionMeterBand,
+  ReunionMeterGauge,
+  ReunionMeterTally,
+  ReunionMeterTimeline
+} from './reunionMeters';
 import { REUNION_PATHS, REUNION_PRICE } from './reunionFlow';
 import {
   actTitles,
@@ -361,55 +367,53 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
         </ul>
       );
 
-    /* 게이지와 타임라인은 한 블록이다. 절대 분리하지 않는다. */
+    /* 게이지와 타임라인은 한 블록이다. 절대 분리하지 않는다.
+       마크업은 reunionMeters.tsx 에 있고 리포트 화면이 같은 것을 실제 값으로 그린다.
+       여기서는 값이 비어 있는 상태가 곧 '우리가 채우지 않는 칸'이라는 메시지다. */
     case 'gaugeTimeline':
       return (
         <div className="rw-gauge-block">
-          <div className="rw-gauge">
-            <div className="rw-gauge-track">
-              <span className="rw-gauge-cell" aria-hidden="true" />
-              <span className="rw-gauge-cell" aria-hidden="true" />
-              <span className="rw-gauge-cell" aria-hidden="true" />
-            </div>
-          </div>
+          <ReunionMeterGauge
+            ns="rw"
+            cells={[{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }]}
+          />
           {cut.gaugeCaption ? <p className="rw-gauge-caption">{cut.gaugeCaption}</p> : null}
-          <ol className="rw-timeline" role="list">
-            {actionTimeline.map((node) => (
-              <li className="rw-timeline-node" key={node.when}>
-                <span className="rw-timeline-dot" aria-hidden="true" />
-                <strong className="rw-timeline-when">{node.when}</strong>
-                <span className="rw-timeline-count">{node.count}</span>
-              </li>
-            ))}
-          </ol>
+          <ReunionMeterTimeline
+            ns="rw"
+            nodes={actionTimeline.map((node) => ({
+              id: node.when,
+              when: node.when,
+              count: node.count
+            }))}
+          />
         </div>
       );
 
     case 'timingBand':
       return (
         <>
-          <div className="rw-band">
-            <ol className="rw-band-ticks" aria-hidden="true">
-              {Array.from({ length: 12 }, (_, index) => (
-                <li className={`rw-band-tick${index === 6 ? ' is-marked' : ''}`} key={index} />
-              ))}
-            </ol>
-            <p className="rw-band-label" aria-hidden="true">
-              ○○○○년 ○월 · ○○
-            </p>
-            <span className="reunion-visually-hidden">참고 구간 예시 표기</span>
-            {cut.bandNote ? <p className="rw-band-note">{cut.bandNote}</p> : null}
-          </div>
-          <ul className="rw-tally" role="list">
-            {tallyItems.map((item) => (
-              <li key={item.label}>
-                <strong className="rw-tally-num">{item.num}</strong>
-                <span className="rw-tally-unit">{item.unit}</span>
-                <span className="rw-tally-label">{item.label}</span>
-              </li>
-            ))}
-          </ul>
-          {cut.tallyFoot ? <p className="rw-tally-foot">{cut.tallyFoot}</p> : null}
+          <ReunionMeterBand
+            ns="rw"
+            ticks={Array.from({ length: 12 }, (_unused, index) => ({
+              id: String(index),
+              marked: index === 6
+            }))}
+            ticksHidden
+            label="○○○○년 ○월 · ○○"
+            labelHidden
+            srText="참고 구간 예시 표기"
+            note={cut.bandNote}
+          />
+          <ReunionMeterTally
+            ns="rw"
+            items={tallyItems.map((item) => ({
+              id: item.label,
+              num: item.num,
+              unit: item.unit,
+              label: item.label
+            }))}
+            foot={cut.tallyFoot}
+          />
         </>
       );
 

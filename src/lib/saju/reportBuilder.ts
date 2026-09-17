@@ -730,7 +730,11 @@ function mapCurrentAndNextDayun(
       range: row.age,
       summary: `${displayName}(${row.ganzhi}) 대운은 ${tenGodReading}. ${practicalTheme.summary}`,
       focus: practicalTheme.focus,
-      caution: practicalTheme.caution
+      caution: practicalTheme.caution,
+      /* 입운은 정수 나이가 아니라 절기 기준 시각에서 시작한다. 연도 표기가 필요한 화면이
+         `생년 + 시작 나이` 로 되짚으면 실제 구간과 어긋나므로 계산된 경계를 그대로 싣는다. */
+      startsAt: row.startsAt,
+      endsAt: row.endsAt
     };
   };
 

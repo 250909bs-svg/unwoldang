@@ -1022,6 +1022,43 @@
   color: var(--reunion-safe);
 }
 
+/* 판단 게이트가 보류로 나왔을 때 가격 CTA 자리에 들어가는 카드 (§6-C-2).
+   길을 막지 않되 가격과 화살표로 밀지 않는다. */
+.reunion-preview-hold {
+  margin-top: 24px;
+  padding: 18px 16px;
+  background: var(--reunion-blush);
+  border: 1px solid var(--reunion-line);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.reunion-preview-hold > strong {
+  display: block;
+  color: var(--reunion-ink);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.reunion-preview-hold ul {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reunion-preview-hold li,
+.reunion-preview-hold > p {
+  color: #57474c;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.reunion-preview-hold > p {
+  margin-top: 12px;
+}
+
 .reunion-text-button {
   display: block;
   min-height: 44px;
