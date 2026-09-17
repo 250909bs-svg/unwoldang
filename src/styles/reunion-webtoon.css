@@ -1,0 +1,1691 @@
+/* 운월당 재회운 웹툰 랜딩 전용. 모든 규칙은 .reunion-webtoon 하위로만 적용한다.
+   이 클래스를 다른 화면에 붙이지 말 것. 이미지 배율 상한 1.6(패널 19는 1.0 고정).
+   ReunionIntake / ReunionPreview / ReunionReportView 가 함께 쓰는 reunion.css 의
+   클래스 의미는 건드리지 않는다. 여기서 만드는 클래스는 전부 rw- 프리픽스다. */
+
+/* ── 컨테이너 해제 (App.tsx 무수정, :has() 로만) ─────────────────── */
+.app-container.reunion-app-container:has(.reunion-webtoon),
+body.home-all-black .app-container.reunion-app-container:has(.reunion-webtoon) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: #0b0707;
+  box-shadow: none;
+}
+
+/* ── 루트 토큰 ─────────────────────────────────────────────────── */
+.reunion-page.reunion-webtoon {
+  --rw-ink: #0b0707;
+  --rw-ink-2: #140d0d;
+  --rw-ink-3: #241414;
+  --rw-dawn: #171016;
+  --rw-crimson: #e04a3c;
+  --rw-crimson-deep: #4a0f0c;
+  --rw-crimson-ink: #2b0806;
+  --rw-gold: #e0b070;
+  --rw-gold-hi: #fbc064;
+  /* 장식 전용(선·테두리). 글자에 쓰면 #0b0707 대비 4.09:1 로 AA 미달이다. */
+  --rw-gold-dim: #8a6b4a;
+  /* 어두운 배경 위 작은 글자용 금색. #0b0707 대비 5.09:1. */
+  --rw-gold-text: #9c7a55;
+  --rw-cream: #f3e6d2;
+  --rw-cream-dim: #c9b79f;
+  --rw-bubble: #fbf4ea;
+  --rw-navy: #0d2340;
+  --rw-navy-line: #2a5c9a;
+  --rw-safe: #6fae8f;
+  --rw-paper: #ece7dc;
+  /* 종이 영역(rw-legal · rw-footer) 위에서 쓰는 잉크색. 종이 대비 12.2:1. */
+  --rw-paper-ink: #2b2620;
+  --rw-serif: 'Nanum Myeongjo', 'Noto Serif KR', 'AppleMyungjo', 'Batang', serif;
+  --rw-col: 460px;
+
+  /* 오행 색. 시안 5.png 의 원국표 색 코드를 어두운 배경에 맞춰 낮춘 값이며
+     전부 --rw-ink 대비 5.9:1 이상이다. 페이지에서 파랑은 비교표 is-report 칸과
+     여기 '수' 칸 두 곳에만 쓴다. */
+  --rw-el-wood: #7fae86;
+  --rw-el-fire: #e0655a;
+  --rw-el-earth: #cfa46a;
+  --rw-el-metal: #d8d2c6;
+  --rw-el-water: #7fa8cf;
+
+  min-height: 100svh;
+  overflow: clip;
+  color-scheme: dark;
+  background: var(--rw-ink);
+  color: var(--rw-cream);
+  font-family: var(--rw-serif);
+}
+
+/* reunion.css 에서 옮겨 온 최소 리셋.
+   이 랜딩은 reunion.css 를 import 하지 않는다(이 페이지에서 매칭되는 규칙이
+   268개 중 5개뿐이라 LCP 경로에 죽은 스타일시트가 얹혔다). */
+.reunion-page.reunion-webtoon *,
+.reunion-page.reunion-webtoon *::before,
+.reunion-page.reunion-webtoon *::after {
+  box-sizing: border-box;
+}
+
+.reunion-page.reunion-webtoon a,
+.reunion-page.reunion-webtoon button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reunion-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reunion-page.reunion-webtoon a:focus-visible,
+.reunion-page.reunion-webtoon button:focus-visible {
+  outline: 3px solid var(--rw-gold);
+  outline-offset: 3px;
+}
+
+/* 종이 배경 위에서는 금색 링이 1.60:1 이라 보이지 않는다(WCAG 2.4.11 은 3:1).
+   법적 필수 링크가 모여 있는 영역이므로 링 색을 따로 준다. */
+.reunion-page.reunion-webtoon .rw-legal a:focus-visible,
+.reunion-page.reunion-webtoon .rw-footer a:focus-visible {
+  outline-color: var(--rw-paper-ink);
+}
+
+/* 스코프 내 여백 리셋 (전역 기본값이 들어오는 것을 막는다) */
+.reunion-webtoon h1,
+.reunion-webtoon h2,
+.reunion-webtoon h3,
+.reunion-webtoon h4,
+.reunion-webtoon p,
+.reunion-webtoon ul,
+.reunion-webtoon ol,
+.reunion-webtoon dl,
+.reunion-webtoon dd,
+.reunion-webtoon figure {
+  margin: 0;
+  padding: 0;
+}
+
+.reunion-webtoon ul,
+.reunion-webtoon ol {
+  list-style: none;
+}
+
+/* ── 고정 프레임 · 붉은 실 ──────────────────────────────────────── */
+.reunion-webtoon .rw-frame {
+  position: fixed;
+  inset: 8px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.reunion-webtoon .rw-frame-corner {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  color: var(--rw-gold-dim);
+  opacity: 0.55;
+}
+
+.reunion-webtoon .rw-frame-corner svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.reunion-webtoon .rw-frame-corner.is-tl { top: 0; left: 0; }
+.reunion-webtoon .rw-frame-corner.is-tr { top: 0; right: 0; transform: scaleX(-1); }
+.reunion-webtoon .rw-frame-corner.is-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.reunion-webtoon .rw-frame-corner.is-br { bottom: 0; right: 0; transform: scale(-1); }
+
+/* 붉은 실. 좁은 화면에서는 왼쪽 가장자리에, 넓은 화면에서는 본문 칼럼 바깥으로 빼서
+   콘텐츠 패딩과 겹쳐 테두리선처럼 읽히지 않게 한다. */
+.reunion-webtoon .rw-thread {
+  position: fixed;
+  left: max(9px, calc(50% - var(--rw-col) / 2 - 22px));
+  inset-block: 0;
+  width: 2px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(224, 74, 60, 0.5) 10%,
+    rgba(224, 74, 60, 0.5) 90%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(224, 74, 60, 0.28);
+}
+
+.reunion-webtoon .rw-thread-spark {
+  position: absolute;
+  left: -1px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rw-crimson);
+  box-shadow: 0 0 10px 2px rgba(224, 74, 60, 0.7);
+  opacity: 0;
+  animation: rwThreadPass 14s linear infinite;
+}
+
+.reunion-webtoon .rw-thread-spark:nth-child(2) { animation-delay: -4.6s; }
+.reunion-webtoon .rw-thread-spark:nth-child(3) { animation-delay: -9.2s; }
+
+@keyframes rwThreadPass {
+  0%   { transform: translateY(-8vh); opacity: 0; }
+  12%  { opacity: 0.9; }
+  88%  { opacity: 0.9; }
+  100% { transform: translateY(108vh); opacity: 0; }
+}
+
+/* ── 상단바 ────────────────────────────────────────────────────── */
+.reunion-webtoon .rw-topbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: var(--rw-col);
+  margin-inline: auto;
+  padding: 18px 16px 6px;
+}
+
+.reunion-webtoon .rw-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rw-cream);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.reunion-webtoon .rw-wordmark span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--rw-gold-dim);
+  border-radius: 50%;
+  color: var(--rw-gold);
+  font-size: 0.82rem;
+}
+
+.reunion-webtoon .rw-wordmark strong {
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.reunion-webtoon .rw-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(224, 176, 112, 0.42);
+  border-radius: 999px;
+  color: var(--rw-gold);
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+
+/* ── 스트립 · 액트 · 컷 ────────────────────────────────────────── */
+.reunion-webtoon .rw-strip {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--rw-col);
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+.reunion-webtoon .rw-act {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  padding-block: 25px;
+}
+
+/* 조명 아크: 페이지에서 화면이 밝아지는 유일한 지점 */
+.reunion-webtoon .rw-act--4 {
+  background: var(--rw-dawn);
+  margin-inline: -16px;
+  padding-inline: 16px;
+}
+
+.reunion-webtoon .rw-cut {
+  position: relative;
+  min-height: var(--rw-h, 600px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--rw-h, 600px);
+}
+
+/* ── 이미지 크롭 계약 ──────────────────────────────────────────── */
+.reunion-webtoon .rw-fig {
+  --rw-fig-ratio: 4/5;
+  --rw-fig-x: 50%;
+  --rw-fig-y: 50%;
+  --rw-fig-z: 1;          /* 상한 1.6. 넘기면 모바일 640px 소스의 유효 해상도가 붕괴한다. */
+  --rw-fig-filter: none;
+  --rw-fig-opacity: 1;
+  --rw-fig-tint: transparent;
+  --rw-fig-tint-a: 0;
+
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  aspect-ratio: var(--rw-fig-ratio);
+  border-radius: 2px;
+}
+
+/* className 은 <picture> 에 붙으므로 picture 와 img 를 항상 쌍으로 잡는다. */
+.reunion-webtoon .rw-fig-pic,
+.reunion-webtoon .rw-fig-pic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.reunion-webtoon .rw-fig-pic img {
+  object-fit: cover;
+  object-position: var(--rw-fig-x) var(--rw-fig-y);
+  transform: scale(var(--rw-fig-z));
+  filter: var(--rw-fig-filter);
+  opacity: var(--rw-fig-opacity);
+}
+
+/* 모든 아트 밴드에 예외 없이 건다. 하나라도 빠지면 밴드가 검은 배경에 녹지 않는다. */
+.reunion-webtoon .rw-fig-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, var(--rw-ink) 0%, transparent 17%),
+    linear-gradient(0deg, var(--rw-ink) 0%, transparent 17%),
+    radial-gradient(120% 90% at 50% 50%, transparent 46%, rgba(11, 7, 7, 0.72) 100%);
+}
+
+.reunion-webtoon .rw-act--4 .rw-fig-fade {
+  background:
+    linear-gradient(180deg, var(--rw-dawn) 0%, transparent 12%),
+    linear-gradient(0deg, var(--rw-dawn) 0%, transparent 12%),
+    radial-gradient(120% 90% at 50% 50%, transparent 52%, rgba(23, 16, 22, 0.6) 100%);
+}
+
+/* 틴트는 실제로 틴트가 있는 컷에만 blend mode 를 건다.
+   조건 없이 걸면 틴트가 opacity:0 인 나머지 컷마다 불필요한 스택 컨텍스트가 생긴다. */
+.reunion-webtoon .rw-fig-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--rw-fig-tint);
+  opacity: var(--rw-fig-tint-a);
+}
+
+.reunion-webtoon .rw-fig--p05 .rw-fig-tint,
+.reunion-webtoon .rw-fig--p19 .rw-fig-tint {
+  mix-blend-mode: multiply;
+}
+
+/* 패널별 크롭 — §4 에셋 맵 */
+.reunion-webtoon .rw-fig--p01 { --rw-fig-ratio: 4/5; --rw-fig-y: 48%; --rw-fig-z: 1.02;
+  --rw-fig-filter: saturate(1.04) contrast(1.05) brightness(0.95); }
+.reunion-webtoon .rw-fig--p02 { --rw-fig-ratio: 21/9; --rw-fig-x: 40%; --rw-fig-y: 30%; --rw-fig-z: 1.6;
+  --rw-fig-filter: blur(14px) grayscale(0.4) brightness(0.5); --rw-fig-opacity: 0.34; }
+.reunion-webtoon .rw-fig--p03 { --rw-fig-ratio: 1/1; --rw-fig-x: 60%; --rw-fig-y: 45%; --rw-fig-z: 1.1;
+  --rw-fig-filter: contrast(1.05) brightness(0.9); }
+.reunion-webtoon .rw-fig--p04 { --rw-fig-ratio: 16/10; --rw-fig-filter: saturate(1.05) brightness(0.92); }
+.reunion-webtoon .rw-fig--p05 { --rw-fig-ratio: 21/9; --rw-fig-y: 42%; --rw-fig-z: 1.3;
+  --rw-fig-tint: var(--rw-crimson-deep); --rw-fig-tint-a: 0.12; }
+.reunion-webtoon .rw-fig--p06 { --rw-fig-ratio: 3/2; --rw-fig-x: 34%; --rw-fig-y: 26%; --rw-fig-z: 1.1;
+  --rw-fig-filter: brightness(0.8); }
+/* 07 과 17 은 같은 p-moon 이다. 처리 차이를 반드시 유지할 것. */
+.reunion-webtoon .rw-fig--p07 { --rw-fig-ratio: 5/2; --rw-fig-x: 48%; --rw-fig-y: 30%; --rw-fig-z: 1.15;
+  --rw-fig-filter: brightness(0.85); }
+.reunion-webtoon .rw-fig--p11 { --rw-fig-ratio: 4/5; --rw-fig-x: 62%; --rw-fig-y: 38%; --rw-fig-z: 1.05;
+  --rw-fig-filter: brightness(0.72); }
+.reunion-webtoon .rw-fig--p12 { --rw-fig-ratio: 16/9; --rw-fig-z: 1.05; --rw-fig-filter: brightness(0.88); }
+.reunion-webtoon .rw-fig--p14 { --rw-fig-ratio: 1/1; --rw-fig-x: 45%; --rw-fig-y: 45%; --rw-fig-z: 1.1;
+  --rw-fig-filter: blur(3px) brightness(0.45); --rw-fig-opacity: 0.5; }
+.reunion-webtoon .rw-fig--p17 { --rw-fig-ratio: 1/1; --rw-fig-y: 30%; --rw-fig-z: 1.4;
+  --rw-fig-filter: blur(6px) brightness(0.4); --rw-fig-opacity: 0.28; }
+.reunion-webtoon .rw-fig--p18 { --rw-fig-ratio: 16/9; --rw-fig-y: 45%; --rw-fig-z: 1.05; }
+/* 19 는 페이지 유일 풀샷이다. --rw-fig-z 를 쓰지 않는다(크롭·확대 금지).
+   다만 원본의 파스텔 하늘색·분홍이 그대로 나오면 이 한 장만 다른 브랜드처럼 읽힌다.
+   '새벽이 밝아지는' 아크는 유지하되 톤은 페이지 팔레트 안으로 끌어온다. */
+.reunion-webtoon .rw-fig--p19 {
+  --rw-fig-ratio: 4/5;
+  --rw-fig-filter: sepia(0.16) saturate(0.86) brightness(0.92) contrast(1.04);
+  --rw-fig-tint: var(--rw-crimson-deep);
+  --rw-fig-tint-a: 0.14;
+}
+.reunion-webtoon .rw-fig--p19 .rw-fig-fade {
+  background:
+    linear-gradient(180deg, var(--rw-dawn) 0%, transparent 18%),
+    linear-gradient(0deg, var(--rw-dawn) 0%, transparent 18%);
+}
+.reunion-webtoon .rw-fig--p20 { --rw-fig-ratio: 1/1; --rw-fig-y: 38%; --rw-fig-z: 1.1;
+  --rw-fig-filter: brightness(0.42) blur(2px); }
+
+/* 배경으로 깔리는 아트 (14 · 17 · 20).
+   이 figure 들은 ReunionLanding 에서 .rw-stage 밖, .rw-cut 직계 자식으로 렌더한다.
+   .rw-stage 안에 두면 스테이지에 인플로 자식이 없어 높이 0 이 되고
+   그림은 전송만 되고 화면에는 아무것도 안 그려진다. */
+.reunion-webtoon .rw-fig.is-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  aspect-ratio: auto;
+  height: 100%;
+}
+
+.reunion-webtoon .rw-cut--sample .rw-copy,
+.reunion-webtoon .rw-cut--window .rw-copy,
+.reunion-webtoon .rw-cut--offer .rw-copy {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 무대 · 카피 ───────────────────────────────────────────────── */
+.reunion-webtoon .rw-stage {
+  position: relative;
+}
+
+.reunion-webtoon .rw-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reunion-webtoon .rw-kicker {
+  font-size: 0.76rem;
+  letter-spacing: 0.16em;
+  color: var(--rw-gold-text);
+  text-transform: none;
+}
+
+/* 컷 번호는 20개 모두에 붙는 좌표다. 킥커 안에 넣으면 킥커 없는 컷에서 같이 사라진다.
+   컷 우상단에 고정해 '지금 몇 번째 컷인가' 를 끝까지 유지한다. */
+.reunion-webtoon .rw-count {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid rgba(224, 176, 112, 0.34);
+  border-radius: 2px;
+  background: rgba(11, 7, 7, 0.72);
+  color: var(--rw-gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reunion-webtoon .rw-badge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px dashed rgba(224, 176, 112, 0.5);
+  border-radius: 3px;
+  color: var(--rw-gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.reunion-webtoon .rw-head {
+  font-size: clamp(1.65rem, 7vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.32;
+  word-break: keep-all;
+  color: var(--rw-cream);
+}
+
+.reunion-webtoon .rw-hot {
+  font-style: normal;
+  color: var(--rw-crimson);
+  text-shadow: 0 0 12px rgba(224, 74, 60, 0.45);
+}
+
+.reunion-webtoon .rw-body {
+  font-size: 0.94rem;
+  line-height: 1.78;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-caption {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: rgba(201, 183, 159, 0.66);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-note {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgba(224, 176, 112, 0.24);
+  border-left: 2px solid var(--rw-gold-dim);
+  border-radius: 3px;
+  background: rgba(36, 20, 20, 0.5);
+}
+
+.reunion-webtoon .rw-note-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--rw-gold);
+}
+
+.reunion-webtoon .rw-note-body {
+  font-size: 0.86rem;
+  line-height: 1.74;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-chip {
+  align-self: flex-start;
+  padding: 5px 12px;
+  border: 1px solid rgba(224, 74, 60, 0.4);
+  border-radius: 999px;
+  color: rgba(243, 230, 210, 0.86);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+}
+
+/* 안전 패널은 진홍이 아니라 안전색 헤어라인 */
+.reunion-webtoon .rw-cut--safety .rw-note {
+  border-color: rgba(111, 174, 143, 0.34);
+  border-left-color: var(--rw-safe);
+  background: rgba(20, 30, 26, 0.5);
+}
+
+.reunion-webtoon .rw-cut--safety .rw-note-label {
+  color: var(--rw-safe);
+}
+
+/* 챕터 발 — 금색 이중 룰 + 초승달 */
+.reunion-webtoon .rw-chapter-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 26px;
+  color: var(--rw-gold-text);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+}
+
+.reunion-webtoon .rw-chapter-foot::before,
+.reunion-webtoon .rw-chapter-foot::after {
+  content: '';
+  flex: 1;
+  height: 3px;
+  border-top: 1px solid rgba(224, 176, 112, 0.34);
+  border-bottom: 1px solid rgba(224, 176, 112, 0.16);
+}
+
+.reunion-webtoon .rw-chapter-moon {
+  flex: none;
+  color: var(--rw-gold);
+}
+
+/* ── 표지 (01) ─────────────────────────────────────────────────── */
+.reunion-webtoon .rw-cut--cover {
+  gap: 22px;
+  padding-top: 6px;
+}
+
+.reunion-webtoon .rw-cut--cover .rw-head {
+  font-size: clamp(2rem, 8.6vw, 2.9rem);
+}
+
+.reunion-webtoon .rw-scroll-hint {
+  display: grid;
+  place-items: center;
+  margin-top: 6px;
+  color: var(--rw-gold-dim);
+}
+
+/* ── 침묵 컷 (02 · 05) ─────────────────────────────────────────── */
+.reunion-webtoon .rw-cut--silence {
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+}
+
+/* 포함 블록은 .rw-cut 이다(figure 를 .rw-stage 밖에 둔다).
+   inset-block: 50% 는 top·bottom 을 동시에 50% 로 묶는 축약이라
+   height:auto 와 만나면 사용 높이가 0 으로 계산된다. top 만 잡는다. */
+.reunion-webtoon .rw-cut--silence .rw-fig {
+  position: absolute;
+  top: 50%;
+  bottom: auto;
+  inset-inline: 0;
+  z-index: 0;
+  height: auto;
+  transform: translateY(-50%);
+}
+
+.reunion-webtoon .rw-silent {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(2.1rem, 9vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--rw-cream);
+  text-align: center;
+}
+
+.reunion-webtoon .rw-echo {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  z-index: 0;
+  transform: translateY(-50%);
+  text-align: center;
+  font-size: clamp(2.1rem, 9vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgba(224, 74, 60, 0.26);
+  filter: blur(3px);
+}
+
+.reunion-webtoon .rw-breath {
+  width: 1px;
+  height: 72px;
+  margin-top: 26px;
+  background: linear-gradient(180deg, rgba(224, 176, 112, 0.5), transparent);
+}
+
+/* ── 말풍선 ────────────────────────────────────────────────────── */
+.reunion-webtoon .rw-bubble {
+  position: absolute;
+  top: var(--rw-top, 10%);
+  max-width: 62%;
+  padding: 16px 20px;
+  background: var(--rw-bubble);
+  color: #23171b;
+  border: 0;
+  border-radius: 26px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  font-size: clamp(16px, 4.4vw, 22px);
+  line-height: 1.42;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  z-index: 3;
+}
+
+.reunion-webtoon .rw-bubble[data-side='left'] { inset-inline-start: clamp(14px, 5%, 40px); }
+.reunion-webtoon .rw-bubble[data-side='right'] { inset-inline-end: clamp(12px, 4%, 34px); }
+
+.reunion-webtoon .rw-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  width: 22px;
+  height: 22px;
+  background: inherit;
+  transform: rotate(45deg);
+}
+
+.reunion-webtoon .rw-bubble[data-side='left']::after { left: 26px; }
+.reunion-webtoon .rw-bubble[data-side='right']::after { right: 26px; }
+
+.reunion-webtoon .rw-bubble-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 메커닉: 멈출 목록 (06) ────────────────────────────────────── */
+.reunion-webtoon .rw-stop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reunion-webtoon .rw-stop-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(224, 74, 60, 0.22);
+  border-radius: 3px;
+  background: rgba(20, 13, 13, 0.7);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--rw-cream);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-stop-mark {
+  flex: none;
+  margin-top: 2px;
+  color: var(--rw-crimson);
+}
+
+/* ── 메커닉: 원칙 카드 (08) ────────────────────────────────────── */
+.reunion-webtoon .rw-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reunion-webtoon .rw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid rgba(224, 176, 112, 0.2);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(36, 20, 20, 0.66), rgba(11, 7, 7, 0.4));
+  color: var(--rw-gold);
+}
+
+.reunion-webtoon .rw-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--rw-cream);
+}
+
+.reunion-webtoon .rw-card p {
+  font-size: 0.86rem;
+  line-height: 1.72;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+/* ── 메커닉: 비교표 (09) ───────────────────────────────────────── */
+.reunion-webtoon .rw-compare {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.reunion-webtoon .rw-compare-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 14px;
+  border-radius: 3px;
+}
+
+/* JSX 는 h3 을 렌더한다. 원래 h4 를 잡고 있어 아무것도 안 걸렸고
+   열 제목이 브라우저 기본 h3(18.72px)로 떨어져 본문보다 커져 있었다.
+   제목 레벨은 h2 → h3 이 맞으므로 여기 셀렉터를 고친다. 굵기도 명시한다. */
+.reunion-webtoon .rw-compare-col h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--rw-cream-dim);
+}
+
+.reunion-webtoon .rw-compare-col li {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-compare-col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.reunion-webtoon .rw-compare-col.is-guess {
+  background: var(--rw-ink-2);
+  border: 1px solid rgba(201, 183, 159, 0.12);
+  color: rgba(201, 183, 159, 0.68);
+}
+
+/* 페이지 전체에서 파랑은 이 칸에만 쓴다. */
+.reunion-webtoon .rw-compare-col.is-report {
+  background: var(--rw-navy);
+  border: 1px solid var(--rw-navy-line);
+  color: var(--rw-cream);
+}
+
+.reunion-webtoon .rw-compare-glyph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  color: var(--rw-crimson);
+  text-shadow: 0 0 14px rgba(224, 74, 60, 0.5);
+}
+
+/* ── 메커닉: 만들지 않는 문장 (10) ─────────────────────────────── */
+.reunion-webtoon .rw-deny {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reunion-webtoon .rw-deny-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(74, 15, 12, 0.9);
+  border-radius: 3px;
+  background: rgba(20, 13, 13, 0.8);
+  overflow: hidden;
+}
+
+/* 베일은 글자 뒤로 보낸다. position:absolute + z-index:auto 인 베일이
+   static 인 글자 위에 그려져 대비가 8.39:1 → 2.57:1 로 무너졌다.
+   이 네 줄은 자리표시자가 아니라 패널의 논지 자체다. */
+.reunion-webtoon .rw-deny-text {
+  position: relative;
+  z-index: 1;
+  font-size: 0.9rem;
+  color: rgba(243, 230, 210, 0.72);
+  text-decoration: line-through;
+  text-decoration-color: var(--rw-crimson);
+  text-decoration-thickness: 2px;
+  word-break: keep-all;
+}
+
+/* backdrop-filter 는 이 패널 외 어디에도 쓰지 않는다(모바일 GPU 비용).
+   미지원 환경에서도 스트라이프가 남아 가림면이 유지된다. */
+.reunion-webtoon .rw-deny-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  backdrop-filter: blur(4px);
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(20, 13, 13, 0.55) 0 6px,
+    rgba(20, 13, 13, 0.18) 6px 12px
+  );
+}
+
+/* ── 메커닉: 리포트 다섯 파트 (12) ─────────────────────────────── */
+.reunion-webtoon .rw-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reunion-webtoon .rw-parts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(224, 176, 112, 0.16);
+}
+
+.reunion-webtoon .rw-parts-num {
+  flex: none;
+  color: var(--rw-gold);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.reunion-webtoon .rw-parts li strong {
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--rw-cream);
+  word-break: keep-all;
+}
+
+/* ── 메커닉: 두 칸 (13) ────────────────────────────────────────── */
+.reunion-webtoon .rw-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.reunion-webtoon .rw-panes-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(224, 176, 112, 0.18);
+  background: rgba(20, 13, 13, 0.66);
+}
+
+.reunion-webtoon .rw-panes-badge {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--rw-gold);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-panes-pane.is-input .rw-panes-badge { color: var(--rw-cream-dim); }
+
+/* 왼쪽은 '적어 넣은 서식', 오른쪽은 '계산 항목 태그'.
+   두 칸을 같은 표로 그리면 바로 다음 컷(14 명식 표)과 함께 같은 표가 세 번 반복된다. */
+.reunion-webtoon .rw-panes-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reunion-webtoon .rw-panes-rows > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reunion-webtoon .rw-panes-rows dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-panes-rows dd {
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(201, 183, 159, 0.3);
+}
+
+.reunion-webtoon .rw-calc-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reunion-webtoon .rw-calc-tags li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(224, 176, 112, 0.28);
+  border-radius: 2px;
+  background: rgba(36, 20, 20, 0.5);
+  font-size: 0.78rem;
+  color: var(--rw-cream);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-calc-mark {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--rw-gold);
+  transform: rotate(45deg);
+}
+
+.reunion-webtoon .rw-mask {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: rgba(243, 230, 210, 0.5);
+  filter: blur(0.4px);
+  white-space: nowrap;
+}
+
+/* ── 메커닉: 명식 표 (14) ──────────────────────────────────────── */
+/* 시안 5.png 의 원국표 장치를 옮긴 자리다.
+   다만 재회운 리포트는 4기둥(시주·일주·월주·년주) 원국표를 출력하지 않으므로
+   여기서도 만들지 않는다. 실제로 출력하는 네 줄만, 격자·오행 색·타일로 세운다.
+   값은 전부 마스킹이고 라벨·구조·색만 진짜다. */
+.reunion-webtoon .rw-ms {
+  padding: 4px;
+  border: 1px solid rgba(224, 176, 112, 0.36);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(43, 8, 6, 0.46), rgba(11, 7, 7, 0.84));
+}
+
+.reunion-webtoon .rw-ms-rows {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(224, 176, 112, 0.2);
+}
+
+.reunion-webtoon .rw-ms-row {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+}
+
+.reunion-webtoon .rw-ms-row + .rw-ms-row {
+  border-top: 1px solid rgba(224, 176, 112, 0.16);
+}
+
+.reunion-webtoon .rw-ms-row dt {
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-ms-row dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reunion-webtoon .rw-ms-tile {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 7px 11px;
+  border: 1px solid rgba(224, 176, 112, 0.44);
+  border-radius: 2px;
+  background: var(--rw-ink-3);
+}
+
+.reunion-webtoon .rw-ms-tile strong {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(243, 230, 210, 0.62);
+  filter: blur(0.4px);
+}
+
+.reunion-webtoon .rw-ms-tile small {
+  font-size: 0.7rem;
+  color: var(--rw-gold-text);
+  filter: blur(0.4px);
+}
+
+/* 오행 다섯 칸. 이름은 실제 값이므로 선명하게, 개수만 마스킹한다. */
+.reunion-webtoon .rw-ms-cells {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.reunion-webtoon .rw-ms-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 2px;
+  border: 1px solid var(--rw-el-line, rgba(224, 176, 112, 0.28));
+  border-radius: 2px;
+  background: var(--rw-ink-2);
+}
+
+.reunion-webtoon .rw-ms-cell[data-el='wood']  { --rw-el: var(--rw-el-wood);  --rw-el-line: rgba(127, 174, 134, 0.44); }
+.reunion-webtoon .rw-ms-cell[data-el='fire']  { --rw-el: var(--rw-el-fire);  --rw-el-line: rgba(224, 101, 90, 0.44); }
+.reunion-webtoon .rw-ms-cell[data-el='earth'] { --rw-el: var(--rw-el-earth); --rw-el-line: rgba(207, 164, 106, 0.44); }
+.reunion-webtoon .rw-ms-cell[data-el='metal'] { --rw-el: var(--rw-el-metal); --rw-el-line: rgba(216, 210, 198, 0.4); }
+.reunion-webtoon .rw-ms-cell[data-el='water'] { --rw-el: var(--rw-el-water); --rw-el-line: rgba(127, 168, 207, 0.44); }
+
+.reunion-webtoon .rw-ms-cell-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--rw-el, var(--rw-cream));
+}
+
+.reunion-webtoon .rw-ms-cell-count {
+  font-size: 0.76rem;
+  color: rgba(243, 230, 210, 0.52);
+  font-variant-numeric: tabular-nums;
+  filter: blur(0.4px);
+}
+
+.reunion-webtoon .rw-ms-chip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  padding: 5px 9px;
+  border: 1px solid rgba(224, 176, 112, 0.38);
+  border-radius: 999px;
+  background: rgba(36, 20, 20, 0.52);
+  font-size: 0.82rem;
+  color: rgba(243, 230, 210, 0.55);
+  filter: blur(0.4px);
+}
+
+/* ── 메커닉: 5분기 (15) ────────────────────────────────────────── */
+.reunion-webtoon .rw-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reunion-webtoon .rw-branch-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(224, 176, 112, 0.16);
+  border-radius: 3px;
+  background: rgba(20, 13, 13, 0.62);
+}
+
+.reunion-webtoon .rw-branch-row::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: var(--rw-gold-dim);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s ease 0.1s;
+}
+
+.reunion-webtoon .rw-cut.is-visible .rw-branch-row::before { transform: scaleX(1); }
+
+.reunion-webtoon .rw-branch-row[data-verdict='withheld'] {
+  border-color: rgba(224, 74, 60, 0.46);
+}
+
+.reunion-webtoon .rw-branch-row[data-verdict='withheld']::before { background: var(--rw-crimson); }
+
+.reunion-webtoon .rw-branch-label {
+  font-size: 0.86rem;
+  color: var(--rw-cream);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-branch-chip {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid rgba(224, 176, 112, 0.32);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--rw-gold);
+}
+
+.reunion-webtoon .rw-branch-row[data-verdict='withheld'] .rw-branch-chip {
+  border-color: rgba(224, 74, 60, 0.5);
+  color: var(--rw-crimson);
+}
+
+/* ── 메커닉: 빈 게이지 + 타임라인 (16) ─────────────────────────── */
+/* 게이지와 타임라인은 절대 분리하지 않는다.
+   분리하면 "990원 내도 안 채워주네" 로 읽힌다. */
+.reunion-webtoon .rw-gauge-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 16px;
+  border: 1px solid rgba(224, 176, 112, 0.2);
+  border-radius: 3px;
+  background: rgba(20, 13, 13, 0.6);
+}
+
+.reunion-webtoon .rw-gauge-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+/* 칸은 전부 비어 있다. 채움 요소 자체를 만들지 않는다. */
+.reunion-webtoon .rw-gauge-cell {
+  height: 12px;
+  border: 1px solid rgba(224, 176, 112, 0.46);
+  border-radius: 2px;
+  background: var(--rw-ink-3);
+}
+
+.reunion-webtoon .rw-gauge-caption {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-timeline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(224, 176, 112, 0.16);
+}
+
+.reunion-webtoon .rw-timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.reunion-webtoon .rw-timeline-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rw-gold);
+}
+
+.reunion-webtoon .rw-timeline-when {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--rw-cream);
+}
+
+.reunion-webtoon .rw-timeline-count {
+  font-size: 0.76rem;
+  color: var(--rw-gold);
+}
+
+/* ── 메커닉: 시기 띠 + 집계 (17) ───────────────────────────────── */
+.reunion-webtoon .rw-band {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 16px;
+  border: 1px solid rgba(224, 176, 112, 0.2);
+  border-radius: 3px;
+  background: rgba(11, 7, 7, 0.68);
+}
+
+.reunion-webtoon .rw-band-ticks {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+}
+
+.reunion-webtoon .rw-band-tick {
+  height: 26px;
+  border-radius: 1px;
+  background: rgba(224, 176, 112, 0.14);
+}
+
+.reunion-webtoon .rw-band-tick.is-marked {
+  background: var(--rw-crimson);
+  box-shadow: 0 0 12px rgba(224, 74, 60, 0.7);
+  opacity: 0;
+  transition: opacity 0.6s ease 0.2s;
+}
+
+.reunion-webtoon .rw-cut.is-visible .rw-band-tick.is-marked { opacity: 1; }
+
+.reunion-webtoon .rw-band-label {
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  color: var(--rw-cream);
+}
+
+.reunion-webtoon .rw-band-note {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-tally {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.reunion-webtoon .rw-tally li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 6px;
+  border: 1px solid rgba(224, 176, 112, 0.18);
+  border-radius: 3px;
+  text-align: center;
+}
+
+.reunion-webtoon .rw-tally-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--rw-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.reunion-webtoon .rw-tally-unit {
+  font-size: 0.74rem;
+  color: var(--rw-gold-text);
+}
+
+.reunion-webtoon .rw-tally-label {
+  font-size: 0.74rem;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-tally-foot {
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: rgba(201, 183, 159, 0.72);
+  word-break: keep-all;
+}
+
+/* ── 명판 ──────────────────────────────────────────────────────── */
+.reunion-webtoon .rw-plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 26px 22px;
+  border: 1px solid rgba(224, 176, 112, 0.34);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(43, 8, 6, 0.6), rgba(11, 7, 7, 0.72));
+  text-align: center;
+}
+
+/* 시안(4.png)의 붉은 세로 인장. 금색 가로쓰기가 아니라 세로 카르투슈다. */
+.reunion-webtoon .rw-plate-seal {
+  display: grid;
+  place-items: center;
+  padding: 10px 5px;
+  border: 1px solid rgba(224, 176, 112, 0.72);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #5c130f, var(--rw-crimson-deep));
+  box-shadow: 0 0 14px rgba(224, 74, 60, 0.22);
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 0.84rem;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: var(--rw-cream);
+}
+
+.reunion-webtoon .rw-plate-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0.76rem;
+  letter-spacing: 0.2em;
+  color: var(--rw-cream-dim);
+}
+
+/* 초승달(챕터 발)과 짝이 되는 등불. 시안의 처마 등·석등 모티프. */
+.reunion-webtoon .rw-plate-lantern {
+  flex: none;
+  color: var(--rw-gold-text);
+}
+
+.reunion-webtoon .rw-plate-act .rw-plate-lantern:last-child {
+  transform: scaleX(-1);
+}
+
+.reunion-webtoon .rw-plate-title {
+  font-size: 1.24rem;
+  font-weight: 700;
+  color: var(--rw-cream);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-plate-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--rw-gold);
+  opacity: 0.6;
+}
+
+.reunion-webtoon .rw-plate-corner:nth-child(1) { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+.reunion-webtoon .rw-plate-corner:nth-child(2) { top: 6px; right: 6px; border-width: 1px 1px 0 0; }
+.reunion-webtoon .rw-plate-corner:nth-child(3) { bottom: 6px; left: 6px; border-width: 0 0 1px 1px; }
+.reunion-webtoon .rw-plate-corner:nth-child(4) { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+
+/* ── 결제 관문 (20) ────────────────────────────────────────────── */
+.reunion-webtoon .rw-ledger {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid rgba(224, 176, 112, 0.3);
+  border-radius: 3px;
+  background: rgba(11, 7, 7, 0.76);
+}
+
+.reunion-webtoon .rw-ledger-label {
+  font-size: 0.86rem;
+  color: var(--rw-cream-dim);
+}
+
+.reunion-webtoon .rw-ledger-num {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--rw-gold-hi);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.reunion-webtoon .rw-ledger-unit {
+  font-size: 0.58em;
+  color: var(--rw-gold);
+}
+
+.reunion-webtoon .rw-ledger-note {
+  font-size: 0.76rem;
+  color: var(--rw-cream-dim);
+}
+
+.reunion-webtoon .rw-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reunion-webtoon .rw-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(224, 176, 112, 0.16);
+  border-radius: 3px;
+  background: rgba(20, 13, 13, 0.6);
+  font-size: 0.86rem;
+  color: var(--rw-cream);
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-step-num {
+  flex: none;
+  color: var(--rw-gold);
+}
+
+.reunion-webtoon .rw-gate-consent,
+.reunion-webtoon .rw-gate-refund {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--rw-cream-dim);
+  word-break: keep-all;
+}
+
+/* index.css 의 전역 a { text-decoration: none } 때문에 밑줄을 명시해야 한다.
+   문장 안에 박힌 링크라 색만으로는 구분되지 않는다(WCAG 1.4.1). */
+.reunion-webtoon .rw-gate-refund a {
+  color: var(--rw-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── CTA ───────────────────────────────────────────────────────── */
+.reunion-webtoon .rw-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 62px;
+  padding: 14px 20px;
+  border: 1px solid rgba(251, 192, 100, 0.5);
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--rw-crimson-deep), var(--rw-crimson-ink));
+  color: var(--rw-cream);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reunion-webtoon .rw-cta:hover,
+.reunion-webtoon .rw-cta:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px rgba(224, 176, 112, 0.24);
+}
+
+.reunion-webtoon .rw-cta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.reunion-webtoon .rw-cta-stack small {
+  font-size: 0.74rem;
+  color: var(--rw-gold);
+  letter-spacing: 0.04em;
+}
+
+.reunion-webtoon .rw-cta-stack strong {
+  font-size: 1.02rem;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-cta-sub {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--rw-cream-dim);
+  text-align: center;
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-disclaimer {
+  font-size: 0.74rem;
+  line-height: 1.7;
+  color: rgba(201, 183, 159, 0.72);
+  word-break: keep-all;
+}
+
+/* ── 스티키 독 ─────────────────────────────────────────────────── */
+.reunion-webtoon .rw-dock {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  min-height: calc(72px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 16px env(safe-area-inset-bottom, 0px);
+  background: linear-gradient(180deg, rgba(11, 7, 7, 0.2), rgba(11, 7, 7, 0.95) 40%);
+  transform: translateY(112%);
+  transition: transform 0.5s ease-out;
+}
+
+.reunion-webtoon .rw-dock.is-visible { transform: translateY(0); }
+
+.reunion-webtoon .rw-dock .rw-cta {
+  width: 100%;
+  max-width: var(--rw-col);
+}
+
+/* ── 법정 고지 + 자체 푸터 ─────────────────────────────────────── */
+/* 이 라우트에는 전역 Footer 와 BottomTabBar 가 렌더되지 않는다(App.tsx hideGlobalChrome).
+   따라서 사업자 정보는 선택이 아니라 필수다. 전부 실제 텍스트이며 이미지에 굽지 않는다. */
+.reunion-webtoon .rw-legal {
+  border-top: 3px double rgba(224, 176, 112, 0.5);
+  background: var(--rw-paper);
+  color: #3a332c;
+  padding: 28px 16px 20px;
+}
+
+.reunion-webtoon .rw-legal-inner,
+.reunion-webtoon .rw-footer-inner {
+  width: 100%;
+  max-width: var(--rw-col);
+  margin-inline: auto;
+}
+
+.reunion-webtoon .rw-legal-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #2b2620;
+  margin-bottom: 12px;
+}
+
+.reunion-webtoon .rw-legal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reunion-webtoon .rw-legal-list li {
+  position: relative;
+  padding-left: 12px;
+  font-size: 0.78rem;
+  line-height: 1.72;
+  color: #4a4238;
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-legal-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 4px;
+  height: 1px;
+  background: #8a8073;
+}
+
+.reunion-webtoon .rw-footer {
+  background: var(--rw-paper);
+  color: #5a5248;
+  padding: 4px 16px 34px;
+}
+
+.reunion-webtoon .rw-footer p {
+  font-size: 0.72rem;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.reunion-webtoon .rw-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.reunion-webtoon .rw-footer-nav a {
+  font-size: 0.74rem;
+  color: var(--rw-paper-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── 리빌 모션 ─────────────────────────────────────────────────── */
+.reunion-webtoon .rw-cut {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.58s ease, transform 0.58s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.reunion-webtoon .rw-cut.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 표지는 예외 없이 처음부터 최종 상태다.
+   첫 화면을 JS 실행 뒤로 미루면 히어로 아트(153,000px²)가 LCP 후보에서 빠지고
+   상단바 워드마크(931px²)가 LCP 로 잡혀 실측치가 실제보다 좋게 나온다.
+   ReunionLanding 은 이 컷에 data-reveal 을 붙이지 않고 is-visible 을 처음부터 준다.
+   아래 규칙은 그 계약이 리팩터링으로 끊겨도 표지가 사라지지 않게 하는 안전망이다. */
+.reunion-webtoon .rw-cut--cover {
+  opacity: 1;
+  transform: none;
+}
+
+.reunion-webtoon .rw-bubble {
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.reunion-webtoon .rw-cut.is-visible .rw-bubble {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--rw-i, 0) * 130ms);
+}
+
+/* letter-spacing(레이아웃)과 filter: blur(재래스터)를 함께 애니메이션하면
+   매 프레임 리플로우 + 재래스터가 걸린다. 번짐은 text-shadow 로 흉내 내고
+   움직임은 transform/opacity 로만 만들어 컴포지터에 남긴다. */
+@keyframes rwInk {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+    text-shadow: 0 0 14px rgba(243, 230, 210, 0.55);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    text-shadow: 0 0 0 rgba(243, 230, 210, 0);
+  }
+}
+
+.reunion-webtoon .rw-cut--silence.is-visible .rw-silent {
+  animation: rwInk 0.82s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── 감속 선호: 최종 상태 고정 (필수) ──────────────────────────── */
+/* 초기값 opacity:0 을 여기서 최종 상태로 고정하지 않으면
+   IO 가 실패한 경로에서 콘텐츠가 숨겨진 채 남는다. */
+@media (prefers-reduced-motion: reduce) {
+  .reunion-page.reunion-webtoon *,
+  .reunion-page.reunion-webtoon *::before,
+  .reunion-page.reunion-webtoon *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .reunion-webtoon .rw-cut,
+  .reunion-webtoon .rw-bubble,
+  .reunion-webtoon .rw-compare-col,
+  .reunion-webtoon .rw-branch-row,
+  .reunion-webtoon .rw-note {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .reunion-webtoon .rw-silent {
+    animation: none !important;
+    transform: none !important;
+    text-shadow: none !important;
+  }
+
+  .reunion-webtoon .rw-branch-row::before { transform: scaleX(1) !important; }
+
+  .reunion-webtoon .rw-band-tick.is-marked {
+    opacity: 1 !important;
+    box-shadow: 0 0 10px rgba(224, 74, 60, 0.6);
+  }
+
+  .reunion-webtoon .rw-thread-spark {
+    animation: none !important;
+    opacity: 0.5;
+  }
+
+  .reunion-webtoon .rw-dock { transition: none !important; }
+  .reunion-webtoon .rw-dock.is-visible { transform: none !important; }
+}
+
+/* ── 좁은 화면 보정 ────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .reunion-webtoon .rw-compare,
+  .reunion-webtoon .rw-panes {
+    grid-template-columns: 1fr;
+  }
+
+  .reunion-webtoon .rw-compare-glyph {
+    position: static;
+    transform: none;
+    text-align: center;
+  }
+
+  .reunion-webtoon .rw-ms-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .reunion-webtoon .rw-bubble { max-width: 74%; }
+}
