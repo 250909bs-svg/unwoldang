@@ -4,7 +4,14 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+
+    /* 참조된 프로젝트라 emit을 끌 수 없다(TS6310).
+       그대로 두면 vite.config.js가 vite.config.ts 옆에 생기고,
+       vite가 .ts보다 .js를 먼저 읽어서 실제 설정이 무시된다.
+       그래서 산출물은 git이 무시하는 곳으로 보낸다. */
+    "outDir": "./node_modules/.tmp/tsconfig-node",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig-node/tsconfig.node.tsbuildinfo"
   },
   "include": ["vite.config.ts"]
 }
