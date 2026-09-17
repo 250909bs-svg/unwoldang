@@ -9,6 +9,7 @@ export {
   assertResolvableLocalDateTime,
   assertValidIanaTimeZone,
   LocalTimeValidationError,
+  resolveHistoricalUtcOffsetMinutes,
   resolveLocalDateTime
 } from './timeZoneValidation';
 export type {

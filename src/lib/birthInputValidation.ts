@@ -71,11 +71,13 @@ function inferPrecision(input: BirthInput): BirthTimePrecision {
 
 function calendarOptionsFor(input: BirthInput): BirthContextOptions {
   const location = input.birthLocation;
-  const offset = location?.utcOffsetMinutes ?? (location?.timezone === 'Asia/Seoul' ? 540 : undefined);
 
   return {
     timezoneId: location?.timezone || 'Asia/Seoul',
-    utcOffsetMinutes: offset,
+    // Left undefined on purpose when the intake did not capture one. The calendar
+    // layer then reads the offset the zone actually observed at the birth clock,
+    // instead of forcing +09:00 onto Korea's 1954-1961 and 1987-1988 exceptions.
+    utcOffsetMinutes: location?.utcOffsetMinutes,
     latitude: location?.latitude,
     longitude: location?.longitude,
     locationLabel: location?.label || input.location,

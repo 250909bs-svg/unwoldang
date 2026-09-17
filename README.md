@@ -58,6 +58,7 @@ VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT=
 VITE_KAKAO_REDIRECT_ORIGIN=
 VITE_KAKAO_SCOPES=
 VITE_PUBLIC_SITE_URL=
+VITE_PAYMENT_PROVIDER=
 VITE_PAYMENT_MODE=
 VITE_PORTONE_STORE_ID=
 VITE_PORTONE_CHANNEL_KEY=
@@ -66,6 +67,19 @@ VITE_PORTONE_DEFAULT_PHONE_NUMBER=
 VITE_PORTONE_DEFAULT_EMAIL=
 VITE_ENABLE_CLIENT_ADMIN=false
 ```
+
+### 결제를 실제로 여는 데 반드시 필요한 값
+
+결제는 프론트와 백엔드 양쪽 모두에서 명시적으로 켜야 합니다. 둘 중 하나라도 빠지면 결제 버튼이 보이지 않거나 리포트 API가 503을 반환합니다.
+
+| 위치 | 값 | 빠뜨렸을 때 |
+| --- | --- | --- |
+| Vercel | `VITE_PAYMENT_PROVIDER=legacy-portone` | 프로덕션 빌드가 `disabled`로 판정해 결제 버튼이 잠깁니다 |
+| Vercel | `VITE_PAYMENT_MODE=live` | `live`가 아니면 프로덕션에서 `disabled`로 처리됩니다 |
+| Cloud Run | `PAYMENT_PROVIDER=legacy-portone` | `/api/report`가 `503 결제 시스템이 준비되지 않아…`를 반환합니다 |
+| Cloud Run | `PORTONE_API_SECRET`, `PORTONE_STORE_ID` | 결제 검증이 구성되지 않은 것으로 판정됩니다 |
+
+`cloudrun-api/deploy-cloudrun.ps1`의 `-PaymentProvider` 기본값은 안전을 위해 `disabled`입니다. 실제 판매 배포에서는 반드시 `-PaymentProvider legacy-portone`을 직접 넘겨야 합니다.
 
 서버 전용 값은 Cloud Run Secret Manager 또는 Cloud Run 환경변수에만 둡니다.
 

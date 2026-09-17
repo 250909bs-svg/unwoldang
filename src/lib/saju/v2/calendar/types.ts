@@ -53,7 +53,12 @@ export interface BirthTimeZone {
   id: string;
   /** Offset that applied at the birth instant. KST defaults to +540. */
   utcOffsetMinutes: number;
-  source: 'korea-default' | 'explicit';
+  /**
+   * `tzdata-historical` means the offset was read from the zone's own history at
+   * the birth clock, so a lunar input may re-resolve it once the solar date is
+   * known. `explicit` is caller-pinned and must never be overwritten.
+   */
+  source: 'korea-default' | 'explicit' | 'tzdata-historical';
 }
 
 export interface TrueSolarTimePolicy {

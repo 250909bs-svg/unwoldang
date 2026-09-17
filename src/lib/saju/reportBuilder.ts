@@ -2933,14 +2933,19 @@ function buildCommercialEvidenceSections(basis: DeterministicSajuBasis): ReportS
           ['재현 지문', releaseAudit.reproducibilityFingerprint]
         ]
       },
+      // infoFlags까지 함께 노출한다. 용신 학설 분기처럼 발행을 막지는 않지만
+      // 고객이 알아야 하는 판정 한계가 infoFlags로 들어오므로, 여기서 빠지면
+      // 리포트에 고지 없이 레거시 기준 결과만 남는다.
       bullets: [
         ...releaseAudit.blockers,
         ...releaseAudit.reviewFlags,
+        ...releaseAudit.infoFlags,
         ...engine.uncertainty
       ].length > 0
         ? [...new Set([
             ...releaseAudit.blockers,
             ...releaseAudit.reviewFlags,
+            ...releaseAudit.infoFlags,
             ...engine.uncertainty
           ])]
         : ['추가로 표시할 계산 불확실성이 없습니다.']

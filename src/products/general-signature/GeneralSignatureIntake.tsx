@@ -266,7 +266,9 @@ export default function GeneralSignatureIntake() {
               latitude: selected.latitude,
               longitude: selected.longitude,
               timezone: 'Asia/Seoul',
-              utcOffsetMinutes: 540,
+              // No utcOffsetMinutes: the form cannot know which offset Korea used
+              // at the customer's birth, and +09:00 is wrong for 1954-1961 and for
+              // the 1987-1988 summer time. The calendar engine resolves it instead.
               applySolarTimeCorrection: true
             }
     }));
