@@ -110,6 +110,21 @@ const LOVE_REUNION_LEGAL_NOTICE = [
   '차단, 연락 거부, 안전 문제처럼 현실에서 확인된 경계가 명리 해석보다 우선합니다.'
 ] as const;
 
+/**
+ * 재회운 heroNote — 리포트 최상단의 **유일한 경계 선언**이다.
+ *
+ * 상수로 뽑아 세 곳이 같은 문자열을 참조한다:
+ *   - `applyLoveReunionSafetyContract` (여기서 고정)
+ *   - `geminiProseGuard.isPermanentlyLockedProse` (모델이 못 바꾸게)
+ *   - `reportFactGuard.lockCommercialReportFacts` (병합 후 base 복원)
+ *
+ * 이전에는 이 문장이 세 곳 중 **어디에도** 등록돼 있지 않았다. authored 모드에서
+ * `heroNote: draft.heroNote || base.heroNote` 가 모델 값으로 덮고, lock 의 복원 목록에도
+ * 없어서(legalNotice 는 있었다) 모델이 쓴 최상단 선언이 그대로 화면까지 갔다.
+ */
+export const LOVE_REUNION_HERO_NOTE =
+  '재회 여부를 예언하기보다 계산된 관계 흐름과 현실에서 확인할 연락·경계 기준을 나누어 살펴봅니다.' as const;
+
 /** Keeps the raw paid reunion report within the same safety boundary as its dedicated UI. */
 export function applyLoveReunionSafetyContract(report: SajuReportData): SajuReportData {
   if (report.serviceId !== 'love-reunion') return report;
@@ -117,14 +132,90 @@ export function applyLoveReunionSafetyContract(report: SajuReportData): SajuRepo
   return {
     ...report,
     subtitle: KIND_META.reunion.subtitle,
-    heroNote: '재회 여부를 예언하기보다 계산된 관계 흐름과 현실에서 확인할 연락·경계 기준을 나누어 살펴봅니다.',
+    heroNote: LOVE_REUNION_HERO_NOTE,
     legalNotice: [...report.legalNotice, ...LOVE_REUNION_LEGAL_NOTICE],
+    keyTakeaways: report.keyTakeaways.flatMap((card) => {
+      const body = stripReunionSurveillanceSentences(card.body);
+      return body ? [{ ...card, body }] : [];
+    }),
     sections: report.sections.map((section) => ({
       ...section,
-      cards: section.cards?.filter((card) => card.title !== '상대가 느끼는 나'),
-      details: section.details?.filter((detail) => detail.summary !== '상대가 보는 나의 연애 스타일')
+      cards: section.cards
+        ?.filter((card) => card.title !== '상대가 느끼는 나')
+        .flatMap((card) => {
+          const body = stripReunionSurveillanceSentences(card.body);
+          return body ? [{ ...card, body }] : [];
+        }),
+      details: section.details
+        ?.filter((detail) => detail.summary !== '상대가 보는 나의 연애 스타일')
+        .flatMap((detail) => {
+          const content = stripReunionSurveillanceSentences(detail.content);
+          return content ? [{ ...detail, content }] : [];
+        })
     }))
   };
+}
+
+/**
+ * 감시 유도로 읽히는 범용 연애 카피를 재회운에서 걷어낸다.
+ *
+ * 범용 love 섹션은 **새로운 인연**을 전제로 쓰였고 `SNS` 를 직업군(`jobField`)과
+ * 만남 경로(`meetingRoute`)로 자연스럽게 언급한다. 종합사주에서는 문제가 없지만
+ * 재회운에서는 §6-B 가 SNS·스토리·프로필·온라인 상태를 **전 연령 전면 금지**한다 —
+ * 이별 직후 독자에게 새로 관찰할 대상을 만들어 주지 않는 것이 이 상품의 전제다.
+ *
+ * `applyLoveReunionSafetyContract` 가 이미 '상대가 느끼는 나' 카드를 걷어내는 것과
+ * 같은 기전이고 같은 이유다. 이 필터가 없으면 결정론 리포트 자체가 자기 안전 규격을
+ * 위반하고, 더 나쁘게는 그 필드를 모델이 고쳐 쓸 때 base 차감이 감시 검사를 그 필드에서
+ * 조용히 꺼 버린다(그래서 이 카테고리는 절대 검사로 두었다).
+ *
+ * **카드를 통째로 버리지 않고 문장 단위로 걷어낸다.** `keyTakeaways` 의 `인연` 카드는
+ * 관계 맥락 문장과 만남 경로 문장이 한 body 에 붙어 있어, 통째로 버리면 5칸 구조가
+ * 깨지고 관계 맥락 서술까지 사라진다.
+ */
+const REUNION_SURVEILLANCE_COPY = /SNS|스토리|프로필 사진|온라인 상태|접속 시간/u;
+
+function stripReunionSurveillanceSentences(text: string | undefined): string | undefined {
+  if (typeof text !== 'string' || !text.trim()) return text;
+  if (!REUNION_SURVEILLANCE_COPY.test(text)) return text;
+
+  const kept = text
+    .split(/(?<=[.!?])\s+/u)
+    .filter((sentence) => !REUNION_SURVEILLANCE_COPY.test(sentence))
+    .join(' ')
+    .trim();
+
+  return kept || undefined;
+}
+
+/**
+ * 재회 리포트 하드 가드 패턴표.
+ *
+ * 병합된 리포트 전체(`findLoveReunionSafetyViolations`)와 제미나이 draft 의 개별 문장
+ * (`findLoveReunionSafetyTextViolations`)에 **같은 표**를 건다. 표를 두 곳에 복사해 두면
+ * 한쪽만 고쳐져 draft 검사가 병합 검사보다 느슨해지는 사고가 난다.
+ *
+ * 주의: 전역 플래그를 쓰지 않는다(`lastIndex` 상태가 남아 같은 정규식 재사용 시 결과가 달라진다).
+ */
+export const LOVE_REUNION_SAFETY_CHECKS: ReadonlyArray<readonly [RegExp, string]> = Object.freeze([
+  [/재회\s*(?:확률|가능성)\s*(?::|은|는|이|가)?\s*\d+(?:\.\d+)?\s*%/u, '재회 확률 수치'],
+  [/재회\s*(?:확률|가능성)(?:은|는|이|가)?\s*(?:매우\s*)?(?:높|낮|크|작|충분|희박)/u, '재회 가능성 등급'],
+  [/(?:반드시|무조건|확실히|틀림없이)\s*(?:재회|연락|다시 만)/u, '재회 결과 보장'],
+  [/(?:재회|연락)(?:가|이|은|는)?\s*(?:확정|성공|온다|옵니다|하게 된다)/u, '재회·연락 결과 단정'],
+  [/(?:상대|그 사람)(?:방|방은|는|가|은)?[^.!?\n]{0,24}(?:당신|나|고객)[^.!?\n]{0,24}(?:생각|그리워|사랑|미련|마음|느낍니다|느끼고)/u, '상대 속마음 단정'],
+  [/(?:상대방?|그 사람)(?:은|는|이|가)\s*[^.!?\n]{0,24}(?:그리워|사랑|미련이|후회|생각하고|마음이 남)/u, '상대 속마음 단정'],
+  [/\d{4}년\s*\d{1,2}월\s*\d{1,2}일[^.!?\n]{0,30}(?:재회|연락)(?:합니다|됩니다|옵니다|온다|하게 된다)/u, '근거 없는 정확 날짜 단정']
+]);
+
+/**
+ * 문장 하나에 대한 재회 하드 가드 검사.
+ * 제미나이 draft 를 **병합 전에** 문장 단위로 걸기 위한 입구다(명세 §4-1 a-③).
+ */
+export function findLoveReunionSafetyTextViolations(text: string) {
+  if (typeof text !== 'string' || !text) return [];
+  return [...new Set(
+    LOVE_REUNION_SAFETY_CHECKS.filter(([pattern]) => pattern.test(text)).map(([, label]) => label)
+  )];
 }
 
 export function findLoveReunionSafetyViolations(report: SajuReportData) {
@@ -136,17 +227,10 @@ export function findLoveReunionSafetyViolations(report: SajuReportData) {
     questionAnswers: report.questionAnswers.map((answer) => ({ ...answer, question: '' }))
   };
   const text = JSON.stringify(authoredReport);
-  const checks: ReadonlyArray<[RegExp, string]> = [
-    [/재회\s*(?:확률|가능성)\s*(?::|은|는|이|가)?\s*\d+(?:\.\d+)?\s*%/u, '재회 확률 수치'],
-    [/재회\s*(?:확률|가능성)(?:은|는|이|가)?\s*(?:매우\s*)?(?:높|낮|크|작|충분|희박)/u, '재회 가능성 등급'],
-    [/(?:반드시|무조건|확실히|틀림없이)\s*(?:재회|연락|다시 만)/u, '재회 결과 보장'],
-    [/(?:재회|연락)(?:가|이|은|는)?\s*(?:확정|성공|온다|옵니다|하게 된다)/u, '재회·연락 결과 단정'],
-    [/(?:상대|그 사람)(?:방|방은|는|가|은)?[^.!?\n]{0,24}(?:당신|나|고객)[^.!?\n]{0,24}(?:생각|그리워|사랑|미련|마음|느낍니다|느끼고)/u, '상대 속마음 단정'],
-    [/(?:상대방?|그 사람)(?:은|는|이|가)\s*[^.!?\n]{0,24}(?:그리워|사랑|미련이|후회|생각하고|마음이 남)/u, '상대 속마음 단정'],
-    [/\d{4}년\s*\d{1,2}월\s*\d{1,2}일[^.!?\n]{0,30}(?:재회|연락)(?:합니다|됩니다|옵니다|온다|하게 된다)/u, '근거 없는 정확 날짜 단정']
-  ];
 
-  return checks.filter(([pattern]) => pattern.test(text)).map(([, label]) => label);
+  return LOVE_REUNION_SAFETY_CHECKS
+    .filter(([pattern]) => pattern.test(text))
+    .map(([, label]) => label);
 }
 
 export function assertLoveReunionReportSafety(report: SajuReportData) {

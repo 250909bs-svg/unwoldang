@@ -13,6 +13,7 @@ import {
 } from '../../../cloudrun-api/src/contracts/products.ts';
 import { TokenService } from '../../../cloudrun-api/src/domains/auth/tokenService.ts';
 import { PUBLIC_ROUTES } from '../../../cloudrun-api/src/http/router.ts';
+import { PREMIUM_SAJU_PROMPT_VERSION, PREMIUM_SAJU_REPORT_MODE } from '../saju/promptRelease';
 
 const ALLOWED_ORIGIN = 'https://contract.example';
 
@@ -151,6 +152,15 @@ describe('Cloud Run API HTTP contracts', () => {
       readyForLunarReportGeneration: true,
       readyForSolarTermDateVerification: true,
       model: 'fixture-gemini-model',
+      /*
+       * 배포 지문. 배포 후 로그를 보는 절차의 첫 단계는 "새 코드가 실제로 떠 있는가" 인데
+       * 그것을 요청 없이 확인할 지점이 없었다. 롤백을 실행했을 때 그것이 배포됐는지
+       * 확인할 유일한 저비용 지점이기도 하다.
+       */
+      promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
+      reportMode: PREMIUM_SAJU_REPORT_MODE,
+      proseMode: { 'love-reunion': 'authored', default: 'strict-echo' },
+      proseTemperature: { 'love-reunion': 0.75, default: 0 },
       timestamp: expect.any(String)
     });
     expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);

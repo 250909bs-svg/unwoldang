@@ -27,8 +27,17 @@ export function parseReportEvidenceReferences(value: string): ReportEvidenceRefe
   }));
 }
 
+/**
+ * 인용 형식이 깨졌는가.
+ *
+ * `'[근거:'` 만 보던 것을 **남은 대괄호 전체**로 넓혔다. 이전에는 짝이 안 맞는 닫는
+ * 괄호(`'…입니다 근거:ID]'` · `'[근거:ID'` 뒤 여는 괄호만 남은 형태)가 검사를 통과해
+ * 고객 문장에 그대로 남았다. 정상 인용은 정규식이 전부 제거하므로,
+ * 제거 후 대괄호가 남아 있다는 것은 형식이 깨졌다는 뜻이다.
+ */
 export function hasMalformedReportEvidenceReference(value: string) {
-  return value.replace(evidenceReferencePattern(), '').includes('[근거:');
+  const rest = value.replace(evidenceReferencePattern(), '');
+  return rest.includes('[근거:') || rest.includes('[') || rest.includes(']');
 }
 
 export function stripReportEvidenceReferences(value: string) {
@@ -226,6 +235,23 @@ export function lockCommercialReportFacts(
     tenGodBasisNote: base.tenGodBasisNote,
     metaGrid: base.metaGrid.map((item) => ({ ...item })),
     legalNotice: [...base.legalNotice],
+    /*
+     * 재회운 컷 페이로드는 판정·집계·날짜·컷 구조를 전부 담고 있어 **무조건 base 로 복원한다**
+     * (명세 §5). 컷 대사만 lock 이후에 `reviewReunionCopy` 가 컷 단위로 검증해 덮어쓴다.
+     * 여기서 복원하지 않으면 병합 draft 가 게이트 판정이나 조건 개수를 바꿀 수 있다.
+     */
+    reunion: base.reunion,
+    /*
+     * 재회운 heroNote 는 **리포트 최상단의 유일한 경계 선언**이므로 base 로 복원한다.
+     *
+     * `applyLoveReunionSafetyContract` 가 고정하는 문장인데 이 목록에 없어서
+     * (`legalNotice` 는 있었다) `mergeGeminiDraft` 의 `draft.heroNote || base.heroNote` 가
+     * 모델 값으로 덮고 화면(`Report.tsx` 의 `{report.heroNote}`)까지 그대로 갔다.
+     * `geminiProseGuard.isPermanentlyLockedProse` 가 1차로 막고 여기가 2차다 —
+     * 산문 가드를 우회하는 경로가 생겨도 이 줄이 남는다.
+     * 다른 상품의 heroNote 는 모델이 쓸 수 있으므로 그대로 통과시킨다.
+     */
+    heroNote: base.serviceId === 'love-reunion' ? base.heroNote : candidate.heroNote,
     engineMeta: base.engineMeta
       ? {
           ...base.engineMeta,
