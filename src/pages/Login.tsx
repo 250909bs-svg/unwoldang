@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { useAuth } from '../context/AuthContext';
 import { beginKakaoLogin, sanitizeAuthReturnTo } from '../lib/auth';
+import { isLocalPreviewAuthEnabled } from '../features/auth/localPreviewAuth';
 
 type LoginLocationState = {
   returnTo?: string;
@@ -15,8 +16,7 @@ export default function Login() {
   const { loginDemo } = useAuth();
   const [loginError, setLoginError] = useState('');
   const autoStartRef = useRef(false);
-  const canUseLocalPreview =
-    import.meta.env.DEV && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
+  const canUseLocalPreview = isLocalPreviewAuthEnabled();
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const shouldAutoStartKakao = searchParams.get('kakao') === '1';
