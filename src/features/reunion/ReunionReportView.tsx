@@ -8,28 +8,62 @@
  * 화자는 **운월**. 존댓말, `{이름}님`. 장 제목은 독자의 1인칭 질문이다.
  * 반말 도발 화법과 화자 캐릭터는 참고 페이지에서 가져오지 않는다.
  *
+ * 시각 층은 `reunion-premium.css` 의 `ud-` 토큰·유틸리티와
+ * `reunionOrnaments.tsx` 의 장식 SVG, `reunionMeters.tsx` 의 계측 프리미티브가 소유한다.
+ * 이 파일은 그것들을 **조립만** 한다 — 색·여백을 여기서 정하지 않는다.
+ *
+ * 모션은 전부 `ud-` 패턴이다. `useRevealOnScroll` 이 `[data-reveal]` 에 `.is-visible` 을
+ * 붙이고, 각 패턴의 **최종 상태가 기본값**이므로 IntersectionObserver 가 실패해도
+ * 콘텐츠가 숨겨진 채 남지 않는다. `reunion-report.css` 는 계속 무모션이다.
+ *
  * 안전 계약(타협 불가):
  *   - CH00 판단 게이트가 `deferred` 면 나머지 장을 접고 **결제·다음 상품 유도를 렌더하지 않는다**.
  *   - 삭제 불가 문구 7개는 어떤 상태에서도 화면에 남는다.
  *   - 신호 판독표는 이미 일어난 대화의 속성만 다루고 체크를 저장하지 않는다.
+ *   - 계산되지 않은 수치를 사실처럼 보여주지 않는다. 최상단 헤드라인의 계측은
+ *     `ReunionMeterReading` 유니온을 타므로, 보류·자료 없음에서는 숫자를 그리는 경로가 없다.
  */
 
 import { ArrowRight, Link as LinkIcon, Sparkles } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode
+} from 'react';
 import { Link } from 'react-router-dom';
 import type { IntakeFormData } from '../../api/mockData';
+import { useRevealOnScroll } from '../../hooks/useRevealOnScroll';
 import {
   REUNION_CONTEXT_VERSION,
   buildReunionReportPayload,
   createEmptyReunionSelfCheck,
   type ReunionContext,
+  type ReunionReportPayload,
   type ReunionSelfCheck,
-  type ReunionSelfCheckAnswer
+  type ReunionSelfCheckAnswer,
+  type ReunionTimelineCell,
+  type ReunionTimingLabel
 } from '../../lib/reunion';
 import type { SajuReportData } from '../../lib/saju/report';
 import { canDiscoverProduct } from '../../products/registry';
+import '../../styles/reunion-premium.css';
 import '../../styles/reunion-report.css';
 import ReunionCutView, { type ReunionCutInteractions } from './reunionReportCuts';
+import {
+  ReunionMeterHeadline,
+  useReunionCountUp,
+  type ReunionMeterReading
+} from './reunionMeters';
+import {
+  UdChapterRule,
+  UdCorners,
+  UdFretDivider,
+  UdMedallion,
+  UdOrnamentDefs
+} from './reunionOrnaments';
 import { buildReunionChapterEvidence, formatReunionDayunLabel } from './reportEvidence';
 
 type ReunionReportViewProps = {
@@ -99,7 +133,108 @@ const writeStored = (key: string, value: string) => {
   }
 };
 
+/**
+ * 글자 단위 등장(`ud-ink`). 제목 전용이고 16자를 넘기면 쓰지 않는다 —
+ * 그 이상에서는 한 자씩 켜지는 것이 읽기를 방해한다.
+ * 공백은 자리만 차지하는 span 으로 두고(`data-space`), 스크린리더에는 원문 한 줄을 준다.
+ *
+ * `letterClass` 는 **글자 span 에** 붙는다. `ud-gilt-text` 를 바깥 래퍼에 붙이면
+ * 글자가 사라진다 — `background-clip: text` 는 자기 배경만 클립하는데
+ * `-webkit-text-fill-color: transparent` 는 자손까지 상속되므로, 배경이 없는
+ * inline-block 자손은 투명한 채로 남는다(실측으로 확인한 실패였다).
+ * 금박 그라디언트는 세로 방향이고 글자 높이가 모두 같아서, 글자마다 칠해도
+ * 한 줄에 칠한 것과 눈에 같다.
+ */
+function UdInk({ text, letterClass }: { text: string; letterClass?: string }) {
+  const letters = Array.from(text);
+
+  if (letters.length > 16) return <span className={letterClass}>{text}</span>;
+
+  return (
+    <span className="ud-ink" aria-label={text}>
+      {letters.map((letter, index) => (
+        <span
+          aria-hidden="true"
+          className={letterClass}
+          data-space={letter === ' ' ? 'true' : undefined}
+          key={`${letter}-${index}`}
+          style={{ '--ud-i': index } as CSSProperties}
+        >
+          {letter === ' ' ? '' : letter}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * CH04 가 이미 계산해 실어 둔 12개월 셀을 **그대로** 꺼낸다.
+ *
+ * 헤드라인은 새 지표를 만들지 않는다. 여기서 쓰는 값은 `monthLuck[].score` 이고
+ * (`timeline.ts` 가 '그대로 쓰되 이름만 바꾼다'고 못박은 그 값),
+ * 축 이름은 CH04 의 띠와 같은 `판단 여력` 이다.
+ */
+function findTimelineCut(payload: ReunionReportPayload): {
+  cells: readonly ReunionTimelineCell[];
+  labels: Readonly<Record<ReunionTimingLabel, string>>;
+} | null {
+  for (const chapter of payload.chapters) {
+    for (const cut of chapter.cuts) {
+      if (cut.payload?.kind === 'timeline12') return cut.payload;
+    }
+  }
+  return null;
+}
+
+/**
+ * 헤드라인 계측.
+ *
+ * ★ 카운트업 훅이 **여기** 있는 이유. 이 리포트는 40,000px 가 넘고 컷이 72개다.
+ * 훅을 최상위에서 부르면 1.2초 · 약 72프레임 동안 매 프레임 그 트리 전체가
+ * 리렌더된다 — 값이 쓰이는 곳은 호 게이지 배지 하나뿐인데도.
+ * 소비하는 층으로 내리면 리렌더가 이 컴포넌트와 호까지로 좁혀지고,
+ * `children`(근거 층)은 부모가 만든 엘리먼트 참조가 그대로 유지되므로
+ * React 가 그 서브트리를 건너뛴다. 계측값과 모션은 그대로다.
+ */
+function ReportHeadline({
+  eyebrow,
+  reading,
+  badge,
+  verdict,
+  children
+}: {
+  eyebrow: string;
+  reading: ReunionMeterReading;
+  badge?: string;
+  verdict?: string;
+  children: ReactNode;
+}) {
+  /* 이 리포트의 유일한 JS 애니메이션이고, 감속 선호에서는 즉시 최종값에 앉는다. */
+  const shownScore = useReunionCountUp(reading.kind === 'value' ? reading.value : null);
+
+  return (
+    <ReunionMeterHeadline
+      ns="rr"
+      eyebrow={eyebrow}
+      title="이번 달 판단 여력"
+      reading={reading}
+      unit="점"
+      badge={badge}
+      verdict={verdict}
+      /* `verdictNote` 는 호 안쪽의 절대 배치 리드아웃(`ud-arc-readout`)에 들어간다.
+         세 줄이 넘는 문장을 거기에 넣으면 호 박스를 넘어 아래 블록과 겹친다(실측으로 확인).
+         그래서 설명은 근거 층의 첫 줄로 내린다 — 호 안에는 배지 · 숫자 · 판정만 남는다. */
+      display={shownScore ?? undefined}
+    >
+      {children}
+    </ReunionMeterHeadline>
+  );
+}
+
 export default function ReunionReportView({ report, formData, reunionContext }: ReunionReportViewProps) {
+  const pageRef = useRef<HTMLDivElement>(null);
+  useRevealOnScroll(pageRef);
+
   const context = useMemo(
     () => reunionContext || formData.reunionContext || EMPTY_CONTEXT,
     [formData.reunionContext, reunionContext]
@@ -213,46 +348,112 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
 
   const deferred = payload.gate.state === 'deferred';
 
+  /**
+   * 표지 다음 한 화면을 채우는 계측. `ReunionMeterReading` 이 세 상태를 갈라 놓으므로
+   * 값이 없는 경로에서 숫자가 나가는 일이 마크업 층에서 막힌다.
+   *
+   * 보류 판정에서는 **값을 그리지 않는다.** 같은 화면에서 '오늘은 읽기만 하셔도 돼요'라고
+   * 해 놓고 최상단에 점수를 세우면 그 판정이 곧바로 무력해진다.
+   */
+  const timeline = useMemo(() => findTimelineCut(payload), [payload]);
+  const monthCell = timeline && timeline.cells.length > 0 ? timeline.cells[0] : null;
+
+  const headlineReading: ReunionMeterReading = deferred
+    ? { kind: 'hold', note: '오늘은 계측을 접어 뒀어요. 아래 장은 읽기만 하셔도 됩니다.' }
+    : monthCell
+      ? {
+          kind: 'value',
+          value: monthCell.score,
+          ariaLabel: `${monthCell.year}년 ${monthCell.month}월 ${monthCell.ganzhi} · 판단 여력 ${monthCell.score}점`
+        }
+      : { kind: 'hold', note: '이 구간을 계측할 월별 자료가 전달되지 않아 비워 뒀어요.' };
+
   return (
-    <div className="rr-page">
+    <div className="rr-page ud-grain ud-vignette" ref={pageRef}>
+      {/* 문서 단위 SVG defs — 페이지당 한 번. 화면에 아무것도 그리지 않는다. */}
+      <UdOrnamentDefs />
+
       {/* Report.tsx 는 이 뷰를 공용 `.premium-report-topbar` 앞에서 반환하므로
           /report/love-reunion 에는 이 바가 없으면 앱으로 돌아갈 길이 사라진다.
           `.reunion-topbar` 는 appShell.css 가 높이를 주는 통합 상단 바 이름이다. */}
-      <header className="reunion-topbar rr-topbar">
-        <Link to="/" className="rr-topbar-link" aria-label="운월당 홈">
+      <header className="reunion-topbar rr-topbar ud-glass">
+        <Link to="/" className="rr-topbar-link ud-pressable" aria-label="운월당 홈">
           운월당
         </Link>
-        <Link to="/my" className="rr-topbar-link">
+        <Link to="/my" className="rr-topbar-link ud-pressable">
           보관함
         </Link>
       </header>
 
       <main className="rr-main">
-        <section className="rr-cover" aria-labelledby="rr-title">
-          <p className="rr-cover-kicker">운월당 · 재회운</p>
-          <h1 id="rr-title">
-            {name}님,
-            <br />
-            여섯 질문에 차례로 답해 드릴게요
+        {/* ── 표지 ── 이름을 부르는 한 화면. 자료는 아래 헤드라인이 전부 맡는다. */}
+        <section className="rr-cover" aria-labelledby="rr-title" data-reveal>
+          {/* 유료 결과물의 첫 화면이 '검정 위 중앙정렬 텍스트'로 시작하고 있었다.
+              상세페이지가 쓰는 것과 같은 코너 장식을 얹어 표지를 액자로 만든다. */}
+          <UdCorners kind="spandrel" size={24} inset={6} className="rr-cover-corners" />
+          <span className="rr-cover-seal ud-rise" aria-hidden="true">
+            <UdMedallion glyph="crescent" size={58} />
+          </span>
+          <p className="rr-cover-kicker ud-kicker ud-rise">운월당 · 재회운</p>
+          <h1 className="rr-cover-title" id="rr-title">
+            <span className="rr-cover-name">
+              <UdInk letterClass="ud-gilt-text" text={`${name}님,`} />
+            </span>
+            <span className="rr-cover-line">여섯 질문에 차례로 답해 드릴게요</span>
           </h1>
-          <p className="rr-cover-lead">
+          <p className="rr-cover-lead ud-rise">
             기대가 아니라 행동을 기준으로 다음 한 걸음만 정리해요. 재회를 확률로 단정하지 않고, 멈춰야
             하는 경우도 같은 분량으로 씁니다.
           </p>
-          <dl className="rr-cover-meta">
-            <div>
-              <dt>발행</dt>
-              <dd>{report.serialNumber}</dd>
-            </div>
-            <div>
-              <dt>기준 명식</dt>
-              <dd>{report.birthLabel}</dd>
-            </div>
-            <div>
-              <dt>현재 흐름</dt>
-              <dd>{dayunLabel}</dd>
-            </div>
-          </dl>
+          <UdChapterRule className="rr-cover-rule ud-rise" />
+        </section>
+
+        {/* ── 헤드라인 ── 표지 다음 한 화면에서 '내 결과'가 잡히는 자리.
+            값은 CH04 가 이미 계산해 둔 셀을 그대로 쓰고, 축 이름도 그 장과 같다. */}
+        {/* 영역 이름은 `ud-cardhead` 의 큰 줄과 같다. 같은 문장을 숨은 제목으로 한 번 더
+            두면 스크린리더가 두 번 읽는다 — `aria-label` 로 영역만 이름 짓는다. */}
+        <section className="rr-headline-wrap" aria-label="이번 달 판단 여력" data-reveal>
+          <ReportHeadline
+            eyebrow={`${name}님의`}
+            reading={headlineReading}
+            badge={
+              monthCell
+                ? `${monthCell.year}.${String(monthCell.month).padStart(2, '0')} · ${monthCell.ganzhi}`
+                : undefined
+            }
+            verdict={monthCell && timeline ? timeline.labels[monthCell.label] : undefined}
+          >
+            {/* 게이트가 보류면 이 자리에 숫자를 한 개도 그리지 않는다. 그 상태에서
+                '이 숫자는…' 이라고 쓰면 화면에 없는 값을 가리키게 된다.
+                없는 값을 지어내는 것은 아니지만, 보여주지 않은 값을 문장이 참조하는
+                것도 같은 종류의 어긋남이다. 세 갈래를 타입이 이미 들고 있으므로
+                분기 비용이 없다. */}
+            {headlineReading.kind === 'value' ? (
+              <p className="rr-headline-note">
+                이 숫자는 {name}님 명식의 월별 흐름이에요. 상대의 마음이나 두 사람의 앞일을 재는 값이
+                아니고, 같은 값을 열두 달로 펼친 표가 네 번째 장에 있어요.
+              </p>
+            ) : (
+              <p className="rr-headline-note">
+                이 칸의 값은 {name}님 명식의 월별 흐름에서 나와요. 오늘은 계측을 접어 뒀고, 같은 값을
+                열두 달로 펼친 표가 네 번째 장에 있어요.
+              </p>
+            )}
+            <dl className="rr-headline-meta ud-surface-2 ud-inlay--thin">
+              <div className="ud-tick" style={{ '--ud-i': 0 } as CSSProperties}>
+                <dt className="ud-label">발행</dt>
+                <dd className="ud-num">{report.serialNumber}</dd>
+              </div>
+              <div className="ud-tick" style={{ '--ud-i': 1 } as CSSProperties}>
+                <dt className="ud-label">기준 명식</dt>
+                <dd className="ud-num">{report.birthLabel}</dd>
+              </div>
+              <div className="ud-tick" style={{ '--ud-i': 2 } as CSSProperties}>
+                <dt className="ud-label">현재 흐름</dt>
+                <dd className="ud-hanja">{dayunLabel}</dd>
+              </div>
+            </dl>
+          </ReportHeadline>
         </section>
 
         {/* 자가체크를 누르는 순간 일곱 장이 접히고 탭 가능 요소가 크게 줄어든다.
@@ -265,6 +466,8 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
         </p>
 
         <div className="rr-rail">
+          {/* 실 위를 지나가는 빛. 페이지당 1개, 감속 선호에서 멈춘다. */}
+          <span className="rr-rail-spark ud-spark" aria-hidden="true" />
           {payload.chapters.map((chapter) => {
             const chapterEvidence = evidence[chapter.id];
             const collapsed = deferred && chapter.index > 0;
@@ -305,19 +508,23 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
                 /* 근거는 기본으로 펼쳐 둔다. goblin 리포트가 개인화를 전부 <details> 뒤에
                    숨겨 첫 스크롤에서 아무것도 안 보이던 실패를 반복하지 않는다.
                    밴드의 `expandedByDefault` 는 장 머리의 '먼저 보셔도 좋은 장' 표시로 나간다. */
-                <details className="rr-evidence" open>
+                <details className="rr-evidence" open data-reveal>
                   <summary>
                     <span className="rr-mark is-calculated" aria-hidden="true">
                       ◆
                     </span>
-                    {chapterEvidence.title}
+                    <span className="rr-evidence-title">{chapterEvidence.title}</span>
                   </summary>
-                  <p className="rr-evidence-note">
+                  <p className="rr-evidence-note ud-rise">
                     {chapterEvidence.note.replace(/\{name\}/gu, name)}
                   </p>
                   <dl className="rr-evidence-list">
-                    {chapterEvidence.entries.map((entry) => (
-                      <div key={entry.id}>
+                    {chapterEvidence.entries.map((entry, index) => (
+                      <div
+                        className="ud-tick"
+                        key={entry.id}
+                        style={{ '--ud-i': index } as CSSProperties}
+                      >
                         <dt>{entry.label}</dt>
                         <dd>{entry.body}</dd>
                       </div>
@@ -337,8 +544,13 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
                 key={chapter.id}
               >
                 <span className="rr-rail-node" aria-hidden="true" />
-                <header className="rr-chapter-head">
-                  <p className="rr-chapter-kicker">
+                <header className="rr-chapter-head" data-reveal>
+                  {/* 장 머리도 액자로 잡는다 — 상세페이지의 컷 무대와 같은 뇌문이다. */}
+                  <UdCorners kind="fret" size={18} inset={2} className="rr-chapter-corners" />
+                  {/* 장 번호는 바로 아래 눈썹()이 이미 말한다.
+                      같은 숫자를 구분선 가운데에 또 얹으면 초승달 문양과 겹친다. */}
+                  <UdChapterRule className="rr-chapter-mark" />
+                  <p className="rr-chapter-kicker ud-kicker ud-rise">
                     CHAPTER {String(chapter.index).padStart(2, '0')}
                     {/* 밴드가 고른 장. 나이·세대를 화면 문장에 쓰지 않으면서 순서만 바꾼다.
                         보류 판정에서는 붙이지 않는다 — 같은 화면에서 '오늘은 읽기만 하셔도 돼요'라고
@@ -347,13 +559,17 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
                       <span className="rr-chapter-flag">먼저 보셔도 좋은 장</span>
                     ) : null}
                   </p>
-                  <h2 className="rr-chapter-title" id={titleId}>
-                    {chapter.questionTitle}
-                  </h2>
-                  <p className="rr-chapter-sub">{chapter.subtitle}</p>
+                  <div className="rr-chapter-veil ud-veil">
+                    <h2 className="rr-chapter-title" id={titleId}>
+                      {chapter.questionTitle}
+                    </h2>
+                  </div>
+                  <p className="rr-chapter-sub ud-rise">{chapter.subtitle}</p>
                   <ol className="rr-chapter-outline" role="list">
-                    {chapter.outline.map((line) => (
-                      <li key={line}>{line}</li>
+                    {chapter.outline.map((line, index) => (
+                      <li className="ud-tick" key={line} style={{ '--ud-i': index } as CSSProperties}>
+                        {line}
+                      </li>
                     ))}
                   </ol>
                 </header>
@@ -382,6 +598,7 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
                   <p className="rr-reduced">{chapter.reducedReason}</p>
                 ) : null}
                 <p className="rr-chapter-foot">{chapter.footerNote}</p>
+                <UdFretDivider className="rr-chapter-seam" scale="narrow" />
               </section>
             );
           })}
@@ -390,12 +607,19 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
         {/* 추천은 편지 밖의 별도 블록이다. 편지 안에 넣는 순간 편지 전체가 판매 도구로 읽힌다.
             그리고 게이트가 보류인 독자에게는 렌더하지 않는다(§6-C-2). */}
         {payload.allowPurchaseCta && recommendationItems.length > 0 ? (
-          <section className="rr-next" aria-labelledby="rr-next-title">
-            <h2 id="rr-next-title">질문이 달라졌을 때만 추천해요</h2>
+          <section className="rr-next" aria-labelledby="rr-next-title" data-reveal>
+            <h2 className="ud-subtitle ud-rise" id="rr-next-title">
+              질문이 달라졌을 때만 추천해요
+            </h2>
             <div className="rr-next-grid">
-              {recommendationItems.map((item) => (
-                <Link key={item.to} to={item.to}>
-                  <small>{item.eyebrow}</small>
+              {recommendationItems.map((item, index) => (
+                <Link
+                  className="ud-tick ud-pressable"
+                  key={item.to}
+                  style={{ '--ud-i': index } as CSSProperties}
+                  to={item.to}
+                >
+                  <small className="ud-label">{item.eyebrow}</small>
                   <strong>{item.title}</strong>
                   <p>{item.body}</p>
                   <span>
@@ -410,13 +634,13 @@ export default function ReunionReportView({ report, formData, reunionContext }: 
         {/* 공유 블록은 상세페이지 링크와 마케팅 문구를 복사한다.
             보류 판정을 받은 독자에게는 추천 블록과 같은 이유로 렌더하지 않는다(§6-C-2). */}
         {deferred ? null : (
-          <section className="rr-share" aria-label="리포트 공유">
+          <section className="rr-share" aria-label="리포트 공유" data-reveal>
             <Sparkles size={18} aria-hidden="true" />
             <div>
               <strong>개인정보 없이 재회운 소개만 공유해요</strong>
               <p>두 사람의 이름·생년월일·이별 사유는 공유하지 않습니다.</p>
             </div>
-            <button type="button" onClick={handleShare}>
+            <button type="button" className="ud-pressable" onClick={handleShare}>
               <LinkIcon size={16} aria-hidden="true" />
               공유하기
             </button>

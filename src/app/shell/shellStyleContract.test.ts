@@ -14,6 +14,8 @@ const PRODUCT_STYLESHEETS = [
   'styles/mz-love-report.css',
   'styles/past-life.css',
   'styles/reunion.css',
+  'styles/reunion-premium.css',
+  'styles/reunion-intake.css',
   'styles/reunion-webtoon.css',
   'styles/reunion-report.css',
   'styles/guiyeondo.css',

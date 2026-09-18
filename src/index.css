@@ -16044,8 +16044,14 @@ body.home-all-black .app-route-loading strong {
 }
 
 @media (max-width: 768px) {
-  input:not([type='checkbox']):not([type='radio']):not([type='file']),
-  textarea,
+  /* iOS 는 포커스된 입력의 글자가 **16px 미만일 때만** 페이지를 확대한다. 그래서
+     이 규칙의 의도는 하한이지 상한이 아니다. 그런데 `!important` 로 값을 못
+     박아 두어 일부러 크게 잡은 필드까지 16px 로 눌렸다 — 실측 확인: 자사
+     `/form/love-reading` 의 `clamp(30px, 8vw, 40px)` 대형 필드가 휴대폭에서
+     16px 로 렌더된다. 의도한 크기를 지키는 필드는 `data-type-scale` 로 빠진다.
+     (16px 보다 작게 쓰지 않는다는 책임은 그 필드가 진다.) */
+  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([data-type-scale]),
+  textarea:not([data-type-scale]),
   select {
     font-size: 16px !important;
   }

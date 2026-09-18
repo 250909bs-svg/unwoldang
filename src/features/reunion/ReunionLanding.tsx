@@ -1,4 +1,3 @@
-import { ArrowRight, CalendarClock, ChevronsDown, MessageCircleMore, ShieldCheck } from 'lucide-react';
 import {
   Fragment,
   useEffect,
@@ -17,6 +16,21 @@ import {
   ReunionMeterTally,
   ReunionMeterTimeline
 } from './reunionMeters';
+import {
+  UdBubble,
+  UdCartouche,
+  UdCorners,
+  UdCrescent,
+  UdFrameBox,
+  UdFretDivider,
+  UdGlyph,
+  UdLantern,
+  UdMedallion,
+  UdOrnamentDefs,
+  UdPlaque,
+  UdThread,
+  type UdGlyphName
+} from './reunionOrnaments';
 import { REUNION_PATHS, REUNION_PRICE } from './reunionFlow';
 import {
   actTitles,
@@ -41,9 +55,14 @@ import {
   type ReunionCutMechanic
 } from '../../content/reunionWebtoonPanels';
 import { useRevealOnScroll } from '../../hooks/useRevealOnScroll';
+import { useReunionParallax } from './useReunionParallax';
 /* reunion.css 는 import 하지 않는다.
    이 랜딩에서 실제로 매칭되던 규칙은 .reunion-page 리셋·포커스와 .reunion-visually-hidden 뿐이라
-   reunion-webtoon.css 상단으로 옮겨 놓았다. reunion.css 는 Intake/Preview/ReportView 가 계속 쓴다. */
+   reunion-webtoon.css 상단으로 옮겨 놓았다. reunion.css 는 Intake/Preview/ReportView 가 계속 쓴다.
+
+   프리미엄 시트가 먼저다. 토큰·유틸리티·모션 패턴을 그것이 소유하고,
+   화면 시트(reunion-webtoon.css)가 나중에 로드되어 컷별 조정으로 이긴다. */
+import '../../styles/reunion-premium.css';
 import '../../styles/reunion-webtoon.css';
 
 /** '\n' → <br />, [강조] → <em class="rw-hot">. CSS 자동 줄바꿈에 맡기지 않는다. */
@@ -73,87 +92,127 @@ function renderMultiline(text: string): ReactNode {
   ));
 }
 
-const standardIcons = {
-  calendar: CalendarClock,
-  message: MessageCircleMore,
-  shield: ShieldCheck
-} as const;
+/* ── 글자 단위 등장 (.ud-ink) ─────────────────────────────────────
+   디자인 시스템 규격: 히어로·장 제목 전용, 16자 이하. 그보다 길면 글자가
+   한 자씩 들어오는 동안 읽는 속도를 방해한다. 줄바꿈이나 [강조] 가 있는 문장은
+   구조가 있으므로 대상이 아니다. */
 
-/* ── 인라인 SVG 장식 ──────────────────────────────────────────── */
+const INK_MAX_GRAPHEMES = 16;
 
-function FrameCorner() {
+function canInk(text: string): boolean {
+  return !text.includes('\n') && !text.includes('[') && Array.from(text).length <= INK_MAX_GRAPHEMES;
+}
+
+/**
+ * 글자를 span 으로 쪼개면 스크린리더가 한 자씩 읽는 브라우저가 있다.
+ * 그래서 시각 층은 aria-hidden 으로 감추고 문장 전체를 한 번 따로 읽힌다.
+ */
+function InkText({ text }: { text: string }) {
+  let index = 0;
+
   return (
-    <svg viewBox="0 0 46 46" fill="none" stroke="currentColor" strokeWidth="1">
-      <path d="M1 14V1h13" />
-      <path d="M6 20V6h14" />
-      <path d="M1 26v-6" />
-      <path d="M26 1h-6" />
+    <>
+      <span className="reunion-visually-hidden">{text}</span>
+      <span className="ud-ink" aria-hidden="true">
+        {Array.from(text).map((character, position) =>
+          character === ' ' ? (
+            <span data-space="true" key={position} />
+          ) : (
+            <span style={{ '--ud-i': index++ } as CSSProperties} key={position}>
+              {character}
+            </span>
+          )
+        )}
+      </span>
+    </>
+  );
+}
+
+/* ── 인라인 아이콘 ────────────────────────────────────────────────
+   lucide 의 둥근 스트로크 아이콘은 이 페이지의 장식 계열(1.1px 라인아트 · 뇌문 ·
+   등불)과 선 성격이 달라서 한 화면에 섞이면 값싸 보인다. 여기서 쓰는 세 개는
+   장식 라이브러리와 같은 규약(currentColor · aria-hidden · 1.1~1.4 스트로크)으로 그린다. */
+
+function RwArrow() {
+  return (
+    <svg
+      className="rw-cta-arrow"
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M3 10h13" />
+      <path d="M11 5l5 5-5 5" />
+    </svg>
+  );
+}
+
+function RwScrollHint() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 22 22"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M4 7l7 6 7-6" />
+      <path d="M4 13l7 6 7-6" />
     </svg>
   );
 }
 
 function StopMark() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      aria-hidden="true"
+      focusable="false"
+    >
       <circle cx="9" cy="9" r="7.2" />
       <path d="M4.3 13.7 13.7 4.3" />
     </svg>
   );
 }
 
-function ChapterMoon() {
-  return (
-    <svg
-      className="rw-chapter-moon"
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      aria-hidden="true"
-    >
-      <path d="M9.6 1.4a6 6 0 1 0 3 10.5A6.6 6.6 0 0 1 9.6 1.4Z" />
-    </svg>
-  );
-}
-
-/** 명판 좌우를 지키는 석등. 시안의 처마 등·석등 모티프를 초승달과 짝이 되게 옮긴 것. */
-function PlateLantern() {
-  return (
-    <svg
-      className="rw-plate-lantern"
-      width="14"
-      height="26"
-      viewBox="0 0 14 26"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="0.9"
-      aria-hidden="true"
-    >
-      <path d="M7 0v3" />
-      <path d="M1.6 4.6h10.8" />
-      <path d="M3 4.6h8l-1 3.2H4z" />
-      <rect x="2.4" y="7.8" width="9.2" height="9" rx="1" />
-      <path d="M3.4 17.4h7.2l-1.1 2.6H4.5z" />
-      <path d="M7 20v2.4" />
-      <path d="M4.6 23.4h4.8" />
-      <circle cx="7" cy="12.3" r="2.1" fill="currentColor" stroke="none" opacity="0.55" />
-    </svg>
-  );
-}
+/** 원칙 카드(08)의 메달리온 글리프. content 의 의미 키를 장식 글리프로 옮긴다. */
+const standardGlyphs = {
+  calendar: 'crescent',
+  message: 'thread',
+  shield: 'gate'
+} as const satisfies Record<(typeof standards)[number]['icon'], UdGlyphName>;
 
 /* ── 말풍선 ──────────────────────────────────────────────────── */
-/* 오직 독자 본인의 속마음만 담는다. 지시·판단·약속·수치·시기는 넣지 않는다. */
+/* 오직 독자 본인의 속마음만 담는다. 지시·판단·약속·수치·시기는 넣지 않는다.
+   껍데기(종이질 · 꼬리 · 그림자)는 .ud-bubble 이, 아트 위 좌표는 이 래퍼가 맡는다. */
 function RwBubble({ bubble }: { bubble: ReunionBubble }) {
   return (
     <div
-      className="rw-bubble"
+      className="rw-bubble ud-onart"
       data-side={bubble.side}
       style={{ '--rw-top': bubble.top, '--rw-i': bubble.i } as CSSProperties}
     >
       <span className="reunion-visually-hidden">혼잣말</span>
-      <p className="rw-bubble-text">{renderMultiline(bubble.text)}</p>
+      <UdBubble variant="dialogue" tail={bubble.side} className="rw-bubble-text ud-settle">
+        {renderMultiline(bubble.text)}
+      </UdBubble>
     </div>
   );
 }
@@ -185,13 +244,16 @@ const mechanicBeforeBody: ReadonlySet<ReunionCutMechanic> = new Set<ReunionCutMe
   'timingBand'
 ]);
 
+/** 스태거 인덱스를 넘기는 인라인 스타일. --ud-i × 90ms 가 .ud-tick 의 지연이다. */
+const tick = (index: number) => ({ '--ud-i': index } as CSSProperties);
+
 function Mechanic({ cut }: { cut: ReunionCut }) {
   switch (cut.mechanic) {
     case 'stopList':
       return (
         <ul className="rw-stop" role="list">
-          {stopActions.map((action) => (
-            <li className="rw-stop-item" key={action}>
+          {stopActions.map((action, index) => (
+            <li className="rw-stop-item ud-tick" style={tick(index)} key={action}>
               <span className="rw-stop-mark" aria-hidden="true">
                 <StopMark />
               </span>
@@ -204,22 +266,19 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
     case 'standards':
       return (
         <ul className="rw-cards" role="list">
-          {standards.map((item) => {
-            const Icon = standardIcons[item.icon];
-            return (
-              <li className="rw-card" key={item.title}>
-                <Icon size={22} aria-hidden="true" />
-                <h3 className="rw-card-title">{item.title}</h3>
-                <p>{item.body}</p>
-              </li>
-            );
-          })}
+          {standards.map((item, index) => (
+            <li className="rw-card ud-tick" style={tick(index)} key={item.title}>
+              <UdMedallion glyph={standardGlyphs[item.icon]} size={52} />
+              <h3 className="rw-card-title">{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))}
         </ul>
       );
 
     case 'compare':
       return (
-        <div className="rw-compare">
+        <div className="rw-compare ud-rise">
           <div className="rw-compare-col is-guess">
             <h3>추측이 채우던 것</h3>
             <ul role="list">
@@ -229,7 +288,7 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
             </ul>
           </div>
           <span className="rw-compare-glyph" aria-hidden="true">
-            ／
+            <UdGlyph name="seal" size={14} />
           </span>
           <div className="rw-compare-col is-report">
             <h3>리포트가 확인해 주는 것</h3>
@@ -245,9 +304,9 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
     case 'deny':
       return (
         <ul className="rw-deny" role="list">
-          {denyItems.map((item) => (
-            <li className="rw-deny-item" key={item}>
-              <ShieldCheck size={16} aria-hidden="true" />
+          {denyItems.map((item, index) => (
+            <li className="rw-deny-item ud-tick" style={tick(index)} key={item}>
+              <UdGlyph name="seal" size={16} />
               <span className="rw-deny-text">{item}</span>
               <span className="rw-deny-veil" aria-hidden="true" />
             </li>
@@ -259,8 +318,10 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
       return (
         <ol className="rw-parts" role="list">
           {reportParts.map((item, index) => (
-            <li key={item}>
-              <span className="rw-parts-num">{String(index + 1).padStart(2, '0')}</span>
+            <li className="ud-tick" style={tick(index)} key={item}>
+              <span className="rw-parts-num" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
               <strong>{item}</strong>
             </li>
           ))}
@@ -271,7 +332,7 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
        형태를 확실히 갈라 둔다. 오른쪽에 값을 붙이면 14 의 명식 표와 같은 표가 두 번 나온다. */
     case 'panes':
       return (
-        <div className="rw-panes">
+        <div className="rw-panes ud-rise">
           <div className="rw-panes-pane is-input">
             <span className="rw-panes-badge">사용자 입력 · 미확인</span>
             <dl className="rw-panes-rows">
@@ -300,68 +361,74 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
       );
 
     /* 14 명식 표. 재회운 리포트가 실제로 출력하는 네 줄만 세운다.
-       4기둥(시주·일주·월주·년주) 원국표는 이 상품이 출력하지 않으므로 여기에도 만들지 않는다. */
+       4기둥(시주·일주·월주·년주) 원국표는 이 상품이 출력하지 않으므로 여기에도 만들지 않는다.
+       시안 5.png 의 금테 이중 액자 + 로제트 코너 + 오행 웰을 그대로 옮긴 자리다. */
     case 'myeongsik':
       return (
-        <div className="rw-ms">
-          <dl className="rw-ms-rows">
-            <div className="rw-ms-row is-stem">
-              <dt>{myeongsik.dayMaster.label}</dt>
-              <dd>
-                <span className="rw-ms-tile" aria-hidden="true">
-                  <strong>{myeongsik.dayMaster.stem}</strong>
-                  <small>{myeongsik.dayMaster.element}</small>
-                </span>
-                <span className="reunion-visually-hidden">예시 값</span>
-              </dd>
-            </div>
-
-            <div className="rw-ms-row is-elements">
-              <dt>{myeongsik.elementsLabel}</dt>
-              <dd>
-                <ul className="rw-ms-cells" role="list">
-                  {myeongsik.elements.map((cell) => (
-                    <li className="rw-ms-cell" data-el={cell.el} key={cell.el}>
-                      <span className="rw-ms-cell-name">{cell.name}</span>
-                      <span className="rw-ms-cell-count" aria-hidden="true">
-                        {cell.count}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <span className="reunion-visually-hidden">다섯 칸의 개수는 모두 예시 값</span>
-              </dd>
-            </div>
-
-            <div className="rw-ms-row is-helpful">
-              <dt>{myeongsik.helpful.label}</dt>
-              <dd>
-                {myeongsik.helpful.chips.map((chip, index) => (
-                  <span className="rw-ms-chip" aria-hidden="true" key={index}>
-                    {chip}
+        <UdFrameBox tone="gilt" corner="rosette" className="rw-ms-frame ud-rise">
+          <div className="rw-ms">
+            <dl className="rw-ms-rows">
+              <div className="rw-ms-row is-stem">
+                <dt>{myeongsik.dayMaster.label}</dt>
+                <dd>
+                  <span className="rw-ms-tile" aria-hidden="true">
+                    <strong>{myeongsik.dayMaster.stem}</strong>
+                    <small>{myeongsik.dayMaster.element}</small>
                   </span>
-                ))}
-                <span className="reunion-visually-hidden">예시 값</span>
-              </dd>
-            </div>
+                  <span className="reunion-visually-hidden">예시 값</span>
+                </dd>
+              </div>
 
-            <div className="rw-ms-row is-dayun">
-              <dt>{myeongsik.dayun.label}</dt>
-              <dd>
-                <MaskValue text={myeongsik.dayun.value} />
-              </dd>
-            </div>
-          </dl>
-        </div>
+              <div className="rw-ms-row is-elements">
+                <dt>{myeongsik.elementsLabel}</dt>
+                <dd>
+                  <ul className="rw-ms-cells" role="list">
+                    {myeongsik.elements.map((cell) => (
+                      <li className="rw-ms-cell ud-well" data-el={cell.el} key={cell.el}>
+                        <span className="rw-ms-cell-glyph ud-hanja" aria-hidden="true">
+                          {cell.hanja}
+                        </span>
+                        <span className="rw-ms-cell-name">{cell.name}</span>
+                        <span className="rw-ms-cell-count" aria-hidden="true">
+                          {cell.count}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="reunion-visually-hidden">다섯 칸의 개수는 모두 예시 값</span>
+                </dd>
+              </div>
+
+              <div className="rw-ms-row is-helpful">
+                <dt>{myeongsik.helpful.label}</dt>
+                <dd>
+                  {myeongsik.helpful.chips.map((chip, index) => (
+                    <span className="rw-ms-chip" aria-hidden="true" key={index}>
+                      {chip}
+                    </span>
+                  ))}
+                  <span className="reunion-visually-hidden">예시 값</span>
+                </dd>
+              </div>
+
+              <div className="rw-ms-row is-dayun">
+                <dt>{myeongsik.dayun.label}</dt>
+                <dd>
+                  <MaskValue text={myeongsik.dayun.value} />
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </UdFrameBox>
       );
 
     case 'branch':
       return (
-        <ul className="rw-branch" role="list">
+        <ul className="rw-branch ud-rise" role="list">
           {branchRows.map((row) => (
             <li className="rw-branch-row" data-verdict={row.verdict} key={row.label}>
               <span className="rw-branch-label">{row.label}</span>
-              <span className="rw-branch-chip">{row.chip}</span>
+              <span className="rw-branch-chip ud-num">{row.chip}</span>
             </li>
           ))}
         </ul>
@@ -372,7 +439,7 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
        여기서는 값이 비어 있는 상태가 곧 '우리가 채우지 않는 칸'이라는 메시지다. */
     case 'gaugeTimeline':
       return (
-        <div className="rw-gauge-block">
+        <div className="rw-gauge-block ud-rise">
           <ReunionMeterGauge
             ns="rw"
             cells={[{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }]}
@@ -391,7 +458,7 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
 
     case 'timingBand':
       return (
-        <>
+        <div className="rw-window-block ud-rise">
           <ReunionMeterBand
             ns="rw"
             ticks={Array.from({ length: 12 }, (_unused, index) => ({
@@ -414,35 +481,39 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
             }))}
             foot={cut.tallyFoot}
           />
-        </>
+        </div>
       );
 
     case 'gate':
       return (
         <>
-          <div className="rw-ledger">
-            <span className="rw-ledger-label">재회운</span>
-            <strong className="rw-ledger-num">
-              {REUNION_PRICE.toLocaleString('ko-KR')}
-              <span className="rw-ledger-unit">원</span>
-            </strong>
-            <span className="rw-ledger-note">1회 결제</span>
-          </div>
+          {/* weight 3 → 2. 금테 최대 강조가 가격 카드에 걸려 있으면 페이지에서
+              가장 비싸 보이는 장치가 가장 싼 숫자를 가리킨다. */}
+          <UdFrameBox tone="gilt" corner="fret" weight={2} className="rw-ledger-frame ud-rise">
+            <p className="rw-ledger">
+              <span className="rw-ledger-label">재회운</span>
+              <strong className="rw-ledger-num ud-num ud-gilt-text">
+                {REUNION_PRICE.toLocaleString('ko-KR')}
+                <span className="rw-ledger-unit">원</span>
+              </strong>
+              <span className="rw-ledger-note">1회 결제</span>
+            </p>
+          </UdFrameBox>
           <ol className="rw-steps" role="list">
             {gateSteps.map((step, index) => (
-              <li key={step}>
-                <span className="rw-step-num" aria-hidden="true">
+              <li className="ud-tick" style={tick(index)} key={step}>
+                <span className="rw-step-num ud-num" aria-hidden="true">
                   {'①②③④'[index]}
                 </span>
                 {step}
               </li>
             ))}
           </ol>
-          <p className="rw-gate-consent">
+          <p className="rw-gate-consent ud-rise">
             상대방의 생년월일(가능하면 태어난 시간)이 필요하며, 상대방이 제공했거나 서비스 이용에 동의한
             정보만 입력합니다.
           </p>
-          <p className="rw-gate-refund">
+          <p className="rw-gate-refund ud-rise">
             리포트가 생성되어 열람 가능한 상태가 된 뒤에는 디지털 콘텐츠 특성상 환불이 제한될 수 있습니다.{' '}
             <Link to="/refund">환불정책</Link>
           </p>
@@ -455,15 +526,19 @@ function Mechanic({ cut }: { cut: ReunionCut }) {
 }
 
 /* ── CTA ─────────────────────────────────────────────────────── */
+/* 형태(오목 브래킷 + 45도 챔퍼 + 진홍 방사 fill)는 .ud-cartouche 가 소유한다.
+   `drawable` 이면 리빌 루트 안에서 내부 금선이 그려진다(.ud-draw). */
 
-function RwCta({ small, strong }: { small: string; strong: string }) {
+function RwCta({ small, strong, drawable }: { small: string; strong: string; drawable?: boolean }) {
   return (
-    <Link to={REUNION_PATHS.intake} className="rw-cta">
-      <span className="rw-cta-stack">
-        <small>{small}</small>
-        <strong>{strong}</strong>
-      </span>
-      <ArrowRight size={20} aria-hidden="true" />
+    <Link to={REUNION_PATHS.intake} className="rw-cta ud-pressable ud-focusable">
+      <UdCartouche tone="cta" drawable={drawable}>
+        <span className="rw-cta-stack">
+          <small>{small}</small>
+          <strong>{strong}</strong>
+        </span>
+        <RwArrow />
+      </UdCartouche>
     </Link>
   );
 }
@@ -486,15 +561,33 @@ const overlayArtPanels: ReadonlySet<ReunionPanelId> = new Set<ReunionPanelId>([
 /** 컷 전면을 덮는 배경 아트 (말풍선 없는 컷만). */
 const backdropPanels: ReadonlySet<ReunionPanelId> = new Set<ReunionPanelId>(['14', '17', '20']);
 
+/** 패럴랙스는 컷당 1개, 배경 아트에만 건다(디자인 시스템 규칙). */
+const parallaxDepth: Readonly<Partial<Record<ReunionPanelId, string>>> = {
+  '14': '20px',
+  '17': '24px',
+  '20': '18px'
+};
+
 function CutFigure({ id }: { id: ReunionPanelId }) {
   const art = reunionPanelArt[id];
   if (!art.image) return null;
 
   const isBackdrop = backdropPanels.has(id);
+  const classes = [
+    'rw-fig',
+    `rw-fig--p${id}`,
+    isBackdrop ? 'is-backdrop' : '',
+    /* 표지는 LCP 후보다. 리빌·레이어 승격을 붙이지 않고 처음부터 최종 상태로 그린다. */
+    id === '01' ? '' : 'ud-settle',
+    parallaxDepth[id] ? 'ud-float' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <figure
-      className={`rw-fig rw-fig--p${id}${isBackdrop ? ' is-backdrop' : ''}`}
+      className={classes}
+      style={parallaxDepth[id] ? ({ '--ud-depth': parallaxDepth[id] } as CSSProperties) : undefined}
       aria-hidden={art.decorative ? true : undefined}
     >
       <ReunionPanelPicture
@@ -516,6 +609,7 @@ function Cut({ cut, cutRef }: { cut: ReunionCut; cutRef?: Ref<HTMLDivElement> })
   const hasBubbles = 'bubbles' in cut && Array.isArray(cut.bubbles) && cut.bubbles.length > 0;
   const beforeBody = cut.mechanic ? mechanicBeforeBody.has(cut.mechanic) : false;
   const isOverlayArt = overlayArtPanels.has(cut.n);
+  const inkHeadline = Boolean(cut.headline && canInk(cut.headline));
 
   /* 컷은 div 다. 만화 컷은 독립 배포 가능한 단위가 아니라 article 의 의미에 맞지 않고,
      이름 없는 article/section 20개는 스크린리더에서 경계 소음이 된다.
@@ -529,19 +623,21 @@ function Cut({ cut, cutRef }: { cut: ReunionCut; cutRef?: Ref<HTMLDivElement> })
       className={`rw-cut rw-cut--${cut.kind} rw-cut--p${cut.n}${isCover ? ' is-visible' : ''}`}
       data-panel={cut.n}
       data-reveal={isCover ? undefined : ''}
+      data-parallax={parallaxDepth[cut.n] ? '' : undefined}
       style={{ '--rw-h': `${cut.height}px` } as CSSProperties}
     >
       {/* 컷 번호는 20개 모두에 붙는 좌표다. 킥커 유무와 무관하게 항상 코너에 둔다.
           시각 표시 전용이므로 접근성 트리에서는 감춘다(필요한 값은 data-panel 이 갖는다). */}
-      <span className="rw-count" aria-hidden="true">
+      <span className="rw-count ud-num ud-tick" aria-hidden="true">
         {cut.n}
       </span>
 
       {art.image && isOverlayArt ? <CutFigure id={cut.n} /> : null}
 
       {art.image && !isOverlayArt ? (
-        <div className="rw-stage">
+        <div className="rw-stage rw-stage--framed">
           <CutFigure id={cut.n} />
+          <UdCorners kind="fret" size={22} inset={5} className="rw-stage-corners" />
           {hasBubbles
             ? (cut.bubbles as ReunionBubble[]).map((bubble) => (
                 <RwBubble bubble={bubble} key={bubble.text} />
@@ -552,44 +648,57 @@ function Cut({ cut, cutRef }: { cut: ReunionCut; cutRef?: Ref<HTMLDivElement> })
 
       {cut.silent ? (
         <>
-          <p className="rw-silent">{cut.silent}</p>
+          <p className="rw-silent">
+            <InkText text={cut.silent} />
+          </p>
           {cut.n === '05' ? (
             <span className="rw-echo" aria-hidden="true">
               {cut.silent}
             </span>
           ) : null}
-          {cut.n === '02' ? <span className="rw-breath" aria-hidden="true" /> : null}
+          {cut.n === '02' ? <span className="rw-breath ud-breath" aria-hidden="true" /> : null}
         </>
       ) : null}
 
-      <div className="rw-copy">
-        {cut.kicker ? <p className="rw-kicker">{cut.kicker}</p> : null}
+      <div className={isCover ? 'rw-copy ud-bloom rw-cover-bloom' : 'rw-copy'}>
+        {isCover ? (
+          <span className="rw-seal rw-cover-seal">雲月堂</span>
+        ) : null}
 
-        {cut.badge ? <p className="rw-badge">{cut.badge}</p> : null}
+        {cut.kicker ? <p className="rw-kicker ud-rise">{cut.kicker}</p> : null}
+
+        {cut.badge ? <p className="rw-badge ud-rise">{cut.badge}</p> : null}
 
         {cut.plate ? (
-          <div className="rw-plate">
-            <span className="rw-plate-corner" aria-hidden="true" />
-            <span className="rw-plate-corner" aria-hidden="true" />
-            <span className="rw-plate-corner" aria-hidden="true" />
-            <span className="rw-plate-corner" aria-hidden="true" />
-            <span className="rw-plate-seal">{cut.plate.seal}</span>
-            <span className="rw-plate-act">
-              <PlateLantern />
-              {cut.plate.act}
-              <PlateLantern />
-            </span>
-            <strong className="rw-plate-title">{cut.plate.title}</strong>
+          <div className="rw-plate-wrap ud-bloom ud-bloom-in">
+            <div className="rw-plate">
+              <UdCorners kind="spandrel" size={22} inset={7} className="rw-plate-corners" />
+              <UdPlaque>
+                <span className="rw-seal">{cut.plate.seal}</span>
+                <span className="rw-plate-act">
+                  <UdLantern size={14} className="rw-plate-lantern" />
+                  {cut.plate.act}
+                  <UdLantern size={14} className="rw-plate-lantern" />
+                </span>
+                <span className="rw-plate-title-veil ud-veil">
+                  <strong className="rw-plate-title">{cut.plate.title}</strong>
+                </span>
+              </UdPlaque>
+            </div>
           </div>
         ) : null}
 
         {cut.headline ? (
-          <Heading className="rw-head">{renderHeadline(cut.headline)}</Heading>
+          <Heading className="rw-head ud-rise">
+            {inkHeadline ? <InkText text={cut.headline} /> : renderHeadline(cut.headline)}
+          </Heading>
         ) : null}
 
         {beforeBody ? <Mechanic cut={cut} /> : null}
 
-        {cut.body ? <p className="rw-body">{cut.body}</p> : null}
+        {cut.body ? (
+          <p className={isCover ? 'rw-lead ud-rise' : 'rw-body ud-rise'}>{cut.body}</p>
+        ) : null}
 
         {!beforeBody ? <Mechanic cut={cut} /> : null}
 
@@ -598,25 +707,32 @@ function Cut({ cut, cutRef }: { cut: ReunionCut; cutRef?: Ref<HTMLDivElement> })
             <RwCta small="약 3분, 4단계 입력" strong="무료 미리보기부터 보기" />
             <p className="rw-cta-sub">결제 전 미리보기까지 무료 · 전체 리포트는 990원, 1회 결제</p>
             <span className="rw-scroll-hint" aria-hidden="true">
-              <ChevronsDown size={22} />
+              <RwScrollHint />
             </span>
           </>
         ) : null}
 
         {cut.note ? (
-          <aside className="rw-note">
-            <span className="rw-note-label">운월당</span>
+          <aside className="rw-note ud-rise">
+            <span className="rw-note-label">
+              <UdGlyph name="crescent" size={12} />
+              운월당
+            </span>
             <p className="rw-note-body">{cut.note}</p>
           </aside>
         ) : null}
 
-        {cut.n === '04' ? <p className="rw-chip">사용자 입력 · 미확인</p> : null}
+        {cut.n === '04' ? <p className="rw-chip ud-rise">사용자 입력 · 미확인</p> : null}
 
-        {cut.caption ? <p className="rw-caption">{cut.caption}</p> : null}
+        {cut.sampleNote ? (
+          <p className="rw-sample ud-sample-note ud-rise">{cut.sampleNote}</p>
+        ) : null}
+
+        {cut.caption ? <p className="rw-caption ud-rise">{cut.caption}</p> : null}
 
         {cut.kind === 'offer' ? (
           <>
-            <RwCta small="약 3분, 4단계 입력" strong="무료 미리보기부터 보기" />
+            <RwCta small="약 3분, 4단계 입력" strong="무료 미리보기부터 보기" drawable />
             <p className="rw-cta-sub">결제 전 미리보기까지 무료 · 전체 리포트 990원, 1회 결제</p>
             <p className="rw-disclaimer">
               본 콘텐츠는 전통 명리학 기반의 참고 자료이며 상대방의 연락, 감정 또는 재회를 보장하지
@@ -627,10 +743,13 @@ function Cut({ cut, cutRef }: { cut: ReunionCut; cutRef?: Ref<HTMLDivElement> })
       </div>
 
       {cut.chapterFoot ? (
-        <p className="rw-chapter-foot">
-          <ChapterMoon />
-          {cut.chapterFoot}
-        </p>
+        <div className="rw-chapter-foot">
+          <UdFretDivider scale="wide" />
+          <p className="rw-chapter-foot-label">
+            <UdCrescent size={13} className="rw-chapter-moon" />
+            {cut.chapterFoot}
+          </p>
+        </div>
       ) : null}
     </div>
   );
@@ -646,6 +765,7 @@ export default function ReunionLanding() {
   const [finalReached, setFinalReached] = useState(false);
 
   useRevealOnScroll(rootRef);
+  useReunionParallax(rootRef);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -685,39 +805,33 @@ export default function ReunionLanding() {
      매핑되지 않는다. 이 라우트에는 전역 Footer 도 없어서 안에 두면 페이지에
      contentinfo 랜드마크가 아예 사라진다. */
   return (
-    <div className="reunion-page reunion-landing reunion-webtoon">
-      <div className="rw-frame" aria-hidden="true">
-        <span className="rw-frame-corner is-tl">
-          <FrameCorner />
-        </span>
-        <span className="rw-frame-corner is-tr">
-          <FrameCorner />
-        </span>
-        <span className="rw-frame-corner is-bl">
-          <FrameCorner />
-        </span>
-        <span className="rw-frame-corner is-br">
-          <FrameCorner />
-        </span>
-      </div>
+    <div className="reunion-page reunion-landing reunion-webtoon ud-grain ud-vignette">
+      {/* 문서 단위 SVG defs. 페이지당 한 번. 화면에는 아무것도 그리지 않는다. */}
+      <UdOrnamentDefs />
 
-      <div className="rw-thread" aria-hidden="true">
-        <i className="rw-thread-spark" />
-        <i className="rw-thread-spark" />
-        <i className="rw-thread-spark" />
+      {/* 시안(4.png)의 페이지 네 귀 뇌문 코너. 셸 프레임 폭에 묶여 있다. */}
+      <div className="rw-frame" aria-hidden="true">
+        <UdCorners kind="fret" size={34} inset={0} className="rw-frame-inner" />
       </div>
 
       <header className="rw-topbar">
-        <Link to="/" className="rw-wordmark" aria-label="운월당 홈으로 이동">
+        <Link to="/" className="rw-wordmark ud-focusable" aria-label="운월당 홈으로 이동">
           <span aria-hidden="true">緣</span>
           <strong>운월당</strong>
         </Link>
-        <Link to={REUNION_PATHS.intake} className="rw-topbar-link">
+        <Link to={REUNION_PATHS.intake} className="rw-topbar-link ud-pressable ud-focusable">
           바로 시작
         </Link>
       </header>
 
       <main ref={rootRef} className="rw-main">
+        {/* 붉은 실. 직선 레일이 아니라 곡선 3갈래이고 스크롤 진입에서 그려진다.
+            <main> 안에 두는 이유는 useRevealOnScroll 의 관찰 범위가 여기라서다. */}
+        <div className="rw-thread" aria-hidden="true" data-reveal>
+          <UdThread height={1000} strands={3} drawable />
+          <i className="rw-thread-spark ud-spark" />
+        </div>
+
         <div className="rw-strip">
           {acts.map((act) => (
             <section className={`rw-act rw-act--${act}`} aria-label={actTitles[act]} key={act}>
@@ -737,12 +851,17 @@ export default function ReunionLanding() {
         {/* 이 라우트에는 전역 Footer 가 렌더되지 않는다. 사업자 정보는 필수다. */}
         <section className="rw-legal" aria-labelledby="rw-legal-title">
           <div className="rw-legal-inner">
-            <h2 id="rw-legal-title" className="rw-legal-title">
-              이용 안내
-            </h2>
+            <div className="rw-legal-head">
+              <UdFretDivider scale="narrow" />
+              <h2 id="rw-legal-title" className="rw-legal-title">
+                이용 안내
+              </h2>
+            </div>
             <ul className="rw-legal-list" role="list">
-              {legalItems.map((item) => (
-                <li key={item}>{item}</li>
+              {legalItems.map((item, index) => (
+                <li className="ud-tick" style={tick(index)} key={item}>
+                  {item}
+                </li>
               ))}
             </ul>
           </div>
@@ -769,14 +888,16 @@ export default function ReunionLanding() {
       >
         <Link
           to={REUNION_PATHS.intake}
-          className="rw-cta"
+          className="rw-cta ud-pressable ud-focusable"
           tabIndex={showDock ? undefined : -1}
         >
-          <span className="rw-cta-stack">
-            <small>미리보기까지 무료</small>
-            <strong>재회운 시작하기</strong>
-          </span>
-          <ArrowRight size={20} aria-hidden="true" />
+          <UdCartouche tone="cta">
+            <span className="rw-cta-stack">
+              <small>미리보기까지 무료</small>
+              <strong>재회운 시작하기</strong>
+            </span>
+            <RwArrow />
+          </UdCartouche>
         </Link>
       </aside>
     </div>

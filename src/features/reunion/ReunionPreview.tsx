@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { buildReunionGate, readReunionContext, type ReunionContext } from '../../lib/reunion';
+import '../../styles/reunion-premium.css';
 import '../../styles/reunion.css';
 import { readReunionDraft, writeReunionDraft } from './intakeStorage';
 import ReunionPicture from './ReunionPicture';

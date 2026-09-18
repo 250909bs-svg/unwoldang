@@ -1,46 +1,88 @@
 /* 운월당 재회운 리포트 전용. 모든 규칙은 .rr-page 하위로만 적용한다.
 
-   상세페이지(reunion-webtoon.css)의 시각 문법 — 검정 지면, 금 실선, 명조,
-   크림 종이 대비, 침묵 컷 — 을 그대로 이어받되 클래스는 전부 rr- 접두사로 격리한다.
-   reunion.css 와 reunion-webtoon.css 의 기존 클래스 의미는 건드리지 않는다.
-   (.reunion-topbar 만 예외적으로 .rr-page 안에서 어둡게 덮는다. 통합 상단 바 이름이라
-    appShell.css 가 높이를 주고, 이 라우트에서는 reunion.css 를 불러오지 않기 때문이다.)
+   ══════════════════════════════════════════════════════════════════════════
+   소유 관계 — 이 시트가 하는 일과 하지 않는 일
+   ══════════════════════════════════════════════════════════════════════════
+   색·서체·여백·깊이·모션은 `reunion-premium.css` 의 `ud-` 토큰과 유틸리티가
+   소유한다. 이 시트는 **리포트 고유의 기하와 미세 조정만** 갖는다.
+
+   1. 여기서 색 값을 새로 만들지 않는다. 아래 루트 블록의 `--rr-*` 는 전부
+      `--ud-*` 로 가는 별칭이다. 별칭을 남겨 둔 이유는 클래스 이름을 지키면서
+      팔레트만 갈아 끼우기 위해서다(계약 테스트가 몇 개의 이름을 잠그고 있다).
+   2. 면·인레이·리프트·종이는 `ud-surface-*` / `ud-inlay` / `ud-paper-hi` 가
+      마크업 층에서 붙는다. 그래서 이 시트는 컷 카드에 `background` 나
+      `box-shadow` 를 다시 선언하지 않는다 — 선언하면 인레이 샌드위치가 지워진다.
+   3. **모션이 한 줄도 없다.** 등장·채움·스태거는 전부 `ud-` 패턴이고,
+      그 패턴들은 프리미엄 시트가 감속 선호에서 최종 상태로 못 박는다.
+      (계약 테스트 `declares no animation or transition` 가 이 사실을 단정한다.)
+
+   ══════════════════════════════════════════════════════════════════════════
+   대비 기준 — 실측값
+   ══════════════════════════════════════════════════════════════════════════
+   이 시트가 글자를 올리는 가장 밝은 불투명 면은 `--ud-surface-3`(#2c1e1b)다.
+   그 위에서 잰 값:
+     --ud-cream       #f3e6d2  13.04:1
+     --ud-cream-dim   #c9b79f   8.22:1
+     --ud-cream-mute  #ab9984   5.82:1
+     --ud-gold-text   #b68e5f   5.37:1   ← 이 시트의 금색 글자 하한
+     --ud-gold-text-hi #c29a68  6.20:1
+     --ud-crimson-text #ef8478  6.30:1
+     --ud-safe / --ud-slate / --ud-terra  6.21 / 7.52 / 7.14:1
+   장식 전용(글자에 쓰지 않는다): --ud-metal-4 (4.55:1), --ud-crimson (3.98:1).
+
+   승계 기록 — 이 자리의 직전 값은 `--rr-gold-text: #a07d58` 이었다. 실제 사용처인
+   `--rr-ink-3(#241414)` 위에서 4.26:1 로 AA 미달이었고(가장 어두운 지면 기준으로
+   재서 후하게 나온 값을 쓰고 있었다), 프리미엄 토큰 #b68e5f(5.37:1)로 교체했다.
+   같은 이유로 `--rr-crimson`(#e04a3c, 3.98:1)은 면·선·글로우 전용으로 못 박고
+   글자에는 `--rr-crimson-soft`(= --ud-crimson-text)만 쓴다.
+
+   아트 위 글자는 컷 본문의 자기 스크림이 보장한다. 최악의 경우(흰 아트)에도
+   0.86 스크림 위에서 cream 11.59:1 / cream-dim 7.31:1 / cream-mute 5.18:1 이다.
+   그래서 아트 컷 본문에는 금색 작은 글자(0.86 위 4.77:1 이나 스크림이 옅어지는
+   상단에서는 보장되지 않음)를 두지 않고, 근거 배지처럼 금색을 쓰는 조각에는
+   불투명 칩 면을 따로 깐다.
 
    컨테이너 폭·배경은 셸 정책이 소유한다(routeShellPolicy.ts 의 '/report/love-reunion'
-   = width:'canvas' + surface:'love-reunion'). 여기서 .app-container 를 다시 선언하지 않는다.
+   = width:'canvas' + surface:'love-reunion'). 여기서 셸 컨테이너를 다시 선언하지 않는다.
+   (.reunion-topbar 만 예외적으로 .rr-page 안에서 어둡게 덮는다. 통합 상단 바 이름이라
+    appShell.css 가 높이를 주고, 이 라우트에서는 reunion.css 를 불러오지 않기 때문이다.) */
 
-   어두운 배경 위 작은 글자는 전부 **가장 밝은 지면인 --rr-ink-3(#241414)** 대비 4.5:1 이상으로
-   맞춘 토큰만 쓴다. 가장 어두운 --rr-ink(#0b0707) 기준으로 재면 실제 사용처보다 값이 후하게
-   나와 카드 안의 작은 글자가 조용히 AA 아래로 내려간다.
-   장식 전용 토큰(--rr-gold-dim)은 선과 테두리에만 쓰고 글자에 쓰지 않는다. */
-
-/* ── 루트 토큰 ─────────────────────────────────────────────── */
+/* ── 루트 토큰 — 전부 프리미엄 토큰으로 가는 별칭 ─────────── */
 .rr-page {
-  --rr-ink: #0b0707;
-  --rr-ink-2: #140d0d;
-  --rr-ink-3: #241414;
-  --rr-crimson: #e04a3c;
-  --rr-crimson-soft: #f08a7e;
-  --rr-crimson-deep: #4a0f0c;
-  --rr-gold: #e0b070;
-  --rr-gold-hi: #fbc064;
-  /* 장식 전용(선·테두리). 글자에 쓰면 4.09:1 로 AA 미달이다. */
-  --rr-gold-dim: #8a6b4a;
-  /* 어두운 배경 위 작은 글자용 금색. 실제 사용처인 --rr-ink-3(#241414) 위에서 4.70:1,
-     --rr-ink(#0b0707) 위에서 5.32:1. 직전 값(#9c7a55)은 ink-3 위에서 4.496:1 로 AA 미달이었다. */
-  --rr-gold-text: #a07d58;
-  --rr-cream: #f3e6d2;
-  --rr-cream-dim: #c9b79f;
-  --rr-bubble: #fbf4ea;
-  --rr-safe: #6fae8f;
-  --rr-slate: #9fb4c9;
-  --rr-terra: #d9a08a;
-  --rr-paper: #ece7dc;
-  --rr-paper-ink: #2b2620;
-  --rr-serif: 'Nanum Myeongjo', 'Noto Serif KR', 'AppleMyungjo', 'Batang', serif;
-  --rr-col: 560px;
+  --rr-ink: var(--ud-floor);
+  --rr-ink-2: var(--ud-surface-1);
+  --rr-ink-3: var(--ud-surface-3);
+  --rr-crimson: var(--ud-crimson);
+  --rr-crimson-soft: var(--ud-crimson-text);
+  --rr-crimson-deep: var(--ud-crimson-deep);
+  --rr-gold: var(--ud-metal-2);
+  --rr-gold-hi: var(--ud-focus-dark);
+  --rr-gold-dim: var(--ud-metal-4);
+  --rr-gold-text: var(--ud-gold-text);
+  --rr-cream: var(--ud-cream);
+  --rr-cream-dim: var(--ud-cream-dim);
+  --rr-cream-mute: var(--ud-cream-mute);
+  --rr-bubble: var(--ud-bubble);
+  --rr-safe: var(--ud-safe);
+  --rr-slate: var(--ud-slate);
+  --rr-terra: var(--ud-terra);
+  --rr-paper: var(--ud-paper);
+  --rr-paper-hi: var(--ud-paper-hi);
+  --rr-paper-ink: var(--ud-paper-ink);
+  --rr-paper-line: var(--ud-line-paper);
+  --rr-serif: var(--ud-serif);
+  --rr-sans: var(--ud-sans);
+  --rr-line: var(--ud-line-soft);
+  --rr-line-strong: var(--ud-line);
+  --rr-col: var(--ud-col-wide);
+  --rr-read: var(--ud-col);
   --rr-gutter: 16px;
 
+  /* 아트 컷 본문 스크림의 최저 알파. 위 대비 계산이 이 값에 걸려 있다. */
+  --rr-scrim: 0.86;
+
+  position: relative;
+  z-index: 0;
   min-height: 100svh;
   overflow-x: clip;
   color-scheme: dark;
@@ -83,12 +125,21 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 2.4.11 — 어두운 지면에서 9.80:1. 종이 면 위에서는 금색 링이 1.60:1 이라
+   잉크색 링으로 갈아 낀다. */
 .rr-page a:focus-visible,
 .rr-page button:focus-visible,
 .rr-page input:focus-visible,
 .rr-page summary:focus-visible {
-  outline: 3px solid var(--rr-gold);
+  outline: 3px solid var(--ud-focus-dark);
   outline-offset: 3px;
+}
+
+.rr-pillars-plate a:focus-visible,
+.rr-pillars-plate button:focus-visible,
+.rr-cut--letter a:focus-visible,
+.rr-cut--letter button:focus-visible {
+  outline-color: var(--ud-focus-paper);
 }
 
 /* 이 라우트는 reunion.css / reunion-webtoon.css 를 불러오지 않는다.
@@ -106,6 +157,7 @@
 }
 
 /* ── 상단 바 ───────────────────────────────────────────────── */
+/* 유리감 3개 예산 중 1개(상단바). 나머지는 쓰지 않는다. */
 .rr-page .reunion-topbar {
   display: flex;
   position: relative;
@@ -113,123 +165,229 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: rgba(11, 7, 7, 0.92);
-  border-bottom: 1px solid rgba(138, 107, 74, 0.32);
-  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rr-line-strong);
 }
 
 .rr-page .rr-topbar-link {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--ud-s4);
   color: var(--rr-cream);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
   text-decoration: none;
 }
 
 /* ── 지면 ──────────────────────────────────────────────────── */
+/* 노이즈·비네트는 페이지 루트의 고정 레이어(z-index 0)다. 본문을 그 위로 올린다. */
 .rr-main {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--rr-col);
   margin: 0 auto;
-  padding: 0 var(--rr-gutter) 96px;
+  padding: 0 var(--rr-gutter) var(--ud-s8);
 }
 
-/* ── 표지 ──────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   표지 — 이름을 부르는 한 화면. 자료는 바로 아래 헤드라인이 전부 맡는다.
+   ══════════════════════════════════════════════════════════════════════════ */
 .rr-cover {
-  padding: 48px 0 40px;
-  border-bottom: 1px solid rgba(138, 107, 74, 0.26);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--ud-s4);
+  padding: var(--ud-s8) var(--ud-s5) var(--ud-s6);
+  text-align: center;
 }
 
-.rr-cover-kicker {
-  color: var(--rr-gold-text);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
+/* 표지의 네 귀. 유료 결과물의 첫 화면이 아무 장치 없는 검정으로 시작하지 않게 한다. */
+.rr-cover-corners {
+  color: var(--ud-metal-5);
+  opacity: 0.8;
 }
 
-.rr-cover h1 {
-  margin-top: 14px;
-  font-size: clamp(26px, 8vw, 38px);
-  font-weight: 600;
-  line-height: 1.32;
-  letter-spacing: -0.02em;
+.rr-cover-seal {
+  display: grid;
+  place-items: center;
+}
+
+.rr-cover-title {
+  display: grid;
+  gap: var(--ud-s3);
+  margin: 0;
+}
+
+/* 금박 그라디언트 글리프. `ud-gilt-text` 가 배경 클립과 drop-shadow 를 준다. */
+.rr-cover-name {
+  display: block;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-700);
+  font-weight: var(--ud-w-display);
+  letter-spacing: var(--ud-ls-display);
+  line-height: var(--ud-lh-display);
+}
+
+.rr-cover-line {
+  display: block;
+  color: var(--rr-cream);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-body);
+  letter-spacing: var(--ud-ls-title);
+  line-height: var(--ud-lh-title);
 }
 
 .rr-cover-lead {
-  margin-top: 16px;
+  max-width: 30ch;
   color: var(--rr-cream-dim);
-  font-size: 14px;
-  line-height: 1.85;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-300);
+  line-height: var(--ud-lh-body);
 }
 
-.rr-cover-meta {
+.rr-cover-rule {
+  width: 100%;
+  margin-top: var(--ud-s3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   헤드라인 — 스크롤 3초 안에 '내 결과'가 잡히는 자리.
+   ══════════════════════════════════════════════════════════════════════════
+   값은 CH04 가 이미 계산해 둔 12개월 셀을 그대로 쓴다. 새 지표를 만들지 않는다.
+   보류 판정에서는 `ReunionMeterReading` 이 `hold` 로 들어오므로 숫자가 렌더되지
+   않고 보류 문구만 남는다. 그 분기는 컴포넌트가 마크업 층에서 막는다. */
+.rr-headline-wrap {
+  padding: 0 0 var(--ud-s6);
+}
+
+.rr-headline {
+  padding-inline: var(--ud-card-pad-inline);
+}
+
+/* 호 게이지. 기본 스킨의 진홍 단색은 이 상품에서 가장 값싸 보이는 신호다
+   (검정 + 빨강 2색). 금속 램프로 갈아 낀다 — 값은 dashoffset 이 나르므로
+   색을 바꿔도 계측이 가리키는 숫자는 그대로다. 진홍은 컷의 선·글로우에 남는다. */
+.rr-arc .ud-arc-progress {
+  stroke: url(#ud-grad-metal);
+  filter: drop-shadow(0 0 10px rgba(224, 176, 112, 0.4));
+}
+
+.rr-arc-badge {
+  font-family: var(--rr-sans);
+}
+
+.rr-arc-verdict {
+  color: var(--rr-cream);
+}
+
+/* 보류·자료 없음의 안내 문구. 규격 문구이므로 작게 만들지 않는다. */
+.rr-arc .rr-sample-note {
+  max-width: 32ch;
+  margin-inline: auto;
+}
+
+/* 호 안쪽 리드아웃은 절대 배치라 긴 문장을 담지 못한다. 설명은 근거 층의 첫 줄이다. */
+.rr-headline-note {
+  max-width: 34ch;
+  margin-inline: auto;
+  color: var(--rr-cream-dim);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
+  text-align: center;
+}
+
+/* 발행 · 기준 명식 · 현재 흐름. 표지에서 데이터를 걷어 내고 이 각인판으로 모았다.
+   표지는 이름을 부르는 일만 하고, 자료는 전부 계측 바로 아래에 붙는다. */
+.rr-headline-meta {
   display: grid;
-  gap: 8px;
-  margin-top: 24px;
+  gap: var(--ud-s2);
+  padding: var(--ud-s4);
 }
 
-.rr-cover-meta > div {
-  display: flex;
-  gap: 10px;
+.rr-headline-meta > div {
+  display: grid;
+  grid-template-columns: minmax(0, 84px) minmax(0, 1fr);
+  gap: var(--ud-s3);
   align-items: baseline;
-  padding-bottom: 7px;
-  border-bottom: 1px dotted rgba(138, 107, 74, 0.3);
+  padding-bottom: var(--ud-s2);
+  border-bottom: 1px dotted var(--rr-line);
 }
 
-.rr-cover-meta dt {
-  flex: 0 0 72px;
-  color: var(--rr-gold-text);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+.rr-headline-meta > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
-.rr-cover-meta dd {
+.rr-headline-meta dt {
   min-width: 0;
-  color: var(--rr-cream-dim);
-  font-size: 12px;
 }
 
-/* ── 관통 레일 (CSS 만으로) ─────────────────────────────────── */
+.rr-headline-meta dd {
+  min-width: 0;
+  color: var(--rr-cream);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-title);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   관통 레일
+   ══════════════════════════════════════════════════════════════════════════
+   1px 직선 하나였던 자리를 3겹(외곽 어둠 + 본선 + 안쪽 빛)으로 바꾼다.
+   실 위를 지나는 빛(`ud-spark`)은 페이지당 1개다. */
 .rr-rail {
   position: relative;
-  padding-left: 24px;
+  padding-left: var(--ud-s6);
 }
 
 .rr-rail::before {
   content: '';
   position: absolute;
   top: 0;
-  bottom: 40px;
+  bottom: var(--ud-s7);
   left: 5px;
-  width: 1px;
-  background: linear-gradient(
-    180deg,
-    rgba(138, 107, 74, 0) 0%,
-    rgba(138, 107, 74, 0.55) 6%,
-    rgba(138, 107, 74, 0.55) 94%,
-    rgba(138, 107, 74, 0) 100%
-  );
+  width: 3px;
+  background:
+    linear-gradient(90deg, var(--ud-metal-10) 0 1px, transparent 1px 2px, var(--ud-metal-10) 2px 3px),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--ud-metal-6) 5%,
+      var(--ud-metal-4) 50%,
+      var(--ud-metal-6) 95%,
+      transparent 100%
+    );
+}
+
+.rr-rail-spark {
+  position: absolute;
+  top: 0;
+  bottom: var(--ud-s7);
+  left: 4px;
+  width: 5px;
+  background: radial-gradient(closest-side, rgba(255, 233, 199, 0.85), transparent 70%);
+  pointer-events: none;
 }
 
 .rr-chapter {
   position: relative;
-  padding: 44px 0 20px;
+  padding: var(--ud-s7) 0 var(--ud-s4);
 }
 
 .rr-rail-node {
   position: absolute;
-  top: 58px;
-  left: -23px;
+  top: calc(var(--ud-s7) + 34px);
+  left: -25px;
   width: 11px;
   height: 11px;
   background: var(--rr-ink);
   border: 1px solid var(--rr-gold-dim);
   border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--ud-floor), 0 0 10px rgba(224, 176, 112, 0.35);
 }
 
 .rr-chapter[data-index='1'] .rr-rail-node { border-radius: 2px; transform: rotate(45deg); }
@@ -243,155 +401,238 @@
 }
 
 /* ── 챕터 헤더 / 푸터 ──────────────────────────────────────── */
+.rr-chapter-head {
+  position: relative;
+  display: grid;
+  gap: var(--ud-s3);
+}
+
+/* 장 머리의 네 귀 — 상세페이지의 컷 무대와 같은 뇌문이다. */
+.rr-chapter-corners {
+  color: var(--ud-metal-6);
+  opacity: 0.85;
+}
+
+.rr-chapter-mark {
+  justify-self: start;
+  width: min(180px, 100%);
+}
+
 .rr-chapter-kicker {
-  color: var(--rr-gold-text);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ud-s2);
+  align-items: center;
 }
 
 .rr-chapter-flag {
-  display: inline-block;
-  margin-left: 10px;
-  padding: 3px 8px;
-  background: rgba(224, 176, 112, 0.14);
-  border: 1px solid rgba(224, 176, 112, 0.42);
-  color: var(--rr-cream-dim);
-  font-size: 10px;
-  font-weight: 400;
+  padding: 3px var(--ud-s2);
+  background: var(--ud-tint-gold);
+  border: 1px solid var(--rr-line-strong);
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-body);
   letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* `ud-veil` 이 바깥을 overflow:hidden 으로 잡는다. 제목의 디센더가 잘리지 않게
+   아래로 여유를 준다. */
+.rr-chapter-veil {
+  padding-bottom: 2px;
 }
 
 .rr-chapter-title {
-  margin-top: 10px;
-  font-size: clamp(21px, 6.4vw, 27px);
-  font-weight: 600;
-  line-height: 1.42;
-  letter-spacing: -0.015em;
+  color: var(--rr-cream);
+  font-family: var(--rr-serif);
+  font-size: clamp(var(--ud-fs-400), 6.4vw, var(--ud-fs-500));
+  font-weight: var(--ud-w-bold);
+  line-height: var(--ud-lh-title);
+  letter-spacing: var(--ud-ls-title);
 }
 
 .rr-chapter-sub {
-  margin-top: 9px;
   color: var(--rr-cream-dim);
-  font-size: 13px;
-  line-height: 1.7;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-chapter-outline {
   display: grid;
-  gap: 5px;
-  margin-top: 16px;
-  padding: 14px 15px;
+  gap: var(--ud-s1);
+  margin-top: var(--ud-s2);
+  padding: var(--ud-s4) var(--ud-s4) var(--ud-s4) var(--ud-s5);
   background: var(--rr-ink-2);
   border-left: 2px solid var(--rr-gold-dim);
 }
 
 .rr-chapter-outline li {
+  position: relative;
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.65;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-chapter-outline li::before {
-  content: '— ';
-  color: var(--rr-gold-text);
+  content: '';
+  position: absolute;
+  top: 0.62em;
+  left: calc(var(--ud-s5) * -1);
+  width: 5px;
+  height: 5px;
+  background: var(--rr-gold-dim);
+  transform: rotate(45deg);
 }
 
 .rr-chapter-foot {
-  margin-top: 26px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(138, 107, 74, 0.26);
+  margin-top: var(--ud-s6);
+  padding-top: var(--ud-s4);
+  border-top: 1px solid var(--rr-line);
   color: var(--rr-gold-text);
-  font-size: 11.5px;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
   letter-spacing: 0.04em;
   text-align: center;
 }
 
-.rr-reduced {
-  margin-top: 18px;
-  padding: 12px 14px;
-  background: var(--rr-ink-2);
-  border: 1px dashed rgba(138, 107, 74, 0.42);
-  color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.7;
+.rr-chapter-seam {
+  margin-top: var(--ud-s5);
+  opacity: 0.75;
 }
 
-/* ── 컷 ────────────────────────────────────────────────────── */
+.rr-reduced {
+  margin-top: var(--ud-s5);
+  padding: var(--ud-s3) var(--ud-s4);
+  background: var(--rr-ink-2);
+  border: 1px dashed var(--rr-line-strong);
+  color: var(--rr-cream-dim);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   컷
+   ══════════════════════════════════════════════════════════════════════════
+   면·인레이·종이는 `CUT_SKIN`(reunionReportCuts.tsx)이 `ud-` 클래스로 붙인다.
+   그래서 여기서 background / box-shadow 를 선언하지 않는다 — 선언하면
+   인레이의 다크-브라이트-다크 샌드위치가 지워지고 카드가 다시 평평해진다. */
 .rr-cuts {
   display: grid;
-  gap: 20px;
-  margin-top: 26px;
+  gap: var(--ud-cut-gap);
+  margin-top: var(--ud-s6);
 }
 
 .rr-cut {
   position: relative;
   overflow: clip;
-  background: var(--rr-ink-2);
-  border: 1px solid rgba(138, 107, 74, 0.2);
+  isolation: isolate;
 }
 
 /* 침묵. 내용 없음, 순검정. 높이만 갖는다. */
+/* beat 컷은 '침묵' 이다. 하지만 아무 장치도 없는 빈 박스로 두면 침묵이 아니라
+   **미완성**으로 읽힌다 — 실측에서 beat·plate 19개가 문서 높이의 9.1%(3,760px)를
+   내용 0 으로 차지했고, 개별 최대 360px 는 휴대폰 화면의 44% 다.
+
+   침묵을 없애지 않고 장치를 준다. 이 장의 왼쪽에는 이미 관통 레일이 지나가므로
+   새 가구를 세우지 않고 **그 실 위의 매듭**을 놓는다(상세페이지의 붉은 실이
+   리포트에서 이어지는 자리다). 글자는 넣지 않는다 — 이 컷은 aria-hidden 이고
+   제품 카피가 아니라 호흡이다.
+
+   높이는 데이터(`--rr-h`)를 건드리지 않고 여기서 상한만 씌운다. 컷 수와 높이
+   대칭을 잠근 reportPayload.test.ts 를 건드리지 않기 위해서다. */
 .rr-cut--beat {
-  height: var(--rr-h, 120px);
-  background: var(--rr-ink);
-  border: 0;
+  position: relative;
+  height: min(var(--rr-h, 120px), 168px);
+}
+
+/* 레일 위의 매듭. 좌표는 .rr-rail-node 와 같은 계열이다
+   (.rr-rail 의 padding-left 32px, 레일 중심 6.5px → 컷 기준 -25.5px). */
+.rr-cut--beat::before,
+.rr-cut--plate::before {
+  position: absolute;
+  top: 50%;
+  left: -29px;
+  width: 7px;
+  height: 7px;
+  background: var(--ud-metal-3);
+  box-shadow: 0 0 0 3px var(--ud-floor);
+  content: '';
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* 매듭에서 단 안쪽으로 뻗는 헤어라인. 끝에서 사라지므로 칸을 나누지 않는다. */
+.rr-cut--beat::after {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: min(38%, 132px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--ud-metal-6), transparent);
+  content: '';
 }
 
 .rr-cut--cinematic {
   min-height: min(var(--rr-h, 560px), 72svh);
-  background: var(--rr-ink);
 }
 
-/* 장 여는 컷. 챕터 헤더가 이미 글자를 갖고 있으므로 여기서는 명판 선만 남긴다. */
+/* 장 여는 컷. 챕터 헤더가 이미 글자를 갖고 있으므로 여기서는 숨표 하나만 남긴다. */
+/* 숨표(`ud-breath`)는 72px 세로 실선이다. 컷 높이를 그보다 넉넉히 잡아 위아래로 숨을 준다. */
 .rr-cut--plate {
+  position: relative;
   display: grid;
-  height: 46px;
-  background: transparent;
-  border: 0;
+  height: 104px;
   place-items: center;
 }
 
-.rr-plate-rule {
-  width: 62px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(138, 107, 74, 0) 0%,
-    var(--rr-gold-dim) 50%,
-    rgba(138, 107, 74, 0) 100%
-  );
+.rr-cut--letter {
+  color: var(--rr-paper-ink);
 }
 
-.rr-cut--letter {
-  background: var(--rr-paper);
-  border-color: rgba(43, 38, 32, 0.24);
-  color: var(--rr-paper-ink);
+.rr-cut-corners {
+  z-index: 3;
+  color: var(--ud-metal-4);
 }
 
 .rr-cut-body {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 14px;
-  padding: 22px 18px;
+  gap: var(--ud-s4);
+  padding: var(--ud-s5) var(--ud-card-pad-inline);
 }
 
 .rr-cut--cinematic .rr-cut-body {
   align-content: end;
   min-height: min(var(--rr-h, 560px), 72svh);
+  padding-top: var(--ud-s8);
+}
+
+/* 아트 위 **글자**는 자기 스크림을 갖는다. 그림이 무엇이든 cream 11.59:1 /
+   cream-dim 7.31:1 / cream-mute 5.18:1 이 보장되는 이유가 이 레이어다
+   (최악의 경우 = 흰 그림 위 0.86 스크림. 실측 계산으로 확인했다).
+
+   대사 풍선은 자기 종이 면(잉크 대비 8.81:1)을 갖고 있어 이 레이어가 필요 없고,
+   전 컷에 깔면 아트의 아래 절반이 통째로 검정에 잠긴다. 그래서 렌더러가
+   나레이션·캡션이 실제로 있는 컷에만 `data-scrim="text"` 를 건다. */
+.rr-cut--cinematic[data-scrim='text'] .rr-cut-body {
+  background: linear-gradient(
+    0deg,
+    rgba(11, 7, 7, 0.95) 0%,
+    rgba(11, 7, 7, var(--rr-scrim)) 62%,
+    rgba(11, 7, 7, 0) 100%
+  );
 }
 
 /* 그림 없는 시네마틱 컷 = 순검정 침묵 컷.
-   글을 가운데 세우고 그 위에 1px 세로선 하나만 둔다(명세 CH00 c00-1). */
-.rr-cut--cinematic[data-scene='none'] {
-  background: var(--rr-ink);
-  border-color: rgba(138, 107, 74, 0.12);
-}
-
+   글을 가운데 세우고 그 위에 숨표 하나만 둔다(명세 CH00 c00-1). */
 .rr-cut--cinematic[data-scene='none'] .rr-cut-body {
   align-content: center;
   justify-items: center;
+  background: none;
   text-align: center;
 }
 
@@ -399,14 +640,13 @@
   content: '';
   width: 1px;
   height: 72px;
-  background: linear-gradient(180deg, rgba(138, 107, 74, 0) 0%, var(--rr-gold-dim) 100%);
+  background: linear-gradient(180deg, transparent 0%, var(--rr-gold-dim) 100%);
 }
 
 .rr-cut--cinematic[data-scene='none'] .rr-caption {
   max-width: 34ch;
 }
 
-/* 컷 이음매를 지우는 상하 그라디언트 */
 .rr-fig {
   position: absolute;
   inset: 0;
@@ -425,6 +665,8 @@
   transform: scale(var(--rr-scale, 1));
 }
 
+/* 컷 이음매를 지우는 상하 페이드. 위 17% 와 아래를 지면색으로 녹여
+   컷이 서로 이어 보이게 만든다. */
 .rr-fig-fade {
   position: absolute;
   inset: 0;
@@ -441,22 +683,19 @@
 .rr-narration {
   white-space: pre-line;
   color: var(--rr-cream);
-  font-size: clamp(19px, 5.6vw, 25px);
-  line-height: 1.58;
-  letter-spacing: -0.01em;
+  font-family: var(--rr-serif);
+  font-size: clamp(var(--ud-fs-400), 5.6vw, var(--ud-fs-500));
+  line-height: var(--ud-lh-lead);
+  letter-spacing: var(--ud-ls-title);
   text-align: center;
+  text-wrap: balance;
 }
 
+/* 종이색·꼬리·그림자는 `ud-bubble--dialogue` 가 소유한다.
+   여기서는 자리와 줄바꿈 규칙만 정한다. */
 .rr-bubble {
   justify-self: start;
-  max-width: 88%;
-  padding: 13px 17px;
-  background: var(--rr-bubble);
-  border-radius: 22px;
-  color: #23171b;
   white-space: pre-line;
-  font-size: clamp(15px, 4.2vw, 19px);
-  line-height: 1.46;
   text-align: center;
 }
 
@@ -465,407 +704,542 @@
   justify-self: end;
 }
 
+/* 환경음은 아트가 그대로 비친다. 꼬리도 그림자도 없다. */
 .rr-bubble.is-sfx {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--rr-cream);
-  border-radius: 999px;
+  justify-self: center;
+  border-radius: var(--ud-r-pill);
   letter-spacing: 0.3em;
 }
 
+/* 단정적 대사 한 줄. 진홍 링은 면·선 용도이므로 글자색은 건드리지 않는다. */
 .rr-bubble.is-direct {
-  background: var(--rr-bubble);
-  box-shadow: 0 0 0 2px rgba(224, 74, 60, 0.55);
+  box-shadow: var(--ud-lift-3), 0 0 0 2px var(--rr-crimson);
 }
 
 .rr-caption {
   white-space: pre-line;
   color: var(--rr-cream-dim);
-  font-size: 13px;
-  line-height: 1.78;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
 }
 
 /* 패널 라벨로 앞에 서는 캡션. */
 .rr-caption.is-lead {
   color: var(--rr-gold-text);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  letter-spacing: var(--ud-ls-kicker);
+  text-transform: uppercase;
+}
+
+/* 아트 위에서는 금색 작은 글자의 대비가 스크림 두께에 따라 흔들린다.
+   같은 자리에 크림을 쓰면 어떤 그림 위에서도 7.31:1 아래로 내려가지 않는다. */
+.rr-cut--cinematic[data-scene='art'] .rr-caption.is-lead {
+  color: var(--rr-cream-dim);
 }
 
 /* CH07 '오늘 할 것 한 가지'. 금테 프레임 안 문장 하나, 다른 항목 없음. */
 .rr-cut[data-cut='c07-6'] .rr-caption.is-lead {
-  padding: 16px 16px;
+  padding: var(--ud-s5);
   border: 1px solid var(--rr-gold-dim);
+  box-shadow: inset 0 0 0 4px var(--ud-floor), inset 0 0 0 5px var(--rr-line);
   color: var(--rr-cream);
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.75;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-300);
+  font-weight: var(--ud-w-body);
+  letter-spacing: var(--ud-ls-body);
+  line-height: var(--ud-lh-body);
   text-align: center;
+  text-transform: none;
 }
 
 .rr-footnote,
 .rr-empty {
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-empty {
-  padding: 12px 14px;
+  padding: var(--ud-s3) var(--ud-s4);
   background: var(--rr-ink-3);
-  border: 1px dashed rgba(138, 107, 74, 0.4);
+  border: 1px dashed var(--rr-line-strong);
 }
 
 /* 삭제 불가 문구가 실린 컷은 테두리로 한 번 더 표시해 둔다. */
-.rr-cut[data-undeletable] {
-  border-color: rgba(224, 176, 112, 0.42);
+.rr-cut[data-undeletable] .rr-cut-body {
+  border-top: 1px solid var(--rr-line-strong);
 }
 
 /* ── ◇ 알려주신 것 / ◆ 제가 계산한 것 ─────────────────────── */
 .rr-mark {
   margin-right: 6px;
-  font-size: 10px;
+  font-size: var(--ud-fs-50);
 }
 
-.rr-mark.is-input { color: var(--rr-cream-dim); }
-.rr-mark.is-calculated { color: var(--rr-gold); }
+.rr-mark.is-input { color: var(--rr-cream-mute); }
+.rr-mark.is-calculated { color: var(--rr-gold-text); }
 
 /* ── 근거 배지 (2층 분리) ─────────────────────────────────── */
+/* 아트 컷에도 실리므로 불투명 칩 면을 깐다. 그래야 금색 용어가 어떤 그림
+   위에서도 5.90:1(surface-2 기준)을 유지한다. */
 .rr-badges {
   display: grid;
-  gap: 8px;
+  gap: var(--ud-s2);
 }
 
 .rr-badges li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: baseline;
-  padding: 9px 11px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.26);
+  display: grid;
+  gap: 3px;
+  padding: var(--ud-s2) var(--ud-s3);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
 }
 
 .rr-badge-term {
   color: var(--rr-gold-text);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-medium);
+  letter-spacing: 0.06em;
 }
 
 .rr-badge-translation {
-  min-width: 0;
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.6;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 입력 되인용 ──────────────────────────────────────────── */
 .rr-echo {
   display: grid;
-  gap: 0;
-  padding: 4px 2px;
-  border: 1px solid var(--rr-gold-dim);
+  gap: var(--ud-s2);
 }
 
 .rr-echo-row {
   display: grid;
   grid-template-columns: minmax(0, 96px) minmax(0, 1fr);
-  gap: 10px;
-  padding: 11px 13px;
-  border-bottom: 1px dotted rgba(138, 107, 74, 0.3);
+  gap: var(--ud-s3);
+  align-items: baseline;
+  padding-bottom: var(--ud-s2);
+  border-bottom: 1px dotted var(--rr-line);
 }
 
-.rr-echo-row:last-child { border-bottom: 0; }
-
 .rr-echo dt {
-  color: var(--rr-gold-text);
-  font-size: 11.5px;
-  line-height: 1.6;
+  min-width: 0;
 }
 
 .rr-echo dd {
   min-width: 0;
   color: var(--rr-cream);
-  font-size: 13px;
-  line-height: 1.66;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 판단 게이트 ──────────────────────────────────────────── */
 .rr-gate-check {
   display: grid;
-  gap: 14px;
+  gap: var(--ud-s4);
 }
 
 .rr-gate-question p {
   color: var(--rr-cream);
-  font-size: 14px;
-  line-height: 1.6;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-gate-answers {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 9px;
+  gap: var(--ud-s2);
+  margin-top: var(--ud-s2);
 }
 
 .rr-choice {
   min-height: 44px;
-  padding: 0 16px;
-  background: transparent;
-  border: 1px solid rgba(138, 107, 74, 0.5);
+  padding: 0 var(--ud-s4);
+  background: var(--ud-surface-2);
+  border: 1px solid var(--rr-line-strong);
   color: var(--rr-cream-dim);
-  font-family: inherit;
-  font-size: 13px;
   cursor: pointer;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
 }
 
 .rr-choice.is-on {
-  background: rgba(224, 176, 112, 0.16);
+  background: var(--ud-tint-gold);
   border-color: var(--rr-gold);
+  box-shadow: var(--ud-rim-strong), var(--ud-glow-gold);
   color: var(--rr-cream);
 }
 
 .rr-verdict {
-  padding: 16px 16px 18px;
-  background: var(--rr-ink-3);
-  border-left: 3px solid var(--rr-gold-dim);
+  padding: var(--ud-card-pad-inline);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
 }
 
 .rr-verdict.is-deferred {
-  border-left-color: var(--rr-crimson);
+  border-left-color: var(--rr-safe);
 }
 
 .rr-verdict-state {
   display: flex;
-  gap: 8px;
+  gap: var(--ud-s2);
   align-items: center;
-  color: var(--rr-gold);
-  font-size: 15px;
-  font-weight: 700;
+  color: var(--rr-cream);
 }
 
-.rr-verdict.is-deferred .rr-verdict-state { color: var(--rr-crimson-soft); }
+.rr-verdict.is-deferred .rr-verdict-state {
+  color: var(--rr-safe);
+}
 
 .rr-verdict p + p,
 .rr-verdict-reasons,
-.rr-toc { margin-top: 12px; }
+.rr-toc { margin-top: var(--ud-s3); }
 
 .rr-verdict p {
   color: var(--rr-cream-dim);
-  font-size: 13px;
-  line-height: 1.75;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-verdict-reasons {
   display: grid;
-  gap: 8px;
+  gap: var(--ud-s2);
 }
 
 .rr-verdict-reasons li {
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.7;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-toc {
   display: grid;
-  gap: 9px;
+  gap: var(--ud-s2);
 }
 
 .rr-toc li {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: var(--ud-s2);
   align-items: baseline;
-  color: var(--rr-cream);
-  font-size: 13px;
-  line-height: 1.6;
+  color: var(--rr-cream-dim);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-toc-dot {
-  flex: none;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
+  margin-top: 0.55em;
   background: var(--rr-gold-dim);
-  border-radius: 50%;
+  transform: rotate(45deg);
 }
 
-/* ── 사주 원국 패널 ───────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   사주 원국 패널 — 리포트에서 유일한 종이 면
+   ══════════════════════════════════════════════════════════════════════════
+   근검정 지면 한가운데 문서 한 장이 놓이는 것이 이 장의 시각적 중심이다.
+   종이를 두 장 쓰면 그 중심이 사라지므로 다른 컷에는 쓰지 않는다.
+   잉크 대비 12.16:1, 괘선은 잉크 알파(--ud-line-paper)라 종이 위에서 항상 보인다.
+   한자는 **텍스트로 유지한다** — 래스터로 굽는 방식은 선택 불가 · 확대 시 깨짐 ·
+   다크 대응 불가다. */
 .rr-pillars {
-  padding: 4px;
-  border: 1px solid var(--rr-gold-dim);
+  display: grid;
+  gap: var(--ud-s3);
+}
+
+.rr-pillars-plate {
+  position: relative;
+  padding: var(--ud-s4) var(--ud-s3) var(--ud-s3);
+}
+
+.rr-pillars-corners {
+  color: var(--ud-paper-ink-dim);
+  opacity: 0.45;
 }
 
 .rr-pillars-table {
   width: 100%;
-  table-layout: fixed;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .rr-pillars-table th,
 .rr-pillars-table td {
-  padding: 9px 2px;
-  border: 1px solid rgba(138, 107, 74, 0.26);
-  color: var(--rr-cream-dim);
-  font-size: 12px;
-  font-weight: 400;
+  padding: var(--ud-s2) 2px;
+  border: 1px solid var(--rr-paper-line);
+  color: var(--rr-paper-ink);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-body);
   text-align: center;
+  vertical-align: middle;
 }
 
+/* 열 머리(時 日 月 年 자리의 한글 주 이름). 위 괘선을 굵게 잡아 판으로 읽히게 한다. */
 .rr-pillars-table thead th {
-  color: var(--rr-gold-text);
-  font-size: 11.5px;
-  font-weight: 700;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+  color: var(--ud-paper-ink-dim);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: 0.04em;
+}
+
+/* 행 라벨 — 한자 + (한글) 병기. 참고 자료가 래스터 이미지로 하던 자리를 글자로 한다.
+   `table-layout: fixed` 는 열 폭을 **첫 행**에서 가져가므로 라벨 열 폭은 thead 에서 잡는다.
+   tbody 에만 width 를 걸면 320px 에서 `地藏干` 이 두 줄로 접힌다. */
+.rr-pillars-table thead th:first-child {
+  width: 23%;
 }
 
 .rr-pillars-table tbody th {
-  color: var(--rr-gold-text);
-  font-size: 11px;
+  background: rgba(43, 38, 32, 0.07);
+  border-right-width: 2px;
+}
+
+.rr-pillars-rowhanja {
+  display: block;
+  color: var(--rr-paper-ink);
+  font-family: var(--ud-hanja);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-bold);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.rr-pillars-rowko {
+  display: block;
+  margin-top: 2px;
+  color: var(--ud-paper-ink-dim);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-50);
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .rr-pillars-table .is-day {
-  background: rgba(74, 15, 12, 0.5);
-  color: var(--rr-cream);
+  background: rgba(109, 28, 20, 0.09);
+}
+
+.rr-pillars-table thead th.is-day {
+  color: var(--ud-crimson-paper);
 }
 
 .rr-pillars-badge {
-  display: block;
-  margin-top: 3px;
-  color: var(--rr-crimson-soft);
-  font-size: 10px;
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  background: var(--ud-crimson-paper);
+  color: var(--ud-paper-hi);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
 }
 
+/* 대형 한자 글리프. `ud-hanja` 의 기본 색(크림)은 종이 위에서 보이지 않으므로
+   이 면에서는 잉크로 덮는다. */
 .rr-pillars-glyph {
   display: block;
-  color: var(--rr-cream);
-  font-size: clamp(17px, 5.2vw, 22px);
-  font-weight: 600;
+  color: var(--rr-paper-ink);
+  font-family: var(--ud-hanja);
+  font-size: clamp(22px, 7.2vw, 30px);
+  font-weight: var(--ud-w-body);
+  line-height: 1.12;
 }
 
-.rr-pillars-ko {
+.rr-pillars-table .is-day .rr-pillars-glyph {
+  color: var(--ud-crimson-paper);
+}
+
+/* ── 원국표의 오행 ──────────────────────────────────────────────────
+   이 표는 유료 리포트의 시각적 중심인데 색이 한 개도 없어 회색 격자
+   스프레드시트로 렌더됐다. 같은 정보를 **무료 상세페이지**는 5색 유리 타일로
+   보여주므로, 광고가 결과물보다 예뻐 보이는 역전이 생겼다.
+
+   시스템이 만든 유일한 다색 장치(오행)를 유료 화면에서 쓴다. 다만 상세페이지의
+   `--ud-el-*` 는 어두운 웰 전용이라 종이 위에서는 전부 AA 아래다. 종이 쪽 짝인
+   `--ud-el-ink-*` / `--ud-el-wash-*` 를 쓴다(대비는 기반 시트 §1.6 참조).
+
+   일주 칸은 제외한다 — 그 칸이 붉은 것은 오행이 아니라 '독자 자신' 이라는
+   표시이고 본문이 그 붉은 칸을 가리켜 설명한다. */
+.rr-pillars-table td[data-el='wood'] {
+  --rr-el-ink: var(--ud-el-ink-wood);
+  --rr-el-wash: var(--ud-el-wash-wood);
+}
+.rr-pillars-table td[data-el='fire'] {
+  --rr-el-ink: var(--ud-el-ink-fire);
+  --rr-el-wash: var(--ud-el-wash-fire);
+}
+.rr-pillars-table td[data-el='earth'] {
+  --rr-el-ink: var(--ud-el-ink-earth);
+  --rr-el-wash: var(--ud-el-wash-earth);
+}
+.rr-pillars-table td[data-el='metal'] {
+  --rr-el-ink: var(--ud-el-ink-metal);
+  --rr-el-wash: var(--ud-el-wash-metal);
+}
+.rr-pillars-table td[data-el='water'] {
+  --rr-el-ink: var(--ud-el-ink-water);
+  --rr-el-wash: var(--ud-el-wash-water);
+}
+
+.rr-pillars-table td[data-el]:not(.is-day) {
+  background: var(--rr-el-wash);
+}
+
+.rr-pillars-table td[data-el]:not(.is-day) .rr-pillars-glyph {
+  color: var(--rr-el-ink);
+}
+
+/* 한자 옆 한글 병기. `ud-gloss` 가 11px 바닥과 굵기를 주고, 색만 잉크로 덮는다.
+   선택자를 두 단으로 쓰는 이유: `.ud-gloss` 는 셸 컨테이너 밑에서 선언되어
+   특이도가 (0,2,0) 이다. 한 클래스(0,1,0)로는 그 기본 금색을 이기지 못하고,
+   금색은 종이 위에서 2.07:1 이다(실측으로 잡은 실패). */
+.rr-pillars-plate .rr-pillars-ko {
   display: block;
-  margin-top: 2px;
-  font-size: 10.5px;
+  color: var(--ud-paper-ink-dim);
+}
+
+.rr-pillars-text {
+  color: var(--ud-paper-ink-dim);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
 }
 
 .rr-pillars-note {
-  padding: 10px 11px 6px;
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.68;
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 네 칸 요약 / 오행 ────────────────────────────────────── */
 .rr-facts {
   display: grid;
-  gap: 1px;
-  background: rgba(138, 107, 74, 0.26);
-  border: 1px solid rgba(138, 107, 74, 0.26);
+  gap: var(--ud-s2);
 }
 
 .rr-facts > div {
   display: grid;
-  grid-template-columns: minmax(0, 88px) minmax(0, 1fr);
-  gap: 10px;
-  padding: 11px 13px;
-  background: var(--rr-ink-2);
+  grid-template-columns: minmax(0, 96px) minmax(0, 1fr);
+  gap: var(--ud-s3);
+  align-items: baseline;
+  padding-bottom: var(--ud-s2);
+  border-bottom: 1px dotted var(--rr-line);
 }
 
 .rr-facts dt {
-  color: var(--rr-gold-text);
-  font-size: 11.5px;
+  min-width: 0;
 }
 
 .rr-facts dd {
   min-width: 0;
   color: var(--rr-cream);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-elements {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--ud-s2);
 }
 
 .rr-elements li {
   display: flex;
-  gap: 6px;
+  gap: var(--ud-s2);
   align-items: baseline;
-  padding: 7px 11px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.26);
-  font-size: 12.5px;
+  padding: var(--ud-s2) var(--ud-s3);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-recess);
 }
 
-.rr-elements-count { color: var(--rr-gold); }
+.rr-elements-name {
+  color: var(--rr-cream);
+  font-size: var(--ud-fs-300);
+}
+
+.rr-elements-count {
+  color: var(--rr-gold-text);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+}
 
 /* ── 궁합 4축 ─────────────────────────────────────────────── */
 .rr-axes {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
 
 .rr-axis {
-  padding: 13px 14px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.24);
+  display: grid;
+  gap: var(--ud-s2);
+  padding: var(--ud-s4);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
+  box-shadow: var(--ud-rim);
 }
 
-.rr-axis.is-insufficient {
-  background: repeating-linear-gradient(
-    135deg,
-    var(--rr-ink-3) 0 8px,
-    rgba(138, 107, 74, 0.1) 8px 16px
-  );
-}
+.rr-axis.is-supportive { border-left-color: var(--rr-safe); }
+.rr-axis.is-tension { border-left-color: var(--rr-crimson); }
+.rr-axis.is-insufficient { border-left-color: var(--rr-slate); }
 
 .rr-axis-head {
   display: flex;
-  gap: 9px;
+  gap: var(--ud-s2);
   align-items: baseline;
 }
 
 .rr-axis-icon {
-  color: var(--rr-gold);
-  font-size: 16px;
+  color: var(--rr-gold-text);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-200);
 }
 
-.rr-axis.is-tension .rr-axis-icon { color: var(--rr-crimson-soft); }
 .rr-axis.is-supportive .rr-axis-icon { color: var(--rr-safe); }
+.rr-axis.is-tension .rr-axis-icon { color: var(--rr-crimson-soft); }
+.rr-axis.is-insufficient .rr-axis-icon { color: var(--rr-slate); }
 
 .rr-axis-label {
-  min-width: 0;
   color: var(--rr-cream);
-  font-size: 14px;
-  font-weight: 700;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
 }
 
 .rr-axis-direction {
-  margin-top: 5px;
-  color: var(--rr-cream-dim);
-  font-size: 12px;
+  color: var(--rr-gold-text);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
   letter-spacing: 0.06em;
 }
 
 .rr-axis-statement {
-  margin-top: 9px;
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.75;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
-/* 근거 신뢰도는 관계 점수와 색·크기를 완전히 분리한다. */
 .rr-axis-confidence {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px dotted rgba(138, 107, 74, 0.34);
-  color: var(--rr-cream-dim);
-  font-size: 11px;
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-50);
   letter-spacing: 0.04em;
-  opacity: 0.86;
 }
 
 /* ── 신호 판독표 ──────────────────────────────────────────── */
@@ -875,281 +1249,307 @@
 
 .rr-signals ul {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s2);
 }
 
 .rr-signal {
-  display: grid;
-  gap: 7px;
-  padding: 12px 13px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.24);
+  padding: var(--ud-s3);
+  background: var(--ud-surface-2);
+  border: 1px solid var(--rr-line);
+}
+
+.rr-signal.is-on {
+  border-color: var(--rr-gold);
+  box-shadow: var(--ud-rim-strong);
 }
 
 .rr-signal-toggle {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: var(--ud-s2);
+  align-items: flex-start;
+  width: 100%;
   min-height: 44px;
   padding: 0;
   background: none;
   border: 0;
   color: var(--rr-cream);
-  font-family: inherit;
-  font-size: 13.5px;
-  line-height: 1.5;
-  text-align: left;
   cursor: pointer;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
+  text-align: left;
 }
 
 .rr-signal-box,
 .rr-check-box {
   display: grid;
-  flex: none;
-  width: 19px;
-  height: 19px;
-  background: transparent;
-  border: 1px solid var(--rr-gold-dim);
-  color: var(--rr-gold-hi);
+  flex: 0 0 auto;
   place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  background: var(--ud-floor);
+  border: 1px solid var(--rr-gold-dim);
+  box-shadow: var(--ud-recess);
+  color: var(--ud-floor);
 }
 
 .rr-signal.is-on .rr-signal-box,
 .rr-check.is-on .rr-check-box {
-  background: rgba(224, 176, 112, 0.18);
+  background: var(--rr-gold);
   border-color: var(--rr-gold);
 }
 
 .rr-signal-fact,
 .rr-signal-guess {
-  padding-left: 29px;
-  font-size: 12px;
-  line-height: 1.66;
+  padding-left: 28px;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
-.rr-signal-fact { color: var(--rr-safe); }
+.rr-signal-fact { color: var(--rr-terra); }
 
-/* 열 머리글은 560px 이상에서만 보인다(그리고 장식이라 aria-hidden 이다).
-   사실 칸과 추측 칸을 가르는 것이 이 컷의 존재 이유이므로 행 안에 라벨을 둔다.
-   머리글이 보이는 폭에서는 시각적으로만 감추고 보조기술에는 그대로 남긴다. */
 .rr-signal-tag {
-  color: var(--rr-cream-dim);
-  font-size: 11px;
-  letter-spacing: 0.02em;
+  color: var(--rr-cream-mute);
 }
 
 .rr-signal-guess {
-  color: var(--rr-cream-dim);
-  background: repeating-linear-gradient(
-    135deg,
-    transparent 0 7px,
-    rgba(138, 107, 74, 0.09) 7px 14px
-  );
+  color: var(--rr-slate);
 }
 
-/* ── 조건 게이지 · 집계 ───────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   조건 게이지 · 집계
+   ══════════════════════════════════════════════════════════════════════════
+   확률이 아니라 조건 개수다. 다섯 칸은 리세스 트랙 안의 각인 칸으로 그린다. */
 .rr-readiness,
 .rr-tally-block {
   display: grid;
-  gap: 14px;
+  gap: var(--ud-s4);
 }
 
 .rr-gauge-track {
   display: flex;
-  gap: 5px;
+  gap: var(--ud-s1);
+  padding: var(--ud-s2);
+  background: var(--ud-surface-1);
+  box-shadow: var(--ud-recess);
 }
 
 .rr-gauge-cell {
   flex: 1 1 0;
   min-width: 0;
-  height: 13px;
-  background: rgba(138, 107, 74, 0.16);
-  border: 1px solid rgba(138, 107, 74, 0.4);
+  height: 14px;
+  background: var(--ud-floor);
+  box-shadow: inset 0 0 0 1px var(--rr-line);
 }
 
-.rr-gauge-cell.is-met { background: var(--rr-safe); border-color: var(--rr-safe); }
-.rr-gauge-cell.is-unmet { background: var(--rr-crimson-deep); border-color: var(--rr-crimson); }
-.rr-gauge-cell.is-unknown { background: rgba(159, 180, 201, 0.24); border-color: var(--rr-slate); }
+.rr-gauge-cell.is-met { background: var(--rr-gold); box-shadow: none; }
+.rr-gauge-cell.is-unmet { background: var(--ud-surface-4); box-shadow: inset 0 0 0 1px var(--rr-line-strong); }
+.rr-gauge-cell.is-unknown {
+  background: var(--ud-surface-2);
+  box-shadow: inset 0 0 0 1px rgba(159, 180, 201, 0.55);
+}
 
 .rr-tally {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ud-s2);
 }
 
 .rr-tally li {
-  display: flex;
-  flex: 1 1 96px;
-  gap: 4px;
-  align-items: baseline;
-  min-width: 0;
-  padding: 10px 11px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.24);
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: var(--ud-s3) var(--ud-s2);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim);
+  text-align: center;
 }
 
 .rr-tally-num {
   color: var(--rr-cream);
-  font-size: 26px;
-  font-weight: 600;
+  font-family: var(--ud-num);
+  font-feature-settings: 'tnum' 1;
+  font-size: var(--ud-fs-600);
+  font-weight: var(--ud-w-display);
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.rr-tally-item.is-met .rr-tally-num { color: var(--rr-safe); }
-.rr-tally-item.is-unmet .rr-tally-num { color: var(--rr-crimson-soft); }
+.rr-tally-item.is-met .rr-tally-num { color: var(--rr-gold-hi); }
+.rr-tally-item.is-unmet .rr-tally-num { color: var(--rr-terra); }
 .rr-tally-item.is-unknown .rr-tally-num { color: var(--rr-slate); }
 
 .rr-tally-unit {
-  color: var(--rr-cream-dim);
-  font-size: 11px;
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-50);
 }
 
 .rr-tally-label {
-  flex: 1 1 100%;
   color: var(--rr-cream-dim);
-  font-size: 11px;
-  line-height: 1.5;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-title);
 }
 
 .rr-tally-foot {
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.7;
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-readiness-list {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
 
 .rr-readiness-item {
-  padding: 12px 13px;
-  background: var(--rr-ink-3);
-  border-left: 2px solid rgba(138, 107, 74, 0.5);
+  display: grid;
+  gap: 4px;
+  padding: var(--ud-s3) var(--ud-s4);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
 }
 
-.rr-readiness-item.is-met { border-left-color: var(--rr-safe); }
-.rr-readiness-item.is-unmet { border-left-color: var(--rr-crimson); }
+.rr-readiness-item.is-met { border-left-color: var(--rr-gold); }
+.rr-readiness-item.is-unmet { border-left-color: var(--rr-terra); }
 .rr-readiness-item.is-unknown { border-left-color: var(--rr-slate); }
 
 .rr-readiness-label {
   display: flex;
-  gap: 9px;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ud-s1);
+  align-items: baseline;
   color: var(--rr-cream);
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
 }
 
 .rr-readiness-state {
-  display: grid;
-  flex: none;
-  width: 20px;
-  height: 20px;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  color: var(--rr-cream-mute);
 }
 
-.rr-readiness-item.is-met .rr-readiness-state { color: var(--rr-safe); }
-.rr-readiness-item.is-unmet .rr-readiness-state { color: var(--rr-crimson-soft); }
-.rr-readiness-item.is-unknown .rr-readiness-state { color: var(--rr-slate); }
+.rr-readiness-item.is-met .rr-readiness-state,
+.rr-condition.is-met .rr-readiness-state { color: var(--rr-gold-hi); }
+.rr-readiness-item.is-unmet .rr-readiness-state,
+.rr-condition.is-unmet .rr-readiness-state { color: var(--rr-terra); }
+.rr-readiness-item.is-unknown .rr-readiness-state,
+.rr-condition.is-unknown .rr-readiness-state { color: var(--rr-slate); }
 
 .rr-readiness-reason,
 .rr-readiness-fill {
-  margin-top: 6px;
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
-.rr-readiness-fill { opacity: 0.88; }
+.rr-readiness-fill { color: var(--rr-cream-mute); }
 
-/* 다섯 칸의 출처 분리. 게이지가 한 숫자로 합산하는 옆에서 ◇/◆ 비율을 말로 남긴다. */
 .rr-readiness-basis {
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  letter-spacing: 0.02em;
+  color: var(--rr-gold-text);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 미확인 조건 카드 (조건 · 지금 상태 · 채우는 방법) ────── */
 .rr-conditions {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
 
 .rr-condition {
-  padding: 12px 13px;
-  background: var(--rr-ink-3);
-  border-left: 2px solid rgba(138, 107, 74, 0.5);
+  display: grid;
+  gap: 4px;
+  padding: var(--ud-s3) var(--ud-s4);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
 }
 
-.rr-condition.is-unmet { border-left-color: var(--rr-crimson); }
+.rr-condition.is-met { border-left-color: var(--rr-gold); }
+.rr-condition.is-unmet { border-left-color: var(--rr-terra); }
 .rr-condition.is-unknown { border-left-color: var(--rr-slate); }
 
 .rr-condition-label {
   display: flex;
-  gap: 9px;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ud-s1);
+  align-items: baseline;
   color: var(--rr-cream);
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
 }
-
-.rr-condition.is-unmet .rr-readiness-state { color: var(--rr-crimson-soft); }
-.rr-condition.is-unknown .rr-readiness-state { color: var(--rr-slate); }
 
 .rr-condition-reason,
 .rr-condition-fill {
-  margin-top: 6px;
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
-.rr-condition-fill { opacity: 0.88; }
+.rr-condition-fill { color: var(--rr-cream-mute); }
 
 /* ── 12개월 띠 ────────────────────────────────────────────── */
 .rr-months {
   display: grid;
-  gap: 13px;
+  gap: var(--ud-s3);
 }
 
-.rr-months-title {
-  color: var(--rr-gold-text);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+/* `.ud-label` 이 셸 컨테이너 밑에서 letter-spacing 을 (0,2,0) 으로 잡고 있으므로
+   두 단 선택자로 올린다. 아래 몇 군데도 같은 이유다. */
+.rr-months .rr-months-title {
+  letter-spacing: var(--ud-ls-kicker);
 }
 
 .rr-band {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
 
-.rr-band-ticks {
+/* 상단 헤드룸 16px + 하단 축 32px.
+   이전 판은 트랙 높이와 최대 막대 높이가 둘 다 148px 이라 가장 높은 막대가
+   천장에 붙어 잘린 것처럼 보였다. 헤드룸을 주면 최대값이 '차오른' 것으로 읽힌다. */
+/* ★ `.rr-page ol` 리셋(`padding: 0`, 특이도 0,1,1)이 이 규칙의 padding 을 이긴다.
+   이전 판이 `padding: var(--ud-s2) 6px` 를 선언하고도 실측 padding 이 0 이었던
+   이유이고, 그래서 최대 막대가 트랙 높이와 같아져 천장에 붙어 잘린 것처럼 보였다.
+   `.rr-page` 를 앞에 붙여 특이도를 올린다. */
+.rr-page .rr-band-ticks {
   display: flex;
   gap: 3px;
   align-items: flex-end;
-  height: 148px;
-  padding: 8px 6px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.26);
+  height: 178px;
+  padding: var(--ud-s4) 6px 32px;
+  background: var(--ud-surface-3);
+  box-shadow: var(--ud-recess);
 }
 
 .rr-band-tick {
+  position: relative;
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
   justify-content: flex-end;
   min-width: 0;
   height: max(14%, var(--meter-level, 100%));
-  background: rgba(138, 107, 74, 0.3);
+  background: rgba(158, 132, 104, 0.34);
 }
 
-.rr-band-tick.is-open { background: var(--rr-gold); }
+.rr-band-tick.is-open {
+  background: linear-gradient(180deg, var(--ud-metal-1) 0%, var(--ud-metal-3) 100%);
+}
 .rr-band-tick.is-normal { background: rgba(224, 176, 112, 0.34); }
 /* 보류 막대는 12칸 중 절반을 차지한다. 트랙과 같은 색으로 두면 차트 절반이 빈 자리로 읽히고
    막대 높이(level)도 전달되지 않는다. 테두리를 트랙 대비 3:1 위로 올려 경계를 살린다
-   (rgba(201,183,159,0.85) 를 트랙 rgb(36,20,20) 위에 합성하면 약 6.9:1). */
+   (rgba(201,183,159,0.85) 를 트랙 위에 합성하면 약 6.9:1). */
 .rr-band-tick.is-hold {
   background: rgba(159, 180, 201, 0.16);
   box-shadow: inset 0 0 0 1.5px rgba(201, 183, 159, 0.85);
@@ -1160,69 +1560,91 @@
   outline-offset: 1px;
 }
 
-.rr-band-tick-caption {
-  padding-bottom: 3px;
-  color: var(--rr-ink);
-  font-size: 10px;
-  line-height: 1.05;
-  text-align: center;
-}
+/* 간지 두 자.
+   ★ 막대 **안**이 아니라 트랙 아래 축에 앉힌다. 막대 안에 두면 칸 폭(20.5px)보다
+   글자 폭(11px × 2 = 22px)이 넓어 '정'/'유' 가 한 자씩 강제 개행됐고, 행간이
+   글자 크기와 같아 붙어 버렸다 — 의도된 세로조판이 아니라 오버플로 줄바꿈이었다.
+   막대 바닥(=트랙 기준선)에서 절대 배치하므로 12칸의 축이 한 줄로 정렬되고,
+   막대 높이와 무관하게 잘리지 않는다.
+   `writing-mode: vertical-rl` 로 간지를 **의도된 세로조판**으로 세운다.
 
-.rr-band-tick.is-hold .rr-band-tick-caption { color: var(--rr-cream-dim); }
+   대비 — 축은 막대가 아니라 트랙 면(--ud-surface-3) 위에 있으므로 조합이 하나다:
+   `--rr-cream` on `--ud-surface-3` = 13.04:1. 막대 색에 따라 잉크로 뒤집던
+   `is-open` 예외가 필요 없어졌다. */
+.rr-band-tick-caption {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  color: var(--rr-cream);
+  font-family: var(--ud-hanja);
+  font-size: var(--ud-fs-50);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-align: center;
+  transform: translateX(-50%);
+  /* ★ `white-space: nowrap` 이 필수다. 세로 조판에서는 **인라인 축이 세로**이고,
+     이 요소는 `top: calc(100% + 5px)` 로 막대 아래에 놓이므로 컨테이닝 블록 안에
+     남은 세로 공간이 0 이다. 그대로 두면 간지 두 자가 한 자씩 두 줄로 쪼개진다
+     (막대 안에 두던 이전 판과 똑같은 증상이 세로로 재현된다). */
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+}
 
 .rr-band-note {
   color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.7;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-months-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: var(--ud-s1);
 }
 
 .rr-month {
   min-width: 44px;
-  min-height: 36px;
-  padding: 0 6px;
-  background: transparent;
-  border: 1px solid rgba(138, 107, 74, 0.4);
+  min-height: 44px;
+  padding: 0 var(--ud-s2);
+  background: var(--ud-surface-2);
+  border: 1px solid var(--rr-line-strong);
   color: var(--rr-cream-dim);
-  font-family: inherit;
-  font-size: 12px;
   cursor: pointer;
+  font-size: var(--ud-fs-100);
 }
 
 .rr-month.is-on {
-  background: rgba(224, 176, 112, 0.18);
+  background: var(--ud-tint-gold);
   border-color: var(--rr-gold);
+  box-shadow: var(--ud-rim-strong), var(--ud-glow-gold);
   color: var(--rr-cream);
 }
 
 .rr-months-focus {
   min-height: 3.4em;
-  padding: 11px 12px;
-  background: var(--rr-ink-3);
-  border: 1px dashed rgba(138, 107, 74, 0.34);
+  padding: var(--ud-s3) var(--ud-s4);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 세로 연운 타임라인 (12개월 띠와 일부러 다르게) ────────── */
 .rr-timeline[data-orientation='vertical'] {
   display: grid;
   gap: 0;
-  padding-left: 16px;
-  border-left: 1px solid rgba(138, 107, 74, 0.45);
+  padding-left: var(--ud-s5);
+  border-left: 1px solid var(--rr-line-strong);
 }
 
 .rr-timeline-node {
   position: relative;
   display: grid;
-  gap: 5px;
-  padding: 0 0 18px;
+  gap: var(--ud-s1);
+  padding: 0 0 var(--ud-s5);
 }
 
 .rr-timeline-node:last-child { padding-bottom: 0; }
@@ -1230,222 +1652,247 @@
 .rr-timeline-dot {
   position: absolute;
   top: 6px;
-  left: -21px;
+  left: -29px;
   width: 9px;
   height: 9px;
   background: var(--rr-ink);
   border: 1px solid var(--rr-gold-dim);
   border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--ud-floor);
 }
 
-.rr-timeline-node.is-open .rr-timeline-dot { background: var(--rr-gold); border-color: var(--rr-gold); }
+.rr-timeline-node.is-open .rr-timeline-dot {
+  background: var(--rr-gold);
+  border-color: var(--rr-gold);
+  box-shadow: 0 0 0 3px var(--ud-floor), var(--ud-glow-gold);
+}
 .rr-timeline-node.is-hold .rr-timeline-dot { border-color: var(--rr-slate); }
 
 .rr-timeline-when {
   color: var(--rr-cream);
-  font-size: 15px;
-  font-weight: 600;
+  font-family: var(--ud-num);
+  font-size: var(--ud-fs-300);
+  font-weight: var(--ud-w-bold);
+  font-variant-numeric: tabular-nums;
 }
 
 .rr-timeline-count {
   color: var(--rr-slate);
-  font-size: 11.5px;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
   letter-spacing: 0.06em;
 }
 
 .rr-timeline-note {
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.75;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
 }
 
 /* ── 독자 기입 ────────────────────────────────────────────── */
 .rr-deadline,
 .rr-decision {
   display: grid;
-  gap: 12px;
+  gap: var(--ud-s3);
 }
 
 .rr-deadline-line,
 .rr-decision-line {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+  gap: var(--ud-s2);
+  align-items: baseline;
+  padding-bottom: var(--ud-s2);
+  border-bottom: 1px solid var(--rr-line-strong);
   color: var(--rr-cream);
-  font-size: 14px;
-  line-height: 1.6;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-deadline-line input,
 .rr-decision-line input {
-  flex: 1 1 160px;
+  flex: 1 1 140px;
   min-width: 0;
   min-height: 44px;
-  padding: 0 12px;
-  background: var(--rr-ink);
-  border: 1px solid var(--rr-gold-dim);
+  padding: 0 var(--ud-s2);
+  background: var(--ud-floor);
+  border: 1px solid var(--rr-line-strong);
+  box-shadow: var(--ud-recess);
   color: var(--rr-cream);
-  font-family: inherit;
-  font-size: 15px;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
 }
 
-/* 독자가 날짜를 쓰기 전 자리. 삭제 불가 문구 `deadline-owner` 는 입력 후에만 나간다(§6-F). */
 .rr-deadline-before {
-  color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-deadline-suggest {
   display: grid;
-  gap: 6px;
-  padding: 11px 12px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.26);
-  color: var(--rr-cream);
-  font-size: 12.5px;
+  gap: 4px;
+  padding: var(--ud-s3) var(--ud-s4);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-gold-dim);
+  color: var(--rr-gold-text);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
 }
 
 .rr-deadline-rationale {
   color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.7;
+  line-height: var(--ud-lh-lead);
 }
 
-.rr-deadline-value {
-  background: linear-gradient(90deg, var(--rr-cream) 0%, var(--rr-crimson-soft) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-size: clamp(30px, 9vw, 46px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+.rr-deadline .rr-deadline-value {
+  color: var(--rr-cream);
+  font-family: var(--ud-num);
+  font-size: var(--ud-fs-400);
+  font-weight: var(--ud-w-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .rr-decision-deadline {
   color: var(--rr-gold-text);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-save {
   justify-self: start;
   min-height: 44px;
-  padding: 0 18px;
-  background: rgba(224, 176, 112, 0.14);
+  padding: 0 var(--ud-s5);
+  background: var(--ud-surface-3);
   border: 1px solid var(--rr-gold);
+  box-shadow: var(--ud-rim-strong);
   color: var(--rr-cream);
-  font-family: inherit;
-  font-size: 13px;
   cursor: pointer;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
 }
 
 .rr-save-note {
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  min-height: 1.3em;
+  color: var(--rr-safe);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
 }
 
 /* ── 체크리스트 · 금지 행동 ───────────────────────────────── */
 .rr-checklist {
   display: grid;
-  gap: 8px;
+  gap: var(--ud-s2);
 }
 
 .rr-check {
   display: flex;
-  gap: 11px;
-  align-items: center;
+  gap: var(--ud-s2);
+  align-items: flex-start;
   width: 100%;
-  min-height: 46px;
-  padding: 10px 13px;
-  background: var(--rr-ink-3);
-  border: 1px solid rgba(138, 107, 74, 0.24);
+  min-height: 44px;
+  padding: var(--ud-s2) var(--ud-s3);
+  background: var(--ud-surface-2);
+  border: 1px solid var(--rr-line);
   color: var(--rr-cream);
-  font-family: inherit;
-  font-size: 13.5px;
-  line-height: 1.55;
-  text-align: left;
   cursor: pointer;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
+  text-align: left;
 }
 
-.rr-check.is-on { border-color: var(--rr-gold); }
+.rr-check.is-on {
+  border-color: var(--rr-gold);
+  box-shadow: var(--ud-rim-strong);
+}
 
 .rr-prohibited {
   display: grid;
-  gap: 9px;
+  gap: var(--ud-s2);
 }
 
 .rr-prohibited li {
   display: flex;
-  gap: 11px;
+  gap: var(--ud-s2);
   align-items: flex-start;
-  padding: 12px 13px;
-  background: rgba(74, 15, 12, 0.28);
-  border: 1px solid rgba(224, 74, 60, 0.3);
-  color: var(--rr-cream);
-  font-size: 13px;
-  line-height: 1.66;
+  padding: var(--ud-s2) var(--ud-s3);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-crimson);
+  color: var(--rr-cream-dim);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-prohibited-mark {
-  flex: none;
-  margin-top: 2px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-top: 3px;
   color: var(--rr-crimson-soft);
 }
 
 /* ── 대조 ─────────────────────────────────────────────────── */
 .rr-compare2 {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s4);
 }
 
 .rr-compare2-col {
-  padding: 13px 14px;
-  background: var(--rr-ink-3);
-  border-top: 2px solid var(--rr-gold-dim);
+  display: grid;
+  gap: var(--ud-s2);
+  padding: var(--ud-s4);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim);
 }
 
-.rr-compare2-col h3 {
-  color: var(--rr-gold-text);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.rr-compare2 .rr-compare2-col h3 {
+  padding-bottom: var(--ud-s2);
+  border-bottom: 1px solid var(--rr-line-strong);
+  letter-spacing: var(--ud-ls-kicker);
+  text-transform: uppercase;
 }
 
 .rr-compare2-col ul {
   display: grid;
-  gap: 7px;
-  margin-top: 9px;
+  gap: var(--ud-s2);
 }
 
 .rr-compare2-col li {
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.72;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-compare3 {
   width: 100%;
-  table-layout: fixed;
   border-collapse: collapse;
 }
 
 .rr-compare3 th,
 .rr-compare3 td {
-  padding: 10px 8px;
-  border: 1px solid rgba(138, 107, 74, 0.26);
-  font-size: 11.5px;
-  font-weight: 400;
-  line-height: 1.6;
+  padding: var(--ud-s3) var(--ud-s2);
+  border-bottom: 1px solid var(--rr-line);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
   text-align: left;
   vertical-align: top;
 }
 
 .rr-compare3 th {
+  border-bottom-color: var(--rr-line-strong);
   color: var(--rr-gold-text);
-  font-weight: 700;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  letter-spacing: 0.06em;
 }
 
 .rr-compare3 td { color: var(--rr-cream-dim); }
@@ -1454,352 +1901,407 @@
 /* ── 집계 · 미확인 ────────────────────────────────────────── */
 .rr-checkpoints {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
 
 .rr-checkpoint {
-  position: relative;
   display: grid;
-  gap: 4px;
-  padding-left: 18px;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: var(--ud-s2) var(--ud-s3);
+  align-items: baseline;
 }
 
 .rr-checkpoint-dot {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
+  margin-top: 0.4em;
+  background: var(--ud-floor);
+  border: 1px solid var(--rr-gold-dim);
   border-radius: 50%;
-  background: var(--rr-slate);
 }
 
-.rr-checkpoint.is-confirmed .rr-checkpoint-dot { background: var(--rr-safe); }
-.rr-checkpoint.is-unconfirmed .rr-checkpoint-dot { background: var(--rr-crimson); }
+.rr-checkpoint.is-confirmed .rr-checkpoint-dot {
+  background: var(--rr-gold);
+  border-color: var(--rr-gold);
+}
+.rr-checkpoint.is-unconfirmed .rr-checkpoint-dot { border-color: var(--rr-terra); }
+.rr-checkpoint.is-deferred .rr-checkpoint-dot { border-color: var(--rr-slate); }
 
 .rr-checkpoint-question {
   color: var(--rr-cream);
-  font-size: 13px;
-  line-height: 1.55;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-checkpoint-why {
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.66;
+  grid-column: 2;
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-unconfirmed {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
 
 .rr-unconfirmed li {
   display: grid;
-  gap: 5px;
-  padding: 12px 13px;
-  background: var(--rr-ink-3);
+  gap: 4px;
+  padding: var(--ud-s3) var(--ud-s4);
+  background: var(--ud-surface-2);
   border-left: 2px solid var(--rr-slate);
 }
 
 .rr-unconfirmed strong {
   color: var(--rr-cream);
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
 }
 
 .rr-unconfirmed span {
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 인용 · 편지 · 고지 ───────────────────────────────────── */
+/* 상하 괘선과 여백은 `ud-quote` 가 준다. 따옴표는 UdQuoteMarks 가 얹는다. */
+.rr-quote .rr-quote-marks {
+  inset: var(--ud-s2) 0;
+}
+
 .rr-quote blockquote {
-  padding: 16px 16px 14px;
-  background: var(--rr-ink-3);
-  border-left: 2px solid var(--rr-gold);
   color: var(--rr-cream);
-  font-size: clamp(16px, 4.6vw, 20px);
-  line-height: 1.68;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-400);
+  line-height: var(--ud-lh-lead);
+  text-align: center;
+  text-wrap: balance;
 }
 
 .rr-quote figcaption {
-  margin-top: 9px;
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
+  margin-top: var(--ud-s3);
+  text-align: center;
 }
 
-/* 편지는 리포트에서 유일하게 밝은 지면이다. 줄당 9~13자로 폭을 좁힌다. */
 .rr-letter {
   display: grid;
-  gap: 13px;
-  max-width: 30ch;
-  margin: 0 auto;
-  color: var(--rr-paper-ink);
+  gap: var(--ud-s4);
+  padding: var(--ud-s6) var(--ud-s5);
 }
 
 .rr-letter p {
-  font-size: 14px;
-  line-height: 1.95;
+  color: var(--rr-paper-ink);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-300);
+  line-height: var(--ud-lh-body);
 }
 
 .rr-letter-sign {
-  margin-top: 6px;
-  font-size: 17px;
-  letter-spacing: 0.4em;
+  color: var(--ud-crimson-paper);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  letter-spacing: var(--ud-ls-kicker);
   text-align: right;
 }
 
 .rr-cut--letter .rr-caption,
 .rr-cut--letter .rr-narration {
-  color: var(--rr-paper-ink);
+  color: var(--ud-paper-ink-dim);
 }
 
 .rr-legal {
   display: grid;
-  gap: 10px;
+  gap: var(--ud-s3);
+  padding: var(--ud-s4);
+  background: var(--ud-surface-1);
+  border: 1px solid var(--rr-line);
 }
 
 .rr-legal li {
   color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.75;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
-.rr-legal li + li { margin-top: 5px; }
+.rr-legal li + li { margin-top: var(--ud-s2); }
 
-/* 차단·미확인 분기의 경계 문장. 법정 고지와 섞지 않고 그 위에 따로 둔다(§6-A). */
+/* §6-A. 삭제 불가 법정 고지와 섞지 않고 그 위에 따로 둔다. */
 .rr-legal-boundary {
-  padding: 10px 12px;
-  background: var(--rr-ink-3);
-  border-left: 2px solid var(--rr-crimson);
-  color: var(--rr-cream);
-  font-size: 12.5px;
-  line-height: 1.7;
+  padding: var(--ud-s3);
+  background: var(--ud-surface-2);
+  border-left: 2px solid var(--rr-safe);
+  color: var(--rr-safe);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
-.rr-legal-serial {
-  color: var(--rr-gold-text);
-  font-size: 10.5px;
+.rr-legal .rr-legal-serial {
+  color: var(--rr-cream-mute);
+  font-size: var(--ud-fs-50);
   letter-spacing: 0.08em;
 }
 
-/* ── 근거 아코디언 ────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   근거 아코디언
+   ══════════════════════════════════════════════════════════════════════════
+   기본으로 펼쳐 둔다. 개인화를 전부 <details> 뒤에 숨겨 첫 스크롤에서 아무것도
+   안 보이던 실패를 반복하지 않는다. 열림 표시는 마커의 회전으로만 바뀌고
+   높이를 애니메이션하지 않는다(레이아웃 유발 속성은 이 상품에서 금지다). */
 .rr-evidence {
-  margin-top: 18px;
-  background: var(--rr-ink-2);
-  border: 1px solid rgba(138, 107, 74, 0.22);
+  margin-top: var(--ud-s5);
+  padding: 0 var(--ud-s4) var(--ud-s4);
+  background: var(--ud-surface-1);
+  border: 1px solid var(--rr-line);
 }
 
 .rr-evidence > summary {
   display: flex;
-  gap: 6px;
+  gap: var(--ud-s2);
   align-items: center;
-  min-height: 48px;
-  padding: 0 14px;
-  color: var(--rr-cream);
-  font-size: 13px;
+  margin: 0 calc(var(--ud-s4) * -1);
+  padding: var(--ud-s4);
+  border-bottom: 1px solid var(--rr-line);
+  color: var(--rr-gold-text);
   cursor: pointer;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  letter-spacing: 0.04em;
   list-style: none;
 }
 
 .rr-evidence > summary::-webkit-details-marker { display: none; }
 
-.rr-evidence > summary::after {
-  content: '＋';
-  margin-left: auto;
-  color: var(--rr-gold-text);
-  font-size: 14px;
+.rr-evidence-title {
+  min-width: 0;
 }
 
-.rr-evidence[open] > summary::after { content: '－'; }
+.rr-evidence > summary::after {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--rr-gold-dim);
+  content: '＋';
+  font-size: var(--ud-fs-200);
+}
+
+.rr-evidence[open] > summary::after {
+  content: '－';
+}
 
 .rr-evidence-note {
-  padding: 0 14px 12px;
-  color: var(--rr-gold-text);
-  font-size: 11.5px;
-  line-height: 1.7;
+  margin-top: var(--ud-s4);
+  color: var(--rr-cream-dim);
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-evidence-list {
   display: grid;
-  gap: 0;
+  gap: var(--ud-s3);
+  margin-top: var(--ud-s4);
 }
 
 .rr-evidence-list > div {
-  padding: 12px 14px;
-  border-top: 1px solid rgba(138, 107, 74, 0.18);
+  display: grid;
+  gap: 4px;
+  padding-bottom: var(--ud-s3);
+  border-bottom: 1px dotted var(--rr-line);
 }
 
 .rr-evidence-list dt {
-  color: var(--rr-cream);
-  font-size: 12.5px;
-  font-weight: 600;
+  color: var(--rr-gold-text);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  letter-spacing: 0.04em;
 }
 
 .rr-evidence-list dd {
-  margin-top: 6px;
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.85;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
 }
 
 /* ── 접힌 장 (게이트 보류) ───────────────────────────────── */
-/* 삭제 불가 문구가 실린 컷은 접는 대상이 아니다. 닫힌 <details> 안은 렌더되지 않아
-   접근성 트리에서도 사라지므로, 접는 순간 안전 문구가 가장 필요한 상태에서 없어진다. */
+/* 삭제 불가 컷과 신호 판독표는 이 접힘 **밖**에 남는다(ReunionReportView 의
+   alwaysOnCuts). 닫힌 <details> 안은 접근성 트리에서도 사라지기 때문이다. */
 .rr-cuts--always {
-  margin-top: 4px;
+  margin-bottom: var(--ud-s5);
 }
 
 .rr-collapsed {
-  margin-top: 20px;
-  border: 1px dashed rgba(138, 107, 74, 0.44);
+  margin-top: var(--ud-s4);
+  background: var(--ud-surface-1);
+  border: 1px dashed var(--rr-line-strong);
 }
 
 .rr-collapsed > summary {
-  min-height: 52px;
-  padding: 15px 14px;
+  padding: var(--ud-s4);
   color: var(--rr-cream-dim);
-  font-size: 12.5px;
-  line-height: 1.6;
   cursor: pointer;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
+  list-style: none;
 }
 
-.rr-collapsed[open] > summary {
-  border-bottom: 1px dashed rgba(138, 107, 74, 0.44);
-}
+.rr-collapsed > summary::-webkit-details-marker { display: none; }
 
-.rr-collapsed .rr-cuts { padding: 0 12px 14px; }
-.rr-collapsed .rr-evidence { margin: 0 12px 14px; }
+.rr-collapsed .rr-cuts { padding: 0 var(--ud-s3) var(--ud-s4); margin-top: 0; }
+.rr-collapsed .rr-evidence { margin: 0 var(--ud-s3) var(--ud-s4); }
 
 /* ── 추천 · 공유 · 고지 ───────────────────────────────────── */
 .rr-next {
-  margin-top: 46px;
-  padding-top: 26px;
-  border-top: 1px solid rgba(138, 107, 74, 0.26);
+  display: grid;
+  gap: var(--ud-s4);
+  margin-top: var(--ud-chapter-gap);
+  padding-top: var(--ud-s6);
+  border-top: 1px solid var(--rr-line-strong);
 }
 
 .rr-next h2 {
-  color: var(--rr-cream-dim);
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
+  text-align: center;
 }
 
 .rr-next-grid {
   display: grid;
-  gap: 10px;
-  margin-top: 14px;
+  gap: var(--ud-s3);
 }
 
 .rr-next-grid a {
   display: grid;
-  gap: 5px;
-  padding: 14px 15px;
-  background: var(--rr-ink-2);
-  border: 1px solid rgba(138, 107, 74, 0.24);
+  gap: var(--ud-s2);
+  padding: var(--ud-s4);
+  background: var(--ud-surface-2);
+  border: 1px solid var(--rr-line);
+  box-shadow: var(--ud-rim);
   color: var(--rr-cream);
   text-decoration: none;
 }
 
-.rr-next-grid small {
-  color: var(--rr-gold-text);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
+.rr-next .rr-next-grid small {
+  letter-spacing: var(--ud-ls-kicker);
+  text-transform: uppercase;
 }
 
-.rr-next-grid strong { font-size: 15px; font-weight: 600; }
+.rr-next-grid strong {
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-400);
+  font-weight: var(--ud-w-bold);
+}
 
 .rr-next-grid p {
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-next-grid span {
   display: inline-flex;
-  gap: 5px;
+  gap: var(--ud-s1);
   align-items: center;
-  margin-top: 3px;
   color: var(--rr-gold-text);
-  font-size: 11.5px;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
 }
 
 .rr-share {
   display: grid;
-  gap: 10px;
-  margin-top: 26px;
-  padding: 16px;
-  background: var(--rr-ink-2);
-  border: 1px solid rgba(138, 107, 74, 0.2);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ud-s3);
+  align-items: start;
+  margin-top: var(--ud-s6);
+  padding: var(--ud-s4);
+  background: var(--ud-surface-1);
+  border: 1px solid var(--rr-line);
   color: var(--rr-gold-text);
 }
 
 .rr-share strong {
   display: block;
   color: var(--rr-cream);
-  font-size: 13.5px;
-  font-weight: 600;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
 }
 
 .rr-share p {
-  margin-top: 5px;
+  margin-top: var(--ud-s1);
   color: var(--rr-cream-dim);
-  font-size: 12px;
-  line-height: 1.66;
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 .rr-share button {
   display: inline-flex;
-  gap: 7px;
+  grid-column: 2;
+  gap: var(--ud-s2);
   align-items: center;
   justify-self: start;
   min-height: 44px;
-  padding: 0 16px;
-  background: transparent;
-  border: 1px solid var(--rr-gold-dim);
+  padding: 0 var(--ud-s4);
+  background: var(--ud-surface-3);
+  border: 1px solid var(--rr-gold);
+  box-shadow: var(--ud-rim-strong);
   color: var(--rr-cream);
-  font-family: inherit;
-  font-size: 13px;
   cursor: pointer;
+  font-family: var(--rr-serif);
+  font-size: var(--ud-fs-200);
 }
 
 .rr-share small {
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  min-height: 1.2em;
+  grid-column: 2;
+  color: var(--rr-safe);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
 }
 
 .rr-disclaimer {
-  margin-top: 26px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(138, 107, 74, 0.2);
-  color: var(--rr-cream-dim);
-  font-size: 11.5px;
-  line-height: 1.8;
+  margin-top: var(--ud-s6);
+  padding-top: var(--ud-s4);
+  border-top: 1px solid var(--rr-line);
+  color: var(--rr-cream-mute);
+  font-family: var(--rr-sans);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
 
 /* ── 넓은 화면: 읽기 열은 그대로, 표만 숨통을 튼다 ────────── */
 @media (min-width: 560px) {
-  .rr-main { padding-inline: 24px; }
+  .rr-main { padding-inline: var(--ud-s5); }
+  .rr-cover-lead { max-width: var(--rr-read); }
   .rr-axes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rr-compare2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rr-cut-body { padding: 26px 24px; }
+  .rr-cut-body { padding: var(--ud-s6) var(--ud-s5); }
+  .rr-next-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
   /* 신호 판독표는 이 폭부터 세 칸으로 편다. */
   .rr-signals-head,
   .rr-signal {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr) minmax(0, 1fr);
-    gap: 12px;
+    gap: var(--ud-s3);
     align-items: start;
   }
 
   .rr-signals-head {
-    padding: 0 13px 6px;
+    padding: 0 var(--ud-s3) var(--ud-s2);
     color: var(--rr-gold-text);
-    font-size: 11px;
+    font-family: var(--rr-sans);
+    font-size: var(--ud-fs-100);
     letter-spacing: 0.08em;
   }
 
@@ -1824,33 +2326,76 @@
 /* ── 아주 좁은 화면 (320px) ───────────────────────────────── */
 @media (max-width: 359px) {
   .rr-page { --rr-gutter: 12px; }
+  .rr-rail { padding-left: var(--ud-s5); }
+  .rr-rail-node { left: -21px; }
+  .rr-cut--beat::before,
+  .rr-cut--plate::before { left: -25px; }
   .rr-echo-row,
   .rr-facts > div { grid-template-columns: minmax(0, 76px) minmax(0, 1fr); }
-  .rr-band-ticks { gap: 2px; height: 128px; }
+  /* 트랙 128 + 상단 헤드룸 + 하단 축. 세로 간지 2자 = 20px 가 축에 들어간다. */
+  /* `.rr-page` 접두어는 위와 같은 이유다 — ol 리셋이 padding 을 이긴다. */
+  .rr-page .rr-band-ticks { gap: 2px; height: 156px; padding: 12px 4px 30px; }
+  .rr-band-tick-caption { font-size: 10px; }
+  .rr-pillars-plate { padding: var(--ud-s3) 6px 6px; }
   .rr-pillars-table th,
-  .rr-pillars-table td { padding: 7px 1px; font-size: 11px; }
+  .rr-pillars-table td { padding: 6px 1px; }
+  .rr-pillars-glyph { font-size: 20px; }
+  .rr-tally li { padding: var(--ud-s2) 4px; }
 }
 
 /* ── 모션 축소 ────────────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .rr-page *,
-  .rr-page *::before,
-  .rr-page *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-}
+/* 이 시트는 애니메이션을 한 줄도 선언하지 않는다. 등장·채움·스태거는 전부
+   프리미엄 시트의 `ud-` 패턴이고, 그 패턴들은 같은 미디어 쿼리 안에서
+   **최종 상태로** 고정된다(duration 만 0 으로 만드는 방식을 쓰지 않는다).
+   아래 블록은 서드파티·브라우저 기본 모션까지 잡는 안전망이다. */
+/* 감속 선호 — 이 시트는 블록을 갖지 않는다.
+
+   이유: 이 시트는 애니메이션도 트랜지션도 **한 줄도 선언하지 않는다**(바로 위
+   계약이 그것을 단정한다). 그러므로 여기서 끌 것이 없다. 이 화면의 모션은 전부
+   `reunion-premium.css` 의 `ud-*` 패턴이고, 그 시트가 15개 패턴 전부를 감속
+   선호에서 **최종 상태로 고정**한다 — 값을 나르는 호 게이지는 0 이 아니라
+   `--ud-arc-rest` 에 앉히는 식으로, 패턴마다 올바른 끝점이 다르기 때문이다.
+
+   이전 판은 여기에 `.rr-page *` 일괄 무력화(`animation-duration: 0.001ms
+   !important`)를 두고 있었다. 그 방식은 디자인 시스템이 금지한 것이고
+   (premium · webtoon · intake 세 시트의 계약이 그 패턴의 부재를 단정한다),
+   '모션을 끈다' 가 아니라 '0.001ms 로 재생한다' 여서 최종 상태를 보장하지 못한다.
+   게다가 이 시트가 선언한 적 없는 남의 요소까지 덮었다.
+   전역 폴백은 src/index.css 가 이미 갖고 있으므로 지워도 비는 곳이 없다. */
 
 /* ── 인쇄 ─────────────────────────────────────────────────── */
 @media print {
   .rr-page .reunion-topbar,
   .rr-next,
-  .rr-share {
+  .rr-share,
+  .rr-rail-spark {
+    display: none;
+  }
+
+  /* 인쇄에서는 침묵 컷을 접고 장식도 함께 뺀다. */
+  .rr-cut--beat::before,
+  .rr-cut--beat::after,
+  .rr-cut--plate::before {
     display: none;
   }
 
   .rr-cut--beat { height: 24px; }
   .rr-cut--cinematic { min-height: 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   강제 색상 모드
+   ══════════════════════════════════════════════════════════════════════════
+   선택 상태가 면 색·테두리 색으로만 표시되면 forced-colors 에서 사라진다
+   (시스템 색으로 치환되기 때문). `aria-pressed` 가 있어 스크린리더 사용자는
+   영향이 없고, 색 재정의를 쓰는 저시력 사용자만 선택 여부를 잃는다.
+   형태(아웃라인)로 한 겹 더 표시한다 — appShell.css 의 하단 탭과 같은 패턴이다. */
+@media (forced-colors: active) {
+  .rr-month.is-on,
+  .rr-choice.is-on,
+  .rr-check.is-on .rr-check-box {
+    outline: 2px solid;
+    outline-offset: -2px;
+    forced-color-adjust: none;
+  }
 }

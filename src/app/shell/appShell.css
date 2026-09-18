@@ -493,9 +493,12 @@ body {
     grid-template-columns: minmax(92px, 0.36fr) minmax(0, 1fr);
     margin-inline: auto;
     padding: 10px 14px max(10px, var(--app-safe-bottom));
-    border-top: 1px solid var(--reunion-line);
-    background: rgba(255, 250, 244, 0.95);
-    backdrop-filter: blur(14px);
+    /* The funnel is dark now, so restoring reunion.css's cream surface here put
+       a 1280px-only light bar under a dark page. Both values fall back to the
+       old ones if `reunion-premium.css` is not on the route. */
+    border-top: 1px solid var(--ud-line-soft, var(--reunion-line));
+    background: var(--ud-glass-bg, rgba(255, 250, 244, 0.95));
+    backdrop-filter: blur(var(--ud-glass-blur, 14px));
   }
   :root[data-shell-width='phone'] .reunion-preview-heading,
   :root[data-shell-width='phone'] .reunion-report-hero-copy {

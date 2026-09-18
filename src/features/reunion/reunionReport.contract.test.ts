@@ -312,14 +312,22 @@ describe('reunion report screen contract', () => {
     expect(css).not.toMatch(/(^|[},])\s*(html|body)\s*[,{]/mu);
   });
 
-  it('declares no animation or transition, so reduced motion removes nothing', () => {
-    const css = sheet().replace(/\/\*[\s\S]*?\*\//g, '');
-    const motionBlock = css.slice(css.indexOf('@media (prefers-reduced-motion'));
-    const outsideGuard = css.slice(0, css.indexOf('@media (prefers-reduced-motion'));
+  it('declares no motion of its own, and no blanket reduced-motion override', () => {
+    /* 이 화면의 모션은 전부 reunion-premium.css 의 `ud-*` 패턴이다. 이 시트는
+       한 줄도 선언하지 않으므로 감속 선호에서 끌 것도 없다.
 
-    expect(motionBlock).toContain('animation-duration');
-    expect(outsideGuard).not.toMatch(/(^|[;{\s])animation\s*:/u);
-    expect(outsideGuard).not.toMatch(/(^|[;{\s])transition\s*:/u);
+       ★ 일괄 무력화(`animation-duration: 0.001ms !important`)를 두지 않는다.
+       디자인 시스템이 금지한 방식이고(premium · webtoon · intake 세 시트의 계약이
+       같은 것을 단정한다), '모션을 끈다' 가 아니라 '아주 짧게 재생한다' 여서
+       최종 상태를 보장하지 못한다. 패턴마다 올바른 끝점이 다르기 때문에
+       (호 게이지는 0 이 아니라 --ud-arc-rest 에 앉아야 한다) 소유한 시트가
+       명시적으로 고정하는 방식만 옳다. */
+    const css = sheet().replace(/\/\*[\s\S]*?\*\//g, '');
+
+    expect(css).not.toMatch(/(^|[;{\s])animation\s*:/u);
+    expect(css).not.toMatch(/(^|[;{\s])transition\s*:/u);
+    expect(css).not.toMatch(/animation-duration:\s*0?\.0+\d*ms/u);
+    expect(css).not.toMatch(/transition-duration:\s*0?\.0+\d*ms/u);
   });
 
   it('keeps a 16px side gutter and clips horizontal overflow', () => {

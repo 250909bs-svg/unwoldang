@@ -75,9 +75,24 @@ type BaseCut = {
   gaugeCaption?: string;
   bandNote?: string;
   tallyFoot?: string;
+  /**
+   * 값이 비어 있거나 마스킹된 예시 블록 아래에 붙는 규격 문구.
+   * `badge: '예시 화면'` 이 붙은 패널에는 예외 없이 함께 붙인다 —
+   * 계산되지 않은 수치를 사실처럼 보이게 두지 않는다는 사실 정합성 규격이
+   * 배지(작은 라벨) 하나에만 실려 있으면 스크롤에서 놓칠 수 있다.
+   */
+  sampleNote?: string;
   mechanic?: ReunionCutMechanic;
   chapterFoot?: string;
 };
+
+/** 예시 화면 규격 문구. 두 종류뿐이고 패널마다 새로 쓰지 않는다. */
+export const sampleNotes = {
+  /** 리포트에서는 계산된 값이 들어오는 자리(13 · 14 · 17). */
+  filled: '리포트에서는 이렇게 보여드립니다. 지금 보이는 값은 모두 예시 표기입니다.',
+  /** 리포트에서도 우리가 채우지 않는 자리(16). 채우겠다고 약속하지 않는다. */
+  empty: '리포트에서는 이렇게 보여드립니다. 이 칸과 눈금은 결과에서도 비어 있습니다.'
+} as const;
 
 /** 안전·고지 패널에는 말풍선을 놓지 않는다(타입 수준 강제). */
 export type ReunionCut =
@@ -172,13 +187,17 @@ export const calcTags = ['본인 일간', '원국 오행', '도움 오행', '현
 export const myeongsik = {
   dayMaster: { label: '본인 일간', stem: '○', element: '○' },
   elementsLabel: '원국 오행',
-  /** el 값은 CSS 의 --rw-el-* 토큰 키와 일치해야 한다. */
+  /**
+   * el 값은 디자인 시스템의 `--ud-el-*` / `--ud-well-*` 토큰 키와 일치해야 한다.
+   * hanja 는 오행의 표준 표기다. 값이 아니라 **칸의 이름**이므로 마스킹하지 않고
+   * 한자와 한글을 병기한다(리포트의 원국 패널과 같은 표기 규칙).
+   */
   elements: [
-    { el: 'wood', name: '목', count: '○' },
-    { el: 'fire', name: '화', count: '○' },
-    { el: 'earth', name: '토', count: '○' },
-    { el: 'metal', name: '금', count: '○' },
-    { el: 'water', name: '수', count: '○' }
+    { el: 'wood', hanja: '木', name: '목', count: '○' },
+    { el: 'fire', hanja: '火', name: '화', count: '○' },
+    { el: 'earth', hanja: '土', name: '토', count: '○' },
+    { el: 'metal', hanja: '金', name: '금', count: '○' },
+    { el: 'water', hanja: '水', name: '수', count: '○' }
   ],
   helpful: { label: '도움 오행', chips: ['○', '○'] },
   dayun: { label: '현재 대운', value: '○○ 대운 · ○○○○~○○○○' }
@@ -374,6 +393,7 @@ export const reunionCuts: readonly ReunionCut[] = [
     badge: '예시 화면',
     headline: '알려주신 상황과\n계산한 근거를 [섞지] 않습니다',
     mechanic: 'panes',
+    sampleNote: sampleNotes.filled,
     body: '왼쪽은 알려주신 내용 그대로입니다. 오른쪽은 본인 생년월일에서 계산되는 항목이고, 이 둘을 한 문장으로 합치지 않습니다.',
     caption:
       '두 사람의 정보가 함께 들어가는 계산은 이 네 항목이 아니라 궁합 근거에서 따로 다루고, 결과에도 따로 표시합니다.'
@@ -387,6 +407,7 @@ export const reunionCuts: readonly ReunionCut[] = [
     badge: '예시 화면',
     headline: '해석의 바닥에는\n이 [네 줄]이 깔립니다',
     mechanic: 'myeongsik',
+    sampleNote: sampleNotes.filled,
     body: '본인 일간, 원국 오행, 도움 오행, 현재 대운. 결과에서는 이 네 줄 앞에 시·일·월·년 네 기둥 표가 한 장 먼저 나오고, 관계 해석은 전부 이 사실들 위에서만 만들어집니다.',
     caption: '표기 형식은 예시이며, 실제 값은 입력하신 정보로 계산됩니다.'
   },
@@ -411,6 +432,7 @@ export const reunionCuts: readonly ReunionCut[] = [
     badge: '예시 화면',
     headline: '이 칸은\n[우리가] 채우지 않습니다',
     mechanic: 'gaugeTimeline',
+    sampleNote: sampleNotes.empty,
     gaugeCaption:
       '연락해도 되는 조건은 항상 세 가지로 정리해 드립니다. 충족 여부는 상대의 실제 응답을 보고 당신이 채웁니다.',
     body: '대신 지금부터 할 일은 드립니다. 오늘 두 가지, 7일 안에 세 가지, 30일 안에 세 가지로 나눠 순서를 정합니다.'
@@ -424,6 +446,7 @@ export const reunionCuts: readonly ReunionCut[] = [
     badge: '예시 화면',
     headline: '시기는 [한 곳],\n날짜가 아니라 구간',
     mechanic: 'timingBand',
+    sampleNote: sampleNotes.filled,
     bandNote: '명리 흐름을 검토할 참고 구간일 뿐, 연락 동의나 재회를 보장하는 날짜가 아닙니다.',
     tallyFoot: '* 리포트 구성 기준입니다. 이용자 수·후기 수 같은 실적 수치는 표기하지 않습니다.',
     chapterFoot: '운월당 재회운 · 셋째 마당'
