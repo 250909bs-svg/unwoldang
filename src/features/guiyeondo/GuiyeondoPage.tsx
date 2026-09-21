@@ -67,7 +67,11 @@ export default function GuiyeondoPage() {
   const mapStateRef = useRef<GuiyeondoMapState | null>(mapState);
 
   useEffect(() => {
-    if (!isAuthenticated || !authToken) {
+    /* 지도 자체는 이 브라우저의 저장소만으로 돌아간다. 카카오 토큰이 필요한 것은
+       초대 링크를 만들고 회수하고 응답을 읽는 공유 기능뿐이다. 예전에는 토큰이 없으면
+       입구에서 로그인으로 돌려보내, 자기 인연도를 그려 보려는 사람까지 막았다.
+       이제 토큰은 공유 시점에만 묻는다. */
+    if (!isAuthenticated) {
       navigate('/login', {
         replace: true,
         state: { returnTo: `${location.pathname}${location.search}`, tabOrigin: '/' }
@@ -300,9 +304,23 @@ export default function GuiyeondoPage() {
     setAddOpen(true);
   };
 
+  /**
+   * 공유는 서버가 소유자를 확인해야 하므로 카카오 토큰이 필요하다.
+   * 토큰 없이 눌렀을 때 조용히 실패하는 대신, 지금 하려던 일로 돌아오도록 로그인으로 보낸다.
+   */
+  const requireSignInForSharing = () => {
+    if (authToken) return false;
+    setToast('초대 링크를 만들려면 카카오 로그인이 필요해요.');
+    navigate('/login', {
+      state: { returnTo: `${location.pathname}${location.search}`, tabOrigin: '/guiyeondo' }
+    });
+    return true;
+  };
+
   const openInvite = async () => {
     const current = mapStateRef.current;
     if (!current || inviteBusy) return;
+    if (requireSignInForSharing()) return;
     closeDetail();
     setAddOpen(false);
     const reusable = [...current.invites]
@@ -346,6 +364,7 @@ export default function GuiyeondoPage() {
 
   const revokeInvite = async () => {
     if (!invite || inviteBusy) return;
+    if (requireSignInForSharing()) return;
     if (!window.confirm('이 초대 링크를 취소할까요? 취소하면 더 이상 새 응답을 받을 수 없습니다.')) return;
     setInviteBusy(true);
     try {
@@ -371,8 +390,13 @@ export default function GuiyeondoPage() {
     if (!window.confirm('내 귀연도와 이 브라우저에 저장된 출생정보·인연 결과를 삭제할까요? 활성 초대 링크도 함께 취소됩니다.')) return;
     setInviteBusy(true);
     try {
-      for (const ownedInvite of current.invites.filter((item) => Date.parse(item.expiresAt) > Date.now())) {
-        await revokeGuiyeondoInvite(ownedInvite, authToken);
+      /* 서버 회수는 토큰이 있을 때만 된다. 없다고 해서 이 브라우저의 삭제까지 막으면
+         "내 정보를 지우고 싶다"는 요청을 로그인 뒤로 미루는 셈이라, 로컬 삭제는 항상 진행한다.
+         토큰 없이 남은 링크는 만료 시각이 지나면 서버에서 스스로 닫힌다. */
+      if (authToken) {
+        for (const ownedInvite of current.invites.filter((item) => Date.parse(item.expiresAt) > Date.now())) {
+          await revokeGuiyeondoInvite(ownedInvite, authToken);
+        }
       }
       clearGuiyeondoMap(ownerId);
       mapStateRef.current = null;
@@ -388,7 +412,7 @@ export default function GuiyeondoPage() {
     }
   };
 
-  if (!isAuthenticated || !user || !authToken) return null;
+  if (!isAuthenticated || !user) return null;
   if (introOpen) return <main className="guiyeondo-page"><GuiyeondoIntro onEnter={() => setIntroOpen(false)} /></main>;
   if (!mapState) {
     return (

@@ -1,7 +1,6 @@
 import { ArrowLeft, ChevronRight, LockKeyhole, Share2, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { createSecureRandomPart } from '../../shared/security/secureRandom';
 import { fetchGuiyeondoInvite, submitGuiyeondoInviteResponse } from './api';
 import GuiyeondoBirthFlow from './GuiyeondoBirthFlow';
@@ -47,7 +46,6 @@ function personalizeGuestStatement(statement: string, hostName: string, guestNam
 export default function GuiyeondoGuestPage() {
   const { publicId = '' } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [invite, setInvite] = useState<GuiyeondoInvite | null>(null);
   const [stage, setStage] = useState<'loading' | 'missing' | 'landing' | 'input' | 'revealing' | 'result'>('loading');
   const [person, setPerson] = useState<GuiyeondoPerson | null>(null);
@@ -107,14 +105,10 @@ export default function GuiyeondoGuestPage() {
     try {
       window.sessionStorage.setItem(GUEST_OWN_PROFILE_KEY, JSON.stringify({ profile: guestProfile }));
       trackGuiyeondoEvent('guiyeondo_create_own');
-      const returnTo = '/guiyeondo?start=1';
-      if (isAuthenticated) {
-        navigate(returnTo);
-        return;
-      }
-      navigate('/login', {
-        state: { returnTo, tabOrigin: invite ? `/g/${invite.publicId}` : '/guiyeondo' }
-      });
+      /* 초대 링크를 받고 들어온 사람이 자기 인연도를 그려 보려는 참이다. 지도는 이
+         브라우저의 저장소만으로 돌아가므로 여기서 로그인을 물을 이유가 없다. 토큰은
+         나중에 자기 링크를 남에게 보낼 때 /guiyeondo 가 묻는다. */
+      navigate('/guiyeondo?start=1');
     } catch {
       setError('이 브라우저에 출생정보를 임시 저장하지 못했습니다. 개인정보 보호 설정을 확인해 주세요.');
     }
