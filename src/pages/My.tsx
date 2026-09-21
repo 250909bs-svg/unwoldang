@@ -21,69 +21,54 @@ import {
   type ReportArchiveEntry
 } from '../lib/reportArchive';
 import { getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
-import { canDiscoverProduct, getProductById } from '../products/registry';
+import { discoverableProducts } from '../products/registry';
 import type { ProductId } from '../products/types';
 
+/**
+ * 보관함 하단의 추천 카드.
+ *
+ * 예전에는 상품마다 제목·부제·이미지를 여기에 손으로 다시 적었다. 그래서 정통사주는
+ * 카드 아트 대신 입력창 배경(intake-night-blue.png)을, 재회운은 리포트용 사진을 썼고,
+ * 상품 쪽 문구를 고쳐도 보관함은 옛 문구를 그대로 보여줬다. 이제 상품 정의 하나만 본다.
+ */
 type ReplayPromo = {
   productId: ProductId;
   title: string;
   subtitle: string;
   image: string;
+  imagePosition?: string;
   to: string;
   tone: string;
 };
 
-const replayPromoCandidates: ReplayPromo[] = [
-  {
-    title: '정통사주',
-    subtitle: '나의 운명 전체 흐름은?',
-    productId: 'general-signature',
-    image: '/intake-night-blue.png',
-    to: getProductById('general-signature').routes.detail,
-    tone: '#1f4f98'
-  },
-  {
-    title: '팩폭 연애운',
-    subtitle: '반복되는 내 연애 패턴은?',
-    productId: 'love-reading',
-    image: '/home-love-reading-card.png',
-    to: getProductById('love-reading').routes.detail,
-    tone: '#a80e30'
-  },
-  {
-    title: '운월당 재회운',
-    subtitle: '다시 연락해도 되는 조건은?',
-    productId: 'love-reunion',
-    image: '/assets/reunion/hero-640.webp',
-    to: getProductById('love-reunion').routes.detail,
-    tone: '#6d4de8'
-  },
-  {
-    title: '올해의 운세',
-    subtitle: '2026년 기회와 조심할 시기',
-    productId: 'life-flow',
-    image: '/intake-sunlight-girl.png',
-    to: getProductById('life-flow').routes.detail,
-    tone: '#6da9c8'
-  },
-  {
-    title: '사주궁합',
-    subtitle: '우리 둘의 속도와 생활 궁합',
-    productId: 'match-couple',
-    image: '/intake-beauty-red.png',
-    to: getProductById('match-couple').routes.detail,
-    tone: '#d62f3f'
-  },
-  {
-    title: '결혼운',
-    subtitle: '결혼 시기와 현실 기준',
-    productId: 'marriage-blueprint',
-    image: '/intake-blossom-girl.png',
-    to: getProductById('marriage-blueprint').routes.detail,
-    tone: '#bc6a53'
-  }
-];
-const replayPromos = replayPromoCandidates.filter((promo) => canDiscoverProduct(promo.productId));
+/** 카드 배경 위에 얹는 그라데이션 색. 상품 정의에는 없는 표시 층 값이다. */
+const PROMO_TONES: Partial<Record<ProductId, string>> = {
+  'general-signature': '#1f4f98',
+  'love-reading': '#a80e30',
+  'love-reunion': '#6d4de8',
+  'past-life-goblin': '#3f2a6d',
+  'match-couple': '#d62f3f',
+  'life-flow': '#6da9c8',
+  'marriage-blueprint': '#bc6a53'
+};
+
+/** 보관함 카드는 한 줄만 들어간다. 상품 부제가 길면 질문형으로 줄여 쓴다. */
+const PROMO_SUBTITLES: Partial<Record<ProductId, string>> = {
+  'general-signature': '나의 운명 전체 흐름은?',
+  'love-reading': '반복되는 내 연애 패턴은?',
+  'love-reunion': '다시 연락해도 되는 조건은?',
+  'past-life-goblin': '전생의 나는 누구였을까?'
+};
+
+const replayPromos: ReplayPromo[] = discoverableProducts.map((product) => ({
+  productId: product.id,
+  title: product.home.title,
+  subtitle: PROMO_SUBTITLES[product.id] || product.home.subtitle,
+  image: product.home.image,
+  imagePosition: product.home.imagePosition,
+  to: product.routes.detail,
+  tone: PROMO_TONES[product.id] || '#6d4de8'
+}));
 
 function formatArchiveDate(value: string) {
   const date = new Date(value);
@@ -140,8 +125,10 @@ function LoggedOutReplay() {
 function EmptyArchive() {
   return (
     <section className="my-empty-replay-card">
-      <div className="my-empty-avatar">
-        <img src="/tarot-mascot.png" alt="" />
+      {/* 예전에는 /tarot-mascot.png 를 썼다. 타로는 /tarot 이 홈으로 리다이렉트되는
+          제거된 상품이라, 팔지 않는 물건의 캐릭터가 보관함을 지키고 있었다. */}
+      <div className="my-empty-avatar" aria-hidden="true">
+        <Archive size={30} strokeWidth={1.5} />
       </div>
       <p>앗, 아직 사주결과가 없어요!</p>
       <Link to="/detail/general-saju">첫 사주 리포트 보러가기</Link>
@@ -185,7 +172,13 @@ function PromoBanner({ promo }: { promo: ReplayPromo }) {
       {promo.productId === 'love-reading' ? (
         <LoveReadingCardPicture alt="" sizes="72px" />
       ) : (
-        <img src={promo.image} alt="" loading="lazy" decoding="async" />
+        <img
+          src={promo.image}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          style={promo.imagePosition ? { objectPosition: promo.imagePosition } : undefined}
+        />
       )}
       <div className="my-promo-overlay" />
       <div className="my-promo-copy">

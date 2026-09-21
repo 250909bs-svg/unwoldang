@@ -54,13 +54,16 @@ describe('product discovery source contract', () => {
   });
 
   it('filters only replay promotions while preserving historical report replay', () => {
-    expect(mySource).toContain(
-      'replayPromoCandidates.filter((promo) => canDiscoverProduct(promo.productId))'
-    );
-    expect(mySource).toContain("productId: 'love-reunion'");
-    expect(mySource).toContain("productId: 'match-couple'");
-    expect(mySource).toContain("getProductById('love-reunion').routes.detail");
-    expect(mySource).toContain("getProductById('match-couple').routes.detail");
+    /* 보관함 추천 카드는 상품 정의에서 파생된다. 예전에는 상품마다 제목·부제·이미지를
+       손으로 다시 적어서, 정통사주가 카드 아트 대신 입력창 배경(intake-night-blue.png)을
+       쓰고 상품 쪽 문구를 고쳐도 보관함만 옛 문구로 남았다.
+       discoverableProducts 는 registry 에서 이미 canDiscoverProduct 로 걸러진 목록이다. */
+    expect(mySource).toContain('const replayPromos: ReplayPromo[] = discoverableProducts.map(');
+    expect(mySource).toContain('image: product.home.image');
+    expect(mySource).toContain('to: product.routes.detail');
+    // 상품 목록을 손으로 다시 적는 구조로 되돌아가면 잡는다.
+    expect(mySource).not.toContain('replayPromoCandidates');
+    expect(mySource).not.toContain("image: '/intake-");
 
     expect(mySource).toContain(
       'const visibleReports = showAllReports ? recentReports : recentReports.slice(0, 4);'

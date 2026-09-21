@@ -13623,14 +13623,16 @@ body.home-all-black .app-route-loading strong {
   place-items: center;
   overflow: hidden;
   border-radius: 999px;
-  background: #ffffff;
-  box-shadow: 0 12px 24px rgba(45, 45, 45, 0.08);
-}
-
-.my-empty-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* 사진 한 장을 원 안에 꽉 채우던 자리다. 지금은 선 아이콘이 들어가므로
+     금색 테두리와 옅은 안쪽 광택으로 빈자리를 채운다. */
+  border: 1px solid rgba(176, 138, 92, 0.34);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(176, 138, 92, 0.16), transparent 68%),
+    #ffffff;
+  color: #8a6b4a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 24px rgba(45, 45, 45, 0.08);
 }
 
 .my-empty-replay-card p {
