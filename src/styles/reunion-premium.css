@@ -1723,7 +1723,7 @@
    16. 좁은 화면 — 375px / 320px 가로 오버플로 0
    ══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 400px) {
+@container app (max-width: 400px) {
   .reunion-app-container {
     --ud-gutter-wide: 16px;
     --ud-moat: 14px;
@@ -1735,7 +1735,7 @@
   }
 }
 
-@media (max-width: 340px) {
+@container app (max-width: 340px) {
   .reunion-app-container {
     --ud-gutter: 14px;
     --ud-gutter-wide: 14px;

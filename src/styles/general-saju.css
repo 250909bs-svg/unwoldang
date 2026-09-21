@@ -207,7 +207,7 @@
   line-height: 1.6;
 }
 
-@media (min-width: 601px) {
+@container app (min-width: 601px) {
   .general-saju-entry-stage {
     width: min(100%, 520px);
     padding: 22px 0;
@@ -233,13 +233,17 @@
   }
 }
 
-@media (max-height: 700px) and (min-width: 601px) {
-  .general-saju-entry-film {
-    height: 72svh;
-  }
+/* 높이는 뷰포트, 폭은 프레임이 기준이다. 컨테이너 쿼리로는 높이를 물을 수 없어
+   바깥은 @media 로 두고 폭 조건만 @container 로 중첩한다. */
+@media (max-height: 700px) {
+  @container app (min-width: 601px) {
+    .general-saju-entry-film {
+      height: 72svh;
+    }
 
-  .general-saju-entry-action p {
-    display: none;
+    .general-saju-entry-action p {
+      display: none;
+    }
   }
 }
 

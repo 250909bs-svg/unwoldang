@@ -2280,7 +2280,7 @@
 }
 
 /* ── 넓은 화면: 읽기 열은 그대로, 표만 숨통을 튼다 ────────── */
-@media (min-width: 560px) {
+@container app (min-width: 560px) {
   .rr-main { padding-inline: var(--ud-s5); }
   .rr-cover-lead { max-width: var(--rr-read); }
   .rr-axes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2324,7 +2324,7 @@
 }
 
 /* ── 아주 좁은 화면 (320px) ───────────────────────────────── */
-@media (max-width: 359px) {
+@container app (max-width: 359px) {
   .rr-page { --rr-gutter: 12px; }
   .rr-rail { padding-left: var(--ud-s5); }
   .rr-rail-node { left: -21px; }

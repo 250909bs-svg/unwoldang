@@ -1790,9 +1790,11 @@
 .mz-love-sticky-cta {
   position: fixed;
   z-index: 60;
-  right: max(14px, calc((100vw - 820px) / 2 + 14px));
+  /* 100vw 는 창 전체라 1440px 에서 CTA 가 폰 프레임 밖으로 나갔다. 레일 거터가
+     프레임 가장자리이므로 폰에서도 PC 안 폰 프레임에서도 같은 여백이 남는다. */
+  right: calc(var(--app-rail-gutter, 0px) + 14px);
   bottom: max(14px, env(safe-area-inset-bottom));
-  left: max(14px, calc((100vw - 820px) / 2 + 14px));
+  left: calc(var(--app-rail-gutter, 0px) + 14px);
   display: flex;
   max-width: 792px;
   min-height: 66px;
@@ -1880,7 +1882,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@container app (max-width: 720px) {
   .mz-love-related {
     grid-template-columns: 1fr;
     padding: 22px;
@@ -2080,7 +2082,7 @@
   }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .mz-love-hero h1 {
     font-size: clamp(35px, 10.5vw, 46px);
   }

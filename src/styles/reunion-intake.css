@@ -1030,7 +1030,7 @@
    12. 좁은 화면 — 375px / 320px 가로 오버플로 0
    ══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 400px) {
+@container app (max-width: 400px) {
   .reunion-intake-page {
     --ri-veil-h: 96px;
   }
@@ -1040,7 +1040,7 @@
   }
 }
 
-@media (max-width: 340px) {
+@container app (max-width: 340px) {
   .reunion-intake-page .ri-rail-name {
     display: none;
   }

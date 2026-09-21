@@ -23,10 +23,11 @@ describe('route shell policy', () => {
     ['/checkout', 'phone'],
     ['/loading', 'phone'],
     ['/form/general-signature', 'phone'],
-    // Own 460px column plus viewport-fixed decoration (.rw-frame / .rw-thread).
-    ['/detail/love-reunion', 'canvas'],
-    ['/detail/past-life-goblin/about', 'canvas'],
-    ['/report/8f2c0f1a-0000-4000-8000-000000000000', 'canvas'],
+    // 몰입형 랜딩과 리포트도 폰 프레임이다. 제품 시트가 @container app 으로 프레임을
+    // 재므로 폭을 묶어도 데스크톱 블록이 잘못 발동하지 않는다.
+    ['/detail/love-reunion', 'phone'],
+    ['/detail/past-life-goblin/about', 'phone'],
+    ['/report/8f2c0f1a-0000-4000-8000-000000000000', 'phone'],
     ['/guiyeondo', 'wide'],
     ['/g/abc123', 'wide'],
     ['/admin', 'full']
@@ -34,30 +35,37 @@ describe('route shell policy', () => {
     expect(getRouteShellPolicy(pathname).width).toBe(width);
   });
 
-  it('never puts a report in a frame narrower than the viewport it is styled for', () => {
-    // generalSignatureReport.css keys its whole mobile layout to
-    // `@media (max-width: 767px)`, reunion.css to `@media (min-width: 768px)`,
-    // mz-love-report.css to `@media (min-width: 680px)` and the shared premium
-    // report to `@media (max-width: 640px)`. All four are viewport queries, so a
-    // 400px frame inside a 1280px window runs the desktop layout in a phone-width
-    // box: `.gs-important` fell back to its fixed 190px column and pushed the body
-    // text out onto the rail. `canvas` keeps frame width == viewport width.
+  it('keeps every customer route in the phone frame, on a desktop window too', () => {
+    // 발주자 요구: PC 에서도 모바일 화면 그대로 보여야 한다.
+    // 예전에는 리포트 시트가 레이아웃을 뷰포트에 물어서 canvas 가 필요했다. 그 쿼리들이
+    // 전부 @container app 으로 바뀌었으므로 폰 폭으로 묶어도 거짓말을 하지 않는다.
     for (const pathname of [
+      '/',
+      '/detail/love-reunion',
+      '/detail/past-life-goblin/about',
+      '/form/love-reunion',
+      '/checkout',
       '/report/general-signature',
       '/report/love-reading',
       '/report/love-reunion',
       '/report/past-life-goblin',
       '/report/8f2c0f1a-0000-4000-8000-000000000000'
     ]) {
-      expect(getRouteShellPolicy(pathname).width, pathname).toBe('canvas');
+      expect(getRouteShellPolicy(pathname).width, pathname).toBe('phone');
     }
   });
 
-  it('leaves the deprecated 520px card width unused', () => {
+  it('keeps full width for the admin dashboard only', () => {
+    for (const [pattern, policy] of Object.entries(ROUTE_SHELL_POLICIES)) {
+      expect(policy.width === 'full', pattern).toBe(pattern === '/admin');
+    }
+  });
+
+  it('leaves the deprecated 520px card and canvas widths unused', () => {
     const widths = new Set(Object.values(ROUTE_SHELL_POLICIES).map((policy) => policy.width));
 
     expect(widths.has('card')).toBe(false);
-    expect([...widths].sort()).toEqual(['canvas', 'full', 'phone', 'wide']);
+    expect([...widths].sort()).toEqual(['full', 'phone', 'wide']);
   });
 
   it('keeps the light theme on /admin only, which is what index.html boots on', () => {
@@ -136,7 +144,7 @@ describe('route shell policy', () => {
 
     expect(policy).toEqual({
       theme: 'dark',
-      width: 'canvas',
+      width: 'phone',
       topBar: 'product',
       bottomTab: 'immersive-hidden',
       tabAnchor: 'origin',

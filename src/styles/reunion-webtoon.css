@@ -175,7 +175,10 @@
   z-index: 1;
   top: 0;
   bottom: 0;
-  left: max(0px, calc(50% - var(--ud-col) / 2 - 34px));
+  /* fixed 라 50% 는 뷰포트의 절반이다. 1440px 창에서는 실이 프레임(513~913) 바깥
+     449px 에 떠버렸다. 레일 거터가 프레임 왼쪽 가장자리라, 폰에서 left:0 이던 자리와
+     PC 안 폰 프레임에서의 자리가 같아진다. */
+  left: var(--app-rail-gutter, 0px);
   width: 40px;
   pointer-events: none;
 }
@@ -2197,7 +2200,7 @@
    28. 좁은 화면 보정 — 375px · 320px 가로 오버플로 0
    ══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 400px) {
+@container app (max-width: 400px) {
   .reunion-webtoon .rw-compare,
   .reunion-webtoon .rw-panes {
     grid-template-columns: 1fr;
@@ -2218,7 +2221,7 @@
   .reunion-webtoon .rw-bubble { max-width: 76%; }
 }
 
-@media (max-width: 340px) {
+@container app (max-width: 340px) {
   .reunion-webtoon .rw-tally {
     grid-template-columns: 1fr;
   }

@@ -1448,7 +1448,7 @@ body:has(.general-signature-report) {
   color: var(--report-gold-dark);
 }
 
-@media (max-width: 767px) {
+@container app (max-width: 767px) {
   .general-signature-report .premium-report-topbar-inner {
     width: calc(100% - 24px);
     min-height: 54px;
@@ -1762,7 +1762,7 @@ body:has(.general-signature-report) {
   }
 }
 
-@media (max-width: 374px) {
+@container app (max-width: 374px) {
   .gs-cover,
   .gs-briefing,
   .gs-timeline,

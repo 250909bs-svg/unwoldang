@@ -455,7 +455,7 @@
 @keyframes gy-sigil-pulse { 0%, 100% { transform: scale(.98); } 50% { transform: scale(1.025); } }
 @keyframes gy-reveal-pulse { 0%, 100% { transform: scale(.94); box-shadow: 0 0 0 rgba(207, 73, 85, 0); } 50% { transform: scale(1.06); box-shadow: 0 0 34px rgba(207, 73, 85, .32); } }
 
-@media (min-width: 960px) {
+@container app (min-width: 960px) {
   /* 1440px at >=960px is declared by the shell width token `wide`
      (src/app/shell/appShell.css). */
   .gy-intro-copy { right: auto; bottom: 70px; left: clamp(50px, 8vw, 130px); align-items: flex-start; text-align: left; }
@@ -476,7 +476,7 @@
   .gy-guest-result .gy-character-hero { width: min(100% - 40px, 720px); height: 66vh; margin: 24px auto 0; border-radius: 28px; }
 }
 
-@media (max-width: 959px) {
+@container app (max-width: 959px) {
   .gy-detail-panel { display: none; }
   .gy-detail-panel.has-person,
   .gy-detail-panel.is-empty {
@@ -499,7 +499,7 @@
   .gy-detail-panel.is-empty .gy-character-hero { height: 34svh; min-height: 240px; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-map-stage { height: clamp(480px, 64svh, 610px); }
   .gy-relation-node { width: 94px; min-height: 50px; padding: 5px 6px 5px 5px; }
   .gy-node-glyph { width: 31px; height: 31px; flex-basis: 31px; }
@@ -509,7 +509,7 @@
   .gy-map-question { font-size: 9px; }
 }
 
-@media (max-width: 370px) {
+@container app (max-width: 370px) {
   .gy-map-lead { padding-right: 15px; padding-left: 15px; }
   .gy-map-stage { min-height: 470px; }
   .gy-relation-node { width: 90px; min-height: 48px; }
@@ -553,11 +553,11 @@
 .gy-evidence-version,
 .gy-preview-limit { font-size: 10px; }
 
-@media (min-width: 960px) {
+@container app (min-width: 960px) {
   .gy-intro-copy { bottom: 104px; }
 }
 
-@media (max-width: 959px) {
+@container app (max-width: 959px) {
   .gy-sheet .gy-detail-panel.has-person,
   .gy-sheet .gy-detail-panel.is-empty {
     position: relative;
@@ -577,7 +577,7 @@
   .gy-sheet .gy-detail-panel .gy-character-hero { height: 36svh; min-height: 240px; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-map-actions { grid-template-columns: 1fr; }
   .gy-map-actions .gy-primary-button,
   .gy-map-actions .gy-secondary-button { width: 100%; }
@@ -665,11 +665,11 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
 @keyframes gy-world-image { from { opacity: .55; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
 @keyframes gy-recommend-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-@media (min-width: 960px) {
+@container app (min-width: 960px) {
   .gy-purpose-grid { grid-template-columns: 1fr 1fr; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-detail-body { padding-right: 18px; padding-left: 18px; }
   .gy-recommendation-card { min-height: 178px; }
   .gy-recommendation-card > div { width: 84%; padding: 16px; }
@@ -766,7 +766,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   line-height: 1.55;
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-guest-deep-reading {
     border-radius: 17px;
   }
@@ -960,7 +960,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   }
 }
 
-@media (min-width: 600px) and (max-width: 959px) {
+@container app (min-width: 600px) and (max-width: 959px) {
   .gy-sheet { width: min(calc(100% - 32px), 640px); border-radius: 30px 30px 0 0; }
   .gy-detail-body { padding-right: 28px; padding-bottom: 52px; padding-left: 28px; }
   .gy-purpose-grid,
@@ -968,7 +968,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   .gy-map-actions { width: min(calc(100% - 48px), 620px); margin-right: auto; margin-left: auto; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-form-card { width: min(calc(100% - 20px), 470px); padding-right: 15px; padding-left: 15px; }
   .gy-form-card h2 { font-size: clamp(24px, 7vw, 27px); }
   .gy-map-lead h1,
@@ -990,7 +990,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   .gy-recommendation-card p { font-size: 12px; }
 }
 
-@media (max-width: 370px) {
+@container app (max-width: 370px) {
   .gy-share-actions { grid-template-columns: 1fr; }
   .gy-result-card,
   .gy-detail-body { padding-right: 14px; padding-left: 14px; }
@@ -1144,7 +1144,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
 
 @keyframes gySyncSpin { to { transform: rotate(360deg); } }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-result-actions { grid-template-columns: 1fr; }
   .gy-result-actions .gy-secondary-button { order: 1; }
   .gy-result-actions .gy-primary-button { order: 2; }

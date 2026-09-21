@@ -321,9 +321,12 @@ describe('reunion detail page (webtoon landing)', () => {
       );
     }
 
-    /* 붉은 실은 폭이 40px 고정이라 좌표를 읽기 열 기준으로 잡는다. */
+    /* 붉은 실은 폭이 40px 고정이라 프레임 왼쪽 가장자리(레일 거터)에 붙인다.
+       예전에는 calc(50% - col/2) 로 잡았는데, fixed 의 50% 는 뷰포트의 절반이라
+       1440px 창에서 실이 프레임(513~913) 바깥 449px 에 떠 있었다. */
     const thread = css.slice(css.indexOf('.rw-thread {'), css.indexOf('}', css.indexOf('.rw-thread {')));
-    expect(thread).toContain('var(--ud-col)');
+    expect(thread).toContain('var(--app-rail-gutter');
+    expect(thread).not.toContain('50%');
   });
 
   it('keeps the audited art-band fade geometry', () => {

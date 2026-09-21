@@ -2157,7 +2157,7 @@
   aspect-ratio: 9 / 13;
 }
 
-@media (min-width: 390px) {
+@container app (min-width: 390px) {
   .mz-love-report {
     --mz-love-pad: 20px;
   }
@@ -2176,7 +2176,7 @@
   }
 }
 
-@media (min-width: 430px) {
+@container app (min-width: 430px) {
   .mz-love-report {
     --mz-love-pad: 24px;
     --mz-love-radius: 27px;
@@ -2196,7 +2196,7 @@
   }
 }
 
-@media (min-width: 680px) {
+@container app (min-width: 680px) {
   .mz-love-report {
     --mz-love-pad: 42px;
     border-inline-color: rgba(255, 116, 130, 0.12);
@@ -2323,7 +2323,7 @@
   }
 }
 
-@media (max-width: 374px) {
+@container app (max-width: 374px) {
   .mz-love-report {
     --mz-love-pad: 15px;
   }

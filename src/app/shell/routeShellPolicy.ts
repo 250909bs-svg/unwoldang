@@ -113,14 +113,12 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
 
   /* ── Full-bleed landings that own their column, dock and footer ────── */
   '/detail/love-reunion': shell({
-    width: 'canvas',
     topBar: 'product',
     surface: 'love-reunion',
     containerClass: 'reunion-app-container',
     ...IMMERSIVE
   }),
   '/detail/past-life-goblin/about': shell({
-    width: 'canvas',
     topBar: 'product',
     surface: 'past-life-goblin',
     containerClass: 'past-life-app-container',
@@ -175,43 +173,36 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
   '/payment/portone/callback': shell({ topBar: 'none', ...FLOW }),
 
   /* ── Reports: long-form documents, so the frame is the viewport ─────── */
-  /* Every report stylesheet keys its layout to the viewport (`max-width: 767px`
-     in generalSignatureReport.css, `min-width: 768px` in reunion.css,
-     `min-width: 680px` in mz-love-report.css, `max-width: 640px` for the shared
-     premium report). A 400px frame inside a 1280px window makes those queries
-     lie: the desktop grid runs in a phone-width box and its fixed columns push
-     the body text onto the rail. `canvas` keeps frame width == viewport width,
-     so the queries stay truthful at every size, and on a phone it is identical
-     to `phone`. It is also what these routes measured before the shell refactor. */
+  /* 리포트도 폰 프레임이다. 예전에는 canvas(= 프레임 폭 == 뷰포트 폭)를 써야 했다.
+     제품 시트가 레이아웃을 뷰포트에 물었기 때문에, 1280px 창 안의 400px 프레임에서는
+     데스크톱 그리드가 폰 폭 상자 안에서 돌며 고정 컬럼이 본문을 레일 밖으로 밀어냈다.
+     지금은 그 쿼리들이 전부 @container app 으로 바뀌어 프레임을 재므로, 폭을 묶어도
+     거짓말을 하지 않는다. PC 에서도 폰 화면 그대로 보인다. */
   '/report/general-signature': shell({
-    width: 'canvas',
     topBar: 'product',
     surface: 'general-signature',
     containerClass: 'general-signature-report-app-container',
     ...FLOW
   }),
   '/report/love-reading': shell({
-    width: 'canvas',
     topBar: 'product',
     surface: 'love-reading',
     containerClass: 'mz-love-report-app-container',
     ...FLOW
   }),
   '/report/love-reunion': shell({
-    width: 'canvas',
     topBar: 'product',
     surface: 'love-reunion',
     containerClass: 'reunion-app-container',
     ...FLOW
   }),
   '/report/past-life-goblin': shell({
-    width: 'canvas',
     topBar: 'product',
     surface: 'past-life-goblin',
     containerClass: 'past-life-report-app-container',
     ...FLOW
   }),
-  '/report/:id': shell({ width: 'canvas', topBar: 'product', ...FLOW }),
+  '/report/:id': shell({ topBar: 'product', ...FLOW }),
 
   /* ── Guiyeondo: the one intentional desktop two-column surface ─────── */
   /* Deliberate exception among the four bottom-tab destinations: the only one

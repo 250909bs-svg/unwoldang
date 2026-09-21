@@ -87,17 +87,13 @@
   --app-shell-width: none;
   --app-shell-width-px: 100%;
 }
-/* `wide` is phone-sized until the guiyeondo two-column layout actually turns on. */
+/* `wide` 도 폰 프레임이다. 예전에는 960px 이상에서 1440px 로 넓혀 귀연도의 2단
+   레이아웃을 열었지만, 그러면 PC 에서 이 화면만 앱 프레임을 벗어나 웹페이지처럼 보인다.
+   제품 전체가 "PC 에서도 모바일 화면 그대로" 라는 한 가지 규칙을 따른다.
+   2단 레이아웃을 되살리려면 이 토큰이 아니라 guiyeondo.css 의 @container 쪽을 연다. */
 :root[data-shell-width='wide'] {
   --app-shell-width: 400px;
   --app-shell-width-px: 400px;
-}
-
-@media (min-width: 960px) {
-  :root[data-shell-width='wide'] {
-    --app-shell-width: 1440px;
-    --app-shell-width-px: 1440px;
-  }
 }
 
 :root[data-shell-theme='light'] {
@@ -151,6 +147,12 @@ body {
   max-width: var(--app-shell-width);
   min-height: 100svh;
   margin-inline: auto;
+  /* 제품 시트가 레이아웃을 프레임 폭에 맞춰 물어볼 수 있게 한다.
+     뷰포트 기준 @media 를 쓰면 1440px 창 안의 400px 프레임에서 데스크톱 블록이
+     발동해 고정 컬럼이 본문을 레일 밖으로 밀어낸다. @container app 은 프레임을
+     재므로 폰 화면과 PC 안의 폰 프레임이 같은 규칙을 탄다. */
+  container-type: inline-size;
+  container-name: app;
   /* The frame is centred, so it only needs the part of the inset the letterbox
      rail does not already absorb. Without this, landscape on a notched phone
      lost 47px of reading width to a notch that never touches the frame. */

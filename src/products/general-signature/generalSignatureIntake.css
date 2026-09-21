@@ -444,7 +444,7 @@
   box-shadow: 0 5px 0 -4px rgba(255, 255, 255, 0.94);
 }
 
-@media (min-width: 760px) {
+@container app (min-width: 760px) {
   .gs-intake-panel {
     padding-right: 30px;
     padding-bottom: 32px;
@@ -452,7 +452,7 @@
   }
 }
 
-@media (max-width: 390px) {
+@container app (max-width: 390px) {
   .gs-intake-panel {
     min-height: 64svh;
     gap: 18px;
