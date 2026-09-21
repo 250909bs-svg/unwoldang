@@ -1154,3 +1154,133 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
 @media (prefers-reduced-motion: reduce) {
   .gy-sync-button .is-spinning { animation: none !important; }
 }
+
+/* ── 인연 순위 목록 ──────────────────────────────────────────────────────
+   지도 아래에서 같은 사람들을 한 줄로 세운다. 0~100 궁합점수는 만들지 않으므로
+   숫자 자리에는 순번과 실제로 센 신호 개수만 온다. */
+
+.gy-rank {
+  margin: 26px 0 0;
+  padding: 20px 16px 18px;
+  border: 1px solid var(--gy-line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(241, 221, 213, .05), rgba(7, 6, 8, .4));
+}
+
+.gy-rank-head h2 {
+  margin: 6px 0 6px;
+  color: #f7f1ed;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.gy-rank-head p {
+  margin: 0;
+  color: var(--gy-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.gy-rank-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.gy-rank-row {
+  display: grid;
+  grid-template-columns: 26px 1fr 17px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 12px 12px 10px;
+  border: 1px solid var(--gy-line);
+  border-radius: 14px;
+  background: rgba(241, 221, 213, .035);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+.gy-rank-row:hover { border-color: rgba(216, 108, 118, .42); background: rgba(241, 221, 213, .07); }
+.gy-rank-row:active { transform: scale(.995); }
+.gy-rank-row.is-selected { border-color: var(--gy-rose); background: rgba(169, 39, 54, .16); }
+.gy-rank-row.is-pending { opacity: .74; }
+
+.gy-rank-ordinal {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(241, 221, 213, .08);
+  color: var(--gy-muted);
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 상위 세 자리만 표식을 준다. 그 아래까지 물들이면 순위가 아니라 장식이 된다. */
+.gy-rank-row:not(.is-pending):nth-child(-n + 3) .gy-rank-ordinal {
+  background: linear-gradient(160deg, rgba(216, 108, 118, .9), rgba(169, 39, 54, .9));
+  color: #fff6f2;
+}
+
+.gy-rank-body { display: grid; gap: 4px; min-width: 0; }
+
+.gy-rank-name {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  color: #f7f1ed;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.gy-rank-source {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(241, 221, 213, .1);
+  color: var(--gy-muted);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.gy-rank-type {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  width: fit-content;
+  color: var(--gy-rose);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gy-rank-type i { color: var(--gy-muted); font-size: 10.5px; font-style: normal; }
+.gy-rank-type.is-pending { color: var(--gy-muted); font-weight: 600; }
+
+.gy-rank-tally {
+  color: var(--gy-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gy-rank-tally em { font-style: normal; opacity: .85; }
+.gy-rank-arrow { color: var(--gy-muted); flex-shrink: 0; }
+
+.gy-rank-footnote {
+  margin: 14px 0 0;
+  color: var(--gy-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gy-rank-row { transition: none; }
+  .gy-rank-row:active { transform: none; }
+}

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { createSecureRandomPart } from '../../shared/security/secureRandom';
 import { createGuiyeondoInviteRemote, fetchGuiyeondoInviteResponses, fetchGuiyeondoOwnedInvites, revokeGuiyeondoInvite } from './api';
 import GuiyeondoBirthFlow from './GuiyeondoBirthFlow';
+import GuiyeondoConnectionList from './GuiyeondoConnectionList';
 import GuiyeondoDetailPanel from './GuiyeondoDetailPanel';
 import GuiyeondoIntro from './GuiyeondoIntro';
 import GuiyeondoInviteSheet from './GuiyeondoInviteSheet';
@@ -34,6 +35,7 @@ import type {
   GuiyeondoBirthProfile,
   GuiyeondoMapState,
   GuiyeondoOwnedInvite,
+  GuiyeondoPerson,
   GuiyeondoRelationshipType
 } from './types';
 import '../../styles/guiyeondo.css';
@@ -168,9 +170,7 @@ export default function GuiyeondoPage() {
     selectedPeople.find((person) => person.id === selectedPersonId)
       || selectedPeople[selectedPeople.length - 1]
       || null, [selectedPeople, selectedPersonId]);
-  const unclassifiedPeople = useMemo(() => mapState?.people.filter(
-    (person) => person.analysis.classification.type === null
-  ) || [], [mapState?.people]);
+  /* 분류 미확정 인연은 따로 모으지 않는다. 순위 목록이 같은 줄에서 맨 아래로 세운다. */
   const ownerSigilSeed = useMemo(() => mapState ? guiyeondoSigilSeed(mapState.owner) : '', [mapState?.owner]);
   const inviteSyncKey = useMemo(() => mapState?.invites
     .map((item) => `${item.publicId}:${item.expiresAt}`)
@@ -295,6 +295,19 @@ export default function GuiyeondoPage() {
     } catch (error) {
       setToast(error instanceof Error ? error.message : '인연을 삭제하지 못했습니다.');
     }
+  };
+
+  /** 목록에서 한 사람을 고르면 지도의 해당 분류를 선택하고 상세를 연다. */
+  const openConnection = (person: GuiyeondoPerson) => {
+    setAddOpen(false);
+    setInvite(null);
+    setSelectedType(person.analysis.classification.type);
+    setSelectedPersonId(person.id);
+    trackGuiyeondoEvent('guiyeondo_detail_open', {
+      type: person.analysis.classification.type || 'unclassified',
+      occupied: true,
+      from: 'rank-list'
+    });
   };
 
   const openAdd = () => {
@@ -452,23 +465,15 @@ export default function GuiyeondoPage() {
             {mapState.invites.length ? <button type="button" className="gy-sync-button" disabled={syncing} onClick={() => void syncInviteResponses(false)}><RefreshCw size={16} className={syncing ? 'is-spinning' : ''} /> {syncing ? '새 인연 확인 중' : '받은 인연 새로고침'}</button> : null}
             <p className="gy-invite-note">초대 링크에는 표시 이름만 보이며, 초대자 원국 스냅샷은 서버에 최대 14일 보관됩니다.</p>
           </div>
-          {unclassifiedPeople.length ? (
-            <section className="gy-unclassified" aria-labelledby="gy-unclassified-title">
-              <div>
-                <span>검증 가능한 대표 관계를 고르는 중</span>
-                <strong id="gy-unclassified-title">근거 확인 중 {unclassifiedPeople.length}명</strong>
-                <p>억지로 8개 관계에 넣지 않고, 현재 엔진 근거가 충분해질 때까지 별도로 보관합니다.</p>
-              </div>
-              <div className="gy-unclassified-list">
-                {unclassifiedPeople.map((person) => (
-                  <span key={person.id}>
-                    <b>{person.name}</b>
-                    <button type="button" onClick={() => removePerson(person.id)} aria-label={`${person.name} 인연 삭제`}>삭제</button>
-                  </span>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          {/* 지도는 별자리라 누가 위인지 세기 어렵다. 같은 사람들을 한 줄로 세우고,
+              누르면 지도의 해당 노드를 골라 상세 해석을 연다. 예전 "근거 확인 중"
+              섹션은 이 목록이 흡수했다 — 미확정 인연도 같은 줄에서 맨 아래에 선다. */}
+          <GuiyeondoConnectionList
+            ownerName={mapState.owner.name}
+            people={mapState.people}
+            selectedPersonId={selectedPersonId}
+            onOpen={openConnection}
+          />
         </div>
         {!isCompactViewport ? <GuiyeondoDetailPanel ownerName={mapState.owner.name} type={selectedType} person={selectedPerson} people={selectedPeople} selectedPersonId={selectedPersonId} onSelectPerson={setSelectedPersonId} onClose={closeDetail} onAdd={openAdd} onInvite={openInvite} onRemove={removePerson} /> : null}
       </div>
