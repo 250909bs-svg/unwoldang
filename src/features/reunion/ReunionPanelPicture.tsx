@@ -29,7 +29,7 @@ export default function ReunionPanelPicture({
         sizes={source.sizes}
         alt={alt}
         loading={eager ? 'eager' : 'lazy'}
-        fetchPriority={eager ? 'high' : 'auto'}
+        fetchpriority={eager ? 'high' : 'auto'}
         decoding="async"
       />
     </picture>
