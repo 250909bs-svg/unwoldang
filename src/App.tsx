@@ -37,6 +37,9 @@ const MyManseryeok = lazy(() => import('./pages/MyManseryeok'));
 const DailyFortune = lazy(() => import('./pages/DailyFortune'));
 const MyCoupons = lazy(() => import('./pages/MyCoupons'));
 const Chat = lazy(() => import('./pages/Chat'));
+const GiftSend = lazy(() => import('./pages/GiftSend'));
+const GiftReceive = lazy(() => import('./pages/GiftReceive'));
+const GiftSent = lazy(() => import('./pages/GiftSent'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
@@ -92,6 +95,9 @@ function AppRoutes({
           <Route path="/today" element={<DailyFortune />} />
           <Route path="/my/coupons" element={<MyCoupons />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/gift" element={<GiftSend />} />
+          <Route path="/gift/sent" element={<GiftSent />} />
+          <Route path="/gift/:code" element={<GiftReceive />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/kakao/callback" element={<KakaoCallback />} />

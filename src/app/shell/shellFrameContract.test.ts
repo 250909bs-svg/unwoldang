@@ -22,6 +22,7 @@ const PRODUCT_SHEETS = [
   'styles/guiyeondo.css',
   'styles/chat.css',
   'styles/daily.css',
+  'styles/gift.css',
   'styles/my.css',
   'styles/mz-love-fact.css',
   'styles/mz-love-intake.css',

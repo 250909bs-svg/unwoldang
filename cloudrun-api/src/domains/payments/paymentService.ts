@@ -31,6 +31,8 @@ export type PaymentOrderClaimInput = {
   /** 쿠폰 적용 후 청구액. 없으면 정가와 같다. */
   payableAmount?: number;
   couponCode?: string;
+  /** 선물 주문 표시. 확정되면 리포트 대신 선물 코드가 나간다. */
+  gift?: boolean;
 };
 
 export type ReportAccessTokenInput = {
@@ -111,8 +113,24 @@ export type PaymentServiceDependencies = {
    * 쿠폰 규칙은 그대로 남아야 한다. 결제는 "얼마를 받을지" 를 묻기만 한다.
    */
   couponService?: OrderPricingService | null;
+  /** 선물 주문을 코드로 바꿔 주는 곳. 없으면 선물 주문을 받지 않는다. */
+  giftService?: GiftIssuer | null;
   now?: () => number;
   randomBytes?: (size: number) => Buffer;
+};
+
+export type GiftIssuer = {
+  readonly enabled: boolean;
+  createForPayment(input: {
+    orderId: string;
+    paymentId: string;
+    productId: string;
+    amount: number;
+    entitlementId: string;
+    buyerUserId: string;
+    buyerName: string;
+    message: unknown;
+  }): Promise<{ code: string; expiresAt: string }>;
 };
 
 export type OrderPricingService = {
@@ -210,6 +228,12 @@ export class PaymentService {
       throw new PaymentRequestError(409, '주문 금액이 서버 상품 가격과 일치하지 않습니다.');
     }
 
+    /* 선물을 받을 곳이 없는데 선물 주문을 받아 두면, 결제는 되고 코드는 안 나온다.
+       돈을 받기 전에 막는다. */
+    if (body.gift === true && !this.dependencies.giftService?.enabled) {
+      throw new PaymentRequestError(503, '선물하기가 아직 열리지 않았습니다.');
+    }
+
     const pricing = await this.resolvePricing(user.userId, productId, amount, body.couponCode);
 
     const orderClaim = this.dependencies.tokenService.createPaymentOrderClaim({
@@ -218,7 +242,10 @@ export class PaymentService {
       productId,
       amount,
       payableAmount: pricing.payableAmount,
-      couponCode: pricing.couponCode
+      couponCode: pricing.couponCode,
+      /* 선물인지도 서명해 둔다. 확인 단계에서 클라이언트에게 다시 묻지 않으려면
+         "이 주문이 선물이었는가" 가 주문을 만들 때 고정돼 있어야 한다. */
+      gift: body.gift === true
     });
 
     return {
@@ -467,6 +494,27 @@ export class PaymentService {
       }
     }
 
+    /*
+     * 선물 주문이면 리포트 토큰 대신 **코드**가 결과물이다.
+     *
+     * 산 사람은 자기 출생정보를 넣지 않았으므로 여기서 만들 리포트가 없다. 코드는
+     * 주문번호에서 결정론적으로 나오므로, 같은 결제를 두 번 확인해도 코드가 하나다.
+     */
+    let gift: { code: string; expiresAt: string } | null = null;
+
+    if (orderClaims.gift === true && this.dependencies.giftService?.enabled) {
+      gift = await this.dependencies.giftService.createForPayment({
+        orderId,
+        paymentId,
+        productId,
+        amount: payableAmount,
+        entitlementId: ledgerDocumentId,
+        buyerUserId: user.userId,
+        buyerName: user.nickname || '',
+        message: body.giftMessage
+      });
+    }
+
     const reportAccessToken = this.dependencies.tokenService.createReportAccessToken({
       userId: user.userId,
       orderId,
@@ -483,6 +531,7 @@ export class PaymentService {
       productId,
       amount: payableAmount,
       couponCode,
+      gift,
       currency,
       status,
       method: readNestedString(payment, [['method', 'type'], ['method'], ['payMethod']]),

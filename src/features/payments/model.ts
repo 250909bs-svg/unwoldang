@@ -17,6 +17,9 @@ export interface PendingPayment {
   txId?: string;
   orderClaim?: string;
   reportAccessToken?: string;
+  /* 선물 주문이면 리포트가 아니라 링크가 결과물이다. */
+  gift?: boolean;
+  giftMessage?: string;
   createdAt: string;
 }
 
@@ -59,10 +62,17 @@ export interface RenewedPaymentEntitlement {
   reportAccessTokenExpiresAt: string;
 }
 
+export interface ConfirmedGift {
+  code: string;
+  expiresAt: string;
+}
+
 export interface ConfirmedPortOnePayment extends RenewedPaymentEntitlement {
   paymentId: string;
   txId: string;
   status: string;
   method?: string;
   approvedAt?: string;
+  /** 선물 주문이었다면 받는 사람에게 보낼 코드. 아니면 null. */
+  gift?: ConfirmedGift | null;
 }

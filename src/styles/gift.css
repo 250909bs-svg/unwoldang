@@ -1,0 +1,263 @@
+/* 선물하기 · 선물 받기.
+ *
+ * 토큰은 `ud-tokens.css`, 선택자는 `.ud-app-container` 로 시작 — `my.css` 와 같은 규칙.
+ */
+
+/* ── 받는 화면 ──────────────────────────────────────────────────────────── */
+
+.ud-app-container .ud-gift {
+  padding-top: var(--ud-s6);
+  text-align: center;
+}
+.ud-app-container .ud-gift-seal {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--ud-s5);
+  place-items: center;
+  border: 1px solid var(--ud-metal-7);
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim);
+  color: var(--ud-gold-text-hi);
+}
+.ud-app-container .ud-gift h1 {
+  margin-top: var(--ud-s3);
+  color: var(--ud-cream);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-body);
+  line-height: var(--ud-lh-title);
+}
+/* 보낸 사람의 한마디. 인용으로 놓아 운월당의 말과 구분한다. */
+.ud-app-container .ud-gift-message {
+  margin-top: var(--ud-s5);
+  padding: var(--ud-s4);
+  border-left: 2px solid var(--ud-metal-6);
+  border-radius: 0 var(--udm-r-chip) var(--udm-r-chip) 0;
+  background: var(--ud-surface-1);
+  color: var(--ud-cream-dim);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
+  text-align: left;
+}
+.ud-app-container .ud-gift-product {
+  display: flex;
+  align-items: center;
+  margin-top: var(--ud-s5);
+  padding: var(--ud-s4);
+  gap: var(--ud-s4);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-2);
+  text-align: left;
+}
+.ud-app-container .ud-gift-product img {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: var(--udm-r-chip);
+  object-fit: cover;
+}
+.ud-app-container .ud-gift-product strong {
+  display: block;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-300);
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .ud-gift-product p {
+  margin-top: var(--ud-s1);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+}
+.ud-app-container .ud-gift-product small {
+  display: block;
+  margin-top: var(--ud-s2);
+  color: var(--ud-metal-5);
+  font-size: var(--ud-fs-50);
+}
+.ud-app-container .ud-gift-state {
+  margin-top: var(--ud-s5);
+  padding: var(--ud-s4);
+  border: 1px dashed var(--ud-metal-8);
+  border-radius: var(--udm-r-card);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+}
+.ud-app-container .ud-gift-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: var(--ud-s2);
+  border: 0;
+  cursor: pointer;
+}
+.ud-app-container .ud-gift-cta:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ud-app-container .ud-gift-note {
+  display: flex;
+  align-items: flex-start;
+  margin-top: var(--ud-s4);
+  gap: var(--ud-s2);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-body);
+  text-align: left;
+}
+.ud-app-container .ud-gift-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+/* ── 보내는 화면 ────────────────────────────────────────────────────────── */
+
+.ud-app-container .ud-gift-choices {
+  margin-top: var(--ud-s5);
+  padding: 0;
+  border: 0;
+}
+.ud-app-container .ud-gift-choices label {
+  display: flex;
+  align-items: center;
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s3);
+  gap: var(--ud-s4);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-1);
+  cursor: pointer;
+}
+.ud-app-container .ud-gift-choices label.is-selected {
+  border-color: var(--ud-metal-5);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim);
+}
+/* 라디오는 숨기지 않고 접근 가능하게 둔다 — 키보드로 고를 수 있어야 한다.
+   폭·높이를 명시하는 이유: index.css 의 폼 규칙이 input 을 `width: 100%` 로 늘려서,
+   라디오 하나가 324px 을 차지하고 그림과 글이 밀려 사라졌다. */
+.ud-app-container .ud-gift-choices input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--ud-metal-3);
+}
+.ud-app-container .ud-gift-choices img {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: var(--udm-r-chip);
+  object-fit: cover;
+}
+.ud-app-container .ud-gift-choices span {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ud-app-container .ud-gift-choices strong {
+  display: block;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .ud-gift-choices em {
+  color: var(--ud-gold-text-hi);
+  font-size: var(--ud-fs-100);
+  font-style: normal;
+  font-weight: var(--ud-w-bold);
+}
+
+.ud-app-container .ud-gift-message-field {
+  display: block;
+  margin-top: var(--ud-s6);
+}
+.ud-app-container .ud-gift-message-field textarea {
+  display: block;
+  width: 100%;
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s4);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--udm-r-row);
+  background: var(--ud-surface-1);
+  color: var(--ud-cream);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-lead);
+  resize: vertical;
+}
+.ud-app-container .ud-gift-message-field textarea::placeholder {
+  color: var(--ud-cream-mute);
+}
+.ud-app-container .ud-gift-message-field small {
+  display: block;
+  margin-top: var(--ud-s2);
+  color: var(--ud-metal-5);
+  font-size: var(--ud-fs-50);
+  text-align: right;
+}
+
+.ud-app-container .ud-gift-send .ud-gift-cta {
+  margin-top: var(--ud-s6);
+}
+.ud-app-container .ud-gift-back {
+  display: block;
+  margin-top: var(--ud-s5);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  text-align: center;
+  text-decoration: none;
+}
+
+/* ── 선물 완료 화면 ─────────────────────────────────────────────────────── */
+
+.ud-app-container .ud-gift-sent-lead {
+  margin-top: var(--ud-s4);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-body);
+}
+/* 코드를 크게 적는다. 링크가 막힌 메신저에서는 이것을 불러 줘야 한다. */
+.ud-app-container .ud-gift-code {
+  margin-top: var(--ud-s5);
+  padding: var(--ud-s4);
+  border: 1px dashed var(--ud-metal-7);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-1);
+  color: var(--ud-cream);
+  font-family: var(--ud-num);
+  font-size: var(--ud-fs-400);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: 0.12em;
+  word-break: break-all;
+}
+.ud-app-container .ud-gift-actions {
+  display: flex;
+  margin-top: var(--ud-s5);
+  flex-direction: column;
+  gap: var(--ud-s3);
+}
+.ud-app-container .ud-gift-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  gap: var(--ud-s2);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--udm-r-row);
+  background: transparent;
+  color: var(--ud-cream-dim);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  cursor: pointer;
+}
+.ud-app-container .ud-gift-url {
+  margin-top: var(--ud-s4);
+  color: var(--ud-metal-5);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-lead);
+  word-break: break-all;
+}

@@ -36,6 +36,9 @@ type CheckoutState = {
   tabOrigin?: string;
   draftOwnerId?: string;
   reunionContext?: ReunionContext;
+  /* 선물 주문. 내 출생정보를 넣지 않으므로 아래 검증이 달라진다. */
+  gift?: boolean;
+  giftMessage?: string;
 };
 
 export default function Checkout() {
@@ -76,6 +79,12 @@ export default function Checkout() {
 
   const orderId = useMemo(() => createOrderId(), []);
   const amount = product.price;
+  /*
+   * 선물 주문에는 내 출생정보가 없다. 받는 사람이 자기 정보로 리포트를 만들기 때문이다.
+   * 그래서 생년월일시·질문 검증을 걸지 않는다 — 걸면 선물은 영원히 결제되지 않는다.
+   */
+  const isGiftOrder = locationState?.gift === true;
+  const giftMessage = locationState?.giftMessage || '';
   /*
    * 쿠폰은 코드만 고른다. 깎인 금액은 서버가 정한다.
    *
@@ -139,10 +148,10 @@ export default function Checkout() {
       !isSubmitting &&
       service &&
       amount > 0 &&
-      hasRequiredBirthInfo &&
-      hasRequiredPartnerBirth &&
-      hasRequiredReunionContext &&
-      hasTwoQuestions &&
+      (isGiftOrder || hasRequiredBirthInfo) &&
+      (isGiftOrder || hasRequiredPartnerBirth) &&
+      (isGiftOrder || hasRequiredReunionContext) &&
+      (isGiftOrder || hasTwoQuestions) &&
       reportReady &&
       paymentReady
   );
@@ -227,7 +236,8 @@ export default function Checkout() {
         orderId,
         productId: service.id,
         amount,
-        couponCode: couponCode || undefined
+        couponCode: couponCode || undefined,
+        gift: isGiftOrder
       });
       /* 결제창에 넣을 금액은 서버가 서명해 준 값이다. 화면이 계산한 값을 쓰지 않는다. */
       const chargeAmount = orderIntent.payableAmount ?? orderIntent.amount;
@@ -236,7 +246,9 @@ export default function Checkout() {
         orderId: orderIntent.orderId,
         orderClaim: orderIntent.orderClaim,
         amount: chargeAmount,
-        couponCode: orderIntent.couponCode || ''
+        couponCode: orderIntent.couponCode || '',
+        gift: isGiftOrder,
+        giftMessage
       };
       savePendingPayment(authenticatedPendingPayment);
 

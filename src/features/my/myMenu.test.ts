@@ -24,13 +24,19 @@ describe('마이 메뉴', () => {
     }
   });
 
-  it('soon 항목은 경로가 없고, 왜 없는지 적혀 있다', () => {
-    const soon = MY_MENU_ENTRIES.filter((entry) => entry.status === 'soon');
+  it('메뉴에 준비 중인 줄이 남아 있지 않다', () => {
+    /*
+     * 목표 상태다 — 메뉴의 모든 줄이 눌리면 열린다. 새 항목을 `soon` 으로 넣는 것은
+     * 막지 않지만(아래에서 규칙을 지킨다), 지금 남아 있는 것이 있으면 출시 전에
+     * 그것부터 봐야 한다는 신호다.
+     */
+    expect(MY_MENU_ENTRIES.filter((entry) => entry.status === 'soon')).toEqual([]);
+  });
 
-    expect(soon.length).toBeGreaterThan(0);
-    for (const entry of soon) {
+  it('soon 항목을 새로 넣으면 경로 없이, 왜 없는지 함께 적는다', () => {
+    /* 근거 없는 "준비 중" 은 그냥 잊힌 항목과 구분되지 않는다. */
+    for (const entry of MY_MENU_ENTRIES.filter((item) => item.status === 'soon')) {
       expect(entry.to, `${entry.id} 는 경로가 없어야 한다`).toBeNull();
-      // 근거 없는 "준비 중" 은 그냥 잊힌 항목과 구분되지 않는다.
       expect(entry.blockedBy?.length, `${entry.id} 에 blockedBy 가 없다`).toBeGreaterThan(20);
     }
   });

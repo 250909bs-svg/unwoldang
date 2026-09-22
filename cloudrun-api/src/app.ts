@@ -30,6 +30,8 @@ import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { CouponRepository } from './repositories/couponRepository.ts';
 import { CouponService } from './domains/coupons/couponService.ts';
 import { ChatService } from './domains/chat/chatService.ts';
+import { GiftRepository } from './repositories/giftRepository.ts';
+import { GiftService } from './domains/gifts/giftService.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
 import { GuiyeondoFirestoreRepository } from './repositories/guiyeondoRepository.ts';
@@ -68,6 +70,15 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     repository: config.firestore.enabled
       ? new CouponRepository(firestoreRepository, config.firestore.couponCollection)
       : null
+  });
+  /* Firestore 가 꺼져 있으면 선물도 꺼진다. 선물 한 장이 한 번만 쓰이는 것을
+     기록으로 지켜야 하는데, 기록할 곳이 없으면 그 보장이 사라진다. */
+  const giftService = new GiftService({
+    repository: config.firestore.enabled
+      ? new GiftRepository(firestoreRepository, config.firestore.giftCollection)
+      : null,
+    tokenService,
+    reportAccessTokenTtlMs: config.report.accessTokenTtlMs
   });
   const guiyeondoRepository = new GuiyeondoFirestoreRepository(
     firestoreRepository,
@@ -113,6 +124,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     paymentProvider,
     ledgerRepository: paymentLedgerAdapter,
     couponService,
+    giftService,
     tokenService
   });
   const reportService = new ReportService(
@@ -156,6 +168,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     admin: adminService,
     guiyeondo: guiyeondoService,
     chat: chatService,
+    gifts: giftService,
     coupons: couponService
   });
 }

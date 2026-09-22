@@ -106,6 +106,8 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       archiveCollection: trimmed(env, 'FIRESTORE_ARCHIVE_COLLECTION') || 'reportArchives',
       /* 쿠폰 보유·사용 기록. 쿠폰 정의는 코드에 있고 여기에는 이력만 쌓인다. */
       couponCollection: trimmed(env, 'FIRESTORE_COUPON_COLLECTION') || 'couponGrants',
+      /* 선물 한 장이 한 번만 쓰이는 것을 이 컬렉션이 기록으로 지킨다. */
+      giftCollection: trimmed(env, 'FIRESTORE_GIFT_COLLECTION') || 'giftCodes',
       accessToken: trimmed(env, 'FIRESTORE_ACCESS_TOKEN')
     },
     guiyeondo: {

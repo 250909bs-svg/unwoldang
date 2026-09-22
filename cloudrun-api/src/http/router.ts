@@ -18,6 +18,8 @@ export const PUBLIC_ROUTES = Object.freeze([
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  'GET /api/gifts/:code',
+  'POST /api/gifts/:code/redeem',
   'POST /api/chat',
   'GET /api/coupons',
   'POST /api/coupons/claim',
@@ -70,6 +72,10 @@ type RouterDependencies = {
   admin: { login(body: Record<string, unknown>): unknown };
   guiyeondo: GuiyeondoApi;
   chat: { reply(body: Record<string, unknown>): Promise<unknown> };
+  gifts: {
+    describe(code: unknown): Promise<unknown>;
+    redeem(userId: string, code: unknown): Promise<unknown>;
+  };
   coupons: {
     listWallet(userId: string): Promise<unknown>;
     claim(userId: string, code: unknown): Promise<unknown>;
@@ -270,6 +276,29 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
        순간 전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
     /* 상담 채팅. 로그인한 사람만 — 대화가 이 사람의 명식을 근거로 돌고,
        모델 호출이라 비용이 붙는다. 요청 제한은 리포트와 같은 것을 쓴다. */
+    /* 선물 조회는 공개다 — 링크를 받은 사람은 아직 로그인하지 않았다. 대신 응답에
+       주문번호·권한 ID·산 사람의 사용자 ID 는 넣지 않는다(giftService.describe). */
+    const giftPath = url.pathname.match(/^(?:\/api)?\/gifts\/([A-Z0-9]{4,32})(\/redeem)?$/iu);
+
+    if (giftPath && req.method === 'GET' && !giftPath[2]) {
+      try {
+        sendJson(res, 200, await dependencies.gifts.describe(giftPath[1]));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
+    if (giftPath && req.method === 'POST' && giftPath[2]) {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.gifts.redeem(user.userId, giftPath[1]));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
     if (req.method === 'POST' && isPath(url.pathname, '/chat')) {
       try {
         dependencies.auth.verifyUserAccess(req);

@@ -87,10 +87,10 @@ export const MY_MENU_ENTRIES: readonly MyMenuEntry[] = Object.freeze([
   {
     id: 'gift',
     label: '선물하기',
-    note: '결제가 열리면 함께 열립니다',
-    to: null,
-    status: 'soon',
-    blockedBy: '남의 몫을 결제해 주는 기능이라 결제 연동이 먼저다.',
+    note: '사주 한 장을 결제해 링크로 보냅니다',
+    to: '/gift',
+    status: 'live',
+    requiresAuth: true,
     group: 'share'
   },
   {

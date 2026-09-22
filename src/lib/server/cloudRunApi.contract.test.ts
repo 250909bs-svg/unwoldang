@@ -23,6 +23,11 @@ const EXPECTED_PUBLIC_ROUTES = [
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  /* 선물 조회는 공개다 — 링크를 받은 사람은 아직 로그인하지 않았다. 대신 응답에
+     주문번호·권한 ID·산 사람의 사용자 ID 를 넣지 않는다(giftService.describe).
+     받는 것은 로그인이 필요하다: 누가 받았는지 남아야 분쟁이 정리된다. */
+  'GET /api/gifts/:code',
+  'POST /api/gifts/:code/redeem',
   /* 상담 채팅. 로그인한 사람만 — 대화가 이 사람의 명식을 근거로 돌고 모델 호출에 비용이
      붙는다. 요청 제한은 리포트와 같은 것을 쓴다. */
   'POST /api/chat',

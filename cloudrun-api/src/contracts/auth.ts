@@ -21,6 +21,8 @@ export type PaymentOrderClaims = {
    * 얼마를 받기로 했는가" 를 알 수 있다. 쿠폰 도입 전에 발급된 클레임에는 없어서 선택 필드다.
    */
   payableAmount?: number;
+  /** 선물 주문인가. 확정되면 리포트 대신 선물 코드가 나간다. */
+  gift?: boolean;
   /** 적용된 쿠폰 코드. 결제가 확정되면 이 코드를 한 번 소모한다. */
   couponCode?: string;
   userBinding: string;

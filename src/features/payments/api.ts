@@ -142,6 +142,8 @@ export async function requestPaymentOrderIntent(options: {
   /** 상품 정가. 할인 금액은 보내지 않는다 — 서버가 쿠폰을 보고 직접 정한다. */
   amount: number;
   couponCode?: string;
+  /** 선물 주문. 서버가 확정 시 리포트 대신 선물 코드를 만든다. */
+  gift?: boolean;
 }) {
   const response = await fetchPaymentApi(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'order'), {
     method: 'POST',
@@ -153,7 +155,8 @@ export async function requestPaymentOrderIntent(options: {
       orderId: options.orderId,
       productId: options.productId,
       amount: options.amount,
-      couponCode: options.couponCode
+      couponCode: options.couponCode,
+      gift: options.gift
     })
   });
 
@@ -171,6 +174,8 @@ export async function confirmAuthenticatedPortOnePayment(options: {
   productId: ProductId;
   amount: number;
   orderClaim: string;
+  /** 선물 주문의 한마디. 서버가 선물 문서에 담는다. */
+  giftMessage?: string;
 }) {
   const response = await fetchPaymentApi(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'confirm'), {
     method: 'POST',
@@ -184,7 +189,8 @@ export async function confirmAuthenticatedPortOnePayment(options: {
       orderId: options.orderId,
       productId: options.productId,
       amount: options.amount,
-      orderClaim: options.orderClaim
+      orderClaim: options.orderClaim,
+      giftMessage: options.giftMessage
     })
   });
 
