@@ -59,6 +59,20 @@ describe('마이 메뉴', () => {
     expect(reports.to).toBe('/my/reports');
   });
 
+  it('강조 문구는 실제로 있는 혜택만 약속한다', () => {
+    /* 초대 보상 쿠폰(FRIEND300)은 쿠폰 원장에 실재한다. 없는 혜택을 메뉴에 적으면
+       누른 사람이 빈손으로 돌아온다. */
+    const invite = MY_MENU_ENTRIES.find((entry) => entry.id === 'invite') as MyMenuEntry;
+
+    expect(invite.accent).toBe('쿠폰 받기');
+    expect(invite.status).toBe('live');
+
+    // 준비 중인 줄에는 혜택을 약속하지 않는다.
+    for (const entry of MY_MENU_ENTRIES.filter((item) => item.status === 'soon')) {
+      expect(entry.accent, `${entry.id}`).toBeUndefined();
+    }
+  });
+
   it('그룹마다 항목이 있고, 한 항목은 한 그룹에만 속한다', () => {
     const primary = myMenuEntriesByGroup('primary');
     const share = myMenuEntriesByGroup('share');
@@ -77,7 +91,9 @@ describe('마이 메뉴', () => {
      * 실제로 있던 표현들이다.
      */
     const borrowed = ['3초만에', '곳간', '즉시 지급', '무료이용권', '채널 추가'];
-    const allCopy = MY_MENU_ENTRIES.map((entry) => `${entry.label} ${entry.note || ''}`).join(' ');
+    const allCopy = MY_MENU_ENTRIES.map(
+      (entry) => `${entry.label} ${entry.note || ''} ${entry.accent || ''}`
+    ).join(' ');
 
     for (const phrase of borrowed) {
       expect(allCopy, `"${phrase}" 는 참고 화면의 문구다`).not.toContain(phrase);

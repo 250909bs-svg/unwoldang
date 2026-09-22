@@ -150,8 +150,13 @@
   font-size: var(--ud-fs-100);
 }
 
+
 /* ══════════════════════════════════════════════════════════════════════════
    마이 — 바로 가기 카드
+
+   참고 화면과 같은 비례로 맞췄다: 64px 정사각 썸네일, 20px 안쪽 여백, 굵은 제목 +
+   한 단 낮은 회색 부제, 오른쪽 끝 화살표. 썸네일에는 테두리를 두르지 않는다 —
+   테두리가 들어가면 그림이 아니라 버튼처럼 읽힌다.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .ud-app-container .my-feature-cards {
@@ -164,35 +169,30 @@
   display: flex;
   align-items: center;
   gap: var(--ud-s4);
-  padding: var(--ud-s3);
+  padding: var(--ud-s4);
   overflow: hidden;
-  border: 1px solid var(--ud-metal-9);
+  border: 0;
   border-radius: var(--udm-r-card);
-  background: var(--ud-surface-1);
-  box-shadow: var(--ud-lift-1);
+  background: var(--ud-surface-2);
   color: inherit;
   text-decoration: none;
-  transition:
-    transform var(--ud-t-2) var(--ud-ease-soft),
-    border-color var(--ud-t-2) var(--ud-ease-soft);
+  transition: background var(--ud-t-2) var(--ud-ease-soft);
 }
 .ud-app-container .my-feature-card:active {
-  transform: scale(0.99);
-  border-color: var(--ud-metal-7);
+  background: var(--ud-surface-3);
 }
 .ud-app-container .my-feature-card > img,
 .ud-app-container .my-feature-card-glyph {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   flex: 0 0 auto;
-  border: 1px solid var(--ud-metal-9);
   border-radius: var(--udm-r-chip);
   object-fit: cover;
 }
 .ud-app-container .my-feature-card-glyph {
   display: grid;
   place-items: center;
-  background: var(--ud-surface-3);
+  background: var(--ud-surface-4);
   color: var(--ud-gold-text-hi);
 }
 .ud-app-container .my-feature-card-copy {
@@ -202,7 +202,7 @@
 .ud-app-container .my-feature-card-copy strong {
   display: block;
   color: var(--ud-cream);
-  font-size: var(--ud-fs-200);
+  font-size: var(--ud-fs-300);
   font-weight: var(--ud-w-bold);
   letter-spacing: var(--ud-ls-title);
 }
@@ -219,23 +219,28 @@
 
 /* ══════════════════════════════════════════════════════════════════════════
    마이 — 메뉴 목록
+
+   카드가 아니라 **맨 줄**이다. 참고 화면처럼 배경도 테두리도 없고, 아이콘 · 이름 ·
+   화살표만 놓인다. 이름 아래 설명을 달지 않는 것이 이 목록이 빨리 읽히는 이유다.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .ud-app-container .my-menu-list {
   display: flex;
-  margin-top: var(--ud-s6);
+  margin-top: var(--ud-s5);
   flex-direction: column;
 }
+/* 선물하기·초대하기 앞의 구분선. */
 .ud-app-container .my-menu-list-share {
-  margin-top: var(--ud-s3);
-  padding-top: var(--ud-s3);
+  margin-top: var(--ud-s4);
+  padding-top: var(--ud-s4);
   border-top: 1px solid var(--ud-metal-9);
 }
 .ud-app-container .my-menu-row {
   display: flex;
   align-items: center;
+  min-height: 56px;
   gap: var(--ud-s4);
-  padding: var(--ud-s4) var(--ud-s3);
+  padding: 0 var(--ud-s2);
   border-radius: var(--udm-r-row);
   color: inherit;
   text-decoration: none;
@@ -246,29 +251,44 @@
 }
 .ud-app-container .my-menu-icon {
   display: grid;
-  width: 26px;
+  width: 24px;
   flex: 0 0 auto;
   place-items: center;
-  color: var(--ud-gold-text-hi);
+  color: var(--ud-cream-dim);
 }
-.ud-app-container .my-menu-copy {
+.ud-app-container .my-menu-label {
   display: flex;
+  align-items: center;
   min-width: 0;
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 3px;
-}
-.ud-app-container .my-menu-copy strong {
+  gap: var(--ud-s2);
   color: var(--ud-cream);
   font-size: var(--ud-fs-200);
   font-weight: var(--ud-w-bold);
   letter-spacing: var(--ud-ls-title);
 }
-.ud-app-container .my-menu-copy em {
-  color: var(--ud-cream-mute);
+/* 아직 안 열어 본 줄의 N 배지. 한 번 열면 꺼진다(`myMenuSeen.ts`). */
+.ud-app-container .my-menu-badge {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-crimson);
+  color: #fff;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: var(--ud-w-display);
+  line-height: 1;
+}
+/* 줄 오른쪽 강조(초대 보상). 화살표 앞에 붙는다. */
+.ud-app-container .my-menu-accent {
+  flex: 0 0 auto;
+  color: var(--ud-crimson-text);
   font-size: var(--ud-fs-100);
   font-style: normal;
-  line-height: var(--ud-lh-lead);
+  font-weight: var(--ud-w-bold);
 }
 .ud-app-container .my-menu-arrow {
   flex: 0 0 auto;
@@ -276,13 +296,10 @@
 }
 /* 아직 없는 기능. 링크가 아니라 문단이라 커서도 포커스도 잡히지 않는다. */
 .ud-app-container .my-menu-row.is-soon {
-  opacity: 0.4;
+  opacity: 0.38;
 }
 .ud-app-container .my-menu-tag {
   flex: 0 0 auto;
-  padding: 4px var(--ud-s2);
-  border: 1px solid var(--ud-metal-7);
-  border-radius: var(--ud-r-pill);
   color: var(--ud-cream-mute);
   font-size: var(--ud-fs-50);
   font-weight: var(--ud-w-bold);
@@ -290,44 +307,32 @@
 
 /* ══════════════════════════════════════════════════════════════════════════
    마이 — 고객센터 · 약관 · 로그아웃
+
+   참고 화면처럼 **세로로 쌓은 조용한 링크**다. 가로로 늘어놓으면 목록의 일부처럼
+   보여서 눈이 한 번 더 멈춘다. 여기는 필요할 때만 찾는 자리다.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .ud-app-container .my-support {
-  margin-top: var(--ud-s6);
-  padding: var(--ud-s5) var(--ud-s3) 0;
-  border-top: 1px solid var(--ud-metal-9);
-}
-.ud-app-container .my-support-contact {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--ud-s1) var(--ud-s3);
+  margin-top: var(--ud-s7);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ud-s4);
+  padding: 0 var(--ud-s2);
+}
+.ud-app-container .my-support-link {
+  color: var(--ud-cream-mute);
   font-size: var(--ud-fs-100);
-}
-.ud-app-container .my-support-contact span {
-  color: var(--ud-gold-text);
-  font-weight: var(--ud-w-bold);
-}
-.ud-app-container .my-support-contact a,
-.ud-app-container .my-support-links a {
-  color: var(--ud-cream-dim);
   text-decoration: none;
 }
-.ud-app-container .my-support-contact a:hover,
-.ud-app-container .my-support-links a:hover {
-  color: var(--ud-cream);
+.ud-app-container .my-support-link:hover {
+  color: var(--ud-cream-dim);
   text-decoration: underline;
 }
-.ud-app-container .my-support-links {
-  display: flex;
-  margin-top: var(--ud-s4);
-  flex-wrap: wrap;
-  gap: var(--ud-s2) var(--ud-s5);
-  font-size: var(--ud-fs-100);
-}
 .ud-app-container .my-support-business {
-  margin-top: var(--ud-s4);
-  color: var(--ud-cream-mute);
+  margin-top: var(--ud-s6);
+  padding: 0 var(--ud-s2);
+  color: var(--ud-metal-5);
   font-size: var(--ud-fs-50);
   line-height: var(--ud-lh-body);
 }

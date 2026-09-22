@@ -13,13 +13,16 @@ import {
   type LucideIcon
 } from 'lucide-react';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
 import { siteBusinessInfo } from '../content/legal';
 import { useAuth } from '../context/AuthContext';
 import { MY_MENU_ENTRIES, type MyMenuEntry } from '../features/my/myMenu';
+import { markMyMenuSeen, readSeenMyMenuIds, shouldBadgeMyMenu } from '../features/my/myMenuSeen';
+import { resolveManseryeokSource } from '../features/my/manseryeok';
 import { beginKakaoLogin } from '../lib/auth';
+import { readReportArchiveEntries } from '../lib/reportArchive';
 import { getProductById } from '../products/registry';
 import '../styles/my.css';
 
@@ -140,23 +143,31 @@ function FeatureCards() {
   );
 }
 
-function MenuRow({ entry }: { entry: MyMenuEntry }) {
+/**
+ * 메뉴 한 줄 — 아이콘 · 이름 · (배지) · (강조) · 화살표.
+ *
+ * 이름 아래에 설명을 달지 않는다. 줄마다 설명이 붙으면 목록이 아니라 글이 되어 훑어보는
+ * 속도가 사라진다. 설명은 `aria-label` 로만 남겨 화면 낭독기에는 전달한다.
+ */
+function MenuRow({ entry, badge, onOpen }: { entry: MyMenuEntry; badge: boolean; onOpen: (id: string) => void }) {
   const Icon = MENU_ICONS[entry.id] || Sparkles;
 
   const body = (
     <>
       <span className="my-menu-icon" aria-hidden="true">
-        <Icon size={19} strokeWidth={1.8} />
+        <Icon size={21} strokeWidth={1.7} />
       </span>
-      <span className="my-menu-copy">
-        <strong>{entry.label}</strong>
-        {entry.note ? <em>{entry.note}</em> : null}
+      <span className="my-menu-label">
+        {entry.label}
+        {badge ? (
+          <i className="my-menu-badge" aria-label="새로 볼 내용 있음">
+            N
+          </i>
+        ) : null}
       </span>
-      {entry.status === 'soon' ? (
-        <span className="my-menu-tag">준비 중</span>
-      ) : (
-        <ChevronRight size={18} className="my-menu-arrow" aria-hidden="true" />
-      )}
+      {entry.status === 'soon' ? <span className="my-menu-tag">준비 중</span> : null}
+      {entry.accent ? <em className="my-menu-accent">{entry.accent}</em> : null}
+      <ChevronRight size={19} className="my-menu-arrow" aria-hidden="true" />
     </>
   );
 
@@ -171,16 +182,52 @@ function MenuRow({ entry }: { entry: MyMenuEntry }) {
   }
 
   return (
-    <Link to={entry.to} className="my-menu-row">
+    <Link
+      to={entry.to}
+      className="my-menu-row"
+      aria-label={entry.note ? `${entry.label} — ${entry.note}` : entry.label}
+      onClick={() => onOpen(entry.id)}
+    >
       {body}
     </Link>
   );
 }
 
 export default function My() {
-  const { isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const primary = MY_MENU_ENTRIES.filter((entry) => entry.group === 'primary');
   const share = MY_MENU_ENTRIES.filter((entry) => entry.group === 'share');
+  const [seen, setSeen] = useState(() => readSeenMyMenuIds());
+
+  /*
+   * 배지는 **보여 줄 것이 실제로 있는 줄에만** 붙인다.
+   *
+   * 전부에 붙이면 그건 알림이 아니라 장식이고, 빨간 점이 다섯 개면 하나도 안 본다.
+   * 그래서 화면마다 "지금 열면 뭔가 있는가" 를 따로 묻는다. 여기 없는 항목(쿠폰 ·
+   * 초대하기 · 준비 중)은 배지를 받지 않는다 — 쿠폰 보유 여부는 서버에 물어야 알고,
+   * 그 한 줄을 위해 이 화면이 요청을 하나 더 하지는 않는다.
+   */
+  const hasBirthData = useMemo(() => Boolean(resolveManseryeokSource(user?.id)), [user?.id]);
+  const hasReports = useMemo(() => readReportArchiveEntries(user?.id).length > 0, [user?.id]);
+
+  const HAS_CONTENT: Record<string, boolean> = {
+    manseryeok: hasBirthData,
+    'daily-fortune': hasBirthData,
+    reports: hasReports
+  };
+
+  const markSeen = (id: string) => {
+    markMyMenuSeen(id);
+    setSeen(readSeenMyMenuIds());
+  };
+
+  const badgeFor = (entry: MyMenuEntry) =>
+    shouldBadgeMyMenu({
+      id: entry.id,
+      live: entry.status === 'live',
+      hasContent: HAS_CONTENT[entry.id] === true,
+      seen
+    });
 
   return (
     <main className="my-replay-page my-menu-page">
@@ -192,32 +239,38 @@ export default function My() {
 
         <nav className="my-menu-list" aria-label="마이 메뉴">
           {primary.map((entry) => (
-            <MenuRow key={entry.id} entry={entry} />
+            <MenuRow key={entry.id} entry={entry} badge={badgeFor(entry)} onOpen={markSeen} />
           ))}
         </nav>
 
         <nav className="my-menu-list my-menu-list-share" aria-label="함께 보기">
           {share.map((entry) => (
-            <MenuRow key={entry.id} entry={entry} />
+            <MenuRow key={entry.id} entry={entry} badge={badgeFor(entry)} onOpen={markSeen} />
           ))}
         </nav>
 
+        {/* 참고 화면처럼 조용한 링크 묶음. 고객센터는 전화·메일이 실제 값이라 링크로 연다. */}
         <section className="my-support" aria-label="고객 지원 및 약관">
-          <div className="my-support-contact">
-            <span>고객센터</span>
-            <a href={`tel:${siteBusinessInfo.phone}`}>{siteBusinessInfo.phone}</a>
-            <a href={`mailto:${siteBusinessInfo.email}`}>{siteBusinessInfo.email}</a>
-          </div>
-          <div className="my-support-links">
-            <Link to="/terms">이용약관</Link>
-            <Link to="/privacy">개인정보처리방침</Link>
-            <Link to="/refund">환불정책</Link>
-          </div>
-          <p className="my-support-business">
-            {siteBusinessInfo.companyName} · 대표 {siteBusinessInfo.representative} · 사업자등록번호{' '}
-            {siteBusinessInfo.businessRegistrationNumber}
-          </p>
+          <a className="my-support-link" href={`tel:${siteBusinessInfo.phone}`}>
+            고객센터
+          </a>
+          <Link className="my-support-link" to="/terms">
+            이용약관
+          </Link>
+          <Link className="my-support-link" to="/privacy">
+            개인정보처리방침
+          </Link>
+          <Link className="my-support-link" to="/refund">
+            환불정책
+          </Link>
         </section>
+
+        <p className="my-support-business">
+          {siteBusinessInfo.companyName} · 대표 {siteBusinessInfo.representative} · 사업자등록번호{' '}
+          {siteBusinessInfo.businessRegistrationNumber}
+          <br />
+          고객센터 {siteBusinessInfo.phone} · {siteBusinessInfo.email}
+        </p>
 
         {isAuthenticated ? (
           <button type="button" className="my-logout-button" onClick={logout}>

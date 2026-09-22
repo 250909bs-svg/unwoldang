@@ -14,8 +14,16 @@ export type MyMenuGroup = 'primary' | 'share' | 'support';
 export type MyMenuEntry = {
   id: string;
   label: string;
-  /** 한 줄 설명. 메뉴 이름만으로 뭘 하는지 모르는 줄에만 붙인다. */
+  /**
+   * 한 줄 설명.
+   *
+   * 메뉴 목록에는 **그리지 않는다.** 줄마다 설명이 붙으면 목록이 아니라 글이 되고,
+   * 훑어보는 속도가 사라진다. 설명이 필요한 두 가지는 위쪽 카드가 맡는다.
+   * 이 값은 화면 밖에서 쓴다 — 접근성 이름과, 나중에 검색·도움말에 붙일 때.
+   */
   note?: string;
+  /** 줄 오른쪽에 붙는 강조 문구(예: 초대 보상). 화살표 앞에 놓인다. */
+  accent?: string;
   /** `live` 는 App.tsx 의 경로, `soon` 은 null. 그 대응을 테스트가 확인한다. */
   to: string | null;
   status: MyMenuStatus;
@@ -91,6 +99,9 @@ export const MY_MENU_ENTRIES: readonly MyMenuEntry[] = Object.freeze([
     id: 'invite',
     label: '초대하기',
     note: '귀연도로 인연을 불러 두 사람의 명식을 이어 봅니다',
+    /* 실제로 있는 보상이다 — 초대에 답이 오면 FRIEND300 쿠폰이 지급된다
+       (cloudrun-api/src/domains/coupons/couponCatalog.ts). 없는 혜택을 적지 않는다. */
+    accent: '쿠폰 받기',
     to: '/guiyeondo',
     status: 'live',
     group: 'share'
