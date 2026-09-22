@@ -128,7 +128,12 @@
 
 /* 카카오 버튼은 카카오 색을 지킨다 — 브랜드 규정이고, 이 화면에서 가장 밝은 면이라
    시선이 한 번만 강하게 걸린다. */
+/* 카카오 버튼. 말풍선 아이콘과 문구가 한 줄에 선다 — 참고 화면과 같은 구성이다. */
 .ud-app-container .my-kakao-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 0;
   border-radius: var(--udm-r-chip);
   background: #ffe812;

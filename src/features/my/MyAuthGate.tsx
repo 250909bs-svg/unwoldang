@@ -1,4 +1,5 @@
 import { type PropsWithChildren, useState } from 'react';
+import { MessageCircle } from 'lucide-react';
 import MobileTopBar from '../../components/MobileTopBar';
 import { useAuth } from '../../context/AuthContext';
 import { beginKakaoLogin } from '../../lib/auth';
@@ -45,7 +46,8 @@ export default function MyAuthGate({
           받아 본 리포트와 출생정보를 계정에 연결해 둡니다.
         </p>
         <button type="button" className="my-kakao-button" onClick={handleKakaoLogin}>
-          카카오로 시작하기
+          <MessageCircle size={17} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+          카카오로 1초만에 시작
         </button>
         {loginError ? <p className="my-login-error">{loginError}</p> : null}
       </section>

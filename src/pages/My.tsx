@@ -91,15 +91,15 @@ function AccountRow() {
               <em>{user?.provider === 'kakao' ? '카카오 계정으로 연결됨' : '연결된 계정'}</em>
             </>
           ) : (
-            <>
-              <strong>로그인</strong>
-              <em>리포트와 만세력을 계정에 보관합니다</em>
-            </>
+            /* 부제를 두지 않는다. 옆에 붙는 카카오 버튼이 176px 을 가져가서, 한 줄짜리
+               설명도 세 줄로 접힌다. 로그인 전에 필요한 정보는 "로그인" 한 단어다. */
+            <strong>로그인</strong>
           )}
         </div>
         {isAuthenticated ? null : (
           <button type="button" className="my-kakao-button my-account-kakao" onClick={handleKakaoLogin}>
-            카카오로 시작
+            <MessageCircle size={15} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+            카카오로 1초만에 시작
           </button>
         )}
       </div>
