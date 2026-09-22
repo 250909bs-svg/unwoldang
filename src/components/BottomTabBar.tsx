@@ -1,4 +1,4 @@
-import { Archive, FlaskConical, Home } from 'lucide-react';
+import { FlaskConical, Home, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { getRouteShellPolicy } from '../app/shell';
 
@@ -38,10 +38,12 @@ export const BOTTOM_TAB_ITEMS = [
   },
   discoveryItem,
   {
+    /* 예전 이름은 '보관함' 이었다. 보관함은 이제 이 탭 아래 '리포트' 항목 하나이고,
+       탭 자체는 계정·기능 입구를 모으는 '마이' 다. */
     to: '/my',
-    label: '보관함',
+    label: '마이',
     match: (pathname: string) => pathname.startsWith('/my') || pathname.startsWith('/login'),
-    icon: Archive
+    icon: UserRound
   }
 ] as const;
 

@@ -1,94 +1,66 @@
-import { Archive, ChevronDown, ChevronRight, LogOut, ScrollText, Sparkles } from 'lucide-react';
-import { useEffect, useState, type CSSProperties } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { findServiceById } from '../api/mockData';
-import LoveReadingCardPicture from '../components/LoveReadingCardPicture';
+import {
+  BookOpen,
+  ChevronRight,
+  FileText,
+  Gift,
+  LogOut,
+  MessageCircle,
+  Sparkles,
+  Sun,
+  Ticket,
+  UserPlus,
+  UserRound,
+  type LucideIcon
+} from 'lucide-react';
+
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import MobileTopBar from '../components/MobileTopBar';
+import { siteBusinessInfo } from '../content/legal';
 import { useAuth } from '../context/AuthContext';
-import {
-  beginKakaoLogin,
-  fetchPaymentEntitlements,
-  readPendingPayment,
-  renewPaymentEntitlement,
-  savePendingPayment,
-  type PaymentEntitlement
-} from '../lib/auth';
-import {
-  fetchRemoteReportArchiveEntries,
-  mergeReportArchiveEntries,
-  readReportArchiveEntries,
-  writeReportArchiveEntries,
-  type ReportArchiveEntry
-} from '../lib/reportArchive';
-import { getPortOneConfirmEndpoint } from '../lib/runtimeConfig';
-import { discoverableProducts } from '../products/registry';
-import type { ProductId } from '../products/types';
+import { MY_MENU_ENTRIES, type MyMenuEntry } from '../features/my/myMenu';
+import { beginKakaoLogin } from '../lib/auth';
+import { getProductById } from '../products/registry';
+import '../styles/my.css';
 
 /**
- * 보관함 하단의 추천 카드.
+ * 마이 — 메뉴 한 장.
  *
- * 예전에는 상품마다 제목·부제·이미지를 여기에 손으로 다시 적었다. 그래서 정통사주는
- * 카드 아트 대신 입력창 배경(intake-night-blue.png)을, 재회운은 리포트용 사진을 썼고,
- * 상품 쪽 문구를 고쳐도 보관함은 옛 문구를 그대로 보여줬다. 이제 상품 정의 하나만 본다.
+ * 예전에는 이 경로가 보관함 자체였다. 보관함은 "리포트" 항목 아래로 들어가고, 이 화면은
+ * 계정과 기능 입구를 모으는 자리가 됐다. 상단바·하단바는 운월당 것을 그대로 쓴다.
+ *
+ * 아직 없는 기능은 눌리지 않는 줄로 둔다. 링크처럼 보이는데 아무 데도 안 가는 것보다,
+ * 준비 중이라고 적혀 있는 게 정직하다. 어느 줄이 어느 상태인지는 `myMenu.ts` 한 곳에서
+ * 정하고 테스트가 경로 존재를 확인한다.
  */
-type ReplayPromo = {
-  productId: ProductId;
-  title: string;
-  subtitle: string;
-  image: string;
-  imagePosition?: string;
-  to: string;
-  tone: string;
+const MENU_ICONS: Record<string, LucideIcon> = {
+  manseryeok: BookOpen,
+  reports: FileText,
+  'daily-fortune': Sun,
+  chat: MessageCircle,
+  coupon: Ticket,
+  gift: Gift,
+  invite: UserPlus
 };
 
-/** 카드 배경 위에 얹는 그라데이션 색. 상품 정의에는 없는 표시 층 값이다. */
-const PROMO_TONES: Partial<Record<ProductId, string>> = {
-  'general-signature': '#1f4f98',
-  'love-reading': '#a80e30',
-  'love-reunion': '#6d4de8',
-  'past-life-goblin': '#3f2a6d',
-  'match-couple': '#d62f3f',
-  'life-flow': '#6da9c8',
-  'marriage-blueprint': '#bc6a53'
-};
-
-/** 보관함 카드는 한 줄만 들어간다. 상품 부제가 길면 질문형으로 줄여 쓴다. */
-const PROMO_SUBTITLES: Partial<Record<ProductId, string>> = {
-  'general-signature': '나의 운명 전체 흐름은?',
-  'love-reading': '반복되는 내 연애 패턴은?',
-  'love-reunion': '다시 연락해도 되는 조건은?',
-  'past-life-goblin': '전생의 나는 누구였을까?'
-};
-
-const replayPromos: ReplayPromo[] = discoverableProducts.map((product) => ({
-  productId: product.id,
-  title: product.home.title,
-  subtitle: PROMO_SUBTITLES[product.id] || product.home.subtitle,
-  image: product.home.image,
-  imagePosition: product.home.imagePosition,
-  to: product.routes.detail,
-  tone: PROMO_TONES[product.id] || '#6d4de8'
-}));
-
-function formatArchiveDate(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '날짜 미상';
+/** 상단 카드는 지금 실제로 팔거나 열려 있는 것만 올린다. */
+const FEATURE_CARDS = [
+  {
+    id: 'general-signature',
+    to: '/detail/general-saju',
+    title: '종합사주 리포트',
+    note: '타고난 원국부터 올해의 흐름까지 한 번에'
+  },
+  {
+    id: 'guiyeondo',
+    to: '/guiyeondo',
+    title: '귀연도',
+    note: '내 곁의 귀한 인연을 지도로 이어 보기'
   }
+] as const;
 
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-}
-
-function MyReplayHeader() {
-  return <MobileTopBar title="보관함" backTo="/" backLabel="홈" />;
-}
-
-function LoggedOutReplay() {
+function AccountRow() {
+  const { user, isAuthenticated } = useAuth();
   const [loginError, setLoginError] = useState('');
 
   const handleKakaoLogin = () => {
@@ -103,329 +75,156 @@ function LoggedOutReplay() {
   };
 
   return (
-    <main className="my-replay-page my-replay-login-page">
-      <MyReplayHeader />
-
-      <section className="my-login-hero">
-        <div className="my-login-portrait-wrap">
-          <img src="/my-kakao-login-hero.png" alt="운월당 카카오 로그인 안내" className="my-login-portrait" />
+    <section className="my-account">
+      <div className="my-account-row">
+        <span className="my-account-avatar" aria-hidden="true">
+          <UserRound size={22} strokeWidth={1.6} />
+        </span>
+        <div className="my-account-name">
+          {isAuthenticated ? (
+            <>
+              <strong>{user?.nickname || '운월당 회원'}</strong>
+              <em>{user?.provider === 'kakao' ? '카카오 계정으로 연결됨' : '연결된 계정'}</em>
+            </>
+          ) : (
+            <>
+              <strong>로그인</strong>
+              <em>리포트와 만세력을 계정에 보관합니다</em>
+            </>
+          )}
         </div>
-
-        <div className="my-login-benefit-card">
-          <button type="button" className="my-kakao-button my-kakao-poster-button" onClick={handleKakaoLogin} aria-label="카카오로 시작하기">
-            카카오로 시작하기
+        {isAuthenticated ? null : (
+          <button type="button" className="my-kakao-button my-account-kakao" onClick={handleKakaoLogin}>
+            카카오로 시작
           </button>
-          {loginError ? <p className="my-login-error">{loginError}</p> : null}
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function EmptyArchive() {
-  return (
-    <section className="my-empty-replay-card">
-      {/* 예전에는 /tarot-mascot.png 를 썼다. 타로는 /tarot 이 홈으로 리다이렉트되는
-          제거된 상품이라, 팔지 않는 물건의 캐릭터가 보관함을 지키고 있었다. */}
-      <div className="my-empty-avatar" aria-hidden="true">
-        <Archive size={30} strokeWidth={1.5} />
+        )}
       </div>
-      <p>앗, 아직 사주결과가 없어요!</p>
-      <Link to="/detail/general-saju">첫 사주 리포트 보러가기</Link>
+      {loginError ? <p className="my-login-error">{loginError}</p> : null}
     </section>
   );
 }
 
-function ReportReplayCard({ report }: { report: ReportArchiveEntry }) {
-  const dateLabel = formatArchiveDate(report.createdAt);
-
+function FeatureCards() {
   return (
-    <Link
-      to={`/report/${report.productId}`}
-      state={{
-        formData: report.formData,
-        paymentMethod: report.paymentMethod,
-        orderId: report.orderId,
-        reportData: report.reportData,
-        reportProvider: report.reportProvider
-      }}
-      className="my-report-replay-card"
-    >
-      <span className="my-report-icon">
-        <ScrollText size={17} />
+    <section className="my-feature-cards" aria-label="바로 가기">
+      {FEATURE_CARDS.map((card) => {
+        /* 이미지는 상품 정의에서 가져온다. 여기에 파일명을 다시 적으면 상품 아트를
+           바꿀 때 이 화면만 옛 그림을 들고 있게 된다. */
+        const product = getProductById(card.id);
+
+        return (
+          <Link key={card.id} to={card.to} className="my-feature-card">
+            {product ? (
+              <img
+                src={product.home.image}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                style={product.home.imagePosition ? { objectPosition: product.home.imagePosition } : undefined}
+              />
+            ) : (
+              <span className="my-feature-card-glyph" aria-hidden="true">
+                <Sparkles size={22} />
+              </span>
+            )}
+            <div className="my-feature-card-copy">
+              <strong>{card.title}</strong>
+              <p>{card.note}</p>
+            </div>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
+        );
+      })}
+    </section>
+  );
+}
+
+function MenuRow({ entry }: { entry: MyMenuEntry }) {
+  const Icon = MENU_ICONS[entry.id] || Sparkles;
+
+  const body = (
+    <>
+      <span className="my-menu-icon" aria-hidden="true">
+        <Icon size={19} strokeWidth={1.8} />
       </span>
-      <div className="my-report-summary">
-        <strong>{report.title}</strong>
-        <p>
-          {report.customerName}님 · {dateLabel}
-        </p>
-        {report.subtitle ? <em>{report.subtitle}</em> : null}
-      </div>
-      <ChevronRight size={18} className="my-report-arrow" />
-    </Link>
-  );
-}
-
-function PromoBanner({ promo }: { promo: ReplayPromo }) {
-  return (
-    <Link to={promo.to} className="my-promo-banner" style={{ '--promo-tone': promo.tone } as CSSProperties}>
-      {promo.productId === 'love-reading' ? (
-        <LoveReadingCardPicture alt="" sizes="72px" />
+      <span className="my-menu-copy">
+        <strong>{entry.label}</strong>
+        {entry.note ? <em>{entry.note}</em> : null}
+      </span>
+      {entry.status === 'soon' ? (
+        <span className="my-menu-tag">준비 중</span>
       ) : (
-        <img
-          src={promo.image}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          style={promo.imagePosition ? { objectPosition: promo.imagePosition } : undefined}
-        />
+        <ChevronRight size={18} className="my-menu-arrow" aria-hidden="true" />
       )}
-      <div className="my-promo-overlay" />
-      <div className="my-promo-copy">
-        <span>운월당 추천</span>
-        <strong>{promo.title}</strong>
-        <p>{promo.subtitle}</p>
-      </div>
-      <em>바로 보기</em>
-    </Link>
+    </>
   );
-}
 
-function LoggedInReplay() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [recentReports, setRecentReports] = useState(() => readReportArchiveEntries(user?.id));
-  const [recoverablePayments, setRecoverablePayments] = useState<PaymentEntitlement[]>([]);
-  const [recoveryOrderId, setRecoveryOrderId] = useState('');
-  const [recoveryError, setRecoveryError] = useState('');
-  const [archiveOpen, setArchiveOpen] = useState(true);
-  const [showAllReports, setShowAllReports] = useState(false);
-  const visibleReports = showAllReports ? recentReports : recentReports.slice(0, 4);
-  const hiddenReportCount = Math.max(recentReports.length - 4, 0);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const syncReports = () => setRecentReports(readReportArchiveEntries(user?.id));
-    const syncRemoteReports = async () => {
-      let mergedReports = readReportArchiveEntries(user?.id);
-      setRecentReports(mergedReports);
-
-      if (!user?.authToken) {
-        return;
-      }
-
-      try {
-        const remoteReports = await fetchRemoteReportArchiveEntries(user.authToken);
-
-        if (isCancelled) {
-          return;
-        }
-
-        mergedReports = mergeReportArchiveEntries(mergedReports, remoteReports);
-        writeReportArchiveEntries(mergedReports, user?.id);
-        setRecentReports(mergedReports);
-      } catch {
-        // Local archive remains available when the server archive is temporarily unavailable.
-      }
-
-      const confirmEndpoint = getPortOneConfirmEndpoint();
-
-      if (!confirmEndpoint || isCancelled) {
-        return;
-      }
-
-      try {
-        const entitlements = await fetchPaymentEntitlements(confirmEndpoint, user.authToken);
-
-        if (isCancelled) {
-          return;
-        }
-
-        const archivedOrderIds = new Set(mergedReports.map((entry) => entry.orderId).filter(Boolean));
-        setRecoverablePayments(entitlements.filter((entry) => !archivedOrderIds.has(entry.orderId)));
-      } catch {
-        // Existing local and remote report archives remain available if entitlement sync is unavailable.
-      }
-    };
-
-    void syncRemoteReports();
-
-    window.addEventListener('focus', syncReports);
-    window.addEventListener('storage', syncReports);
-
-    return () => {
-      isCancelled = true;
-      window.removeEventListener('focus', syncReports);
-      window.removeEventListener('storage', syncReports);
-    };
-  }, [user?.authToken, user?.id]);
-
-  const handleResumePayment = async (entitlement: PaymentEntitlement) => {
-    const confirmEndpoint = getPortOneConfirmEndpoint();
-
-    if (!confirmEndpoint || !user?.authToken) {
-      setRecoveryError('결제 복구 서버 연결 또는 로그인 상태를 확인해 주세요.');
-      return;
-    }
-
-    setRecoveryOrderId(entitlement.orderId);
-    setRecoveryError('');
-
-    try {
-      const renewed = await renewPaymentEntitlement(confirmEndpoint, user.authToken, entitlement.orderId);
-      const pendingPayment = readPendingPayment();
-
-      if (pendingPayment?.orderId === entitlement.orderId && pendingPayment.formData) {
-        const recoveredPayment = {
-          ...pendingPayment,
-          reportAccessToken: renewed.reportAccessToken
-        };
-        savePendingPayment(recoveredPayment);
-        navigate('/loading', {
-          state: {
-            product: recoveredPayment.productId,
-            formData: recoveredPayment.formData,
-            paymentMethod: recoveredPayment.paymentMethod,
-            orderId: recoveredPayment.orderId,
-            tabOrigin: '/my',
-            reportAccessToken: renewed.reportAccessToken
-          }
-        });
-        return;
-      }
-
-      navigate(`/form/${entitlement.productId}`, {
-        state: {
-          tabOrigin: '/my',
-          recoveredEntitlement: {
-            orderId: entitlement.orderId,
-            reportAccessToken: renewed.reportAccessToken
-          }
-        }
-      });
-    } catch (error) {
-      setRecoveryError(error instanceof Error ? error.message : '결제 리포트 권한을 복구하지 못했습니다.');
-    } finally {
-      setRecoveryOrderId('');
-    }
-  };
+  if (entry.status === 'soon' || !entry.to) {
+    /* 링크가 아니라 문단이다. 탭으로 잡히지도, 눌리지도 않아야 한다 — 누를 수 있게
+       두면 "눌렀는데 아무 일도 안 난다" 가 된다. */
+    return (
+      <p className="my-menu-row is-soon" aria-disabled="true">
+        {body}
+      </p>
+    );
+  }
 
   return (
-    <main className="my-replay-page">
-      <MyReplayHeader />
-
-      <section className="my-replay-content">
-        <div className="my-replay-title">
-          <span>REPORT ARCHIVE</span>
-          <h1>{user?.nickname || '운월당'}님의 보관함</h1>
-          <p>구매하거나 생성한 사주 리포트를 한곳에 모아두고 다시 볼 수 있어요.</p>
-        </div>
-
-        {recoverablePayments.length ? (
-          <section className="my-report-archive-section open" aria-label="이어 만들 수 있는 결제 리포트">
-            <div className="my-archive-toggle">
-              <span className="my-archive-toggle-icon">
-                <ScrollText size={17} />
-              </span>
-              <span className="my-archive-toggle-copy">
-                <strong>결제 완료 리포트 이어보기</strong>
-                <em>다른 탭이나 컴퓨터에서 중단한 결제를 본인 인증으로 복구합니다.</em>
-              </span>
-            </div>
-            <div className="my-report-replay-list">
-              {recoverablePayments.map((entitlement) => {
-                const service = findServiceById(entitlement.productId);
-                const isRecovering = recoveryOrderId === entitlement.orderId;
-
-                return (
-                  <button
-                    key={entitlement.orderId}
-                    type="button"
-                    className="my-report-replay-card"
-                    disabled={Boolean(recoveryOrderId)}
-                    onClick={() => void handleResumePayment(entitlement)}
-                  >
-                    <span className="my-report-icon">
-                      <ScrollText size={17} />
-                    </span>
-                    <span className="my-report-summary">
-                      <strong>{service.label}</strong>
-                      <p>{isRecovering ? '결제 권한을 확인하고 있습니다.' : '본인 결제 확인 완료 · 이어서 작성'}</p>
-                    </span>
-                    <ChevronRight size={18} className="my-report-arrow" />
-                  </button>
-                );
-              })}
-            </div>
-            {recoveryError ? <p className="my-login-error">{recoveryError}</p> : null}
-          </section>
-        ) : null}
-
-        {recentReports.length ? (
-          <section className={archiveOpen ? 'my-report-archive-section open' : 'my-report-archive-section'}>
-            <button
-              type="button"
-              className="my-archive-toggle"
-              aria-expanded={archiveOpen}
-              onClick={() => setArchiveOpen((prev) => !prev)}
-            >
-              <span className="my-archive-toggle-icon">
-                <Archive size={17} />
-              </span>
-              <span className="my-archive-toggle-copy">
-                <strong>내가 본 사주</strong>
-                <em>{recentReports.length}개 리포트 보관 중</em>
-              </span>
-              <ChevronDown className={archiveOpen ? 'my-archive-chevron open' : 'my-archive-chevron'} size={18} />
-            </button>
-
-            {archiveOpen ? (
-              <>
-                <div className="my-report-replay-list">
-                  {visibleReports.map((report) => (
-                    <ReportReplayCard key={report.id} report={report} />
-                  ))}
-                </div>
-
-                {hiddenReportCount ? (
-                  <button
-                    type="button"
-                    className="my-archive-expand-button"
-                    onClick={() => setShowAllReports((prev) => !prev)}
-                  >
-                    {showAllReports ? '간단히 접기' : `전체 ${recentReports.length}개 펼치기`}
-                  </button>
-                ) : null}
-              </>
-            ) : null}
-          </section>
-        ) : (
-          <EmptyArchive />
-        )}
-
-        <section className="my-promo-section">
-          <div className="my-section-label">
-            <Sparkles size={15} />
-            다른 사주 리포트도 있어요
-          </div>
-          <div className="my-promo-list">
-            {replayPromos.map((promo) => (
-              <PromoBanner key={promo.title} promo={promo} />
-            ))}
-          </div>
-        </section>
-
-        <button type="button" className="my-logout-button" onClick={logout}>
-          <LogOut size={15} />
-          로그아웃
-        </button>
-      </section>
-    </main>
+    <Link to={entry.to} className="my-menu-row">
+      {body}
+    </Link>
   );
 }
 
 export default function My() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const primary = MY_MENU_ENTRIES.filter((entry) => entry.group === 'primary');
+  const share = MY_MENU_ENTRIES.filter((entry) => entry.group === 'share');
 
-  return isAuthenticated ? <LoggedInReplay /> : <LoggedOutReplay />;
+  return (
+    <main className="my-replay-page my-menu-page">
+      <MobileTopBar title="마이" backTo="/" backLabel="홈" />
+
+      <div className="my-menu-content">
+        <AccountRow />
+        <FeatureCards />
+
+        <nav className="my-menu-list" aria-label="마이 메뉴">
+          {primary.map((entry) => (
+            <MenuRow key={entry.id} entry={entry} />
+          ))}
+        </nav>
+
+        <nav className="my-menu-list my-menu-list-share" aria-label="함께 보기">
+          {share.map((entry) => (
+            <MenuRow key={entry.id} entry={entry} />
+          ))}
+        </nav>
+
+        <section className="my-support" aria-label="고객 지원 및 약관">
+          <div className="my-support-contact">
+            <span>고객센터</span>
+            <a href={`tel:${siteBusinessInfo.phone}`}>{siteBusinessInfo.phone}</a>
+            <a href={`mailto:${siteBusinessInfo.email}`}>{siteBusinessInfo.email}</a>
+          </div>
+          <div className="my-support-links">
+            <Link to="/terms">이용약관</Link>
+            <Link to="/privacy">개인정보처리방침</Link>
+            <Link to="/refund">환불정책</Link>
+          </div>
+          <p className="my-support-business">
+            {siteBusinessInfo.companyName} · 대표 {siteBusinessInfo.representative} · 사업자등록번호{' '}
+            {siteBusinessInfo.businessRegistrationNumber}
+          </p>
+        </section>
+
+        {isAuthenticated ? (
+          <button type="button" className="my-logout-button" onClick={logout}>
+            <LogOut size={15} />
+            로그아웃
+          </button>
+        ) : null}
+      </div>
+    </main>
+  );
 }

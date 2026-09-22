@@ -32,6 +32,8 @@ const Login = lazy(() => import('./pages/Login'));
 const KakaoCallback = lazy(() => import('./pages/KakaoCallback'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback'));
 const My = lazy(() => import('./pages/My'));
+const MyReports = lazy(() => import('./pages/MyReports'));
+const MyManseryeok = lazy(() => import('./pages/MyManseryeok'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
@@ -82,6 +84,8 @@ function AppRoutes({
           <Route path="/g/:publicId" element={<GuiyeondoGuestPage />} />
           <Route path="/tarot" element={<Navigate to="/" replace />} />
           <Route path="/my" element={<My />} />
+          <Route path="/my/reports" element={<MyReports />} />
+          <Route path="/my/manseryeok" element={<MyManseryeok />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/kakao/callback" element={<KakaoCallback />} />

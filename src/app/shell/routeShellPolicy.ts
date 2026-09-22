@@ -82,7 +82,15 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
   '/tarot': shell(), // <Navigate to="/" />
   '/test': shell(),
   '/test/face-ai': shell(),
-  '/my': shell(),
+  /* 마이는 고객센터·약관을 자기 화면 안에 그린다(참고한 마이페이지들처럼 메뉴 끝에
+     붙는 자리다). 전역 푸터까지 켜 두면 한 화면에 같은 연락처와 같은 약관 링크가 두 번
+     나온다. 귀연도와 같은 이유로 여기서만 푸터를 끈다. */
+  '/my': shell({ footer: false }),
+  /* 마이 아래 두 화면. 탭 매처가 `startsWith('/my')` 라서 여기 서 있어도 마이 탭이
+     켜진다 — `self` 로 두어야 그 강조가 맞는다. 상단바는 페이지가 직접 그린다.
+     이 둘은 자기 약관 블록이 없으므로 전역 푸터를 그대로 쓴다. */
+  '/my/reports': shell(),
+  '/my/manseryeok': shell(),
   '/login': shell(),
   /* Not tab destinations: no nav item matches them, so `self` would leave the
      bar with no tab lit at all. `origin` falls back to the tab the reader came

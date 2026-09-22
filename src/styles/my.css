@@ -1,0 +1,476 @@
+/* 마이 (/my) — 메뉴 한 장, 그리고 그 아래 리포트·만세력.
+ *
+ * 색은 기본을 밝은 바탕으로 두고 다크 규칙을 바로 아래 붙인다. `/my` 는 셸 정책이
+ * 다크로 칠하므로(`body.home-all-black`) 실제로 보이는 건 거의 다크 쪽이지만, 두
+ * 값을 한곳에 두어야 한쪽만 고치는 일이 생기지 않는다.
+ *
+ * 폭을 묻는 규칙은 `@container app` 으로 쓴다. 뷰포트 미디어쿼리는 1440px 창 안의
+ * 400px 프레임에서 참이 되어 폰 폭 상자 안에 데스크톱 레이아웃을 그린다
+ * (`shellFrameContract.test.ts` 가 막는다).
+ */
+
+.my-menu-content {
+  width: min(430px, 100%);
+  margin: 0 auto;
+  padding-top: 6px;
+}
+
+/* 계정 줄 ─────────────────────────────────────────────────────────────── */
+
+.my-account {
+  padding: 14px 2px 18px;
+}
+.my-account-row {
+  display: flex;
+  align-items: center;
+  /* index.css 쪽 규칙이 `space-between` 을 넣어, 로그인 상태(버튼 없음)에서 이름이
+     아바타를 떠나 오른쪽 끝에 붙었다. 시작 정렬을 명시한다. */
+  justify-content: flex-start;
+  gap: 12px;
+}
+.my-account-avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #eceef2;
+  color: #6b7280;
+}
+.my-account-name {
+  display: flex;
+  min-width: 0;
+  /* 남는 폭을 가져가야 카카오 버튼의 `margin-left: auto` 가 오른쪽 끝으로 간다. */
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+}
+.my-account-name strong {
+  font-size: 17px;
+  font-weight: 800;
+}
+.my-account-name em {
+  color: #6b7280;
+  font-size: 12px;
+  font-style: normal;
+}
+.my-kakao-button.my-account-kakao {
+  min-height: 42px;
+  margin-left: auto;
+  padding: 0 15px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+/* 바로 가기 카드 ───────────────────────────────────────────────────────── */
+
+.my-feature-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.my-feature-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px;
+  border-radius: 16px;
+  background: #f4f5f7;
+  color: inherit;
+  text-decoration: none;
+}
+.my-feature-card > img,
+.my-feature-card-glyph {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.my-feature-card-glyph {
+  display: grid;
+  place-items: center;
+  background: #e4e7ec;
+  color: #6b7280;
+}
+.my-feature-card-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.my-feature-card-copy strong {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 800;
+}
+.my-feature-card-copy p {
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.my-feature-card > svg {
+  flex: 0 0 auto;
+  color: #9ca3af;
+}
+
+/* 메뉴 목록 ───────────────────────────────────────────────────────────── */
+
+.my-menu-list {
+  display: flex;
+  margin-top: 22px;
+  flex-direction: column;
+}
+.my-menu-list-share {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+.my-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 4px;
+  color: inherit;
+  text-decoration: none;
+}
+.my-menu-icon {
+  display: grid;
+  width: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #4b5563;
+}
+.my-menu-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+}
+.my-menu-copy strong {
+  font-size: 15.5px;
+  font-weight: 700;
+}
+.my-menu-copy em {
+  color: #6b7280;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.5;
+}
+.my-menu-arrow {
+  flex: 0 0 auto;
+  color: #9ca3af;
+}
+/* 아직 없는 기능. 링크가 아니라 문단이라 커서도 포커스도 잡히지 않는다. */
+.my-menu-row.is-soon {
+  opacity: .42;
+}
+.my-menu-tag {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+/* 고객센터·약관 ───────────────────────────────────────────────────────── */
+
+.my-support {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+.my-support-contact {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 12.5px;
+}
+.my-support-contact span {
+  color: #9ca3af;
+  font-weight: 700;
+}
+.my-support-contact a,
+.my-support-links a {
+  color: #6b7280;
+  text-decoration: none;
+}
+.my-support-contact a:hover,
+.my-support-links a:hover {
+  text-decoration: underline;
+}
+.my-support-links {
+  display: flex;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 12.5px;
+}
+.my-support-business {
+  margin-top: 12px;
+  color: #9ca3af;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+/* 로그인 문 (마이 하위 화면 공용) ────────────────────────────────────────── */
+
+.my-gate {
+  width: min(430px, 100%);
+  margin: 0 auto;
+  padding: 56px 6px 0;
+  text-align: center;
+}
+.my-gate-eyebrow {
+  color: #9ca3af;
+  font: 700 10px Georgia, serif;
+  letter-spacing: .16em;
+}
+.my-gate h1 {
+  margin-top: 12px;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.my-gate p {
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.my-gate .my-kakao-button {
+  width: 100%;
+  margin-top: 26px;
+}
+
+/* 내 만세력 ───────────────────────────────────────────────────────────── */
+
+.my-manse-pillars {
+  display: grid;
+  margin-top: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.my-manse-pillar {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 4px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f9fafb;
+}
+.my-manse-pillar-label {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+}
+.my-manse-stem,
+.my-manse-branch {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+.my-manse-branch {
+  color: #6b7280;
+}
+/* 시주가 없을 때의 빈 자리. 실선 카드로 두면 세운 기둥처럼 보인다. */
+.my-manse-pillar.is-unknown {
+  border-style: dashed;
+  background: transparent;
+}
+.my-manse-unknown {
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 600;
+}
+.my-manse-note {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.my-manse-card {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f4f5f7;
+}
+.my-manse-card-label {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.my-manse-daymaster {
+  display: block;
+  margin-top: 6px;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+.my-manse-keywords {
+  display: flex;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+.my-manse-keywords li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e4e7ec;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-manse-card p {
+  margin-top: 12px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.75;
+}
+.my-manse-strength-label {
+  display: block;
+  margin-top: 6px;
+  font-size: 19px;
+  font-weight: 800;
+}
+.my-manse-gauge {
+  height: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e4e7ec;
+}
+.my-manse-gauge > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8894f, #e0be86);
+}
+.my-manse-basis {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+.my-manse-basis dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+.my-manse-basis dt {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+}
+.my-manse-basis dd {
+  /* dd 의 브라우저 기본값은 `margin-inline-start: 40px` 이다. 그대로 두면 값만 40px
+     들여써져 바로 위 레이블과 좌우선이 어긋난다. */
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.my-manse-basis > p {
+  margin-top: 16px;
+  color: #9ca3af;
+  font-size: 11.5px;
+  line-height: 1.75;
+}
+.my-manse-empty {
+  width: min(430px, 100%);
+  margin: 0 auto;
+  padding: 56px 6px 0;
+  text-align: center;
+}
+.my-manse-empty h1 {
+  margin-top: 12px;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.my-manse-empty p {
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.my-manse-cta {
+  display: inline-flex;
+  min-height: 50px;
+  margin-top: 24px;
+  padding: 0 24px;
+  align-items: center;
+  border-radius: 12px;
+  background: #181512;
+  color: #f7f3ec;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* 좁은 프레임에서는 네 기둥을 두 줄로 접는다. 4열을 유지하면 한자가 잘린다. */
+@container app (max-width: 360px) {
+  .my-manse-pillars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 다크 — 셸 정책이 /my 를 다크로 칠한다 ──────────────────────────────────── */
+
+body.home-all-black .my-account-avatar {
+  background: #17181b;
+  color: #8b8f96;
+}
+body.home-all-black .my-account-name em,
+body.home-all-black .my-feature-card-copy p,
+body.home-all-black .my-menu-copy em,
+body.home-all-black .my-gate p,
+body.home-all-black .my-manse-note,
+body.home-all-black .my-manse-empty p {
+  color: #8b8f96;
+}
+body.home-all-black .my-feature-card,
+body.home-all-black .my-manse-card {
+  background: #121316;
+}
+body.home-all-black .my-feature-card-glyph,
+body.home-all-black .my-manse-keywords li,
+body.home-all-black .my-manse-gauge {
+  background: #1e2024;
+  color: #c9ccd2;
+}
+body.home-all-black .my-menu-icon {
+  color: #c9ccd2;
+}
+body.home-all-black .my-menu-list-share,
+body.home-all-black .my-support,
+body.home-all-black .my-manse-basis {
+  border-color: #26282c;
+}
+body.home-all-black .my-manse-pillar {
+  border-color: #26282c;
+  background: #121316;
+}
+body.home-all-black .my-manse-branch,
+body.home-all-black .my-manse-card p {
+  color: #b6bac1;
+}
+body.home-all-black .my-manse-cta {
+  background: #f2efe9;
+  color: #17140f;
+}
+body.home-all-black .my-support-contact a,
+body.home-all-black .my-support-links a {
+  color: #9aa0a8;
+}
