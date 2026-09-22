@@ -29,7 +29,15 @@
    공통 — 지면과 상단
    ══════════════════════════════════════════════════════════════════════════ */
 
-.ud-app-container .my-replay-page {
+/*
+ * 지면.
+ *
+ * index.css 의 `body.home-all-black .my-replay-page` 가 #000 을 칠하고, 그 선택자는
+ * 요소 하나를 더 갖고 있어 명시도에서 이긴다(0,2,1 대 0,2,0). 그래서 같은 형태로
+ * 받아친다 — 그러지 않으면 페이지는 검정, 셸은 #141416 이 되어 프레임 경계에 선이 보인다.
+ */
+.ud-app-container .my-replay-page,
+body.home-all-black .ud-app-container .my-replay-page {
   background: var(--ud-floor);
   color: var(--ud-cream);
   font-family: var(--ud-sans);
@@ -147,12 +155,14 @@
 .ud-app-container .my-kakao-button:active {
   transform: scale(0.98);
 }
+/* 참고 화면 실측: 131×31, 반경 8. 알약으로 두면 계정 줄에서 혼자 튄다. */
 .ud-app-container .my-kakao-button.my-account-kakao {
-  min-height: 42px;
+  min-height: 38px;
   margin-left: auto;
-  padding: 0 var(--ud-s4);
+  padding: 0 14px;
   flex: 0 0 auto;
-  font-size: var(--ud-fs-100);
+  border-radius: 8px;
+  font-size: 12.5px;
 }
 
 
@@ -173,8 +183,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--ud-s4);
-  padding: var(--ud-s4);
+  /* 참고 화면 실측: 카드 높이 72px, 썸네일 44px, 안쪽 여백 14px. */
+  min-height: 72px;
+  gap: var(--ud-s3);
+  padding: 14px;
   overflow: hidden;
   border: 0;
   border-radius: var(--udm-r-card);
@@ -188,8 +200,8 @@
 }
 .ud-app-container .my-feature-card > img,
 .ud-app-container .my-feature-card-glyph {
-  width: 64px;
-  height: 64px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   border-radius: var(--udm-r-chip);
   object-fit: cover;
@@ -204,18 +216,21 @@
   min-width: 0;
   flex: 1 1 auto;
 }
+/* 줄높이를 명시한다. `normal` 은 한글에서 라틴보다 크게 잡혀, 두 줄짜리 카피가
+   카드를 참고 화면의 72px 너머로 밀어 올렸다(실측 87px). */
 .ud-app-container .my-feature-card-copy strong {
   display: block;
   color: var(--ud-cream);
-  font-size: var(--ud-fs-300);
+  font-size: var(--ud-fs-200);
   font-weight: var(--ud-w-bold);
   letter-spacing: var(--ud-ls-title);
+  line-height: 1.35;
 }
 .ud-app-container .my-feature-card-copy p {
-  margin-top: var(--ud-s1);
+  margin-top: 2px;
   color: var(--ud-cream-mute);
-  font-size: var(--ud-fs-100);
-  line-height: var(--ud-lh-lead);
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 .ud-app-container .my-feature-card > svg {
   flex: 0 0 auto;
@@ -243,8 +258,9 @@
 .ud-app-container .my-menu-row {
   display: flex;
   align-items: center;
-  min-height: 56px;
-  gap: var(--ud-s4);
+  /* 참고 화면 실측: 줄 간격 41px. 56px 은 목록이 아니라 카드처럼 읽혔다. */
+  min-height: 42px;
+  gap: 14px;
   padding: 0 var(--ud-s2);
   border-radius: var(--udm-r-row);
   color: inherit;
@@ -254,12 +270,14 @@
 .ud-app-container a.my-menu-row:active {
   background: var(--ud-surface-1);
 }
+/* 참고 화면의 아이콘은 금색이 아니라 흰 계열 선 아이콘이다. 금색을 쓰면 줄마다
+   시선이 걸려 목록이 느려진다. */
 .ud-app-container .my-menu-icon {
   display: grid;
-  width: 24px;
+  width: 22px;
   flex: 0 0 auto;
   place-items: center;
-  color: var(--ud-cream-dim);
+  color: var(--ud-cream);
 }
 .ud-app-container .my-menu-label {
   display: flex;
@@ -275,8 +293,8 @@
 /* 아직 안 열어 본 줄의 N 배지. 한 번 열면 꺼진다(`myMenuSeen.ts`). */
 .ud-app-container .my-menu-badge {
   display: grid;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: var(--ud-r-pill);
@@ -322,7 +340,8 @@
   margin-top: var(--ud-s7);
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--ud-s4);
+  /* 참고 화면 실측: 링크 사이 28px. */
+  gap: 16px;
   padding: 0 var(--ud-s2);
 }
 .ud-app-container .my-support-link {
@@ -334,12 +353,14 @@
   color: var(--ud-cream-dim);
   text-decoration: underline;
 }
+/* 참고 화면에는 이 자리에 사업자 정보가 없다. 다만 전자상거래법상 표시 의무가 있어
+   지우지 않고, 가장 뒤로 물려 링크 묶음과 층을 가른다. */
 .ud-app-container .my-support-business {
-  margin-top: var(--ud-s6);
+  margin-top: var(--ud-s7);
   padding: 0 var(--ud-s2);
-  color: var(--ud-metal-5);
-  font-size: var(--ud-fs-50);
-  line-height: var(--ud-lh-body);
+  color: var(--ud-metal-6);
+  font-size: 10.5px;
+  line-height: 1.7;
 }
 .ud-app-container .my-logout-button {
   display: flex;

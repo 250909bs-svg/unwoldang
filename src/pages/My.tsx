@@ -52,14 +52,15 @@ const FEATURE_CARDS = [
     id: 'general-signature',
     to: '/detail/general-saju',
     title: '종합사주 리포트',
-    /* 60px 카드 옆 한 줄에 들어가는 길이로 맞춘다. 길면 마지막 줄에 한 글자만 남는다. */
-    note: '타고난 원국과 올해의 흐름을 한 번에'
+    /* 44px 썸네일 옆에서 한 줄로 끝나는 길이. 두 줄이 되면 카드가 참고 화면의 72px 을
+       넘어 목록의 리듬이 깨진다. */
+    note: '타고난 원국과 올해의 흐름'
   },
   {
     id: 'guiyeondo',
     to: '/guiyeondo',
     title: '귀연도',
-    note: '내 곁의 귀한 인연을 지도로 이어 보기'
+    note: '내 곁의 귀한 인연을 지도로'
   }
 ] as const;
 

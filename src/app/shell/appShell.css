@@ -114,6 +114,12 @@
 :root[data-shell-surface='past-life-goblin'] {
   --app-shell-bg: #05070a;
 }
+/* 계정 화면들. 지면이 순검정이 아니라 한 단 위의 회색이다 — 카드가 그 위에서
+   판으로 읽히려면 바닥이 검정보다 밝아야 한다. `ud-tokens.css` 의 `--ud-floor` 와
+   같은 값이어야 프레임 경계에 선이 보이지 않는다(accountPalette 계약이 확인한다). */
+:root[data-shell-surface='account'] {
+  --app-shell-bg: #141416;
+}
 :root[data-shell-surface='guiyeondo'] {
   --app-shell-bg: #070608;
 }

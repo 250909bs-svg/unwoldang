@@ -49,13 +49,20 @@ function contrast(foreground: string, background: string) {
 }
 
 describe('계정 화면 중성 램프 계약', () => {
-  it('바닥이 순검정이라 셸과 이음새가 생기지 않는다', () => {
-    /* 셸은 계정 라우트(surface: default)에 #000000 을 칠한다. 페이지가 다른 값을
-       쓰면 프레임 경계에 선이 보인다. */
+  it('바닥과 셸 배경이 같은 값이라 프레임 경계에 선이 없다', () => {
+    /*
+     * 바닥은 순검정이 아니다 — 카드가 판으로 읽히려면 지면이 검정보다 밝아야 한다.
+     * 대신 셸이 `surface: 'account'` 에 **같은 값**을 칠해야 한다. 둘이 다르면
+     * 폰 프레임 경계에 한 줄이 보인다. 그래서 값을 여기서 맞춰 본다.
+     */
     const shell = readFileSync(new URL('../../app/shell/appShell.css', import.meta.url), 'utf8');
+    const floor = token('--ud-floor');
 
-    expect(token('--ud-floor')).toBe('#000000');
-    expect(shell).toContain('--app-shell-bg: #000000;');
+    expect(floor).not.toBe('#000000');
+    expect(shell).toContain(`:root[data-shell-surface='account'] {`);
+    expect(shell.replace(/\s+/g, ' ')).toContain(
+      `:root[data-shell-surface='account'] { --app-shell-bg: ${floor};`
+    );
   });
 
   it('면 사다리가 단조 증가한다', () => {

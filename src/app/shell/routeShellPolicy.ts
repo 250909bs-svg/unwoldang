@@ -34,6 +34,9 @@ export type ShellSurface =
   | 'love-reunion'
   | 'past-life-goblin'
   | 'guiyeondo'
+  /* 마이·리포트·만세력·쿠폰·오늘의 운세·채팅·선물. 지면이 순검정이 아니라 한 단 위의
+     회색이라, 셸도 같은 값을 칠해야 프레임 경계에 선이 보이지 않는다. */
+  | 'account'
   | 'admin';
 
 export type RouteShellPolicy = Readonly<{
@@ -85,23 +88,23 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
   /* 마이는 고객센터·약관을 자기 화면 안에 그린다(참고한 마이페이지들처럼 메뉴 끝에
      붙는 자리다). 전역 푸터까지 켜 두면 한 화면에 같은 연락처와 같은 약관 링크가 두 번
      나온다. 귀연도와 같은 이유로 여기서만 푸터를 끈다. */
-  '/my': shell({ footer: false, containerClass: 'ud-app-container' }),
+  '/my': shell({ surface: 'account', footer: false, containerClass: 'ud-app-container' }),
   /* 마이 아래 두 화면. 탭 매처가 `startsWith('/my')` 라서 여기 서 있어도 마이 탭이
      켜진다 — `self` 로 두어야 그 강조가 맞는다. 상단바는 페이지가 직접 그린다.
      이 둘은 자기 약관 블록이 없으므로 전역 푸터를 그대로 쓴다. */
-  '/my/reports': shell({ containerClass: 'ud-app-container' }),
-  '/my/manseryeok': shell({ containerClass: 'ud-app-container' }),
-  '/my/coupons': shell({ containerClass: 'ud-app-container' }),
+  '/my/reports': shell({ surface: 'account', containerClass: 'ud-app-container' }),
+  '/my/manseryeok': shell({ surface: 'account', containerClass: 'ud-app-container' }),
+  '/my/coupons': shell({ surface: 'account', containerClass: 'ud-app-container' }),
   /* 채팅은 자기 입력줄을 바닥에 고정한다. 전역 푸터가 그 아래 깔리면 스크롤이
      엉키므로 끈다. 탭바는 그대로 둔다 — 대화 중에도 나갈 길은 있어야 한다. */
-  '/chat': shell({ tabAnchor: 'origin', footer: false, containerClass: 'ud-app-container' }),
-  '/gift': shell({ tabAnchor: 'origin', containerClass: 'ud-app-container' }),
+  '/chat': shell({ surface: 'account', tabAnchor: 'origin', footer: false, containerClass: 'ud-app-container' }),
+  '/gift': shell({ surface: 'account', tabAnchor: 'origin', containerClass: 'ud-app-container' }),
   /* 선물 받는 화면은 링크로 들어온다 — 탭에서 온 것이 아니므로 origin 이 맞다. */
-  '/gift/sent': shell({ tabAnchor: 'origin', containerClass: 'ud-app-container' }),
-  '/gift/:code': shell({ tabAnchor: 'origin', containerClass: 'ud-app-container' }),
+  '/gift/sent': shell({ surface: 'account', tabAnchor: 'origin', containerClass: 'ud-app-container' }),
+  '/gift/:code': shell({ surface: 'account', tabAnchor: 'origin', containerClass: 'ud-app-container' }),
   /* 오늘의 운세는 마이에서 들어가지만 탭 목적지는 아니다. 'origin' 으로 두어야
      들어온 탭이 계속 켜져 있는다. */
-  '/today': shell({ tabAnchor: 'origin', containerClass: 'ud-app-container' }),
+  '/today': shell({ surface: 'account', tabAnchor: 'origin', containerClass: 'ud-app-container' }),
   '/login': shell(),
   /* Not tab destinations: no nav item matches them, so `self` would leave the
      bar with no tab lit at all. `origin` falls back to the tab the reader came
