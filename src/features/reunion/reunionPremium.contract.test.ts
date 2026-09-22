@@ -16,7 +16,16 @@ import { describe, expect, it } from 'vitest';
 
 const read = (relative: string) => readFileSync(new URL(relative, import.meta.url), 'utf8');
 
-const sheet = () => read('../../styles/reunion-premium.css');
+/**
+ * 토큰은 `ud-tokens.css` 로 옮겼다 — 계정 화면들(마이 · 오늘의 운세 · 쿠폰 · 만세력)도
+ * 같은 값을 써야 하는데, 1,500줄짜리 재회운 시트를 그 화면마다 싣을 수는 없기 때문이다.
+ *
+ * 여기서는 둘을 이어 붙여 읽는다. 대비·타입스케일·모션 검증은 토큰을 보고, 스코프
+ * 검증은 아래에서 재회운 시트만 따로 본다.
+ */
+const tokens = () => read('../../styles/ud-tokens.css');
+const premium = () => read('../../styles/reunion-premium.css');
+const sheet = () => `${tokens()}\n${premium()}`;
 const ornaments = () => read('./reunionOrnaments.tsx');
 const meters = () => read('./reunionMeters.tsx');
 
@@ -410,8 +419,46 @@ describe('reunion premium design system', () => {
       .filter(Boolean)
       .filter((part) => !part.startsWith('@') && !part.endsWith('%') && part !== 'from' && part !== 'to');
 
-    const stray = selectors.filter((selector) => !selector.startsWith('.reunion-app-container'));
+    /*
+     * 스코프는 둘이다.
+     *
+     * `.reunion-app-container` — 이 시트의 모든 것.
+     * `.ud-app-container` — **토큰 선언 한 블록만.** 계정 화면들(마이·오늘의 운세·
+     *   쿠폰·만세력)이 같은 색 사다리를 쓰되 값을 두 벌로 베끼지 않게 하려고 연 문이다.
+     *   면 유틸리티와 재회운 컴포넌트까지 여기로 새면 시트의 소유 범위가 무너지므로,
+     *   이 스코프에는 커스텀 프로퍼티 외의 선언을 허용하지 않는다(아래에서 확인한다).
+     */
+    const stray = selectors.filter(
+      (selector) =>
+        !selector.startsWith('.reunion-app-container') && selector !== '.ud-app-container'
+    );
     expect(stray, `unscoped selectors: ${stray.join(' | ')}`).toEqual([]);
+  });
+
+  it('lets the shared account scope carry tokens and nothing else', () => {
+    const css = stripComments(sheet());
+    const blocks = Array.from(css.matchAll(/([^{}]+)\{([^{}]*)\}/gu));
+
+    const shared = blocks.filter((block) =>
+      block[1]
+        .split(',')
+        .map((part) => part.trim())
+        .includes('.ud-app-container')
+    );
+
+    expect(shared.length, '.ud-app-container 선언이 없다').toBeGreaterThan(0);
+
+    for (const block of shared) {
+      const properties = block[2]
+        .split(';')
+        .map((part) => part.split(':')[0].trim())
+        .filter(Boolean);
+
+      expect(
+        properties.filter((property) => !property.startsWith('--')),
+        `.ud-app-container declares non-token properties: ${properties.join(', ')}`
+      ).toEqual([]);
+    }
   });
 
   it('adds no new raw safe-area inset, because that budget is a ratchet', () => {

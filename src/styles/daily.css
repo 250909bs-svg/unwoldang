@@ -1,234 +1,256 @@
 /* 오늘의 운세 (/today).
  *
- * `my.css` 와 같은 규칙을 따른다 — 기본은 밝은 바탕, 다크는 바로 아래, 폭을 묻는
- * 규칙은 `@container app`.
+ * `my.css` 와 같은 규칙을 따른다 — 토큰은 `reunion-premium.css` 가
+ * `.ud-app-container` 에 선언한 것을 쓰고, 모든 선택자를 그 스코프로 시작한다.
+ *
+ * 이 화면의 구성은 셋이다.
+ *   1) 히어로 — 오늘이 어떤 날인지 한 줄. 결에 따라 지면 온도만 바뀐다.
+ *   2) 영역 카드 — 오늘 건드려지는 곳이 위로 온다.
+ *   3) 근거 — 어떤 합·충이 잡혔는지 그대로 펼친다. 결론만 주면 믿을 근거가 없다.
  */
 
-.ud-daily-hero {
+/* ── 히어로 ─────────────────────────────────────────────────────────────── */
+
+.ud-app-container .ud-daily-hero {
   position: relative;
-  margin-top: 6px;
-  padding: 26px 20px 22px;
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s6) var(--ud-s5) var(--ud-s5);
   overflow: hidden;
-  border-radius: 20px;
-  background: linear-gradient(150deg, #f3f4f6, #e8eaee);
-}
-/* 결이 셋뿐이라 색으로 구분한다. 색만으로 뜻을 전하지는 않는다 — 제목 문구가 같은 것을 말한다. */
-.ud-daily-hero.is-supportive {
-  background: linear-gradient(150deg, #2b3a2c, #131a14);
-}
-.ud-daily-hero.is-steady {
-  background: linear-gradient(150deg, #2b3138, #14171b);
-}
-.ud-daily-hero.is-caution {
-  background: linear-gradient(150deg, #3a2f2a, #1b1614);
-}
-.ud-daily-hero.is-supportive,
-.ud-daily-hero.is-steady,
-.ud-daily-hero.is-caution {
-  color: #f4f1ec;
-}
-.ud-daily-date {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .02em;
-  opacity: .72;
-}
-.ud-daily-hero h1 {
-  margin-top: 8px;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: clamp(28px, 8.5cqw, 34px);
-  font-weight: 400;
-  line-height: 1.3;
-}
-.ud-daily-pillar {
-  display: flex;
-  align-items: baseline;
-  margin-top: 16px;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  font-size: 12.5px;
-  opacity: .82;
-}
-.ud-daily-pillar strong {
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: 20px;
-  font-weight: 400;
-}
-.ud-daily-pillar em {
-  padding: 3px 9px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 11px;
-  font-style: normal;
-  opacity: .8;
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-lift-2);
+  color: var(--ud-cream);
 }
 
-.ud-daily-summary {
-  margin-top: 18px;
-  padding: 0 2px;
-  font-size: 14.5px;
-  line-height: 1.85;
+/*
+ * 결은 셋뿐이라 지면의 온도로 가른다. **색만으로 뜻을 전하지는 않는다** —
+ * 바로 아래 제목이 같은 것을 글로 말하고, 근거 목록이 개수로 다시 말한다.
+ * 색은 읽기 전에 분위기를 주는 층이지 정보의 유일한 매체가 아니다.
+ */
+.ud-app-container .ud-daily-hero::before {
+  position: absolute;
+  content: '';
+  inset: 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.ud-app-container .ud-daily-hero.is-supportive::before {
+  background: radial-gradient(120% 90% at 18% 0%, rgba(111, 174, 143, 0.22), transparent 62%);
+}
+.ud-app-container .ud-daily-hero.is-steady::before {
+  background: radial-gradient(120% 90% at 18% 0%, rgba(159, 180, 201, 0.16), transparent 62%);
+}
+.ud-app-container .ud-daily-hero.is-caution::before {
+  background: radial-gradient(120% 90% at 18% 0%, rgba(224, 74, 60, 0.2), transparent 62%);
+}
+.ud-app-container .ud-daily-hero > * {
+  position: relative;
 }
 
-.ud-daily-areas {
-  display: flex;
-  margin-top: 20px;
-  flex-direction: column;
-  gap: 8px;
+.ud-app-container .ud-daily-date {
+  color: var(--ud-gold-text-hi);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
 }
-.ud-daily-area {
-  padding: 14px 15px;
-  border-radius: 14px;
-  background: #f4f5f7;
+.ud-app-container .ud-daily-hero h1 {
+  margin-top: var(--ud-s3);
+  color: var(--ud-cream);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-600);
+  font-weight: var(--ud-w-body);
+  letter-spacing: var(--ud-ls-display);
+  line-height: var(--ud-lh-display);
 }
-.ud-daily-area.is-active {
-  background: #eceef2;
-  box-shadow: inset 2px 0 0 #b8894f;
-}
-.ud-daily-area-label {
+.ud-app-container .ud-daily-pillar {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  font-weight: 800;
+  margin-top: var(--ud-s5);
+  flex-wrap: wrap;
+  gap: var(--ud-s2) var(--ud-s3);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
 }
-.ud-daily-area-label i {
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #b8894f;
-  color: #fff;
-  font-size: 10px;
+.ud-app-container .ud-daily-pillar strong {
+  color: var(--ud-cream);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-400);
+  font-weight: var(--ud-w-body);
+}
+.ud-app-container .ud-daily-pillar em {
+  padding: 4px var(--ud-s3);
+  border: 1px solid var(--ud-metal-7);
+  border-radius: var(--ud-r-pill);
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
   font-style: normal;
-  font-weight: 700;
-}
-.ud-daily-area p {
-  margin-top: 6px;
-  color: #4b5563;
-  font-size: 12.5px;
-  line-height: 1.75;
-}
-.ud-daily-area:not(.is-active) p {
-  color: #9ca3af;
+  font-weight: var(--ud-w-bold);
 }
 
-.ud-daily-evidence {
-  margin-top: 24px;
+.ud-app-container .ud-daily-summary {
+  margin-top: var(--ud-s5);
+  padding: 0 var(--ud-s2);
+  color: var(--ud-cream-dim);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
 }
-.ud-daily-evidence ul {
+
+/* ── 영역 카드 ──────────────────────────────────────────────────────────── */
+
+.ud-app-container .ud-daily-areas {
   display: flex;
-  margin-top: 10px;
+  margin-top: var(--ud-s6);
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ud-s2);
+}
+.ud-app-container .ud-daily-area {
+  padding: var(--ud-s4);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-row);
+  background: var(--ud-surface-1);
+}
+/* 오늘 건드려지는 영역. 금속 인레이 한 줄로 구분한다 — 배경만 바꾸면
+   근검정 위에서 차이가 보이지 않는다. */
+.ud-app-container .ud-daily-area.is-active {
+  border-color: var(--ud-metal-8);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim), inset 2px 0 0 var(--ud-metal-4);
+}
+.ud-app-container .ud-daily-area-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ud-s2);
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
+}
+.ud-app-container .ud-daily-area-label i {
+  padding: 3px var(--ud-s2);
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-gilt);
+  color: var(--ud-crimson-ink);
+  font-size: var(--ud-fs-50);
+  font-style: normal;
+  font-weight: var(--ud-w-display);
+}
+.ud-app-container .ud-daily-area p {
+  margin-top: var(--ud-s2);
+  color: var(--ud-cream-dim);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .ud-daily-area:not(.is-active) p {
+  color: var(--ud-cream-mute);
+}
+
+/* ── 근거 ───────────────────────────────────────────────────────────────── */
+
+.ud-app-container .ud-daily-evidence {
+  margin-top: var(--ud-s6);
+}
+.ud-app-container .ud-daily-evidence ul {
+  display: flex;
+  margin-top: var(--ud-s3);
+  flex-direction: column;
+  gap: var(--ud-s2);
   list-style: none;
 }
-.ud-daily-evidence li {
-  padding: 12px 14px;
-  border-left: 2px solid #d1d5db;
-  border-radius: 0 12px 12px 0;
-  background: #f4f5f7;
+.ud-app-container .ud-daily-evidence li {
+  padding: var(--ud-s3) var(--ud-s4);
+  border: 1px solid var(--ud-metal-9);
+  border-left-width: 2px;
+  border-radius: var(--udm-r-chip);
+  background: var(--ud-surface-1);
 }
-.ud-daily-evidence li[data-polarity='friction'],
-.ud-daily-evidence li[data-polarity='latent-friction'] {
-  border-left-color: #c0714f;
+/* 마찰과 통합을 왼쪽 선 색으로 가른다. 이름(지지충 · 지지육합)이 같은 것을
+   글로 말하므로 색은 보조다. */
+.ud-app-container .ud-daily-evidence li[data-polarity='friction'],
+.ud-app-container .ud-daily-evidence li[data-polarity='latent-friction'] {
+  border-left-color: var(--ud-crimson-text);
 }
-.ud-daily-evidence li[data-polarity='integrative'],
-.ud-daily-evidence li[data-polarity='transformative'] {
-  border-left-color: #6f9a6b;
+.ud-app-container .ud-daily-evidence li[data-polarity='integrative'],
+.ud-app-container .ud-daily-evidence li[data-polarity='transformative'] {
+  border-left-color: var(--ud-safe);
 }
-.ud-daily-evidence li strong {
+.ud-app-container .ud-daily-evidence li strong {
   display: block;
-  font-size: 13px;
-  font-weight: 800;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
 }
-.ud-daily-evidence li span {
+.ud-app-container .ud-daily-evidence li span {
   display: block;
-  margin-top: 4px;
-  color: #4b5563;
-  font-size: 12px;
-  line-height: 1.7;
+  margin-top: var(--ud-s1);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
-.ud-daily-none {
-  margin-top: 10px;
-  color: #6b7280;
-  font-size: 12.5px;
-  line-height: 1.7;
+.ud-app-container .ud-daily-none {
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s4);
+  border: 1px dashed var(--ud-metal-8);
+  border-radius: var(--udm-r-chip);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
-.ud-daily-tally {
-  margin-top: 10px;
-  color: #9ca3af;
-  font-size: 11.5px;
-  font-weight: 600;
+.ud-app-container .ud-daily-tally {
+  margin-top: var(--ud-s3);
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
 }
 
-.ud-daily-uncertainty {
+/* ── 불확실성 · 이어보기 ────────────────────────────────────────────────── */
+
+.ud-app-container .ud-daily-uncertainty {
   display: flex;
   align-items: flex-start;
-  margin-top: 18px;
-  padding: 12px 14px;
-  gap: 9px;
-  border-radius: 12px;
-  background: #f4f5f7;
-  color: #6b7280;
+  margin-top: var(--ud-s5);
+  padding: var(--ud-s4);
+  gap: var(--ud-s3);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-chip);
+  background: var(--ud-surface-1);
+  color: var(--ud-slate);
 }
-.ud-daily-uncertainty svg {
+.ud-app-container .ud-daily-uncertainty svg {
   flex: 0 0 auto;
   margin-top: 2px;
 }
-.ud-daily-uncertainty ul {
+.ud-app-container .ud-daily-uncertainty ul {
   list-style: none;
 }
-.ud-daily-uncertainty li {
-  font-size: 12px;
-  line-height: 1.7;
+.ud-app-container .ud-daily-uncertainty li {
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
-.ud-daily-uncertainty li + li {
-  margin-top: 4px;
+.ud-app-container .ud-daily-uncertainty li + li {
+  margin-top: var(--ud-s1);
 }
 
-.ud-daily-more {
+.ud-app-container .ud-daily-more {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 50px;
-  margin-top: 22px;
-  gap: 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  color: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  min-height: 52px;
+  margin-top: var(--ud-s6);
+  gap: var(--ud-s2);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--udm-r-row);
+  color: var(--ud-gold-text-hi);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
   text-decoration: none;
 }
 
-.ud-daily-disclaimer {
-  margin-top: 18px;
-  color: #9ca3af;
-  font-size: 11.5px;
-  line-height: 1.8;
-}
-
-/* 다크 ──────────────────────────────────────────────────────────────────── */
-
-body.home-all-black .ud-daily-area,
-body.home-all-black .ud-daily-evidence li,
-body.home-all-black .ud-daily-uncertainty {
-  background: #121316;
-}
-body.home-all-black .ud-daily-area.is-active {
-  background: #191b1f;
-}
-body.home-all-black .ud-daily-area p,
-body.home-all-black .ud-daily-evidence li span,
-body.home-all-black .ud-daily-none,
-body.home-all-black .ud-daily-uncertainty {
-  color: #9aa0a8;
-}
-body.home-all-black .ud-daily-area:not(.is-active) p {
-  color: #70757c;
-}
-body.home-all-black .ud-daily-evidence li {
-  border-left-color: #35383d;
-}
-body.home-all-black .ud-daily-more {
-  border-color: #26282c;
+.ud-app-container .ud-daily-disclaimer {
+  margin-top: var(--ud-s5);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-body);
 }

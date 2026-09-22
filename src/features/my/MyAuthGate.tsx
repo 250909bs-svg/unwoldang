@@ -2,6 +2,7 @@ import { type PropsWithChildren, useState } from 'react';
 import MobileTopBar from '../../components/MobileTopBar';
 import { useAuth } from '../../context/AuthContext';
 import { beginKakaoLogin } from '../../lib/auth';
+import { withTopicParticle } from '../../lib/korean/particles';
 
 /**
  * 마이 아래 화면들의 로그인 문. 세 화면이 같은 규칙을 쓰게 한 곳에 모았다.
@@ -36,7 +37,8 @@ export default function MyAuthGate({
 
       <section className="my-gate">
         <span className="my-gate-eyebrow">SIGN IN</span>
-        <h1>{title}는 로그인 후에 열립니다</h1>
+        {/* 받침에 따라 은/는. 고정으로 '는' 을 쓰면 "쿠폰는", "만세력는" 이 나온다. */}
+        <h1>{withTopicParticle(title)} 로그인 후에 열립니다</h1>
         <p>
           카카오로 로그인하면 이 화면으로 바로 돌아옵니다.
           <br />

@@ -23,7 +23,10 @@ const read = (relative: string) => readFileSync(new URL(relative, import.meta.ur
 
 const sheet = () => read('../../styles/reunion-webtoon.css');
 const landing = () => read('./ReunionLanding.tsx');
-const premium = () => read('../../styles/reunion-premium.css');
+/* 토큰은 ud-tokens.css 로 옮겼다 — 계정 화면들도 같은 값을 쓰기 때문이다.
+   여기서는 토큰 조회가 목적이므로 둘을 이어 붙여 읽는다. */
+const premium = () =>
+  `${read('../../styles/ud-tokens.css')}\n${read('../../styles/reunion-premium.css')}`;
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 

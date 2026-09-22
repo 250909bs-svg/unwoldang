@@ -49,7 +49,8 @@ const FEATURE_CARDS = [
     id: 'general-signature',
     to: '/detail/general-saju',
     title: '종합사주 리포트',
-    note: '타고난 원국부터 올해의 흐름까지 한 번에'
+    /* 60px 카드 옆 한 줄에 들어가는 길이로 맞춘다. 길면 마지막 줄에 한 글자만 남는다. */
+    note: '타고난 원국과 올해의 흐름을 한 번에'
   },
   {
     id: 'guiyeondo',

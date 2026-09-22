@@ -1,482 +1,937 @@
-/* 마이 (/my) — 메뉴 한 장, 그리고 그 아래 리포트·만세력.
- *
- * 색은 기본을 밝은 바탕으로 두고 다크 규칙을 바로 아래 붙인다. `/my` 는 셸 정책이
- * 다크로 칠하므로(`body.home-all-black`) 실제로 보이는 건 거의 다크 쪽이지만, 두
- * 값을 한곳에 두어야 한쪽만 고치는 일이 생기지 않는다.
- *
- * 폭을 묻는 규칙은 `@container app` 으로 쓴다. 뷰포트 미디어쿼리는 1440px 창 안의
- * 400px 프레임에서 참이 되어 폰 폭 상자 안에 데스크톱 레이아웃을 그린다
- * (`shellFrameContract.test.ts` 가 막는다).
- */
+/* 운월당 계정 화면 — 마이 · 리포트(보관함) · 만세력 · 쿠폰.
+   ============================================================================
 
-.my-menu-content {
-  width: min(430px, 100%);
+   색·타이포·간격·모션은 전부 `reunion-premium.css` 가 `.ud-app-container` 에
+   선언해 둔 토큰을 쓴다. 값을 여기서 다시 정하지 않는다 — 같은 금색이 화면마다
+   달라지는 일을 그 파일이 이미 한 번 정리했다.
+
+   모든 규칙을 `.ud-app-container` 로 시작한다. 이유가 둘이다.
+     1) 계정 라우트에만 적용된다(셸 정책이 이 클래스를 그 라우트들에만 건다).
+     2) index.css 의 옛 `.my-*` 규칙보다 명시도가 높다. 보관함은 그 옛 규칙 위에
+        올라가 있어서, 같은 명시도로는 색이 반만 바뀌어 더 지저분해진다.
+
+   반지름만 토큰을 따르지 않는다
+   ----------------------------
+   시스템의 `--ud-r-card: 3px` 는 웹툰의 금테·현판을 위한 값이라 날카롭다. 계정
+   화면은 읽는 물건이 아니라 **누르는 물건**이고, 손가락이 닿는 면은 둥근 쪽이
+   눌러도 되는 것으로 읽힌다. 그래서 이 계열만 따로 정하고 여기 적어 둔다.
+   ========================================================================== */
+
+.ud-app-container {
+  --udm-r-card: 18px;
+  --udm-r-row: 14px;
+  --udm-r-chip: 10px;
+  /* 계정 화면의 한 단: 폰 프레임 안에서 좌우 여백을 뺀 폭. */
+  --udm-col: min(430px, 100%);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   공통 — 지면과 상단
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ud-app-container .my-replay-page {
+  background: var(--ud-floor);
+  color: var(--ud-cream);
+  font-family: var(--ud-sans);
+}
+
+.ud-app-container .my-menu-content,
+.ud-app-container .my-replay-content {
+  width: var(--udm-col);
   margin: 0 auto;
-  padding-top: 6px;
+  padding-top: var(--ud-s2);
 }
 
-/* 계정 줄 ─────────────────────────────────────────────────────────────── */
-
-.my-account {
-  padding: 14px 2px 18px;
+/* 화면 제목. 명조로 크게 놓아 UI 라벨과 층을 가른다. */
+.ud-app-container .my-replay-title {
+  padding: var(--ud-s5) var(--ud-s1) var(--ud-s4);
 }
-.my-account-row {
+.ud-app-container .my-replay-title > span {
+  display: block;
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
+}
+.ud-app-container .my-replay-title h1 {
+  margin-top: var(--ud-s2);
+  color: var(--ud-cream);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-body);
+  letter-spacing: var(--ud-ls-title);
+  line-height: var(--ud-lh-title);
+}
+.ud-app-container .my-replay-title p {
+  margin-top: var(--ud-s3);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
+}
+
+/* 섹션 라벨 */
+.ud-app-container .my-section-label {
   display: flex;
   align-items: center;
-  /* index.css 쪽 규칙이 `space-between` 을 넣어, 로그인 상태(버튼 없음)에서 이름이
-     아바타를 떠나 오른쪽 끝에 붙었다. 시작 정렬을 명시한다. */
-  justify-content: flex-start;
-  gap: 12px;
+  gap: var(--ud-s2);
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
 }
-.my-account-avatar {
+
+/* ══════════════════════════════════════════════════════════════════════════
+   마이 — 계정 줄
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ud-app-container .my-account {
+  padding: var(--ud-s5) var(--ud-s1) var(--ud-s5);
+}
+.ud-app-container .my-account-row {
+  display: flex;
+  align-items: center;
+  /* index.css 가 space-between 을 걸어, 로그인 상태에서 이름이 아바타를 떠나
+     오른쪽 끝에 붙었다. 시작 정렬을 명시한다. */
+  justify-content: flex-start;
+  gap: var(--ud-s3);
+}
+.ud-app-container .my-account-avatar {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 50%;
-  background: #eceef2;
-  color: #6b7280;
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim);
+  color: var(--ud-gold-text);
 }
-.my-account-name {
+.ud-app-container .my-account-name {
   display: flex;
   min-width: 0;
-  /* 남는 폭을 가져가야 카카오 버튼의 `margin-left: auto` 가 오른쪽 끝으로 간다. */
   flex: 1 1 auto;
   flex-direction: column;
   gap: 3px;
 }
-.my-account-name strong {
-  font-size: 17px;
-  font-weight: 800;
+.ud-app-container .my-account-name strong {
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-300);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
 }
-.my-account-name em {
-  color: #6b7280;
-  font-size: 12px;
+.ud-app-container .my-account-name em {
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
   font-style: normal;
 }
-.my-kakao-button.my-account-kakao {
+
+/* 카카오 버튼은 카카오 색을 지킨다 — 브랜드 규정이고, 이 화면에서 가장 밝은 면이라
+   시선이 한 번만 강하게 걸린다. */
+.ud-app-container .my-kakao-button {
+  border: 0;
+  border-radius: var(--udm-r-chip);
+  background: #ffe812;
+  color: #181600;
+  font-family: var(--ud-sans);
+  font-weight: var(--ud-w-display);
+  box-shadow: 0 10px 24px -12px rgba(255, 232, 18, 0.55);
+  cursor: pointer;
+  transition: transform var(--ud-t-1) var(--ud-ease-soft);
+}
+.ud-app-container .my-kakao-button:active {
+  transform: scale(0.98);
+}
+.ud-app-container .my-kakao-button.my-account-kakao {
   min-height: 42px;
   margin-left: auto;
-  padding: 0 15px;
+  padding: 0 var(--ud-s4);
   flex: 0 0 auto;
-  border-radius: 10px;
-  font-size: 13.5px;
-  font-weight: 800;
-  box-shadow: none;
+  font-size: var(--ud-fs-100);
 }
 
-/* 바로 가기 카드 ───────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   마이 — 바로 가기 카드
+   ══════════════════════════════════════════════════════════════════════════ */
 
-.my-feature-cards {
+.ud-app-container .my-feature-cards {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--ud-s3);
 }
-.my-feature-card {
+.ud-app-container .my-feature-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 13px;
-  border-radius: 16px;
-  background: #f4f5f7;
+  gap: var(--ud-s4);
+  padding: var(--ud-s3);
+  overflow: hidden;
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-1);
+  box-shadow: var(--ud-lift-1);
   color: inherit;
   text-decoration: none;
+  transition:
+    transform var(--ud-t-2) var(--ud-ease-soft),
+    border-color var(--ud-t-2) var(--ud-ease-soft);
 }
-.my-feature-card > img,
-.my-feature-card-glyph {
-  width: 54px;
-  height: 54px;
+.ud-app-container .my-feature-card:active {
+  transform: scale(0.99);
+  border-color: var(--ud-metal-7);
+}
+.ud-app-container .my-feature-card > img,
+.ud-app-container .my-feature-card-glyph {
+  width: 60px;
+  height: 60px;
   flex: 0 0 auto;
-  border-radius: 12px;
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-chip);
   object-fit: cover;
 }
-.my-feature-card-glyph {
+.ud-app-container .my-feature-card-glyph {
   display: grid;
   place-items: center;
-  background: #e4e7ec;
-  color: #6b7280;
+  background: var(--ud-surface-3);
+  color: var(--ud-gold-text-hi);
 }
-.my-feature-card-copy {
+.ud-app-container .my-feature-card-copy {
   min-width: 0;
   flex: 1 1 auto;
 }
-.my-feature-card-copy strong {
+.ud-app-container .my-feature-card-copy strong {
   display: block;
-  font-size: 15.5px;
-  font-weight: 800;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
 }
-.my-feature-card-copy p {
-  margin-top: 3px;
-  color: #6b7280;
-  font-size: 12.5px;
-  line-height: 1.5;
+.ud-app-container .my-feature-card-copy p {
+  margin-top: var(--ud-s1);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
-.my-feature-card > svg {
+.ud-app-container .my-feature-card > svg {
   flex: 0 0 auto;
-  color: #9ca3af;
+  color: var(--ud-metal-6);
 }
 
-/* 메뉴 목록 ───────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   마이 — 메뉴 목록
+   ══════════════════════════════════════════════════════════════════════════ */
 
-.my-menu-list {
+.ud-app-container .my-menu-list {
   display: flex;
-  margin-top: 22px;
+  margin-top: var(--ud-s6);
   flex-direction: column;
 }
-.my-menu-list-share {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #e5e7eb;
+.ud-app-container .my-menu-list-share {
+  margin-top: var(--ud-s3);
+  padding-top: var(--ud-s3);
+  border-top: 1px solid var(--ud-metal-9);
 }
-.my-menu-row {
+.ud-app-container .my-menu-row {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 15px 4px;
+  gap: var(--ud-s4);
+  padding: var(--ud-s4) var(--ud-s3);
+  border-radius: var(--udm-r-row);
   color: inherit;
   text-decoration: none;
+  transition: background var(--ud-t-1) var(--ud-ease-soft);
 }
-.my-menu-icon {
+.ud-app-container a.my-menu-row:active {
+  background: var(--ud-surface-1);
+}
+.ud-app-container .my-menu-icon {
   display: grid;
-  width: 24px;
+  width: 26px;
   flex: 0 0 auto;
   place-items: center;
-  color: #4b5563;
+  color: var(--ud-gold-text-hi);
 }
-.my-menu-copy {
+.ud-app-container .my-menu-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+}
+.ud-app-container .my-menu-copy strong {
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
+}
+.ud-app-container .my-menu-copy em {
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  font-style: normal;
+  line-height: var(--ud-lh-lead);
+}
+.ud-app-container .my-menu-arrow {
+  flex: 0 0 auto;
+  color: var(--ud-metal-6);
+}
+/* 아직 없는 기능. 링크가 아니라 문단이라 커서도 포커스도 잡히지 않는다. */
+.ud-app-container .my-menu-row.is-soon {
+  opacity: 0.4;
+}
+.ud-app-container .my-menu-tag {
+  flex: 0 0 auto;
+  padding: 4px var(--ud-s2);
+  border: 1px solid var(--ud-metal-7);
+  border-radius: var(--ud-r-pill);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   마이 — 고객센터 · 약관 · 로그아웃
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ud-app-container .my-support {
+  margin-top: var(--ud-s6);
+  padding: var(--ud-s5) var(--ud-s3) 0;
+  border-top: 1px solid var(--ud-metal-9);
+}
+.ud-app-container .my-support-contact {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ud-s1) var(--ud-s3);
+  font-size: var(--ud-fs-100);
+}
+.ud-app-container .my-support-contact span {
+  color: var(--ud-gold-text);
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .my-support-contact a,
+.ud-app-container .my-support-links a {
+  color: var(--ud-cream-dim);
+  text-decoration: none;
+}
+.ud-app-container .my-support-contact a:hover,
+.ud-app-container .my-support-links a:hover {
+  color: var(--ud-cream);
+  text-decoration: underline;
+}
+.ud-app-container .my-support-links {
+  display: flex;
+  margin-top: var(--ud-s4);
+  flex-wrap: wrap;
+  gap: var(--ud-s2) var(--ud-s5);
+  font-size: var(--ud-fs-100);
+}
+.ud-app-container .my-support-business {
+  margin-top: var(--ud-s4);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .my-logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--ud-s5);
+  gap: var(--ud-s2);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-row);
+  background: transparent;
+  color: var(--ud-cream-mute);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   로그인 문 (마이 하위 화면 공용)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ud-app-container .my-gate {
+  width: var(--udm-col);
+  margin: 0 auto;
+  padding: var(--ud-s8) var(--ud-s3) 0;
+  text-align: center;
+}
+.ud-app-container .my-gate-eyebrow {
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
+}
+.ud-app-container .my-gate h1 {
+  margin-top: var(--ud-s3);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-body);
+  letter-spacing: var(--ud-ls-title);
+  line-height: var(--ud-lh-title);
+}
+.ud-app-container .my-gate p {
+  margin-top: var(--ud-s4);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .my-gate .my-kakao-button {
+  width: 100%;
+  min-height: 54px;
+  margin-top: var(--ud-s6);
+  font-size: var(--ud-fs-200);
+}
+.ud-app-container .my-login-error {
+  margin-top: var(--ud-s3);
+  color: var(--ud-crimson-text);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   리포트(보관함) — index.css 의 옛 규칙을 이 스코프에서 덮는다
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ud-app-container .my-report-archive-section {
+  margin-top: var(--ud-s4);
+  overflow: hidden;
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-1);
+  box-shadow: var(--ud-lift-1);
+}
+.ud-app-container .my-archive-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--ud-s4);
+  gap: var(--ud-s3);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ud-app-container .my-archive-toggle-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--udm-r-chip);
+  background: var(--ud-surface-3);
+  color: var(--ud-gold-text-hi);
+}
+.ud-app-container .my-archive-toggle-copy {
   display: flex;
   min-width: 0;
   flex: 1 1 auto;
   flex-direction: column;
   gap: 2px;
 }
-.my-menu-copy strong {
-  font-size: 15.5px;
-  font-weight: 700;
+.ud-app-container .my-archive-toggle-copy strong {
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
 }
-.my-menu-copy em {
-  color: #6b7280;
-  font-size: 12px;
+.ud-app-container .my-archive-toggle-copy em {
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
   font-style: normal;
-  line-height: 1.5;
 }
-.my-menu-arrow {
+.ud-app-container .my-archive-chevron {
   flex: 0 0 auto;
-  color: #9ca3af;
+  color: var(--ud-metal-6);
+  transition: transform var(--ud-t-2) var(--ud-ease-soft);
 }
-/* 아직 없는 기능. 링크가 아니라 문단이라 커서도 포커스도 잡히지 않는다. */
-.my-menu-row.is-soon {
-  opacity: .42;
+.ud-app-container .my-archive-chevron.open {
+  transform: rotate(180deg);
 }
-.my-menu-tag {
-  flex: 0 0 auto;
-  padding: 3px 8px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .02em;
-}
-
-/* 고객센터·약관 ───────────────────────────────────────────────────────── */
-
-.my-support {
-  margin-top: 26px;
-  padding-top: 18px;
-  border-top: 1px solid #e5e7eb;
-}
-.my-support-contact {
+.ud-app-container .my-report-replay-list {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 12.5px;
+  padding: 0 var(--ud-s3) var(--ud-s3);
+  flex-direction: column;
+  gap: var(--ud-s2);
 }
-.my-support-contact span {
-  color: #9ca3af;
-  font-weight: 700;
-}
-.my-support-contact a,
-.my-support-links a {
-  color: #6b7280;
-  text-decoration: none;
-}
-.my-support-contact a:hover,
-.my-support-links a:hover {
-  text-decoration: underline;
-}
-.my-support-links {
+.ud-app-container .my-report-replay-card {
   display: flex;
-  margin-top: 12px;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  font-size: 12.5px;
-}
-.my-support-business {
-  margin-top: 12px;
-  color: #9ca3af;
-  font-size: 11px;
-  line-height: 1.7;
-}
-
-/* 로그인 문 (마이 하위 화면 공용) ────────────────────────────────────────── */
-
-.my-gate {
-  width: min(430px, 100%);
-  margin: 0 auto;
-  padding: 56px 6px 0;
-  text-align: center;
-}
-.my-gate-eyebrow {
-  color: #9ca3af;
-  font: 700 10px Georgia, serif;
-  letter-spacing: .16em;
-}
-.my-gate h1 {
-  margin-top: 12px;
-  font-size: 23px;
-  font-weight: 800;
-  line-height: 1.4;
-}
-.my-gate p {
-  margin-top: 12px;
-  color: #6b7280;
-  font-size: 13px;
-  line-height: 1.8;
-}
-.my-gate .my-kakao-button {
+  align-items: center;
   width: 100%;
-  margin-top: 26px;
+  padding: var(--ud-s3);
+  gap: var(--ud-s3);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-row);
+  background: var(--ud-surface-2);
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
 }
-
-/* 내 만세력 ───────────────────────────────────────────────────────────── */
-
-.my-manse-pillars {
+.ud-app-container .my-report-icon {
   display: grid;
-  margin-top: 4px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-surface-4);
+  color: var(--ud-gold-text-hi);
 }
-.my-manse-pillar {
+.ud-app-container .my-report-summary {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ud-app-container .my-report-summary strong {
+  display: block;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .my-report-summary p {
+  margin-top: 2px;
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+}
+.ud-app-container .my-report-summary em {
+  display: block;
+  margin-top: 3px;
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-style: normal;
+}
+.ud-app-container .my-report-arrow {
+  flex: 0 0 auto;
+  color: var(--ud-metal-6);
+}
+.ud-app-container .my-archive-expand-button {
+  width: calc(100% - var(--ud-s6));
+  min-height: 42px;
+  margin: 0 var(--ud-s3) var(--ud-s3);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-chip);
+  background: transparent;
+  color: var(--ud-cream-dim);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+  cursor: pointer;
+}
+.ud-app-container .my-empty-replay-card {
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 4px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  background: #f9fafb;
-}
-.my-manse-pillar-label {
-  color: #9ca3af;
-  font-size: 11px;
-  font-weight: 700;
-}
-.my-manse-stem,
-.my-manse-branch {
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: 26px;
-  font-weight: 400;
-  line-height: 1.1;
-}
-.my-manse-branch {
-  color: #6b7280;
-}
-/* 시주가 없을 때의 빈 자리. 실선 카드로 두면 세운 기둥처럼 보인다. */
-.my-manse-pillar.is-unknown {
-  border-style: dashed;
-  background: transparent;
-}
-.my-manse-unknown {
-  color: #9ca3af;
-  font-size: 14px;
-  font-weight: 600;
-}
-.my-manse-note {
-  margin-top: 10px;
-  color: #6b7280;
-  font-size: 12px;
-  line-height: 1.7;
-}
-.my-manse-card {
-  margin-top: 12px;
-  padding: 16px;
-  border-radius: 16px;
-  background: #f4f5f7;
-}
-.my-manse-card-label {
-  color: #9ca3af;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .04em;
-}
-.my-manse-daymaster {
-  display: block;
-  margin-top: 6px;
-  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  font-size: 34px;
-  font-weight: 400;
-  line-height: 1.1;
-}
-.my-manse-keywords {
-  display: flex;
-  margin-top: 12px;
-  flex-wrap: wrap;
-  gap: 6px;
-  list-style: none;
-}
-.my-manse-keywords li {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #e4e7ec;
-  color: #4b5563;
-  font-size: 12px;
-  font-weight: 600;
-}
-.my-manse-card p {
-  margin-top: 12px;
-  color: #4b5563;
-  font-size: 13px;
-  line-height: 1.75;
-}
-.my-manse-strength-label {
-  display: block;
-  margin-top: 6px;
-  font-size: 19px;
-  font-weight: 800;
-}
-.my-manse-gauge {
-  height: 8px;
-  margin-top: 12px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e4e7ec;
-}
-.my-manse-gauge > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #b8894f, #e0be86);
-}
-.my-manse-basis {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-.my-manse-basis dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
-}
-.my-manse-basis dt {
-  color: #9ca3af;
-  font-size: 11px;
-  font-weight: 700;
-}
-.my-manse-basis dd {
-  /* dd 의 브라우저 기본값은 `margin-inline-start: 40px` 이다. 그대로 두면 값만 40px
-     들여써져 바로 위 레이블과 좌우선이 어긋난다. */
-  margin: 3px 0 0;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.my-manse-basis > p {
-  margin-top: 16px;
-  color: #9ca3af;
-  font-size: 11.5px;
-  line-height: 1.75;
-}
-.my-manse-empty {
-  width: min(430px, 100%);
-  margin: 0 auto;
-  padding: 56px 6px 0;
+  margin-top: var(--ud-s4);
+  padding: var(--ud-s7) var(--ud-s5);
+  border: 1px dashed var(--ud-metal-8);
+  border-radius: var(--udm-r-card);
   text-align: center;
 }
-.my-manse-empty h1 {
-  margin-top: 12px;
-  font-size: 23px;
-  font-weight: 800;
-  line-height: 1.4;
+.ud-app-container .my-empty-avatar {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-surface-2);
+  color: var(--ud-gold-text);
 }
-.my-manse-empty p {
-  margin-top: 12px;
-  color: #6b7280;
-  font-size: 13px;
-  line-height: 1.8;
+.ud-app-container .my-empty-replay-card p {
+  margin-top: var(--ud-s4);
+  color: var(--ud-cream-dim);
+  font-size: var(--ud-fs-200);
 }
-.my-manse-cta {
-  display: inline-flex;
-  min-height: 50px;
-  margin-top: 24px;
-  padding: 0 24px;
-  align-items: center;
-  border-radius: 12px;
-  background: #181512;
-  color: #f7f3ec;
-  font-size: 15px;
-  font-weight: 800;
+.ud-app-container .my-empty-replay-card a {
+  margin-top: var(--ud-s4);
+  color: var(--ud-gold-text-hi);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-bold);
   text-decoration: none;
 }
 
-/* 좁은 프레임에서는 네 기둥을 두 줄로 접는다. 4열을 유지하면 한자가 잘린다. */
-@container app (max-width: 360px) {
-  .my-manse-pillars {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.ud-app-container .my-promo-section {
+  margin-top: var(--ud-s7);
+}
+.ud-app-container .my-promo-list {
+  display: flex;
+  margin-top: var(--ud-s3);
+  flex-direction: column;
+  gap: var(--ud-s2);
+}
+.ud-app-container .my-promo-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ud-s3);
+  padding: var(--ud-s3);
+  overflow: hidden;
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-row);
+  background: var(--ud-surface-1);
+  color: inherit;
+  text-decoration: none;
+}
+.ud-app-container .my-promo-banner img {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  border-radius: var(--udm-r-chip);
+  object-fit: cover;
+}
+.ud-app-container .my-promo-overlay {
+  display: none;
+}
+.ud-app-container .my-promo-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ud-app-container .my-promo-copy > span {
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
+}
+.ud-app-container .my-promo-copy strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .my-promo-copy p {
+  margin-top: 2px;
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+}
+.ud-app-container .my-promo-banner em {
+  flex: 0 0 auto;
+  color: var(--ud-metal-6);
+  font-size: var(--ud-fs-50);
+  font-style: normal;
+  font-weight: var(--ud-w-bold);
 }
 
-/* 다크 — 셸 정책이 /my 를 다크로 칠한다 ──────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   내 만세력
+   ══════════════════════════════════════════════════════════════════════════ */
 
-body.home-all-black .my-account-avatar {
-  background: #17181b;
-  color: #8b8f96;
+.ud-app-container .my-manse-pillars {
+  display: grid;
+  margin-top: var(--ud-s2);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ud-s2);
 }
-body.home-all-black .my-account-name em,
-body.home-all-black .my-feature-card-copy p,
-body.home-all-black .my-menu-copy em,
-body.home-all-black .my-gate p,
-body.home-all-black .my-manse-note,
-body.home-all-black .my-manse-empty p {
-  color: #8b8f96;
+.ud-app-container .my-manse-pillar {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: var(--ud-s2);
+  padding: var(--ud-s4) var(--ud-s1) var(--ud-s5);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-row);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-rim);
 }
-body.home-all-black .my-feature-card,
-body.home-all-black .my-manse-card {
-  background: #121316;
+.ud-app-container .my-manse-pillar-label {
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
 }
-body.home-all-black .my-feature-card-glyph,
-body.home-all-black .my-manse-keywords li,
-body.home-all-black .my-manse-gauge {
-  background: #1e2024;
-  color: #c9ccd2;
+.ud-app-container .my-manse-stem,
+.ud-app-container .my-manse-branch {
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-body);
+  line-height: 1.05;
 }
-body.home-all-black .my-menu-icon {
-  color: #c9ccd2;
+.ud-app-container .my-manse-stem {
+  color: var(--ud-cream);
 }
-body.home-all-black .my-menu-list-share,
-body.home-all-black .my-support,
-body.home-all-black .my-manse-basis {
-  border-color: #26282c;
+.ud-app-container .my-manse-branch {
+  color: var(--ud-cream-dim);
 }
-body.home-all-black .my-manse-pillar {
-  border-color: #26282c;
-  background: #121316;
+/* 시주가 없을 때의 빈 자리. 실선 카드면 세운 기둥처럼 보인다. */
+.ud-app-container .my-manse-pillar.is-unknown {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
 }
-body.home-all-black .my-manse-branch,
-body.home-all-black .my-manse-card p {
-  color: #b6bac1;
+.ud-app-container .my-manse-unknown {
+  color: var(--ud-cream-mute);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
 }
-body.home-all-black .my-manse-cta {
-  background: #f2efe9;
-  color: #17140f;
+.ud-app-container .my-manse-note {
+  margin-top: var(--ud-s3);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
 }
-body.home-all-black .my-support-contact a,
-body.home-all-black .my-support-links a {
-  color: #9aa0a8;
+.ud-app-container .my-manse-card {
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s5);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-1);
+  box-shadow: var(--ud-lift-1);
+}
+.ud-app-container .my-manse-card-label {
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
+}
+.ud-app-container .my-manse-daymaster {
+  display: block;
+  margin-top: var(--ud-s2);
+  background: var(--ud-gilt-text);
+  /* 금박 글리프. 배경 그라디언트를 글자에 클립한다 — 이 화면에서 유일한 금속 글자다. */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-700);
+  font-weight: var(--ud-w-body);
+  line-height: 1.05;
+}
+.ud-app-container .my-manse-keywords {
+  display: flex;
+  margin-top: var(--ud-s4);
+  flex-wrap: wrap;
+  gap: var(--ud-s2);
+  list-style: none;
+}
+.ud-app-container .my-manse-keywords li {
+  padding: 5px var(--ud-s3);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--ud-r-pill);
+  color: var(--ud-cream-dim);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+}
+.ud-app-container .my-manse-card p {
+  margin-top: var(--ud-s4);
+  color: var(--ud-cream-dim);
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .my-manse-strength-label {
+  display: block;
+  margin-top: var(--ud-s2);
+  color: var(--ud-cream);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-400);
+  font-weight: var(--ud-w-body);
+}
+.ud-app-container .my-manse-gauge {
+  height: 6px;
+  margin-top: var(--ud-s4);
+  overflow: hidden;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-surface-4);
+  box-shadow: var(--ud-recess);
+}
+.ud-app-container .my-manse-gauge > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-gilt);
+}
+.ud-app-container .my-manse-basis {
+  margin-top: var(--ud-s5);
+  padding-top: var(--ud-s5);
+  border-top: 1px solid var(--ud-metal-9);
+}
+.ud-app-container .my-manse-basis dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ud-s3) var(--ud-s4);
+}
+.ud-app-container .my-manse-basis dt {
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
+}
+.ud-app-container .my-manse-basis dd {
+  /* dd 의 브라우저 기본값은 margin-inline-start: 40px 이다. 그대로 두면 값만
+     40px 들여써져 바로 위 레이블과 좌우선이 어긋난다. */
+  margin: var(--ud-s1) 0 0;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-medium);
+}
+.ud-app-container .my-manse-basis > p {
+  margin-top: var(--ud-s5);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .my-manse-empty {
+  width: var(--udm-col);
+  margin: 0 auto;
+  padding: var(--ud-s8) var(--ud-s3) 0;
+  text-align: center;
+}
+.ud-app-container .my-manse-empty h1 {
+  margin-top: var(--ud-s3);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-body);
+  line-height: var(--ud-lh-title);
+}
+.ud-app-container .my-manse-empty p {
+  margin-top: var(--ud-s4);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .my-manse-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  margin-top: var(--ud-s6);
+  padding: 0 var(--ud-s6);
+  border-radius: var(--udm-r-row);
+  background: var(--ud-gilt);
+  color: var(--ud-crimson-ink);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-display);
+  text-decoration: none;
 }
 
-/* 결제 화면의 쿠폰 줄 ───────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   쿠폰
+   ══════════════════════════════════════════════════════════════════════════ */
 
+.ud-app-container .ud-coupon-group {
+  margin-top: var(--ud-s6);
+}
+.ud-app-container .ud-coupon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s4);
+  gap: var(--ud-s3);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--udm-r-card);
+  background: var(--ud-surface-1);
+  box-shadow: var(--ud-lift-1);
+}
+/* 티켓처럼 보이게 왼쪽 금액 칸을 점선으로 끊는다. */
+/* 금액 칸은 내용만큼만 차지한다. 고정 폭을 주면 본문이 3~4줄로 눌린다. */
+.ud-app-container .ud-coupon-amount {
+  display: flex;
+  align-items: baseline;
+  flex: 0 0 auto;
+  padding-right: var(--ud-s3);
+  gap: 2px;
+  border-right: 1px dashed var(--ud-metal-7);
+}
+.ud-app-container .ud-coupon-amount strong {
+  background: var(--ud-gilt-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-500);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-title);
+}
+.ud-app-container .ud-coupon-amount em {
+  color: var(--ud-gold-text);
+  font-size: var(--ud-fs-100);
+  font-style: normal;
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .ud-coupon-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ud-app-container .ud-coupon-body strong {
+  display: block;
+  color: var(--ud-cream);
+  font-size: var(--ud-fs-200);
+  font-weight: var(--ud-w-bold);
+}
+.ud-app-container .ud-coupon-body p {
+  margin-top: var(--ud-s1);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
+}
+.ud-app-container .ud-coupon-body small {
+  display: block;
+  margin-top: var(--ud-s2);
+  color: var(--ud-metal-4);
+  font-size: var(--ud-fs-50);
+}
+.ud-app-container .ud-coupon-claim {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 var(--ud-s4);
+  border: 0;
+  border-radius: var(--udm-r-chip);
+  background: var(--ud-gilt);
+  color: var(--ud-crimson-ink);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-display);
+  cursor: pointer;
+}
+.ud-app-container .ud-coupon-claim:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ud-app-container .ud-coupon-state {
+  flex: 0 0 auto;
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+}
+/* 다 쓴 쿠폰과 만료된 쿠폰은 남기되 눈에 덜 띄게. */
+.ud-app-container .ud-coupon.is-used,
+.ud-app-container .ud-coupon.is-expired {
+  opacity: 0.42;
+  box-shadow: none;
+}
+.ud-app-container .ud-coupon-empty,
+.ud-app-container .ud-coupon-disabled {
+  margin-top: var(--ud-s3);
+  padding: var(--ud-s5);
+  border: 1px dashed var(--ud-metal-8);
+  border-radius: var(--udm-r-card);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
+  text-align: center;
+}
+.ud-app-container .ud-coupon-notice {
+  margin-top: var(--ud-s3);
+  color: var(--ud-safe);
+  font-size: var(--ud-fs-100);
+  font-weight: var(--ud-w-medium);
+}
+.ud-app-container .ud-coupon-note {
+  margin-top: var(--ud-s5);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .ud-coupon-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--ud-s5);
+}
+
+/* 결제 화면의 쿠폰 줄 — 여기만 `.ud-app-container` 밖이라 토큰을 못 쓴다.
+   결제는 자기 시트를 따로 갖고 있어 색을 그쪽 값에 맞춘다. */
 .checkout-coupon-row {
   display: flex;
   align-items: center;
@@ -485,12 +940,12 @@ body.home-all-black .my-support-links a {
 }
 .checkout-coupon-row select {
   max-width: 62%;
-  padding: 7px 10px;
-  border: 1px solid rgba(255, 255, 255, .16);
-  border-radius: 9px;
-  background: rgba(255, 255, 255, .05);
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
   color: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 .checkout-coupon-note {
   margin-top: 6px;
@@ -500,119 +955,75 @@ body.home-all-black .my-support-links a {
   text-align: right;
 }
 
-/* 쿠폰 지갑 ───────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   좁은 프레임
+   ══════════════════════════════════════════════════════════════════════════ */
 
-.ud-coupon-group {
-  margin-top: 22px;
+/* 뷰포트가 아니라 **프레임**을 잰다. 1440px 창 안의 400px 프레임에서
+   `@media (min-width: 768px)` 는 참이 되어 폰 폭 상자에 데스크톱 레이아웃을 그린다
+   (`shellFrameContract.test.ts` 가 그것을 막는다). */
+@container app (max-width: 360px) {
+  .ud-app-container .my-manse-pillars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ud-app-container .ud-coupon {
+    flex-wrap: wrap;
+  }
+  .ud-app-container .ud-coupon-amount {
+    border-right: 0;
+  }
 }
-.ud-coupon {
+
+/* 감속 선호에서는 전환을 끈다. 이 시트는 transform·opacity·background 만
+   전환하므로 지속시간만 0 으로 만들어도 최종 상태가 남지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .ud-app-container .my-feature-card,
+  .ud-app-container .my-menu-row,
+  .ud-app-container .my-kakao-button,
+  .ud-app-container .my-archive-chevron {
+    transition: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   전역 푸터 — 계정 화면 안에서만 톤을 맞춘다
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 마이 본화면은 자기 고객센터·약관 블록을 그리므로 푸터를 끈다(셸 정책). 리포트·
+   만세력·쿠폰·오늘의 운세는 그 블록이 없어 전역 푸터를 그대로 쓰는데, 기본 스타일이
+   새 디자인 옆에서 혼자 옛 화면처럼 보인다. 이 스코프 안에서만 색과 간격을 맞춘다. */
+.ud-app-container .site-footer {
+  margin-top: var(--ud-s7);
+  padding: var(--ud-s5) 0 var(--ud-s6);
+  border-top: 1px solid var(--ud-metal-9);
+  background: transparent;
+}
+.ud-app-container .site-footer-inner {
+  width: var(--udm-col);
+  margin: 0 auto;
+  padding: 0 var(--ud-s3);
+}
+.ud-app-container .site-footer-copy p {
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container .site-footer-links {
   display: flex;
   align-items: center;
-  margin-top: 10px;
-  padding: 14px;
-  gap: 14px;
-  border: 1px dashed #d1d5db;
-  border-radius: 14px;
+  margin-top: var(--ud-s4);
+  flex-wrap: wrap;
+  gap: var(--ud-s2);
+  font-size: var(--ud-fs-100);
 }
-.ud-coupon-amount {
-  display: flex;
-  align-items: baseline;
-  flex: 0 0 auto;
-  gap: 2px;
-  min-width: 68px;
+.ud-app-container .site-footer-links a {
+  color: var(--ud-cream-dim);
+  text-decoration: none;
 }
-.ud-coupon-amount strong {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -.02em;
+.ud-app-container .site-footer-links a:hover {
+  color: var(--ud-cream);
+  text-decoration: underline;
 }
-.ud-coupon-amount em {
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 700;
-}
-.ud-coupon-body {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-.ud-coupon-body strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 800;
-}
-.ud-coupon-body p {
-  margin-top: 3px;
-  color: #6b7280;
-  font-size: 12px;
-  line-height: 1.55;
-}
-.ud-coupon-body small {
-  display: block;
-  margin-top: 5px;
-  color: #9ca3af;
-  font-size: 11px;
-}
-.ud-coupon-claim {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 15px;
-  border: 0;
-  border-radius: 10px;
-  background: #181512;
-  color: #f7f3ec;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.ud-coupon-claim:disabled {
-  opacity: .5;
-  cursor: default;
-}
-.ud-coupon-state {
-  flex: 0 0 auto;
-  color: #9ca3af;
-  font-size: 11px;
-  font-weight: 700;
-}
-/* 다 쓴 쿠폰과 만료된 쿠폰은 남겨 두되 눈에 덜 띄게 둔다. */
-.ud-coupon.is-used,
-.ud-coupon.is-expired {
-  opacity: .45;
-}
-.ud-coupon-empty,
-.ud-coupon-disabled {
-  margin-top: 10px;
-  color: #6b7280;
-  font-size: 12.5px;
-  line-height: 1.7;
-}
-.ud-coupon-notice {
-  margin-top: 10px;
-  color: #6f9a6b;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-.ud-coupon-note {
-  margin-top: 20px;
-  color: #9ca3af;
-  font-size: 11.5px;
-  line-height: 1.75;
-}
-.ud-coupon-cta {
-  display: flex;
-  justify-content: center;
-  margin-top: 18px;
-}
-
-body.home-all-black .ud-coupon {
-  border-color: #33363b;
-}
-body.home-all-black .ud-coupon-body p,
-body.home-all-black .ud-coupon-empty,
-body.home-all-black .ud-coupon-disabled {
-  color: #9aa0a8;
-}
-body.home-all-black .ud-coupon-claim {
-  background: #f2efe9;
-  color: #17140f;
+.ud-app-container .site-footer-links span {
+  color: var(--ud-metal-8);
 }
