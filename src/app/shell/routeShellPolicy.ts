@@ -92,6 +92,9 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
   '/my/reports': shell({ containerClass: 'ud-app-container' }),
   '/my/manseryeok': shell({ containerClass: 'ud-app-container' }),
   '/my/coupons': shell({ containerClass: 'ud-app-container' }),
+  /* 채팅은 자기 입력줄을 바닥에 고정한다. 전역 푸터가 그 아래 깔리면 스크롤이
+     엉키므로 끈다. 탭바는 그대로 둔다 — 대화 중에도 나갈 길은 있어야 한다. */
+  '/chat': shell({ tabAnchor: 'origin', footer: false, containerClass: 'ud-app-container' }),
   /* 오늘의 운세는 마이에서 들어가지만 탭 목적지는 아니다. 'origin' 으로 두어야
      들어온 탭이 계속 켜져 있는다. */
   '/today': shell({ tabAnchor: 'origin', containerClass: 'ud-app-container' }),

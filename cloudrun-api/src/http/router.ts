@@ -18,6 +18,7 @@ export const PUBLIC_ROUTES = Object.freeze([
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  'POST /api/chat',
   'GET /api/coupons',
   'POST /api/coupons/claim',
   'POST /api/payments/portone/order',
@@ -68,6 +69,7 @@ type RouterDependencies = {
   };
   admin: { login(body: Record<string, unknown>): unknown };
   guiyeondo: GuiyeondoApi;
+  chat: { reply(body: Record<string, unknown>): Promise<unknown> };
   coupons: {
     listWallet(userId: string): Promise<unknown>;
     claim(userId: string, code: unknown): Promise<unknown>;
@@ -266,6 +268,20 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
 
     /* 쿠폰 — 둘 다 로그인이 필요하다. 코드를 아는 것만으로 할인이 되면 코드가 새는
        순간 전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
+    /* 상담 채팅. 로그인한 사람만 — 대화가 이 사람의 명식을 근거로 돌고,
+       모델 호출이라 비용이 붙는다. 요청 제한은 리포트와 같은 것을 쓴다. */
+    if (req.method === 'POST' && isPath(url.pathname, '/chat')) {
+      try {
+        dependencies.auth.verifyUserAccess(req);
+        dependencies.enforceReportRateLimit(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 200, await dependencies.chat.reply(body));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
     if (req.method === 'GET' && isPath(url.pathname, '/coupons')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);

@@ -9,6 +9,7 @@ const shell = () => read('app/shell/appShell.css');
 /** Sheets that must not re-assert container geometry or the page background. */
 const PRODUCT_STYLESHEETS = [
   'styles/general-saju.css',
+  'styles/chat.css',
   'styles/daily.css',
   'styles/my.css',
   'styles/mz-love-fact.css',

@@ -29,6 +29,7 @@ import { createAdminLoginRateLimit } from './middleware/adminLoginRateLimit.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
 import { CouponRepository } from './repositories/couponRepository.ts';
 import { CouponService } from './domains/coupons/couponService.ts';
+import { ChatService } from './domains/chat/chatService.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
 import { GuiyeondoFirestoreRepository } from './repositories/guiyeondoRepository.ts';
@@ -125,6 +126,10 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     tokenService
   );
   const adminService = new AdminService(config, tokenService);
+  const chatService = new ChatService({
+    config: { model: config.gemini.model, requestTimeoutMs: 20_000 },
+    fetchImplementation
+  });
   const healthService = new HealthService(config);
   const applyCors = createCorsMiddleware(config);
   const enforceReportRateLimit = createReportRateLimit(config);
@@ -150,6 +155,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     archives: archiveService,
     admin: adminService,
     guiyeondo: guiyeondoService,
+    chat: chatService,
     coupons: couponService
   });
 }

@@ -23,6 +23,9 @@ const EXPECTED_PUBLIC_ROUTES = [
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  /* 상담 채팅. 로그인한 사람만 — 대화가 이 사람의 명식을 근거로 돌고 모델 호출에 비용이
+     붙는다. 요청 제한은 리포트와 같은 것을 쓴다. */
+  'POST /api/chat',
   /* 쿠폰은 둘 다 로그인이 필요하다. 코드를 아는 것만으로 할인이 되면 코드가 새는 순간
      전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
   'GET /api/coupons',

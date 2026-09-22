@@ -69,12 +69,10 @@ export const MY_MENU_ENTRIES: readonly MyMenuEntry[] = Object.freeze([
   {
     id: 'chat',
     label: '채팅방',
-    note: '상담 채팅은 아직 열지 않았습니다',
-    to: null,
-    status: 'soon',
-    blockedBy:
-      '실시간 서버와 신고·차단 장치가 없다. 사람 사이의 대화를 받는 기능이라 ' +
-      '운영 책임이 함께 붙는다.',
+    note: '내 명식을 아는 운월에게 바로 물어봅니다',
+    to: '/chat',
+    status: 'live',
+    requiresAuth: true,
     group: 'primary'
   },
   {
