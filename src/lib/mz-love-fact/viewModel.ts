@@ -1,8 +1,14 @@
+import type { LoveReadingRelationshipStatus } from '../../products/love-reading/intakeContract';
+import {
+  buildLoveReadingReportPersonalization,
+  type LoveReadingCalculationBasis,
+} from '../../products/love-reading/reportPersonalization';
 import type { ReportSection, SajuReportData } from '../saju/report';
 import { auditMzLoveText } from './contentSafety';
 import { getMzLoveScene } from './sceneManifest';
 import { resolveMzLoveChapterScenes } from './sceneResolver';
 import type {
+  CalculationBasisTag,
   ChapterLayout,
   FactBombResult,
   LovePartnerTendency,
@@ -18,6 +24,16 @@ import type {
   RelationshipStatus,
   SajuChartSummary,
 } from './types';
+
+export interface MzLoveBuildOptions {
+  relationshipStatus?: RelationshipStatus;
+  relationshipDuration?: MzLoveInput['relationshipDuration'];
+  birthTimeKnown?: boolean;
+  interestedIn?: MzLoveInput['interestedIn'];
+  loveReaction?: MzLoveInput['microChoice'];
+  loveFocus?: MzLoveInput['loveFocus'];
+  primaryQuestion?: string;
+}
 
 const RELATIONSHIP_LABELS: Record<RelationshipStatus, string> = {
   single: '솔로 · 새로운 인연 탐색',
@@ -639,29 +655,114 @@ function partnerTendency(
   };
 }
 
+function toLoveReadingRelationshipStatus(
+  status: RelationshipStatus,
+): LoveReadingRelationshipStatus {
+  switch (status) {
+    case 'meeting':
+      return 'single';
+    case 'long-term':
+      return 'married';
+    case 'single':
+    case 'situationship':
+    case 'dating':
+    case 'ambiguous':
+    case 'breakup-reunion':
+      return status;
+  }
+}
+
+function buildReportPersonalization(
+  report: SajuReportData,
+  sajuSummary: SajuChartSummary,
+  status: RelationshipStatus,
+  options: MzLoveBuildOptions,
+) {
+  if (!options.loveReaction || !options.loveFocus) return null;
+
+  return buildLoveReadingReportPersonalization({
+    relationshipStatus: toLoveReadingRelationshipStatus(status),
+    relationshipDuration: options.relationshipDuration,
+    loveReaction: options.loveReaction,
+    loveFocus: options.loveFocus,
+    chart: {
+      dayMaster: sajuSummary.dayMaster,
+      dayMasterElement: sajuSummary.dayMasterElement,
+      strengthLabel: sajuSummary.strengthLabel,
+      pillars: sajuSummary.pillars,
+      helpfulElements: sajuSummary.helpfulElements,
+      cautiousElements: sajuSummary.cautiousElements,
+      dominantTenGods: sajuSummary.dominantTenGods,
+      monthLuck: (report.monthLuck ?? []).slice(0, 12).map((item) => ({
+        year: item.year,
+        month: item.month,
+        score: item.score,
+      })),
+      birthTimeKnown: sajuSummary.birthTimeKnown,
+      calculationPrecision: sajuSummary.calculationPrecision,
+    },
+  });
+}
+
+function toCalculationBasisTag(
+  chapterId: MzLoveChapterId,
+  basis: LoveReadingCalculationBasis,
+  index: number,
+): CalculationBasisTag {
+  const kind: CalculationBasisTag['kind'] = basis.kind === 'intake-answer'
+    ? 'intake'
+    : basis.kind === 'calculated-timing'
+      ? 'timing'
+      : 'chart';
+
+  return {
+    id: `basis:${chapterId}:${basis.kind}:${basis.field}:${index}`,
+    label: basis.label,
+    value: basis.value,
+    description: basis.scope,
+    sourcePath: basis.field,
+    kind,
+  };
+}
+
+function mapCalculationBasisByChapter(
+  personalization: NonNullable<ReturnType<typeof buildReportPersonalization>>,
+): NonNullable<MzLoveReport['calculationBasisByChapter']> {
+  return Object.fromEntries(
+    ADAPTER_CHAPTERS.map(({ id }) => [
+      id,
+      personalization.calculationBasisByChapter[id]
+        .map((basis, index) => toCalculationBasisTag(id, basis, index)),
+    ]),
+  );
+}
+
 export function buildMzLoveReportFromSaju(
   report: SajuReportData,
-  options: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean; interestedIn?: MzLoveInput['interestedIn'] } = {},
+  options: MzLoveBuildOptions = {},
 ): MzLoveReport {
   const sajuSummary = adaptSajuReportToMzLoveSummary(report, options);
   const status = options.relationshipStatus ?? inferRelationshipStatus(report);
+  const personalization = buildReportPersonalization(report, sajuSummary, status, options);
   const usedFactBombs = new Set<string>();
   const usedCustomerSourceTexts = new Set<string>();
   const chapters: LoveReportChapter[] = ADAPTER_CHAPTERS.map((definition, index) => {
-    const statusCopy = definition.id === 'relationship-status'
+    const personalizedCopy = personalization?.chapterCopyOverrides[definition.id];
+    const legacyStatusCopy = definition.id === 'relationship-status'
       ? RELATIONSHIP_STATUS_CHAPTER_COPY[status]
       : null;
-    const fallback = statusCopy ?? CHAPTER_FALLBACK_COPY[definition.id];
+    const selectedCopy = personalizedCopy ?? legacyStatusCopy;
+    const fallback = selectedCopy ?? CHAPTER_FALLBACK_COPY[definition.id];
     const sourceTexts = chapterSourceTexts(report, definition.id);
-    const factSource = statusCopy
+    const factSource = selectedCopy
       ? undefined
       : sourceTexts.insights.find((item) => (
         !usedFactBombs.has(item.text) && !usedCustomerSourceTexts.has(item.text)
       ));
-    const factBomb = statusCopy?.factBomb ?? factSource?.text ?? definition.factBomb;
+    const factBomb = selectedCopy?.factBomb ?? factSource?.text ?? definition.factBomb;
     usedFactBombs.add(factBomb);
     if (factSource) usedCustomerSourceTexts.add(factSource.text);
-    const supportingTexts = statusCopy
+    const supportingTexts = selectedCopy
       ? []
       : sourceTexts.insights.filter((item) => (
         item.text !== factBomb && !usedCustomerSourceTexts.has(item.text)
@@ -671,7 +772,7 @@ export function buildMzLoveReportFromSaju(
     const realLifeSource = supportingTexts.find((item) => !usedCustomerSourceTexts.has(item.text));
     if (realLifeSource) usedCustomerSourceTexts.add(realLifeSource.text);
     const chapterEvidence = evidenceFromExactSource(sajuSummary.evidence, interpretationSource?.sourcePath);
-    const actionSource = statusCopy
+    const actionSource = selectedCopy
       ? undefined
       : sourceTexts.actions.find((item) => !usedCustomerSourceTexts.has(item.text));
     if (actionSource) usedCustomerSourceTexts.add(actionSource.text);
@@ -707,7 +808,7 @@ export function buildMzLoveReportFromSaju(
   });
   const attractedPartner = partnerTendency('빠르게 끌릴 수 있는 분위기', [], false);
   const lastingPartner = partnerTendency('오래 갈 가능성을 확인할 행동', [], true);
-  const actionPlan = {
+  const defaultActionPlan: MzLoveActionPlan = {
     stop: ['답장 속도 하나로 결론 내리기', '관계를 확인하려고 일부러 밀어내기', '합의 없는 기다림을 계속하기'],
     start: ['원하는 관계를 짧게 말하기', '말과 행동을 분리해 기록하기', '불편한 질문을 차분히 확인하기'],
     check: ['약속을 구체화하는가', '변경 시 대안을 제시하는가', '경계를 존중하는가'],
@@ -718,6 +819,7 @@ export function buildMzLoveReportFromSaju(
       { week: 4 as const, title: '판단하기', task: '계속할 관계와 멈출 관계의 기준 적용하기' },
     ],
   };
+  const actionPlan = personalization?.actionPlan ?? defaultActionPlan;
   const openingFact = adapterFact('adapter:opening', chapters[0].result.factBomb, chapters[0].result.evidence, {
     interpretation: chapters[0].result.interpretation,
     realLifeScene: chapters[0].result.realLifeScene,
@@ -728,8 +830,12 @@ export function buildMzLoveReportFromSaju(
     user: {
       displayName: report.customerName && report.customerName !== '고객' ? report.customerName : '당신',
       relationshipStatus: status,
+      relationshipDuration: options.relationshipDuration,
       interestedIn: options.interestedIn,
-      birthTimeKnown: sajuSummary.birthTimeKnown
+      birthTimeKnown: sajuSummary.birthTimeKnown,
+      primaryQuestion: options.primaryQuestion,
+      microChoice: options.loveReaction,
+      loveFocus: options.loveFocus,
     },
     sajuSummary,
     openingFact,
@@ -752,11 +858,12 @@ export function buildMzLoveReportFromSaju(
     })),
     communicationPattern: chapters[8].result,
     relationshipStatusBranch: chapters[9].result,
-    redFlags: ['관계 정의를 계속 미루면서 책임도 피함', '약속 변경 뒤 대안을 제시하지 않음', '경계를 말했을 때 비난하거나 무시함'],
-    greenFlags: ['말과 행동의 방향이 비슷함', '불편한 대화 뒤에도 관계를 회복하려 함', '서로의 시간과 경계를 존중함'],
+    redFlags: personalization?.redFlags ?? ['관계 정의를 계속 미루면서 책임도 피함', '약속 변경 뒤 대안을 제시하지 않음', '경계를 말했을 때 비난하거나 무시함'],
+    greenFlags: personalization?.greenFlags ?? ['말과 행동의 방향이 비슷함', '불편한 대화 뒤에도 관계를 회복하려 함', '서로의 시간과 경계를 존중함'],
     actionPlan,
     finalFact: chapters[12].result,
     chapters,
+    calculationBasisByChapter: personalization ? mapCalculationBasisByChapter(personalization) : undefined,
     shareCards: ['설렘보다 행동을 본다', '평온함을 지루함으로 오해하지 않는다'],
     recommendations: ['30일 행동 플랜 저장', '관계의 말과 행동을 주 1회 비교'],
     disclaimers: [
@@ -843,11 +950,11 @@ function exactInterpretationEvidence(
 export function buildMzLoveViewModel(report: MzLoveReport): MzLoveReportViewModel;
 export function buildMzLoveViewModel(
   report: SajuReportData,
-  options?: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean; interestedIn?: MzLoveInput['interestedIn'] },
+  options?: MzLoveBuildOptions,
 ): MzLoveReportViewModel;
 export function buildMzLoveViewModel(
   source: MzLoveReport | SajuReportData,
-  options: { relationshipStatus?: RelationshipStatus; birthTimeKnown?: boolean; interestedIn?: MzLoveInput['interestedIn'] } = {},
+  options: MzLoveBuildOptions = {},
 ): MzLoveReportViewModel {
   const report = isMzLoveReport(source) ? source : buildMzLoveReportFromSaju(source, options);
   const sceneByChapter = resolveMzLoveChapterScenes(report.chapters, report.user.relationshipStatus);
@@ -855,7 +962,8 @@ export function buildMzLoveViewModel(
     .sort((left, right) => left.order - right.order)
     .map((chapter) => {
       const definition = ADAPTER_CHAPTERS.find((item) => item.id === chapter.id);
-      const statusCopy = chapter.id === 'relationship-status'
+      const calculationBasis = report.calculationBasisByChapter?.[chapter.id] ?? [];
+      const statusCopy = chapter.id === 'relationship-status' && calculationBasis.length === 0
         ? RELATIONSHIP_STATUS_CHAPTER_COPY[report.user.relationshipStatus]
         : null;
       const fallback = statusCopy ?? CHAPTER_FALLBACK_COPY[chapter.id];
@@ -884,6 +992,7 @@ export function buildMzLoveViewModel(
         evidence: statusCopy
           ? []
           : exactInterpretationEvidence(chapter.result.evidence, chapter.result.interpretation, interpretation),
+        calculationBasis,
         realLifeScene: statusCopy?.realLifeScene
           ?? customerFacingChapterField(chapter.result.realLifeScene, fallback.realLifeScene, chapter.id, excludedValues),
         counterpoint: statusCopy?.counterpoint
@@ -901,8 +1010,9 @@ export function buildMzLoveViewModel(
     });
 
   const evidenceIds = new Set(chapters.flatMap((chapter) => chapter.evidence.map((item) => item.id)));
-  const redFlags = safeNarrativeList(report.redFlags, SAFE_RED_FLAGS, 3);
-  const greenFlags = safeNarrativeList(report.greenFlags, SAFE_GREEN_FLAGS, 3);
+  const flagLimit = report.calculationBasisByChapter ? 4 : 3;
+  const redFlags = safeNarrativeList(report.redFlags, SAFE_RED_FLAGS, flagLimit);
+  const greenFlags = safeNarrativeList(report.greenFlags, SAFE_GREEN_FLAGS, flagLimit);
   const actionPlan = safeActionPlan(report.actionPlan);
   const disclaimers = [
     '이 결과는 관계 패턴을 돌아보는 참고 콘텐츠이며 상대의 속마음이나 미래 사건을 확정하지 않습니다.',

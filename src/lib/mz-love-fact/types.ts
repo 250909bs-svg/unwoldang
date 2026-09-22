@@ -1,3 +1,4 @@
+import type { IntakeFormData, LoveFocus } from '../../api/mockData';
 import type { SajuReportData } from '../saju/report';
 
 export const RELATIONSHIP_STATUSES = [
@@ -29,10 +30,12 @@ export type MzLoveSceneKey = (typeof MZ_LOVE_SCENE_KEYS)[number];
 export interface MzLoveInput {
   displayName: string;
   relationshipStatus: RelationshipStatus;
+  relationshipDuration?: IntakeFormData['relationshipDuration'];
   interestedIn?: 'men' | 'women' | 'any' | 'prefer-not-to-say';
   birthTimeKnown: boolean;
   primaryQuestion?: string;
   microChoice?: 'A' | 'B' | 'C' | 'D';
+  loveFocus?: LoveFocus;
 }
 
 export type EvidenceSource = 'natal-chart' | 'ten-god' | 'relationship' | 'timing' | 'engine-meta';
@@ -48,6 +51,20 @@ export interface EvidenceTag {
   immutable: true;
   confidence?: number;
   uncertainty?: string;
+}
+
+/**
+ * Inputs considered while selecting personalised copy. Unlike EvidenceTag,
+ * this never claims that a displayed interpretation was copied verbatim from
+ * a deterministic engine field.
+ */
+export interface CalculationBasisTag {
+  id: string;
+  label: string;
+  value: string;
+  description: string;
+  sourcePath: string;
+  kind: 'chart' | 'timing' | 'intake';
 }
 
 export interface SajuChartSummary {
@@ -177,6 +194,9 @@ export interface MzLoveReport {
   actionPlan: MzLoveActionPlan;
   finalFact: FactBombResult;
   chapters: readonly LoveReportChapter[];
+  calculationBasisByChapter?: Readonly<
+    Partial<Record<MzLoveChapterId, readonly CalculationBasisTag[]>>
+  >;
   shareCards: readonly string[];
   recommendations: readonly string[];
   disclaimers: readonly string[];
@@ -207,6 +227,7 @@ export interface MzLoveChapterViewModel {
   factBomb: string;
   interpretation: string;
   evidence: readonly EvidenceTag[];
+  calculationBasis: readonly CalculationBasisTag[];
   realLifeScene: string;
   counterpoint: string;
   checkSignal: string;

@@ -158,10 +158,14 @@ describe('premium love nine core answers', () => {
     );
     expect(byId.get('meeting')?.answer).toContain(specificity.meeting.primaryLocation);
     expect(byId.get('meeting')?.answer).toContain(specificity.meeting.recognitionSignal);
+    expect(byId.get('meeting')?.answer).toContain('후보');
+    expect(byId.get('meeting')?.answer).not.toContain('1순위 장소는');
     for (const profession of specificity.professions) {
       expect(byId.get('work')?.answer).toContain(profession.label);
     }
+    expect(byId.get('work')?.answer).toContain('후보');
     expect(byId.get('work')?.answer).toContain('실제 직업 확정이 아니라');
+    expect(byId.get('work')?.answer).not.toContain('1순위');
   });
 
   it('시기 답변에 가장 점수가 높은 3개 월과 첫 행동 지침을 반영한다', () => {

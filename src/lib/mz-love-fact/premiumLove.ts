@@ -167,13 +167,13 @@ export function getPremiumLoveAnswers(report: SajuReportData, interestedIn?: Lov
       id: 'meeting',
       eyebrow: 'WHERE',
       question: '어디서 어떻게 만나게 될까?',
-      answer: `1순위 장소는 ${specificity.meeting.primaryLocation}입니다. ${specificity.meeting.scene}. ${specificity.meeting.recognitionSignal}`
+      answer: `대표 만남 환경 후보로는 ${specificity.meeting.primaryLocation}을 먼저 참고할 수 있어요. ${specificity.meeting.scene}. ${specificity.meeting.recognitionSignal}`
     },
     {
       id: 'work',
       eyebrow: 'LIFE',
       question: '그 사람의 일과 생활 결은 어떨까?',
-      answer: `직업 이미지는 1순위 ${specificity.professions[0].label}, 2순위 ${specificity.professions[1].label}, 3순위 ${specificity.professions[2].label}입니다. 실제 직업 확정이 아니라 ${specificity.professions[0].evidence.join('·')}에서 읽은 대표 사례예요.`
+      answer: `직업 환경 이미지는 ${specificity.professions[0].label}, ${specificity.professions[1].label}, ${specificity.professions[2].label} 후보로 읽힙니다. 실제 직업 확정이 아니라 ${specificity.professions[0].evidence.join('·')}에서 읽은 역할 성향이에요.`
     },
     {
       id: 'contact',
@@ -190,7 +190,7 @@ export function getPremiumLoveAnswers(report: SajuReportData, interestedIn?: Lov
     {
       id: 'avoid',
       eyebrow: 'WARNING',
-      question: '이번에는 어떤 사람을 반드시 피해야 할까?',
+      question: '이번에는 어떤 관계 신호에서 멈춰서 봐야 할까?',
       answer: loveCard(report, '피해야 할 사람', '관계를 정의하지 않으면서 필요할 때만 가까워지는 패턴은 초반부터 멈춰서 봐야 합니다.')
     },
     {

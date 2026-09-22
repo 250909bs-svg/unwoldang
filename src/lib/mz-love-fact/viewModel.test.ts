@@ -350,4 +350,90 @@ describe('SajuReportData MZ love adapter', () => {
     expect(timing?.interpretation).toContain('연애 흐름');
     expect(timing?.evidence).toEqual([]);
   });
+
+  it('reflects relationship status, reaction, focus, and questions in the integrated report', () => {
+    const source = deterministicReport();
+    const sharedOptions = {
+      relationshipStatus: 'dating' as const,
+      relationshipDuration: 'under3' as const,
+      loveFocus: 'partner-type' as const,
+      primaryQuestion: '지금 관계에서 어떤 행동을 먼저 확인해야 하나요?',
+    };
+    const bufferedReport = buildMzLoveReportFromSaju(source, {
+      ...sharedOptions,
+      loveReaction: 'A',
+    });
+    const analyticalReport = buildMzLoveReportFromSaju(source, {
+      ...sharedOptions,
+      loveReaction: 'D',
+      loveFocus: 'repeated-pattern',
+    });
+    const buffered = buildMzLoveViewModel(bufferedReport);
+    const analytical = buildMzLoveViewModel(analyticalReport);
+
+    expect(bufferedReport.user).toMatchObject({
+      relationshipStatus: 'dating',
+      relationshipDuration: 'under3',
+      microChoice: 'A',
+      loveFocus: 'partner-type',
+      primaryQuestion: sharedOptions.primaryQuestion,
+    });
+    expect(buffered.redFlags).not.toEqual(analytical.redFlags);
+    expect(buffered.actionPlan).not.toEqual(analytical.actionPlan);
+
+    const bufferedReaction = buffered.chapters
+      .find((chapter) => chapter.id === 'communication-pattern')
+      ?.calculationBasis.find((item) => item.sourcePath === 'loveReaction');
+    const analyticalReaction = analytical.chapters
+      .find((chapter) => chapter.id === 'communication-pattern')
+      ?.calculationBasis.find((item) => item.sourcePath === 'loveReaction');
+
+    expect(bufferedReaction?.value).toBeTruthy();
+    expect(analyticalReaction?.value).toBeTruthy();
+    expect(bufferedReaction?.value).not.toBe(analyticalReaction?.value);
+    expect([bufferedReaction?.value, analyticalReaction?.value].join(' ')).not.toMatch(/\b(?:A|D)\b/u);
+  });
+
+  it('keeps calculation inputs separate from exact deterministic evidence', () => {
+    const source = deterministicReport();
+    source.monthLuck = [{
+      year: 2026,
+      month: 8,
+      score: 71,
+      focus: '새로운 만남과 대화 접점을 한 번 늘려 보세요.',
+    }] as unknown as SajuReportData['monthLuck'];
+
+    const report = buildMzLoveReportFromSaju(source, {
+      relationshipStatus: 'single',
+      relationshipDuration: '',
+      loveReaction: 'B',
+      loveFocus: 'next-love-timing',
+      primaryQuestion: '앞으로 12개월은 어떻게 움직이면 좋을까요?',
+    });
+    const model = buildMzLoveViewModel(report);
+    const timing = model.chapters.find((chapter) => chapter.id === 'twelve-month-timing');
+    const lasting = model.chapters.find((chapter) => chapter.id === 'lasting-partner');
+
+    expect(timing?.calculationBasis.map((item) => item.sourcePath))
+      .toContain('chart.monthLuck');
+    expect(timing?.calculationBasis.find((item) => item.sourcePath === 'chart.monthLuck')?.value)
+      .toContain('2026-8:71');
+    expect(lasting?.calculationBasis.map((item) => item.sourcePath))
+      .toContain('chart.helpfulElements');
+    expect(model.redFlags.join(' ')).toContain('주의 기운 금');
+    expect(model.greenFlags.join(' ')).toContain('도움 기운 수');
+
+    model.chapters.forEach((chapter) => {
+      chapter.evidence.forEach((item) => {
+        expect(item.value).toBe(chapter.interpretation);
+        expect(item.description).toBe(chapter.interpretation);
+        expect(item.immutable).toBe(true);
+      });
+      chapter.calculationBasis.forEach((item) => {
+        expect(item.id).toMatch(/^basis:/u);
+        expect(item).not.toHaveProperty('immutable');
+        expect(item).not.toHaveProperty('confidence');
+      });
+    });
+  });
 });

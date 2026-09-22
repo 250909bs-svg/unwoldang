@@ -440,6 +440,10 @@
   font-weight: 800;
 }
 
+.mz-love-report__reaction-fact {
+  grid-column: 1 / -1;
+}
+
 .mz-love-report__focus-card {
   position: relative;
   overflow: hidden;
@@ -550,6 +554,19 @@
   border: 1px solid rgba(255, 134, 145, 0.26);
   border-radius: 20px 20px 20px 5px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+
+.mz-love-report__qa-card--safety .mz-love-report__qa-answer {
+  background:
+    radial-gradient(circle at 0 0, rgba(226, 180, 107, 0.2), transparent 13rem),
+    linear-gradient(145deg, rgba(65, 31, 12, 0.97), rgba(18, 8, 5, 0.99));
+  border-color: rgba(255, 203, 124, 0.5);
+  border-left: 4px solid #f2bd68;
+}
+
+.mz-love-report__qa-card--safety .mz-love-report__qa-answer > span,
+.mz-love-report__qa-card--safety .mz-love-report__qa-answer > strong {
+  color: #ffd798;
 }
 
 .mz-love-report__qa-answer > span {
@@ -1498,6 +1515,111 @@
   color: #ffe4d6;
 }
 
+.mz-love-report__calculation-disclosure {
+  overflow: hidden;
+  background: rgba(16, 20, 27, 0.84);
+  border: 1px solid rgba(139, 187, 204, 0.28);
+  border-radius: 15px;
+}
+
+.mz-love-report__calculation-disclosure > summary {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  min-height: 56px;
+  align-content: center;
+  padding: 12px 44px 12px 14px;
+  color: #dcebf0;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.mz-love-report__calculation-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mz-love-report__calculation-disclosure > summary::after {
+  content: "+";
+  position: absolute;
+  right: 16px;
+  align-self: center;
+  color: #91c6d8;
+  font-size: 1.2rem;
+}
+
+.mz-love-report__calculation-disclosure[open] > summary::after {
+  content: "−";
+}
+
+.mz-love-report__calculation-disclosure > summary span {
+  color: #91c6d8;
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+}
+
+.mz-love-report__calculation-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-top: 1px solid rgba(139, 187, 204, 0.18);
+}
+
+.mz-love-report__calculation-body > p {
+  color: #bacbd0;
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+.mz-love-report__calculation-body dl {
+  display: grid;
+  gap: 8px;
+}
+
+.mz-love-report__calculation-body dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: 10px;
+  padding: 11px;
+  background: rgba(87, 128, 143, 0.1);
+  border-radius: 11px;
+}
+
+.mz-love-report__calculation-body dt {
+  color: #a9ced9;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.mz-love-report__calculation-body dd {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.mz-love-report__calculation-body dd strong,
+.mz-love-report__calculation-body dd span,
+.mz-love-report__calculation-body dd small {
+  display: block;
+}
+
+.mz-love-report__calculation-body dd strong {
+  color: #eef9fb;
+  font-size: 0.73rem;
+}
+
+.mz-love-report__calculation-body dd span {
+  color: #c7d8dc;
+  font-size: 0.7rem;
+}
+
+.mz-love-report__calculation-body dd small {
+  color: #829da5;
+  font-size: 0.63rem;
+  overflow-wrap: anywhere;
+}
+
 .mz-love-report__formula {
   display: grid;
   gap: 10px;
@@ -1735,6 +1857,15 @@
   line-height: 1;
 }
 
+.mz-love-report__temperature strong small {
+  display: block;
+  margin-bottom: 4px;
+  color: #c7ada9;
+  font-family: inherit;
+  font-size: 0.6rem;
+  font-weight: 750;
+}
+
 .mz-love-report__temperature meter {
   grid-column: 1 / -1;
   width: 100%;
@@ -1753,6 +1884,14 @@
 .mz-love-report__temperature meter::-webkit-meter-even-less-good-value {
   background: linear-gradient(90deg, #7c1128, #ff5363, #ffc1a7);
   border-radius: 999px;
+}
+
+.mz-love-report__temperature-note {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  color: #a99592;
+  font-size: 0.68rem;
+  line-height: 1.55;
 }
 
 .mz-love-report__month-panel dl {
