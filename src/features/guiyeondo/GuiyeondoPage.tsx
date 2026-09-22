@@ -3,14 +3,29 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { createSecureRandomPart } from '../../shared/security/secureRandom';
-import { createGuiyeondoInviteRemote, fetchGuiyeondoInviteResponses, fetchGuiyeondoOwnedInvites, revokeGuiyeondoInvite } from './api';
+import {
+  claimGuiyeondoConnection,
+  createGuiyeondoDirectConnection,
+  createGuiyeondoInviteRemote,
+  fetchGuiyeondoConnections,
+  fetchGuiyeondoInviteResponses,
+  fetchGuiyeondoOwnedInvites,
+  removeGuiyeondoConnection,
+  revokeGuiyeondoInvite
+} from './api';
 import GuiyeondoBirthFlow from './GuiyeondoBirthFlow';
+import { GUIYEONDO_PENDING_CLAIM_KEY } from './GuiyeondoGuestPage';
 import GuiyeondoConnectionList from './GuiyeondoConnectionList';
 import GuiyeondoDetailPanel from './GuiyeondoDetailPanel';
 import GuiyeondoIntro from './GuiyeondoIntro';
 import GuiyeondoInviteSheet from './GuiyeondoInviteSheet';
 import GuiyeondoMap from './GuiyeondoMap';
 import GuiyeondoSheet from './GuiyeondoSheet';
+import {
+  attachGuiyeondoConnectionId,
+  directConnectionIdempotencyKey,
+  mergeGuiyeondoConnections
+} from './connections';
 import { trackGuiyeondoEvent } from './events';
 import {
   liveGuiyeondoInvites,
@@ -75,6 +90,8 @@ export default function GuiyeondoPage() {
   /* 지도가 사라진 브라우저에서, 서버에 아직 살아 있는 내 초대들. 지도를 다시 만들 때
      여기 붙여 넣으면 응답한 사람들이 기존 동기화 경로로 되돌아온다. */
   const [strandedInvites, setStrandedInvites] = useState<GuiyeondoOwnedInvite[]>([]);
+  /** 계정에는 남아 있는데 이 브라우저에 지도가 없어서 아직 못 얹은 인연 수. */
+  const [strandedConnections, setStrandedConnections] = useState(0);
   const mapStateRef = useRef<GuiyeondoMapState | null>(mapState);
 
   useEffect(() => {
@@ -148,6 +165,86 @@ export default function GuiyeondoPage() {
       cancelled = true;
     };
   }, [authToken, mapState]);
+
+  /*
+   * 계정에 남은 인연을 지도에 얹는다. 기기를 바꿔도 사람이 돌아오는 경로가 이것이다.
+   *
+   * 지도가 없으면 합치지 않고 **몇 건이 기다리는지만 세어 둔다.** 지도가 없다는 것은 내
+   * 출생정보가 없다는 뜻이고, 그러면 관계를 놓을 중심이 없다. 출생정보를 다시 넣는
+   * 순간 `mapState.version` 이 생겨 이 효과가 다시 돌고, 그때 사람들이 돌아온다.
+   */
+  const syncConnections = useCallback(async () => {
+    if (!authToken || !ownerId) return;
+    try {
+      const { connections } = await fetchGuiyeondoConnections(authToken);
+      if (!connections.length) return;
+      const current = mapStateRef.current;
+      if (!current) {
+        setStrandedConnections(connections.length);
+        return;
+      }
+      const merged = mergeGuiyeondoConnections(current, connections);
+      if (merged.people.length === current.people.length
+        && merged.people.every((person, index) => person.id === current.people[index]?.id)) return;
+      const next = saveGuiyeondoMap(merged, ownerId);
+      mapStateRef.current = next;
+      setMapState(next);
+      setStrandedConnections(0);
+    } catch {
+      /* 동기화는 거들기만 한다. 실패해도 이 브라우저의 지도는 그대로 쓸 수 있다. */
+    }
+  }, [authToken, ownerId]);
+
+  useEffect(() => {
+    void syncConnections();
+  }, [syncConnections, mapState?.version]);
+
+  /*
+   * 남의 초대에 응답하고 돌아온 사람이 자기 몫을 가져가는 자리.
+   *
+   * 결과 화면에서 증표를 세션에 넣고 로그인을 다녀왔다. 여기서 그것을 서버에 내밀면
+   * 같은 인연이 **양쪽 지도에** 놓인다. 이것이 "서로 다 볼 수 있게" 의 실제 동작이다.
+   *
+   * 증표는 성공이든 실패든 한 번 쓰고 버린다. 남겨 두면 다음 방문마다 이미 가져간
+   * 인연을 다시 가져가려 시도한다.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || !authToken || !ownerId) return;
+    let raw: string | null = null;
+    try {
+      raw = window.sessionStorage.getItem(GUIYEONDO_PENDING_CLAIM_KEY);
+      if (raw) window.sessionStorage.removeItem(GUIYEONDO_PENDING_CLAIM_KEY);
+    } catch {
+      return;
+    }
+    if (!raw) return;
+
+    let cancelled = false;
+    try {
+      const ticket = JSON.parse(raw) as { publicId?: string; idempotencyKey?: string };
+      if (!ticket.publicId || !ticket.idempotencyKey) return;
+      void claimGuiyeondoConnection({
+        publicId: ticket.publicId,
+        idempotencyKey: ticket.idempotencyKey,
+        authToken
+      })
+        .then(async ({ connection }) => {
+          if (cancelled) return;
+          trackGuiyeondoEvent('guiyeondo_connection_claimed', { role: connection.role });
+          await syncConnections();
+          if (!cancelled) setToast(`${connection.name}님과의 인연을 내 귀연도에 담았어요.`);
+        })
+        .catch((error: unknown) => {
+          if (cancelled) return;
+          setToast(error instanceof Error ? error.message : '인연을 담지 못했습니다.');
+        });
+    } catch {
+      /* 세션에 남은 값이 깨졌을 뿐이다. 이미 지웠으니 다시 시도하지 않는다. */
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [authToken, ownerId, syncConnections]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 959px)');
@@ -285,6 +382,36 @@ export default function GuiyeondoPage() {
     if (recovered) completeOwner(recovered.profile);
   };
 
+  /**
+   * 방금 직접 넣은 사람을 계정에도 남긴다.
+   *
+   * 화면은 이미 결과를 보여 준 뒤다 — 계산은 이 브라우저가 했고, 서버 왕복을 기다리게
+   * 하지 않는다. 여기서 하는 일은 **기기를 바꿔도 이 사람이 돌아오게** 만드는 것뿐이라,
+   * 실패해도 조용히 넘어간다. 지도는 이 브라우저에 이미 저장돼 있다.
+   *
+   * 서버는 두 출생정보를 계산에만 쓰고 버린다. 그래서 상대의 생년월일시는 남지 않는다.
+   */
+  const keepDirectPerson = useCallback(async (personId: string, profile: GuiyeondoBirthProfile) => {
+    const current = mapStateRef.current;
+    if (!authToken || !current) return;
+    try {
+      const { connection } = await createGuiyeondoDirectConnection({
+        ownerProfile: current.owner,
+        guestProfile: profile,
+        idempotencyKey: directConnectionIdempotencyKey(personId),
+        authToken
+      });
+      const latest = mapStateRef.current;
+      if (!latest) return;
+      const next = saveGuiyeondoMap(attachGuiyeondoConnectionId(latest, personId, connection), ownerId);
+      mapStateRef.current = next;
+      setMapState(next);
+      setSelectedPersonId(connection.personId);
+    } catch {
+      /* 계정 보관에 실패했을 뿐이다. 이 브라우저에서는 그대로 보인다. */
+    }
+  }, [authToken, ownerId]);
+
   const addPerson = (profile: GuiyeondoBirthProfile) => {
     if (!mapState || working) return;
     setWorking(true);
@@ -301,7 +428,9 @@ export default function GuiyeondoPage() {
         analysis
       };
       const next = addGuiyeondoPerson(mapState, person, ownerId);
+      mapStateRef.current = next;
       setMapState(next);
+      void keepDirectPerson(person.id, profile);
       setAddOpen(false);
       setDirectPermission(false);
       setSelectedType(analysis.classification.type);
@@ -329,11 +458,27 @@ export default function GuiyeondoPage() {
   const removePerson = (personId: string) => {
     if (!mapState) return;
     const person = mapState.people.find((item) => item.id === personId);
-    if (!person || !window.confirm(`${person.name}님과의 인연을 귀연도에서 삭제할까요? 이 브라우저에서는 되돌릴 수 없습니다.`)) return;
+    /* 계정에 남은 사람은 기기를 가리지 않고 사라진다. 문구도 그렇게 적어야 한다 —
+       "이 브라우저에서는" 이라고 해 놓고 다른 기기에서도 지우면 약속을 어기는 것이다. */
+    const scope = person?.connectionId
+      ? '내 계정의 모든 기기에서 사라지고 되돌릴 수 없습니다.'
+      : '이 브라우저에서는 되돌릴 수 없습니다.';
+    if (!person || !window.confirm(`${person.name}님과의 인연을 귀연도에서 삭제할까요? ${scope}`)) return;
     try {
-      setMapState(removeGuiyeondoPerson(mapState, personId, ownerId));
+      const next = removeGuiyeondoPerson(mapState, personId, ownerId);
+      mapStateRef.current = next;
+      setMapState(next);
       closeDetail();
       setToast('선택한 인연을 삭제했어요.');
+      /*
+       * 서버에서도 내 몫을 치운다. 상대가 같은 인연을 들고 있다면 상대 지도에는 남는다 —
+       * 그 관계는 상대의 것이기도 하기 때문이다. 둘 다 치우면 서버가 문서를 지운다.
+       */
+      if (person.connectionId && authToken) {
+        void removeGuiyeondoConnection(person.connectionId, authToken).catch(() => {
+          /* 다음 동기화가 다시 시도한다. 여기서 화면을 되돌리면 지운 것이 되살아난다. */
+        });
+      }
     } catch (error) {
       setToast(error instanceof Error ? error.message : '인연을 삭제하지 못했습니다.');
     }
@@ -442,7 +587,7 @@ export default function GuiyeondoPage() {
   const clearMap = async () => {
     const current = mapStateRef.current;
     if (!current || inviteBusy) return;
-    if (!window.confirm('내 귀연도와 이 브라우저에 저장된 출생정보·인연 결과를 삭제할까요? 활성 초대 링크도 함께 취소됩니다.')) return;
+    if (!window.confirm('내 귀연도와 저장된 출생정보·인연 결과를 삭제할까요? 계정에 남은 인연과 활성 초대 링크도 함께 사라집니다.')) return;
     setInviteBusy(true);
     try {
       /* 서버 회수는 토큰이 있을 때만 된다. 없다고 해서 이 브라우저의 삭제까지 막으면
@@ -452,12 +597,22 @@ export default function GuiyeondoPage() {
         for (const ownedInvite of current.invites.filter((item) => Date.parse(item.expiresAt) > Date.now())) {
           await revokeGuiyeondoInvite(ownedInvite, authToken);
         }
+        /*
+         * 계정에 남은 인연도 함께 치운다. 이걸 빼면 "삭제했다" 고 말해 놓고 다음 로그인에
+         * 사람들이 돌아오는데, 그건 삭제가 아니다. 상대가 같은 인연을 들고 있으면 상대
+         * 지도에는 남는다 — 그쪽은 그 사람의 기록이라 내가 지울 것이 아니다.
+         */
+        await Promise.allSettled(current.people
+          .map((person) => person.connectionId)
+          .filter((connectionId): connectionId is string => Boolean(connectionId))
+          .map((connectionId) => removeGuiyeondoConnection(connectionId, authToken)));
       }
       clearGuiyeondoMap(ownerId);
       mapStateRef.current = null;
       setMapState(null);
       /* 방금 지운 사람에게 "되살릴까요?" 를 내밀지 않는다. 삭제는 삭제로 끝내야 한다. */
       setStrandedInvites([]);
+      setStrandedConnections(0);
       setInvite(null);
       closeDetail();
       setSetupOpen(true);
@@ -479,7 +634,13 @@ export default function GuiyeondoPage() {
         {/* 지도는 이 브라우저에만 있어서 저장소가 비면 사라진다. 그때 "처음부터 다시"
             로 보이면 쌓아 온 인연을 잃은 것처럼 느껴지는데, 응답한 사람들은 초대 만료
             전까지 서버에 남아 있어 실제로는 돌아온다. 그 사실을 먼저 알린다. */}
-        {strandedInvites.length ? (
+        {/* 계정에 남은 인연이 먼저다. 이쪽이 초대보다 확실하게 돌아온다. */}
+        {strandedConnections ? (
+          <p className="gy-setup-restore" role="status">
+            <strong>계정에 인연 {strandedConnections}명이 남아 있어요.</strong>
+            내 출생정보만 다시 넣으면 그대로 지도에 돌아옵니다.
+          </p>
+        ) : strandedInvites.length ? (
           <p className="gy-setup-restore" role="status">
             <strong>보내 둔 초대 {strandedInvites.length}개가 아직 살아 있어요.</strong>
             내 출생정보만 다시 넣으면 그 초대에 응답한 인연들이 돌아옵니다.

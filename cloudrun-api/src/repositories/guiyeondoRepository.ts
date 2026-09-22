@@ -1,6 +1,7 @@
 import { ReportRequestError } from '../contracts/errors.ts';
 import type {
   GuiyeondoRepository,
+  StoredGuiyeondoConnection,
   StoredGuiyeondoInvite,
   StoredGuiyeondoResponse
 } from '../domains/guiyeondo/guiyeondoService.ts';
@@ -10,6 +11,7 @@ type FirestoreValue = {
   stringValue?: string;
   integerValue?: string;
   timestampValue?: string;
+  arrayValue?: { values?: FirestoreValue[] };
 };
 
 type FirestoreDocument = {
@@ -31,6 +33,18 @@ function readInteger(document: FirestoreDocument, fieldName: string) {
 
 function readTimestamp(document: FirestoreDocument, fieldName: string) {
   return document.fields?.[fieldName]?.timestampValue || '';
+}
+
+function readStringArray(document: FirestoreDocument, fieldName: string) {
+  const values = document.fields?.[fieldName]?.arrayValue?.values;
+  if (!Array.isArray(values)) return [];
+  return values
+    .map((value) => value.stringValue || '')
+    .filter((value): value is string => Boolean(value));
+}
+
+function stringArrayValue(values: readonly string[]): FirestoreValue {
+  return { arrayValue: { values: values.map((value) => ({ stringValue: value })) } };
 }
 
 function isNotFound(error: unknown) {
@@ -69,12 +83,31 @@ function parseResponse(document: FirestoreDocument): StoredGuiyeondoResponse {
   };
 }
 
+function parseConnection(document: FirestoreDocument): StoredGuiyeondoConnection {
+  return {
+    connectionId: readString(document, 'connectionId'),
+    memberHashes: readStringArray(document, 'memberHashes'),
+    ownerHash: readString(document, 'ownerHash'),
+    ownerName: readString(document, 'ownerName'),
+    otherName: readString(document, 'otherName'),
+    claimTicket: readString(document, 'claimTicket'),
+    kind: readString(document, 'kind') === 'direct' ? 'direct' : 'invite',
+    personId: readString(document, 'personId'),
+    analysis: JSON.parse(readString(document, 'analysisJson')),
+    consentVersion: readString(document, 'consentVersion'),
+    createdAt: readTimestamp(document, 'createdAt'),
+    removedBy: readStringArray(document, 'removedBy'),
+    updateTime: document.updateTime || ''
+  };
+}
+
 export class GuiyeondoFirestoreRepository implements GuiyeondoRepository {
   constructor(
     private readonly firestore: FirestoreRepository,
     private readonly inviteCollection: string,
     private readonly responseCollection: string,
-    private readonly rateLimitCollection: string
+    private readonly rateLimitCollection: string,
+    private readonly connectionCollection: string
   ) {}
 
   private invitePath(publicId: string) {
@@ -83,6 +116,10 @@ export class GuiyeondoFirestoreRepository implements GuiyeondoRepository {
 
   private responsePath(responseId: string) {
     return `/${encodeURIComponent(this.responseCollection)}/${encodeURIComponent(responseId)}`;
+  }
+
+  private connectionPath(connectionId: string) {
+    return `/${encodeURIComponent(this.connectionCollection)}/${encodeURIComponent(connectionId)}`;
   }
 
   async createInvite(invite: Omit<StoredGuiyeondoInvite, 'updateTime'>) {
@@ -230,6 +267,112 @@ export class GuiyeondoFirestoreRepository implements GuiyeondoRepository {
       });
       return true;
     } catch (error) {
+      if (isConflict(error)) return false;
+      throw error;
+    }
+  }
+
+  async createConnection(connection: Omit<StoredGuiyeondoConnection, 'updateTime'>) {
+    const collection = encodeURIComponent(this.connectionCollection);
+    try {
+      await this.firestore.request(
+        `/${collection}?documentId=${encodeURIComponent(connection.connectionId)}`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            fields: {
+              connectionId: { stringValue: connection.connectionId },
+              memberHashes: stringArrayValue(connection.memberHashes),
+              ownerHash: { stringValue: connection.ownerHash },
+              ownerName: { stringValue: connection.ownerName },
+              otherName: { stringValue: connection.otherName },
+              claimTicket: { stringValue: connection.claimTicket },
+              kind: { stringValue: connection.kind },
+              personId: { stringValue: connection.personId },
+              analysisJson: { stringValue: JSON.stringify(connection.analysis) },
+              consentVersion: { stringValue: connection.consentVersion },
+              createdAt: { timestampValue: connection.createdAt },
+              removedBy: stringArrayValue(connection.removedBy)
+            }
+          })
+        }
+      );
+      return true;
+    } catch (error) {
+      if (isConflict(error)) return false;
+      throw error;
+    }
+  }
+
+  async getConnection(connectionId: string) {
+    try {
+      return parseConnection(await this.firestore.request<FirestoreDocument>(this.connectionPath(connectionId)));
+    } catch (error) {
+      if (isNotFound(error)) return null;
+      throw error;
+    }
+  }
+
+  async listConnectionsByMember(memberHash: string, limit: number) {
+    const rows = await this.firestore.request<FirestoreRunQueryRow[]>(':runQuery', {
+      method: 'POST',
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: this.connectionCollection }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'memberHashes' },
+              op: 'ARRAY_CONTAINS',
+              value: { stringValue: memberHash }
+            }
+          },
+          limit: Math.min(100, Math.max(1, limit))
+        }
+      })
+    });
+    return (Array.isArray(rows) ? rows : [])
+      .map((row) => row.document)
+      .filter((document): document is FirestoreDocument => Boolean(document))
+      .map(parseConnection)
+      .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt));
+  }
+
+  async updateConnectionMembership(
+    connection: StoredGuiyeondoConnection,
+    next: { memberHashes: string[]; removedBy: string[] }
+  ) {
+    const params = new URLSearchParams();
+    params.append('updateMask.fieldPaths', 'memberHashes');
+    params.append('updateMask.fieldPaths', 'removedBy');
+    params.set('currentDocument.updateTime', connection.updateTime);
+    try {
+      await this.firestore.request(`${this.connectionPath(connection.connectionId)}?${params}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          fields: {
+            memberHashes: stringArrayValue(next.memberHashes),
+            removedBy: stringArrayValue(next.removedBy)
+          }
+        })
+      });
+      return true;
+    } catch (error) {
+      if (isConflict(error)) return false;
+      throw error;
+    }
+  }
+
+  async deleteConnection(connection: StoredGuiyeondoConnection) {
+    const params = new URLSearchParams();
+    params.set('currentDocument.updateTime', connection.updateTime);
+    try {
+      await this.firestore.request(`${this.connectionPath(connection.connectionId)}?${params}`, {
+        method: 'DELETE'
+      });
+      return true;
+    } catch (error) {
+      /* 이미 사라진 문서는 지우려던 결과와 같다. */
+      if (isNotFound(error)) return true;
       if (isConflict(error)) return false;
       throw error;
     }

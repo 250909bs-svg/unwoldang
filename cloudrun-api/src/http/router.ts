@@ -37,7 +37,11 @@ export const PUBLIC_ROUTES = Object.freeze([
   'GET /api/guiyeondo/invites/:publicId',
   'POST /api/guiyeondo/invites/:publicId/responses',
   'GET /api/guiyeondo/invites/:publicId/responses',
-  'POST /api/guiyeondo/invites/:publicId/revoke'
+  'POST /api/guiyeondo/invites/:publicId/revoke',
+  'GET /api/guiyeondo/connections',
+  'POST /api/guiyeondo/connections/claim',
+  'POST /api/guiyeondo/connections/direct',
+  'POST /api/guiyeondo/connections/:connectionId/remove'
 ]);
 
 type AuthMiddleware = {
@@ -221,6 +225,57 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
         const user = dependencies.auth.verifyUserAccess(req);
         sendJson(res, 200, await dependencies.guiyeondo.revokeInvite(
           guiyeondo.publicId,
+          user.userId,
+          getClientIp(req)
+        ));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    /* 인연은 초대와 다른 자원이다. 초대는 만료되고 인연은 남으므로 경로도 나눈다. */
+    if (req.method === 'GET' && url.pathname === '/api/guiyeondo/connections') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.guiyeondo.listConnections(user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/guiyeondo/connections/claim') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 200, await dependencies.guiyeondo.claimConnection(body, user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/guiyeondo/connections/direct') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 201, await dependencies.guiyeondo.createDirectConnection(body, user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    /* DELETE 를 쓰지 않는 이유: CORS 허용 메서드가 GET,POST,OPTIONS 라 브라우저 프리플라이트에서
+       막힌다. 초대 철회도 같은 이유로 `/revoke` 라는 POST 다. */
+    const guiyeondoConnection = url.pathname.match(/^\/api\/guiyeondo\/connections\/([a-fA-F0-9]{64})\/remove$/);
+
+    if (guiyeondoConnection && req.method === 'POST') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.guiyeondo.removeConnection(
+          guiyeondoConnection[1],
           user.userId,
           getClientIp(req)
         ));

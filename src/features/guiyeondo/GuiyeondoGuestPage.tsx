@@ -32,6 +32,14 @@ const RELATION_SIGNAL_IDS: Record<GuiyeondoRelationshipType, GuiyeondoVectorId[]
 };
 
 const GUEST_OWN_PROFILE_KEY = 'unwoldang.guiyeondo.guest-own-profile';
+/**
+ * 로그인을 다녀오는 동안 들고 있는 증표.
+ *
+ * 카카오 로그인은 이 페이지를 떠났다가 돌아온다. 그 사이에 "방금 내가 만든 응답" 이라는
+ * 사실을 증명할 것이 없으면, 돌아온 사람은 자기 결과를 자기 지도에 담지 못한다.
+ * 링크와 멱등키 두 값이 그 증명이고, 둘을 아는 사람은 응답한 본인뿐이다.
+ */
+export const GUIYEONDO_PENDING_CLAIM_KEY = 'unwoldang.guiyeondo.pending-claim';
 const GUEST_PURPOSES = [
   { id: 'dating', label: '연애의 온도' },
   { id: 'marriage', label: '함께 사는 리듬' },
@@ -53,6 +61,8 @@ export default function GuiyeondoGuestPage() {
   const [collectionConsent, setCollectionConsent] = useState(false);
   const [sharingConsent, setSharingConsent] = useState(false);
   const [error, setError] = useState('');
+  /** 서버가 이 응답을 계정에 담을 수 있다고 알려 준 경우에만 채워진다. */
+  const [claimTicket, setClaimTicket] = useState<{ publicId: string; idempotencyKey: string } | null>(null);
   const requestKeyRef = useRef('');
 
   useEffect(() => {
@@ -88,6 +98,8 @@ export default function GuiyeondoGuestPage() {
       setGuestProfile(profile);
       setPerson(payload.person);
       setStage('result');
+      /* 증표는 결과를 본 뒤에야 쓸모가 생긴다. 서버가 담을 수 있다고 한 경우만 들고 있는다. */
+      setClaimTicket(payload.keepable ? { publicId: invite.publicId, idempotencyKey } : null);
       requestKeyRef.current = '';
       trackGuiyeondoEvent('guiyeondo_guest_complete', { status: payload.person.analysis.status });
       trackGuiyeondoEvent('guiyeondo_reveal', { classified: Boolean(payload.person.analysis.classification.type) });
@@ -104,10 +116,17 @@ export default function GuiyeondoGuestPage() {
     }
     try {
       window.sessionStorage.setItem(GUEST_OWN_PROFILE_KEY, JSON.stringify({ profile: guestProfile }));
-      trackGuiyeondoEvent('guiyeondo_create_own');
-      /* 초대 링크를 받고 들어온 사람이 자기 인연도를 그려 보려는 참이다. 지도는 이
-         브라우저의 저장소만으로 돌아가므로 여기서 로그인을 물을 이유가 없다. 토큰은
-         나중에 자기 링크를 남에게 보낼 때 /guiyeondo 가 묻는다. */
+      /*
+       * 방금 본 결과를 내 지도에도 담을 수 있게 증표를 함께 넘긴다.
+       *
+       * 여기가 로그인을 묻는 자리다 — 결과를 보기 전이 아니라, **처음으로 지킬 것이
+       * 생긴 뒤.** 그 전에 물으면 아직 아무것도 얻지 못한 사람에게 계정을 요구하는 것이
+       * 되어 그 자리에서 흐름이 끊긴다. 로그인 자체는 `/guiyeondo` 가 묻는다.
+       */
+      if (claimTicket) {
+        window.sessionStorage.setItem(GUIYEONDO_PENDING_CLAIM_KEY, JSON.stringify(claimTicket));
+      }
+      trackGuiyeondoEvent('guiyeondo_create_own', { keeping: Boolean(claimTicket) });
       navigate('/guiyeondo?start=1');
     } catch {
       setError('이 브라우저에 출생정보를 임시 저장하지 못했습니다. 개인정보 보호 설정을 확인해 주세요.');
@@ -164,13 +183,13 @@ export default function GuiyeondoGuestPage() {
               id: 'collection',
               checked: collectionConsent,
               onChange: setCollectionConsent,
-              label: '수집·이용 동의 (필수): 이름/닉네임, 성별, 양·음력, 생년월일시와 날짜 경계 기준을 두 명식의 관계 계산에 사용합니다. 원시 출생정보는 서버 초대·응답 문서에 저장하지 않고, 닉네임과 계산 결과는 서버에 초대 만료일(최대 14일)까지 보관합니다. 거부할 수 있으나 초대 응답을 진행할 수 없습니다.'
+              label: '수집·이용 동의 (필수): 이름/닉네임, 성별, 양·음력, 생년월일시와 날짜 경계 기준을 두 명식의 관계 계산에 사용합니다. 원시 출생정보는 서버 초대·응답 문서에 저장하지 않으며, 계산 직후 폐기합니다. 닉네임과 계산 결과는 두 사람 중 어느 쪽이든 삭제할 때까지 서버에 보관합니다. 거부할 수 있으나 초대 응답을 진행할 수 없습니다.'
             },
             {
               id: 'sharing',
               checked: sharingConsent,
               onChange: setSharingConsent,
-              label: `초대자 제공 동의 (필수): ${invite.hostName}님에게 내 닉네임과 두 사람의 관계 분석 결과를 귀연도 확인 목적으로 전달합니다. 생년월일시는 전달하지 않습니다. 서버와 초대자 브라우저에 동기화된 응답은 초대 만료일(최대 14일)까지만 표시되며, 초대자가 먼저 삭제할 수 있습니다. 거부할 수 있으나 이 초대에 응답할 수 없습니다.`
+              label: `초대자 제공 동의 (필수): ${invite.hostName}님에게 내 닉네임과 두 사람의 관계 분석 결과를 귀연도 확인 목적으로 전달합니다. 생년월일시는 전달하지 않습니다. 초대 링크는 최대 14일 뒤 닫히지만, 전달된 결과는 ${invite.hostName}님의 귀연도에 남아 ${invite.hostName}님이 삭제할 때까지 표시됩니다. 나도 로그인하면 같은 결과를 내 귀연도에 담고 언제든 지울 수 있습니다. 거부할 수 있으나 이 초대에 응답할 수 없습니다.`
             }
           ]}
         />
@@ -225,8 +244,16 @@ export default function GuiyeondoGuestPage() {
           {error ? <p className="gy-result-status" role="status" aria-live="polite">{error}</p> : null}
           <div className="gy-result-actions">
             <button type="button" className="gy-secondary-button" onClick={shareResult}><Share2 size={18} /> 결과 공유하기</button>
-            <button type="button" className="gy-primary-button" onClick={createOwn}>다른 사람과도 궁합 보기</button>
+            {/* 담을 것이 있을 때만 그렇게 말한다. 담기지 않는데 담긴다고 적으면 거짓말이 된다. */}
+            <button type="button" className="gy-primary-button" onClick={createOwn}>
+              {claimTicket ? '내 귀연도에 이 인연 담기' : '다른 사람과도 궁합 보기'}
+            </button>
           </div>
+          {claimTicket ? (
+            <p className="gy-result-keep-note">
+              로그인하면 이 결과가 내 귀연도에 남아요. {invite.hostName}님 지도에도 함께 남아 서로 볼 수 있어요.
+            </p>
+          ) : null}
           <GuiyeondoRecommendations compact relationType={type} />
         </section>
       </main>

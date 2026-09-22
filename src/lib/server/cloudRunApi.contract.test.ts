@@ -49,7 +49,12 @@ const EXPECTED_PUBLIC_ROUTES = [
   'GET /api/guiyeondo/invites/:publicId',
   'POST /api/guiyeondo/invites/:publicId/responses',
   'GET /api/guiyeondo/invites/:publicId/responses',
-  'POST /api/guiyeondo/invites/:publicId/revoke'
+  'POST /api/guiyeondo/invites/:publicId/revoke',
+  /* 인연은 초대와 다른 자원이다 — 초대는 14일에 닫히고 인연은 계정에 남는다. */
+  'GET /api/guiyeondo/connections',
+  'POST /api/guiyeondo/connections/claim',
+  'POST /api/guiyeondo/connections/direct',
+  'POST /api/guiyeondo/connections/:connectionId/remove'
 ] as const;
 
 const productionConfig = loadConfig({

@@ -18,10 +18,23 @@ const PURPOSE_LABELS = {
   family: '정서적 안전'
 } as const;
 
-function personalizeStatement(statement: string, ownerName: string, personName: string) {
+/**
+ * 문장의 `personA` · `personB` 를 두 사람의 이름으로 바꾼다.
+ *
+ * 보통 `personA` 는 지도 주인이다. 그런데 **남의 초대에 응답해서 가져온 인연**은 초대한
+ * 쪽을 앞에 놓고 계산됐다. 그대로 풀면 "personA 가 personB 를 이끈다" 같은 문장에서 두
+ * 사람이 뒤바뀌어, 방향이 있는 관계 서술이 정반대가 된다. `reversed` 가 그 경우다.
+ */
+function personalizeStatement(
+  statement: string,
+  ownerName: string,
+  personName: string,
+  reversed = false
+) {
+  const [first, second] = reversed ? [personName, ownerName] : [ownerName, personName];
   return statement
-    .replace(/personA/g, ownerName)
-    .replace(/personB/g, personName);
+    .replace(/personA/g, first)
+    .replace(/personB/g, second);
 }
 
 export default function GuiyeondoDetailPanel({
@@ -78,7 +91,7 @@ export default function GuiyeondoDetailPanel({
     : [];
   const seenFacts = new Set<string>();
   const evidenceFacts = purposeEntries.flatMap(([, result]) => result.facts).filter((fact) => {
-    const key = personalizeStatement(fact.statement, ownerName, person?.name || '상대');
+    const key = personalizeStatement(fact.statement, ownerName, person?.name || '상대', person?.reversed);
     if (seenFacts.has(key)) return false;
     seenFacts.add(key);
     return true;
@@ -119,7 +132,7 @@ export default function GuiyeondoDetailPanel({
                 {focusSignals.map((vector) => (
                   <article className={`gy-focus-signal gy-focus-${vector.tendency}`} key={vector.id}>
                     <div><strong>{vector.label}</strong><span>{TENDENCY_LABEL[vector.tendency]}</span></div>
-                    <p>{personalizeStatement(vector.statement || '이 신호의 세부 문장은 관계를 다시 계산하면 확인할 수 있습니다.', ownerName, person.name)}</p>
+                    <p>{personalizeStatement(vector.statement || '이 신호의 세부 문장은 관계를 다시 계산하면 확인할 수 있습니다.', ownerName, person.name, person.reversed)}</p>
                   </article>
                 ))}
               </div>
@@ -148,7 +161,7 @@ export default function GuiyeondoDetailPanel({
                   <article key={purpose} className={`gy-purpose-card gy-purpose-${result.overview.tendency}`}>
                     <span>{PURPOSE_LABELS[purpose]}</span>
                     <strong>{TENDENCY_LABEL[result.overview.tendency]}</strong>
-                    <p>{personalizeStatement(result.overview.statement, ownerName, person.name)}</p>
+                    <p>{personalizeStatement(result.overview.statement, ownerName, person.name, person.reversed)}</p>
                   </article>
                 ))}
               </div>
@@ -179,7 +192,7 @@ export default function GuiyeondoDetailPanel({
                     {result.dimensions.map((dimension) => (
                       <article key={`${purpose}-${dimension.id}`}>
                         <strong>{dimension.label}</strong>
-                        <p>{personalizeStatement(dimension.statement, ownerName, person.name)}</p>
+                        <p>{personalizeStatement(dimension.statement, ownerName, person.name, person.reversed)}</p>
                       </article>
                     ))}
                   </section>
@@ -189,7 +202,7 @@ export default function GuiyeondoDetailPanel({
                   {evidenceFacts.map((fact) => (
                     <article key={fact.id}>
                       <strong>{fact.category === 'day-master' ? '일간 관계' : fact.category === 'spouse-palace' ? '배우자궁 관계' : fact.category === 'element-exchange' ? '오행 상호 보완' : '합·충·형·파·해 관계'}</strong>
-                      <p>{personalizeStatement(fact.statement, ownerName, person.name)}</p>
+                      <p>{personalizeStatement(fact.statement, ownerName, person.name, person.reversed)}</p>
                     </article>
                   ))}
                 </section>

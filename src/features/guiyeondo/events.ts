@@ -13,6 +13,7 @@ export const GUIYEONDO_EVENT_NAMES = [
   /* 지도는 비었지만 서버에 살아 있는 초대를 찾은 경우. 저장소가 실제로 얼마나 자주
      비는지, 그리고 그 사람들이 복구를 끝까지 하는지 보려면 이 지점이 필요하다. */
   'guiyeondo_invites_stranded',
+  'guiyeondo_connection_claimed',
   'guiyeondo_find_benefactor',
   'guiyeondo_find_partner',
   'guiyeondo_report_cta'

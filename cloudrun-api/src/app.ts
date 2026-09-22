@@ -84,7 +84,8 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     firestoreRepository,
     config.guiyeondo.inviteCollection,
     config.guiyeondo.responseCollection,
-    config.guiyeondo.rateLimitCollection
+    config.guiyeondo.rateLimitCollection,
+    config.guiyeondo.connectionCollection
   );
   const guiyeondoService = options.guiyeondoService || new GuiyeondoService({
     repository: guiyeondoRepository,

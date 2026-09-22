@@ -115,6 +115,7 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       inviteCollection: trimmed(env, 'GUIYEONDO_INVITE_COLLECTION') || 'guiyeondoInvites',
       responseCollection: trimmed(env, 'GUIYEONDO_RESPONSE_COLLECTION') || 'guiyeondoResponses',
       rateLimitCollection: trimmed(env, 'GUIYEONDO_RATE_LIMIT_COLLECTION') || 'guiyeondoRateLimits',
+      connectionCollection: trimmed(env, 'GUIYEONDO_CONNECTION_COLLECTION') || 'guiyeondoConnections',
       inviteTtlMs: Number.isFinite(configuredGuiyeondoTtl)
         ? Math.min(14 * 24 * 60 * 60 * 1000, Math.max(60 * 60 * 1000, configuredGuiyeondoTtl))
         : 14 * 24 * 60 * 60 * 1000,

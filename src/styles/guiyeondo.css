@@ -469,6 +469,19 @@
 .gy-result-vectors small { color: #a49b9e; font-size: 10px; }
 .gy-result-vectors b { margin-top: 5px; color: #e1cac6; font-size: 11px; }
 .gy-result-disclaimer { margin-top: 14px !important; color: #aaa0a3 !important; font-size: 11px !important; line-height: 1.55; }
+/* "로그인하면 남는다" 한 줄. 버튼 바로 아래에 붙어 그 버튼이 무엇을 하는지 말한다 —
+   버튼 글자만으로는 계정이 생긴다는 사실이 전해지지 않는다. */
+.gy-result-keep-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(214, 168, 108, .62);
+  border-radius: 0 10px 10px 0;
+  background: rgba(43, 31, 27, .55);
+  color: #c4b8ba;
+  font-size: 11.5px;
+  line-height: 1.65;
+  text-align: left;
+}
 .gy-partial-note { margin-top: 10px !important; padding: 9px 11px; border: 1px solid rgba(216, 165, 110, .22); border-radius: 10px; background: rgba(160, 109, 62, .08); color: #d7bea3; font-size: 11px; line-height: 1.5; }
 .gy-result-card .gy-primary-button { width: 100%; margin-top: 20px; }
 .gy-result-no-classification { display: grid; height: 52svh; place-items: center; color: #c65d68; }
