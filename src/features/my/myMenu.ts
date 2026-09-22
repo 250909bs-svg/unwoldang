@@ -72,12 +72,10 @@ export const MY_MENU_ENTRIES: readonly MyMenuEntry[] = Object.freeze([
   {
     id: 'coupon',
     label: '쿠폰',
-    note: '결제가 열리면 함께 열립니다',
-    to: null,
-    status: 'soon',
-    blockedBy:
-      '쿠폰은 결제 금액을 깎는 물건이라 결제 연동(하이픈 키 대기) 뒤에만 뜻이 있다. ' +
-      'lib/rewards.ts 의 지갑은 제거된 타로에만 붙어 있던 가짜 데이터이므로 쓰지 않는다.',
+    note: '받아 둔 할인 쿠폰을 확인하고 결제에 씁니다',
+    to: '/my/coupons',
+    status: 'live',
+    requiresAuth: true,
     group: 'primary'
   },
   {

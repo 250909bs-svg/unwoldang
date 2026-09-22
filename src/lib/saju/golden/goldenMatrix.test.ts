@@ -42,6 +42,11 @@ describe('general signature independent golden FACT matrix', () => {
     );
   });
 
+  /*
+   * 넉넉한 제한 시간을 준다. 이 한 건이 140개 필드의 골든 매트릭스를 전부 돌려서, 단독
+   * 실행은 1초 남짓이지만 전체 스위트를 병렬로 돌릴 때는 기본값 5초를 넘긴다. 실제로 두
+   * 번 그렇게 떨어졌다 — 실패가 아니라 부하였다. 검사 범위는 그대로 두고 시간만 늘린다.
+   */
   it('derives fixture coverage from field provenance and never counts pending as PASS', () => {
     const report = evaluateGoldenMatrix(generalSignatureGoldenFixtures);
 
@@ -75,7 +80,7 @@ describe('general signature independent golden FACT matrix', () => {
         .filter((field) => field.result === 'mismatch')
         .every((field) => Boolean(field.expectedSource?.sourceTier && field.classification))
     ).toBe(true);
-  });
+  }, 20_000);
 
   it('matches the independently sourced 1992-09-09 10:24 representative FACT', () => {
     const fixture = generalSignatureGoldenFixtures.find((item) => item.id === 'solar-general-001');

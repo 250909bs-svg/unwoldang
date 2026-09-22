@@ -104,6 +104,8 @@ export function loadConfig(env: RuntimeEnv = process.env) {
         trimmed(env, 'GCP_PROJECT'),
       databaseId: trimmed(env, 'FIRESTORE_DATABASE_ID') || '(default)',
       archiveCollection: trimmed(env, 'FIRESTORE_ARCHIVE_COLLECTION') || 'reportArchives',
+      /* 쿠폰 보유·사용 기록. 쿠폰 정의는 코드에 있고 여기에는 이력만 쌓인다. */
+      couponCollection: trimmed(env, 'FIRESTORE_COUPON_COLLECTION') || 'couponGrants',
       accessToken: trimmed(env, 'FIRESTORE_ACCESS_TOKEN')
     },
     guiyeondo: {

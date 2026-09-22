@@ -188,15 +188,16 @@ describe('love-reunion Cloud Run release contract', () => {
     });
   });
 
-  it('rejects new orders while the product is available only in local preview', () => {
+  it('rejects new orders while the product is available only in local preview', async () => {
     const tokenService = new TokenService(config);
     const payments = createPaymentService(tokenService);
 
-    expect(() => payments.createOrderIntent(USER, {
+    /* 쿠폰 조회가 붙으면서 주문 생성이 비동기가 됐다. 거부는 이제 Promise 거부다. */
+    await expect(payments.createOrderIntent(USER, {
       orderId: ORDER_ID,
       productId: PRODUCT_ID,
       amount: PRODUCT_PRICE
-    })).toThrow(expect.objectContaining({
+    })).rejects.toThrow(expect.objectContaining({
       status: 409,
       message: '현재 신규 판매 중인 상품이 아닙니다.'
     }));

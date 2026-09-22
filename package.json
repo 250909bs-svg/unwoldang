@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
+    "build": "tsc -b && npm run typecheck:server && vite build && node scripts/generate-seo-pages.mjs",
+    "typecheck:server": "tsc -p cloudrun-api/tsconfig.json --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

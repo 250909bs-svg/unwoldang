@@ -29,7 +29,13 @@ export interface PaymentEntitlementReference {
 export interface PaymentOrderIntent {
   orderId: string;
   productId: ProductId;
+  /** 상품 정가. 쿠폰과 무관하다. */
   amount: number;
+  /** 실제로 청구할 금액. 서버가 정하며, 쿠폰이 없으면 정가와 같다. */
+  payableAmount?: number;
+  /** 서버가 계산한 할인액. 화면 표시용이고 결제 금액으로 쓰지 않는다. */
+  discount?: number;
+  couponCode?: string;
   currency: 'KRW';
   orderClaim: string;
   orderClaimExpiresAt: string;

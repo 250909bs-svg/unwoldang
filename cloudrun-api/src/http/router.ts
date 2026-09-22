@@ -18,6 +18,8 @@ export const PUBLIC_ROUTES = Object.freeze([
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  'GET /api/coupons',
+  'POST /api/coupons/claim',
   'POST /api/payments/portone/order',
   'POST /api/payments/portone/confirm',
   'GET /api/payments/portone/entitlements',
@@ -66,6 +68,10 @@ type RouterDependencies = {
   };
   admin: { login(body: Record<string, unknown>): unknown };
   guiyeondo: GuiyeondoApi;
+  coupons: {
+    listWallet(userId: string): Promise<unknown>;
+    claim(userId: string, code: unknown): Promise<unknown>;
+  };
 };
 
 function isPath(pathname: string, barePath: string) {
@@ -101,6 +107,33 @@ function sendGuiyeondoError(res: ServerResponse, error: unknown) {
   sendJson(res, 500, {
     message: '귀연도 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
   });
+}
+
+/**
+ * 결제·쿠폰 오류 응답.
+ *
+ * `PaymentRequestError` 는 손님에게 보여도 되는 문구를 들고 온다(금액 불일치, 만료 등).
+ * 그 밖의 오류는 메시지를 숨긴다 — 서버 내부 사정이 결제 화면에 새면 안 된다.
+ */
+function sendPaymentError(res: ServerResponse, error: unknown) {
+  if (error instanceof PaymentRequestError) {
+    sendJson(res, error.status, { message: error.message });
+    return;
+  }
+
+  if (error instanceof ReportRequestError && (error.status === 401 || error.status === 403)) {
+    sendJson(res, error.status, {
+      message: error.status === 401 ? '카카오 로그인이 필요합니다.' : '권한이 없습니다.'
+    });
+    return;
+  }
+
+  if (error instanceof ReportRequestError && (error.status === 400 || error.status === 413)) {
+    sendJson(res, error.status, { message: error.message });
+    return;
+  }
+
+  sendJson(res, 500, { message: '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
 }
 
 export function createRouter(dependencies: RouterDependencies): RequestListener {
@@ -231,11 +264,34 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
       return;
     }
 
+    /* 쿠폰 — 둘 다 로그인이 필요하다. 코드를 아는 것만으로 할인이 되면 코드가 새는
+       순간 전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
+    if (req.method === 'GET' && isPath(url.pathname, '/coupons')) {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.coupons.listWallet(user.userId));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && isPath(url.pathname, '/coupons/claim')) {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 200, await dependencies.coupons.claim(user.userId, body.code));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
     if (req.method === 'POST' && isPath(url.pathname, '/payments/portone/order')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);
         const body = (await readJsonBody(req)) as Record<string, unknown>;
-        sendJson(res, 200, dependencies.payments.createOrder(user, body));
+        sendJson(res, 200, await dependencies.payments.createOrder(user, body));
       } catch (error) {
         const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
         sendJson(res, status, { message: errorMessage(error, '결제 주문 인증 정보 발급 중 오류가 발생했습니다.') });

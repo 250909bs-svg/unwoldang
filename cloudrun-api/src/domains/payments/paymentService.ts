@@ -28,6 +28,9 @@ export type PaymentOrderClaimInput = {
   orderId: string;
   productId: string;
   amount: number;
+  /** 쿠폰 적용 후 청구액. 없으면 정가와 같다. */
+  payableAmount?: number;
+  couponCode?: string;
 };
 
 export type ReportAccessTokenInput = {
@@ -101,8 +104,30 @@ export type PaymentServiceDependencies = {
   paymentProvider: PaymentProvider;
   ledgerRepository: PaymentLedgerRepository;
   tokenService: PaymentTokenService;
+  /**
+   * 쿠폰 적용 금액을 정하는 곳. 없으면 쿠폰 없이 정가로만 판다.
+   *
+   * 할인 계산을 여기에 두지 않는 이유: 결제대행사가 바뀌면 이 파일은 크게 고쳐지는데
+   * 쿠폰 규칙은 그대로 남아야 한다. 결제는 "얼마를 받을지" 를 묻기만 한다.
+   */
+  couponService?: OrderPricingService | null;
   now?: () => number;
   randomBytes?: (size: number) => Buffer;
+};
+
+export type OrderPricingService = {
+  resolvePricing(input: {
+    userId: string;
+    productId: string;
+    catalogAmount: number;
+    couponCode?: unknown;
+  }): Promise<{
+    catalogAmount: number;
+    payableAmount: number;
+    discount: number;
+    couponCode: string;
+  }>;
+  redeem(userId: string, code: string, orderId: string): Promise<unknown>;
 };
 
 function assertPaymentOrderId(orderId: string) {
@@ -167,7 +192,7 @@ export class PaymentService {
     this.generateRandomBytes = dependencies.randomBytes || randomBytes;
   }
 
-  createOrderIntent(user: AuthenticatedUser, body: Record<string, unknown>) {
+  async createOrderIntent(user: AuthenticatedUser, body: Record<string, unknown>) {
     const productId = getRequiredString(body, 'productId');
     assertPaymentProviderConfigured(this.dependencies.paymentProvider);
     const amount = getCatalogAmount(productId);
@@ -179,27 +204,63 @@ export class PaymentService {
 
     assertPaymentOrderId(orderId);
 
+    /* 클라이언트가 보낸 금액은 **정가** 와만 대조한다. 할인은 아래에서 서버가 따로
+       계산한다 — 클라이언트가 깎인 금액을 제안할 자리는 없다. */
     if (requestedAmount !== amount) {
       throw new PaymentRequestError(409, '주문 금액이 서버 상품 가격과 일치하지 않습니다.');
     }
+
+    const pricing = await this.resolvePricing(user.userId, productId, amount, body.couponCode);
 
     const orderClaim = this.dependencies.tokenService.createPaymentOrderClaim({
       userId: user.userId,
       orderId,
       productId,
-      amount
+      amount,
+      payableAmount: pricing.payableAmount,
+      couponCode: pricing.couponCode
     });
 
     return {
       orderId,
       productId,
       amount,
+      /* 결제창에 띄울 금액. `amount` 는 정가라서 둘이 다를 수 있다. */
+      payableAmount: pricing.payableAmount,
+      discount: pricing.discount,
+      couponCode: pricing.couponCode,
       currency: 'KRW' as const,
       orderClaim,
       orderClaimExpiresAt: new Date(
         this.now() + this.dependencies.config.orderClaimTtlMs
       ).toISOString()
     };
+  }
+
+  private async resolvePricing(
+    userId: string,
+    productId: string,
+    catalogAmount: number,
+    couponCode: unknown
+  ) {
+    const code = typeof couponCode === 'string' ? couponCode.trim() : '';
+
+    if (!code) {
+      return { payableAmount: catalogAmount, discount: 0, couponCode: '' };
+    }
+
+    if (!this.dependencies.couponService) {
+      /* 쿠폰을 처리할 곳이 없는데 코드를 받았다면, 조용히 정가를 청구해서는 안 된다.
+         손님은 할인을 기대하고 결제 버튼을 누른다. */
+      throw new PaymentRequestError(503, '쿠폰을 사용할 수 없는 상태입니다.');
+    }
+
+    return this.dependencies.couponService.resolvePricing({
+      userId,
+      productId,
+      catalogAmount,
+      couponCode: code
+    });
   }
 
   async confirmPayment(user: AuthenticatedUser, body: Record<string, unknown>) {
@@ -215,8 +276,11 @@ export class PaymentService {
 
     assertPaymentOrderId(orderId);
 
-    if (!Number.isSafeInteger(amount) || amount !== catalogAmount) {
-      throw new PaymentRequestError(409, '주문 금액이 서버 상품 가격과 일치하지 않습니다.');
+    /* 여기서는 정가와 대조하지 않는다. 쿠폰이 붙은 주문은 정가보다 적게 청구되고,
+       "얼마를 받기로 했는가" 는 서명된 주문 클레임에만 있다. 클레임은 아래에서
+       PortOne 응답과 함께 검증하므로, 그때까지 판단을 미룬다. */
+    if (!Number.isSafeInteger(amount) || amount <= 0 || amount > catalogAmount) {
+      throw new PaymentRequestError(409, '주문 금액이 서버 상품 가격과 맞지 않습니다.');
     }
 
     if (paymentId !== orderId) {
@@ -245,9 +309,7 @@ export class PaymentService {
       );
     }
 
-    if (paidAmount === null || paidAmount !== catalogAmount) {
-      throw new PaymentRequestError(409, 'PortOne 결제 금액이 주문 금액과 일치하지 않습니다.');
-    }
+    /* 실제 결제 금액의 판단은 서명된 클레임을 읽은 뒤에 한다(아래 payableAmount). */
 
     if (status !== 'PAID') {
       throw new PaymentRequestError(
@@ -291,6 +353,30 @@ export class PaymentService {
       );
     }
 
+    /*
+     * 청구액은 서명된 클레임에서만 온다.
+     *
+     * 쿠폰이 붙으면 실제 결제액이 정가보다 적으므로, 정가와 대조하면 정상 결제가 거절된다.
+     * 반대로 클라이언트가 보낸 금액을 믿으면 1원 결제로 리포트를 받을 수 있다. 서버가
+     * 서명해 둔 값만이 두 실수를 모두 막는다. 쿠폰 도입 전 클레임에는 이 필드가 없으므로
+     * 정가로 되돌린다.
+     */
+    const payableAmount = Number.isSafeInteger(orderClaims.payableAmount)
+      ? (orderClaims.payableAmount as number)
+      : orderClaims.amount;
+
+    if (payableAmount <= 0 || payableAmount > catalogAmount) {
+      throw new PaymentRequestError(409, '서명된 주문의 청구 금액이 유효하지 않습니다.');
+    }
+
+    if (amount !== payableAmount) {
+      throw new PaymentRequestError(409, '확인 요청의 금액이 주문 청구 금액과 다릅니다.');
+    }
+
+    if (paidAmount === null || paidAmount !== payableAmount) {
+      throw new PaymentRequestError(409, 'PortOne 결제 금액이 주문 청구 금액과 일치하지 않습니다.');
+    }
+
     if (!portOneTransactionId || (txId && txId !== portOneTransactionId)) {
       throw new PaymentRequestError(409, 'PortOne 거래 ID가 결제 결과와 일치하지 않습니다.');
     }
@@ -303,7 +389,7 @@ export class PaymentService {
       paymentId,
       orderId,
       productId,
-      amount: catalogAmount,
+      amount: payableAmount,
       currency,
       storeId,
       transactionId: portOneTransactionId,
@@ -339,7 +425,7 @@ export class PaymentService {
       (readLedgerString(existing, 'paymentId') !== paymentId ||
         readLedgerString(existing, 'orderId') !== orderId ||
         readLedgerString(existing, 'productId') !== productId ||
-        readLedgerInteger(existing, 'amount') !== catalogAmount ||
+        readLedgerInteger(existing, 'amount') !== payableAmount ||
         readLedgerString(existing, 'currency') !== currency ||
         readLedgerString(existing, 'storeId') !== storeId ||
         readLedgerString(existing, 'transactionId') !== portOneTransactionId ||
@@ -355,12 +441,38 @@ export class PaymentService {
       );
     }
 
+    /*
+     * 쿠폰 소모는 결제 원장이 만들어진 **다음** 이다.
+     *
+     * 순서를 뒤집으면 결제가 마지막에 실패했을 때 쿠폰만 사라진다. 이 순서에서는 최악의
+     * 경우가 "결제는 됐는데 쿠폰이 아직 남아 있다" 인데, 그건 손님에게 유리한 쪽이고
+     * 운영이 나중에 정리할 수 있다.
+     *
+     * 원장이 이미 있었다면(같은 결제 재확인) 다시 소모하지 않는다 — 새로고침 한 번에
+     * 쿠폰이 한 장씩 사라지면 안 된다.
+     */
+    const couponCode = orderClaims.couponCode || '';
+
+    if (couponCode && this.dependencies.couponService && existing === undefined) {
+      try {
+        await this.dependencies.couponService.redeem(user.userId, couponCode, orderId);
+      } catch (error) {
+        /* 이미 결제는 끝났다. 쿠폰 기록에 실패했다고 해서 손님의 리포트를 막지 않는다.
+           동시 결제로 전제조건이 깨진 경우도 여기로 온다. */
+        console.error('[coupon] 결제 후 쿠폰 소모 실패', {
+          orderId,
+          couponCode,
+          message: error instanceof Error ? error.message : 'unknown'
+        });
+      }
+    }
+
     const reportAccessToken = this.dependencies.tokenService.createReportAccessToken({
       userId: user.userId,
       orderId,
       paymentId,
       productId,
-      amount: catalogAmount,
+      amount: payableAmount,
       entitlementId: ledgerDocumentId
     });
 
@@ -369,7 +481,8 @@ export class PaymentService {
       txId: portOneTransactionId,
       orderId,
       productId,
-      amount: catalogAmount,
+      amount: payableAmount,
+      couponCode,
       currency,
       status,
       method: readNestedString(payment, [['method', 'type'], ['method'], ['payMethod']]),

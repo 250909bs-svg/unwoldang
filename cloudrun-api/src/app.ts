@@ -27,6 +27,8 @@ import { createCorsMiddleware } from './middleware/cors.ts';
 import { createReportRateLimit } from './middleware/rateLimit.ts';
 import { createAdminLoginRateLimit } from './middleware/adminLoginRateLimit.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
+import { CouponRepository } from './repositories/couponRepository.ts';
+import { CouponService } from './domains/coupons/couponService.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
 import { GuiyeondoFirestoreRepository } from './repositories/guiyeondoRepository.ts';
@@ -59,6 +61,13 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     firestoreRepository,
     config.firestore.archiveCollection
   );
+  /* Firestore 가 꺼져 있으면 쿠폰도 꺼진다. 사용 이력을 저장할 곳 없이 할인을 내주면
+     같은 쿠폰을 무한히 쓸 수 있다. */
+  const couponService = new CouponService({
+    repository: config.firestore.enabled
+      ? new CouponRepository(firestoreRepository, config.firestore.couponCollection)
+      : null
+  });
   const guiyeondoRepository = new GuiyeondoFirestoreRepository(
     firestoreRepository,
     config.guiyeondo.inviteCollection,
@@ -102,6 +111,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     },
     paymentProvider,
     ledgerRepository: paymentLedgerAdapter,
+    couponService,
     tokenService
   });
   const reportService = new ReportService(
@@ -139,6 +149,7 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     kakao: kakaoService,
     archives: archiveService,
     admin: adminService,
-    guiyeondo: guiyeondoService
+    guiyeondo: guiyeondoService,
+    coupons: couponService
   });
 }

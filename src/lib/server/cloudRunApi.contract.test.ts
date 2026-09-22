@@ -23,6 +23,10 @@ const EXPECTED_PUBLIC_ROUTES = [
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  /* 쿠폰은 둘 다 로그인이 필요하다. 코드를 아는 것만으로 할인이 되면 코드가 새는 순간
+     전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
+  'GET /api/coupons',
+  'POST /api/coupons/claim',
   'POST /api/payments/portone/order',
   'POST /api/payments/portone/confirm',
   'GET /api/payments/portone/entitlements',
@@ -653,6 +657,11 @@ describe('Cloud Run API HTTP contracts', () => {
       orderId: expect.stringMatching(/^UW-[A-Za-z0-9._-]{12,116}$/),
       productId: 'general-signature',
       amount: 990,
+      /* 쿠폰 없이 주문하면 청구액은 정가와 같고 할인은 0 이다. 이 셋이 응답에 항상
+         있어야 결제창이 무엇을 청구할지 화면이 추측하지 않는다. */
+      payableAmount: 990,
+      discount: 0,
+      couponCode: '',
       currency: 'KRW',
       orderClaim: expect.any(String),
       orderClaimExpiresAt: expect.any(String)
