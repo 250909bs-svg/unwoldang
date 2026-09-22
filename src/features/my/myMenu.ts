@@ -52,12 +52,10 @@ export const MY_MENU_ENTRIES: readonly MyMenuEntry[] = Object.freeze([
   {
     id: 'daily-fortune',
     label: '오늘의 운세',
-    note: '하루 단위 풀이는 아직 만들지 않았습니다',
-    to: null,
-    status: 'soon',
-    blockedBy:
-      '상품 자체가 없다. 세운·월운 계산은 엔진에 있지만(deterministicBasis) 하루 단위로 ' +
-      '읽어 주는 리포트 형식과 문안이 없다. 새 상품 하나를 만드는 일이다.',
+    note: '오늘 일진과 내 원국을 맞대어 하루를 읽습니다',
+    to: '/today',
+    status: 'live',
+    requiresAuth: true,
     group: 'primary'
   },
   {

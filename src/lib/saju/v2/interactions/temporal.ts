@@ -27,6 +27,9 @@ function clamp(value: number, minimum: number, maximum: number) {
 function temporalLayerLabel(layer: Exclude<RelationLayer, 'natal' | 'personA' | 'personB'>) {
   if (layer === 'dayun') return '대운';
   if (layer === 'seun') return '세운';
+  /* 'ilun' 이 이 함수에 오면 안 된다 — 일운은 analyzeTemporalInteractions 의 층이 아니라
+     dailyFortune 이 따로 다룬다. 빠뜨린 층이 조용히 '월운' 으로 표시되지 않게 막는다. */
+  if (layer === 'ilun') throw new RangeError('일운은 시간 상호작용 층이 아닙니다.');
   return '월운';
 }
 

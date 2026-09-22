@@ -20,6 +20,7 @@ const PRODUCT_SHEETS = [
   'styles/general-saju.css',
   'styles/general-signature-loading.css',
   'styles/guiyeondo.css',
+  'styles/daily.css',
   'styles/my.css',
   'styles/mz-love-fact.css',
   'styles/mz-love-intake.css',

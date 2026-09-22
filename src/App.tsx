@@ -34,6 +34,7 @@ const PaymentCallback = lazy(() => import('./pages/PaymentCallback'));
 const My = lazy(() => import('./pages/My'));
 const MyReports = lazy(() => import('./pages/MyReports'));
 const MyManseryeok = lazy(() => import('./pages/MyManseryeok'));
+const DailyFortune = lazy(() => import('./pages/DailyFortune'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
@@ -86,6 +87,7 @@ function AppRoutes({
           <Route path="/my" element={<My />} />
           <Route path="/my/reports" element={<MyReports />} />
           <Route path="/my/manseryeok" element={<MyManseryeok />} />
+          <Route path="/today" element={<DailyFortune />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/kakao/callback" element={<KakaoCallback />} />

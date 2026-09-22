@@ -91,6 +91,9 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
      이 둘은 자기 약관 블록이 없으므로 전역 푸터를 그대로 쓴다. */
   '/my/reports': shell(),
   '/my/manseryeok': shell(),
+  /* 오늘의 운세는 마이에서 들어가지만 탭 목적지는 아니다. 'origin' 으로 두어야
+     들어온 탭이 계속 켜져 있는다. */
+  '/today': shell({ tabAnchor: 'origin' }),
   '/login': shell(),
   /* Not tab destinations: no nav item matches them, so `self` would leave the
      bar with no tab lit at all. `origin` falls back to the tab the reader came

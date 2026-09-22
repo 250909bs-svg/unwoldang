@@ -6,6 +6,8 @@ export type RelationLayer =
   | 'dayun'
   | 'seun'
   | 'wolyun'
+  /** 일운 — 오늘 하루의 일진. 원국과 교차해 하루 단위 신호를 본다. */
+  | 'ilun'
   | 'personA'
   | 'personB';
 

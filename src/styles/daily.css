@@ -1,0 +1,234 @@
+/* 오늘의 운세 (/today).
+ *
+ * `my.css` 와 같은 규칙을 따른다 — 기본은 밝은 바탕, 다크는 바로 아래, 폭을 묻는
+ * 규칙은 `@container app`.
+ */
+
+.ud-daily-hero {
+  position: relative;
+  margin-top: 6px;
+  padding: 26px 20px 22px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: linear-gradient(150deg, #f3f4f6, #e8eaee);
+}
+/* 결이 셋뿐이라 색으로 구분한다. 색만으로 뜻을 전하지는 않는다 — 제목 문구가 같은 것을 말한다. */
+.ud-daily-hero.is-supportive {
+  background: linear-gradient(150deg, #2b3a2c, #131a14);
+}
+.ud-daily-hero.is-steady {
+  background: linear-gradient(150deg, #2b3138, #14171b);
+}
+.ud-daily-hero.is-caution {
+  background: linear-gradient(150deg, #3a2f2a, #1b1614);
+}
+.ud-daily-hero.is-supportive,
+.ud-daily-hero.is-steady,
+.ud-daily-hero.is-caution {
+  color: #f4f1ec;
+}
+.ud-daily-date {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  opacity: .72;
+}
+.ud-daily-hero h1 {
+  margin-top: 8px;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: clamp(28px, 8.5cqw, 34px);
+  font-weight: 400;
+  line-height: 1.3;
+}
+.ud-daily-pillar {
+  display: flex;
+  align-items: baseline;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 12.5px;
+  opacity: .82;
+}
+.ud-daily-pillar strong {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+.ud-daily-pillar em {
+  padding: 3px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  opacity: .8;
+}
+
+.ud-daily-summary {
+  margin-top: 18px;
+  padding: 0 2px;
+  font-size: 14.5px;
+  line-height: 1.85;
+}
+
+.ud-daily-areas {
+  display: flex;
+  margin-top: 20px;
+  flex-direction: column;
+  gap: 8px;
+}
+.ud-daily-area {
+  padding: 14px 15px;
+  border-radius: 14px;
+  background: #f4f5f7;
+}
+.ud-daily-area.is-active {
+  background: #eceef2;
+  box-shadow: inset 2px 0 0 #b8894f;
+}
+.ud-daily-area-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.ud-daily-area-label i {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #b8894f;
+  color: #fff;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+}
+.ud-daily-area p {
+  margin-top: 6px;
+  color: #4b5563;
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+.ud-daily-area:not(.is-active) p {
+  color: #9ca3af;
+}
+
+.ud-daily-evidence {
+  margin-top: 24px;
+}
+.ud-daily-evidence ul {
+  display: flex;
+  margin-top: 10px;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+.ud-daily-evidence li {
+  padding: 12px 14px;
+  border-left: 2px solid #d1d5db;
+  border-radius: 0 12px 12px 0;
+  background: #f4f5f7;
+}
+.ud-daily-evidence li[data-polarity='friction'],
+.ud-daily-evidence li[data-polarity='latent-friction'] {
+  border-left-color: #c0714f;
+}
+.ud-daily-evidence li[data-polarity='integrative'],
+.ud-daily-evidence li[data-polarity='transformative'] {
+  border-left-color: #6f9a6b;
+}
+.ud-daily-evidence li strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+.ud-daily-evidence li span {
+  display: block;
+  margin-top: 4px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ud-daily-none {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.ud-daily-tally {
+  margin-top: 10px;
+  color: #9ca3af;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.ud-daily-uncertainty {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 18px;
+  padding: 12px 14px;
+  gap: 9px;
+  border-radius: 12px;
+  background: #f4f5f7;
+  color: #6b7280;
+}
+.ud-daily-uncertainty svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.ud-daily-uncertainty ul {
+  list-style: none;
+}
+.ud-daily-uncertainty li {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ud-daily-uncertainty li + li {
+  margin-top: 4px;
+}
+
+.ud-daily-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  margin-top: 22px;
+  gap: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ud-daily-disclaimer {
+  margin-top: 18px;
+  color: #9ca3af;
+  font-size: 11.5px;
+  line-height: 1.8;
+}
+
+/* 다크 ──────────────────────────────────────────────────────────────────── */
+
+body.home-all-black .ud-daily-area,
+body.home-all-black .ud-daily-evidence li,
+body.home-all-black .ud-daily-uncertainty {
+  background: #121316;
+}
+body.home-all-black .ud-daily-area.is-active {
+  background: #191b1f;
+}
+body.home-all-black .ud-daily-area p,
+body.home-all-black .ud-daily-evidence li span,
+body.home-all-black .ud-daily-none,
+body.home-all-black .ud-daily-uncertainty {
+  color: #9aa0a8;
+}
+body.home-all-black .ud-daily-area:not(.is-active) p {
+  color: #70757c;
+}
+body.home-all-black .ud-daily-evidence li {
+  border-left-color: #35383d;
+}
+body.home-all-black .ud-daily-more {
+  border-color: #26282c;
+}
