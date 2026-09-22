@@ -204,12 +204,15 @@ export const ROUTE_SHELL_POLICIES = Object.freeze({
   }),
   '/report/:id': shell({ topBar: 'product', ...FLOW }),
 
-  /* ── Guiyeondo: the one intentional desktop two-column surface ─────── */
-  /* Deliberate exception among the four bottom-tab destinations: the only one
-     that is not a 400px frame (it opens to 1440px at >=960px, where the map and
-     the person list sit side by side) and the only one without the global
-     footer (it renders its own legal links). On a phone it is 400px like the
-     others, so the tab bar still lands on one consistent frame. */
+  /* ── Guiyeondo ──────────────────────────────────────────────────────── */
+  /* This once opened to 1440px at >=960px so the map and the person list could
+     sit side by side. That exception is gone: `wide` now resolves to the same
+     400px as every other customer route (see appShell.css), because the product
+     follows one rule — the phone frame, on a desktop window too. The token is
+     kept rather than folded into `phone` so the two-column layout has a name to
+     come back to; it lives in guiyeondo.css's `@container` queries now.
+     What still makes this route an exception among the four bottom-tab
+     destinations is the footer: it renders its own legal links. */
   '/guiyeondo': shell({
     width: 'wide',
     topBar: 'product',

@@ -12,6 +12,12 @@ import GuiyeondoInviteSheet from './GuiyeondoInviteSheet';
 import GuiyeondoMap from './GuiyeondoMap';
 import GuiyeondoSheet from './GuiyeondoSheet';
 import { trackGuiyeondoEvent } from './events';
+import {
+  liveGuiyeondoInvites,
+  mergeGuiyeondoOwnedInvites,
+  sameGuiyeondoInviteSet,
+  withRecoveredInvites
+} from './inviteRecovery';
 import { fateRoomImage } from './media';
 import { recoverGuiyeondoOwnerProfile } from './profile';
 import {
@@ -66,6 +72,9 @@ export default function GuiyeondoPage() {
   );
   const [inviteBusy, setInviteBusy] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  /* 지도가 사라진 브라우저에서, 서버에 아직 살아 있는 내 초대들. 지도를 다시 만들 때
+     여기 붙여 넣으면 응답한 사람들이 기존 동기화 경로로 되돌아온다. */
+  const [strandedInvites, setStrandedInvites] = useState<GuiyeondoOwnedInvite[]>([]);
   const mapStateRef = useRef<GuiyeondoMapState | null>(mapState);
 
   useEffect(() => {
@@ -99,13 +108,8 @@ export default function GuiyeondoPage() {
         if (cancelled) return;
         const current = mapStateRef.current;
         if (!current) return;
-        const byPublicId = new Map(current.invites.map((item) => [item.publicId, item]));
-        for (const ownedInvite of invites) byPublicId.set(ownedInvite.publicId, ownedInvite);
-        const recoveredInvites = [...byPublicId.values()]
-          .filter((item) => Date.parse(item.expiresAt) > Date.now())
-          .slice(-20);
-        if (recoveredInvites.length === current.invites.length
-          && recoveredInvites.every((item, index) => item.publicId === current.invites[index]?.publicId)) return;
+        const recoveredInvites = mergeGuiyeondoOwnedInvites(current.invites, invites);
+        if (sameGuiyeondoInviteSet(current.invites, recoveredInvites)) return;
         const next = saveGuiyeondoMap({ ...current, invites: recoveredInvites }, ownerId);
         mapStateRef.current = next;
         setMapState(next);
@@ -117,6 +121,33 @@ export default function GuiyeondoPage() {
       cancelled = true;
     };
   }, [authToken, mapState?.version, ownerId]);
+
+  /*
+   * 지도가 **없을 때**의 복구. 위 효과는 `mapState` 를 요구하므로 정작 지도가 비어 있는
+   * 순간에는 돌지 않았다 — 복구가 가장 필요한 때에 꺼져 있던 셈이다.
+   *
+   * localStorage 는 기기를 바꿀 때만 비지 않는다. iOS Safari 는 7일 넘게 방문하지 않은
+   * 사이트의 스크립트 저장소를 지우고, 방문기록 삭제와 시크릿 모드도 같은 결과를 낸다.
+   * 그래서 여기서 서버에 남은 내 초대를 먼저 찾아 두고, 지도를 다시 만드는 순간 얹는다.
+   */
+  useEffect(() => {
+    if (!authToken || mapState) return;
+    let cancelled = false;
+    void fetchGuiyeondoOwnedInvites(authToken)
+      .then(({ invites }) => {
+        if (cancelled) return;
+        const live = liveGuiyeondoInvites(invites);
+        if (!live.length) return;
+        setStrandedInvites(live);
+        trackGuiyeondoEvent('guiyeondo_invites_stranded', { count: live.length });
+      })
+      .catch(() => {
+        // 복구는 거들기만 한다. 실패해도 처음부터 만드는 길은 그대로 열려 있다.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authToken, mapState]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 959px)');
@@ -153,15 +184,19 @@ export default function GuiyeondoPage() {
         setToast(`귀연도를 만들려면 출생시간 확인이 필요합니다. ${stability.reason}`);
         return;
       }
-      const next = saveGuiyeondoMap(createGuiyeondoMap(handoff.profile), ownerId);
+      const restored = withRecoveredInvites(createGuiyeondoMap(handoff.profile), strandedInvites);
+      const next = saveGuiyeondoMap(restored, ownerId);
       setMapState(next);
       window.sessionStorage.removeItem(GUEST_OWN_PROFILE_KEY);
-      trackGuiyeondoEvent('guiyeondo_map_created', { source: 'guest-handoff' });
+      trackGuiyeondoEvent('guiyeondo_map_created', {
+        source: 'guest-handoff',
+        restoredInvites: restored.invites.length
+      });
     } catch {
       try { window.sessionStorage.removeItem(GUEST_OWN_PROFILE_KEY); } catch { /* unavailable session storage */ }
       setToast('이 브라우저의 임시 출생정보를 불러오지 못했습니다. 직접 입력해 주세요.');
     }
-  }, [mapState, ownerId]);
+  }, [mapState, ownerId, strandedInvites]);
 
   const selectedPeople = useMemo(() => mapState?.people.filter(
     (person) => person.analysis.classification.type === selectedType
@@ -229,11 +264,18 @@ export default function GuiyeondoPage() {
         setToast(`귀연도를 만들려면 출생시간 확인이 필요합니다. ${stability.reason}`);
         return;
       }
-      const next = saveGuiyeondoMap(createGuiyeondoMap(profile), ownerId);
+      /* 되살린 초대를 얹어 저장하면, `inviteSyncKey` 가 바뀌면서 기존 동기화 효과가
+         그 초대들의 응답을 사람으로 붙인다. 복구 전용 경로가 따로 필요 없다. */
+      const restored = withRecoveredInvites(createGuiyeondoMap(profile), strandedInvites);
+      const next = saveGuiyeondoMap(restored, ownerId);
       setMapState(next);
       setSetupOpen(false);
-      trackGuiyeondoEvent('guiyeondo_map_created');
-      setToast('첫 인연의 자리가 열렸어요.');
+      trackGuiyeondoEvent('guiyeondo_map_created', { restoredInvites: restored.invites.length });
+      setToast(
+        restored.invites.length
+          ? '귀연도를 다시 열었어요. 응답한 인연을 불러오고 있어요.'
+          : '첫 인연의 자리가 열렸어요.'
+      );
     } catch (error) {
       setToast(error instanceof Error ? error.message : '귀연도 정보를 저장하지 못했습니다.');
     }
@@ -414,6 +456,8 @@ export default function GuiyeondoPage() {
       clearGuiyeondoMap(ownerId);
       mapStateRef.current = null;
       setMapState(null);
+      /* 방금 지운 사람에게 "되살릴까요?" 를 내밀지 않는다. 삭제는 삭제로 끝내야 한다. */
+      setStrandedInvites([]);
       setInvite(null);
       closeDetail();
       setSetupOpen(true);
@@ -432,6 +476,15 @@ export default function GuiyeondoPage() {
       <main className="guiyeondo-page gy-setup-page">
         <header className="gy-topbar"><Link to="/" aria-label="홈으로"><ArrowLeft size={20} /></Link><strong>귀연도 <span>貴緣圖</span></strong><span /></header>
         <div className="gy-setup-backdrop"><img src={fateRoomImage} alt="" /><span /></div>
+        {/* 지도는 이 브라우저에만 있어서 저장소가 비면 사라진다. 그때 "처음부터 다시"
+            로 보이면 쌓아 온 인연을 잃은 것처럼 느껴지는데, 응답한 사람들은 초대 만료
+            전까지 서버에 남아 있어 실제로는 돌아온다. 그 사실을 먼저 알린다. */}
+        {strandedInvites.length ? (
+          <p className="gy-setup-restore" role="status">
+            <strong>보내 둔 초대 {strandedInvites.length}개가 아직 살아 있어요.</strong>
+            내 출생정보만 다시 넣으면 그 초대에 응답한 인연들이 돌아옵니다.
+          </p>
+        ) : null}
         {setupOpen || !recovered ? (
           <GuiyeondoBirthFlow title="나의 인연점 만들기" subtitle="먼저 나를 중심에 놓을게요. 세 단계면 충분합니다." initialName={user?.nickname || ''} onCancel={() => recovered ? setSetupOpen(false) : setIntroOpen(true)} onComplete={completeOwner} />
         ) : (
