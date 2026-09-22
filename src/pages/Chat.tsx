@@ -141,6 +141,13 @@ function ChatView() {
           <p>무엇이 궁금하신지 편히 물어보세요.</p>
         </article>
 
+        {/* 경계는 물어보기 **전에** 읽혀야 한다. 대화 끝에 두었더니 화면이 짧을 때
+            고정 입력줄이 그 위를 덮었고, 무엇보다 읽을 사람이 이미 물어본 뒤였다. */}
+        <p className="ud-chat-disclaimer">
+          운월은 손님의 명식을 근거로 답합니다. 확정된 예언이 아니며, 건강·법률·투자
+          판단은 드리지 않습니다. 대화는 이 브라우저에만 남고 서버에 저장되지 않습니다.
+        </p>
+
         {turns.map((turn, index) => (
           <article
             key={`${index}-${turn.text.slice(0, 12)}`}
@@ -180,11 +187,6 @@ function ChatView() {
             ))}
           </div>
         ) : null}
-
-        <p className="ud-chat-disclaimer">
-          운월은 손님의 명식을 근거로 답합니다. 확정된 예언이 아니며, 건강·법률·투자
-          판단은 드리지 않습니다. 대화는 이 브라우저에만 남고 서버에 저장되지 않습니다.
-        </p>
 
         <div ref={endRef} />
       </div>
