@@ -166,7 +166,7 @@ export default function GeneralSignatureReportIntro({
                 width="600"
                 height="1067"
                 loading="eager"
-                fetchPriority="high"
+                fetchpriority="high"
               />
             </picture>
             <figcaption>

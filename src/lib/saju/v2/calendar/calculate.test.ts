@@ -21,10 +21,12 @@ function intake(overrides: Partial<IntakeFormData> = {}): Partial<IntakeFormData
 describe('normalizeIntakeFormToBirthContext', () => {
   it('uses safe Korean defaults without inventing coordinates', () => {
     const context = normalizeIntakeFormToBirthContext(intake({ location: '서울' }));
+    // The offset is now read from Korea's zone history rather than defaulted, so
+    // a modern birth still resolves +09:00 but is labelled by where it came from.
     expect(context.timezone).toEqual({
       id: 'Asia/Seoul',
       utcOffsetMinutes: 540,
-      source: 'korea-default'
+      source: 'tzdata-historical'
     });
     expect(context.location).toEqual({
       label: '서울',
@@ -90,11 +92,17 @@ describe('normalizeIntakeFormToBirthContext', () => {
     }).timezone.utcOffsetMinutes).toBe(-300);
   });
 
-  it('requires an explicit historical offset for pre-1962 Korean births', () => {
+  it('reads the historical Korean offset instead of demanding one from the caller', () => {
+    // Previously this threw, because the intake has no field for a birth-time UTC
+    // offset and every Korean location was sent as +09:00. Korea ran UTC+08:30 in
+    // January 1955, so those customers hit an error they could not resolve. The
+    // offset is now taken from the zone's own history.
     const historical = intake({ birthDate: '1955-01-15', birthTime: '01:20' });
 
-    expect(() => normalizeIntakeFormToBirthContext(historical))
-      .toThrow(/역사적 표준시/);
+    expect(normalizeIntakeFormToBirthContext(historical).timezone)
+      .toMatchObject({ utcOffsetMinutes: 510, source: 'tzdata-historical' });
+
+    // A caller-supplied offset still wins, since only the caller can settle a fold.
     expect(normalizeIntakeFormToBirthContext(historical, {
       timezoneId: 'Asia/Seoul',
       utcOffsetMinutes: 510

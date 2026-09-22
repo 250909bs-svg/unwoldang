@@ -350,7 +350,7 @@
   }
 }
 
-@media (max-width: 390px) {
+@container app (max-width: 390px) {
   .general-signature-loading-page .mobile-page-content.centered {
     padding-right: 9px;
     padding-left: 9px;

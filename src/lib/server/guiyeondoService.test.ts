@@ -4,6 +4,7 @@ import {
   GuiyeondoRequestError,
   GuiyeondoService,
   type GuiyeondoRepository,
+  type StoredGuiyeondoConnection,
   type StoredGuiyeondoInvite,
   type StoredGuiyeondoResponse
 } from '../../../cloudrun-api/src/domains/guiyeondo/guiyeondoService.ts';
@@ -36,6 +37,7 @@ function profile(name: string, birthDate = '1992-09-09', birthTime = '10:24') {
 class MemoryGuiyeondoRepository implements GuiyeondoRepository {
   readonly invites = new Map<string, StoredGuiyeondoInvite>();
   readonly responses = new Map<string, StoredGuiyeondoResponse>();
+  readonly connections = new Map<string, StoredGuiyeondoConnection>();
   readonly rateLimits = new Map<string, number>();
   private version = 0;
 
@@ -81,6 +83,45 @@ class MemoryGuiyeondoRepository implements GuiyeondoRepository {
       revokedAt,
       updateTime: `v${++this.version}`
     });
+    return true;
+  }
+
+  async createConnection(input: Omit<StoredGuiyeondoConnection, 'updateTime'>) {
+    if (this.connections.has(input.connectionId)) return false;
+    this.connections.set(input.connectionId, { ...input, updateTime: `v${++this.version}` });
+    return true;
+  }
+
+  async getConnection(connectionId: string) {
+    return this.connections.get(connectionId) || null;
+  }
+
+  async listConnectionsByMember(memberHash: string, limit: number) {
+    return [...this.connections.values()]
+      .filter((item) => item.memberHashes.includes(memberHash))
+      .slice(0, limit);
+  }
+
+  async updateConnectionMembership(
+    connection: StoredGuiyeondoConnection,
+    next: { memberHashes: string[]; removedBy: string[] }
+  ) {
+    const current = this.connections.get(connection.connectionId);
+    if (!current || current.updateTime !== connection.updateTime) return false;
+    this.connections.set(connection.connectionId, {
+      ...current,
+      memberHashes: next.memberHashes,
+      removedBy: next.removedBy,
+      updateTime: `v${++this.version}`
+    });
+    return true;
+  }
+
+  async deleteConnection(connection: StoredGuiyeondoConnection) {
+    const current = this.connections.get(connection.connectionId);
+    if (!current) return true;
+    if (current.updateTime !== connection.updateTime) return false;
+    this.connections.delete(connection.connectionId);
     return true;
   }
 

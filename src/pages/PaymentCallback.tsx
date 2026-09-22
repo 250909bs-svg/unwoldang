@@ -12,7 +12,23 @@ import { getPortOneConfirmEndpoint, shouldUseDemoPayment } from '../lib/runtimeC
 
 type CallbackView = 'loading' | 'fail' | 'error';
 
-function moveToResult(navigate: ReturnType<typeof useNavigate>, payment: PendingPayment) {
+function moveToResult(
+  navigate: ReturnType<typeof useNavigate>,
+  payment: PendingPayment,
+  gift?: { code: string; expiresAt: string } | null
+) {
+  /*
+   * 선물 주문은 리포트로 가지 않는다. 산 사람은 출생정보를 넣지 않았으므로 만들 리포트가
+   * 없고, 받은 것은 링크다. 그 링크를 보여 주는 화면으로 보낸다.
+   */
+  if (payment.gift && gift?.code) {
+    navigate('/gift/sent', {
+      replace: true,
+      state: { code: gift.code, expiresAt: gift.expiresAt, productId: payment.productId }
+    });
+    return;
+  }
+
   navigate('/loading', {
     replace: true,
     state: {
@@ -130,7 +146,8 @@ export default function PaymentCallback() {
           orderId: pendingPayment.orderId,
           amount: pendingPayment.amount,
           productId: pendingPayment.productId,
-          orderClaim
+          orderClaim,
+          giftMessage: pendingPayment.giftMessage
         });
 
         const confirmedPayment = {
@@ -141,7 +158,7 @@ export default function PaymentCallback() {
           reportAccessToken: confirmed.reportAccessToken
         } satisfies PendingPayment;
         savePendingPayment(confirmedPayment);
-        moveToResult(navigate, confirmedPayment);
+        moveToResult(navigate, confirmedPayment, confirmed.gift ?? null);
       } catch (caughtError) {
         setView('error');
         setMessage(caughtError instanceof Error ? caughtError.message : '결제 검증 처리 중 문제가 발생했습니다.');

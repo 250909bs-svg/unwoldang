@@ -18,6 +18,11 @@ export const PUBLIC_ROUTES = Object.freeze([
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  'GET /api/gifts/:code',
+  'POST /api/gifts/:code/redeem',
+  'POST /api/chat',
+  'GET /api/coupons',
+  'POST /api/coupons/claim',
   'POST /api/payments/portone/order',
   'POST /api/payments/portone/confirm',
   'GET /api/payments/portone/entitlements',
@@ -32,7 +37,11 @@ export const PUBLIC_ROUTES = Object.freeze([
   'GET /api/guiyeondo/invites/:publicId',
   'POST /api/guiyeondo/invites/:publicId/responses',
   'GET /api/guiyeondo/invites/:publicId/responses',
-  'POST /api/guiyeondo/invites/:publicId/revoke'
+  'POST /api/guiyeondo/invites/:publicId/revoke',
+  'GET /api/guiyeondo/connections',
+  'POST /api/guiyeondo/connections/claim',
+  'POST /api/guiyeondo/connections/direct',
+  'POST /api/guiyeondo/connections/:connectionId/remove'
 ]);
 
 type AuthMiddleware = {
@@ -66,6 +75,15 @@ type RouterDependencies = {
   };
   admin: { login(body: Record<string, unknown>): unknown };
   guiyeondo: GuiyeondoApi;
+  chat: { reply(body: Record<string, unknown>): Promise<unknown> };
+  gifts: {
+    describe(code: unknown): Promise<unknown>;
+    redeem(userId: string, code: unknown): Promise<unknown>;
+  };
+  coupons: {
+    listWallet(userId: string): Promise<unknown>;
+    claim(userId: string, code: unknown): Promise<unknown>;
+  };
 };
 
 function isPath(pathname: string, barePath: string) {
@@ -101,6 +119,33 @@ function sendGuiyeondoError(res: ServerResponse, error: unknown) {
   sendJson(res, 500, {
     message: '귀연도 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
   });
+}
+
+/**
+ * 결제·쿠폰 오류 응답.
+ *
+ * `PaymentRequestError` 는 손님에게 보여도 되는 문구를 들고 온다(금액 불일치, 만료 등).
+ * 그 밖의 오류는 메시지를 숨긴다 — 서버 내부 사정이 결제 화면에 새면 안 된다.
+ */
+function sendPaymentError(res: ServerResponse, error: unknown) {
+  if (error instanceof PaymentRequestError) {
+    sendJson(res, error.status, { message: error.message });
+    return;
+  }
+
+  if (error instanceof ReportRequestError && (error.status === 401 || error.status === 403)) {
+    sendJson(res, error.status, {
+      message: error.status === 401 ? '카카오 로그인이 필요합니다.' : '권한이 없습니다.'
+    });
+    return;
+  }
+
+  if (error instanceof ReportRequestError && (error.status === 400 || error.status === 413)) {
+    sendJson(res, error.status, { message: error.message });
+    return;
+  }
+
+  sendJson(res, 500, { message: '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
 }
 
 export function createRouter(dependencies: RouterDependencies): RequestListener {
@@ -189,6 +234,57 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
       return;
     }
 
+    /* 인연은 초대와 다른 자원이다. 초대는 만료되고 인연은 남으므로 경로도 나눈다. */
+    if (req.method === 'GET' && url.pathname === '/api/guiyeondo/connections') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.guiyeondo.listConnections(user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/guiyeondo/connections/claim') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 200, await dependencies.guiyeondo.claimConnection(body, user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/guiyeondo/connections/direct') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 201, await dependencies.guiyeondo.createDirectConnection(body, user.userId, getClientIp(req)));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
+    /* DELETE 를 쓰지 않는 이유: CORS 허용 메서드가 GET,POST,OPTIONS 라 브라우저 프리플라이트에서
+       막힌다. 초대 철회도 같은 이유로 `/revoke` 라는 POST 다. */
+    const guiyeondoConnection = url.pathname.match(/^\/api\/guiyeondo\/connections\/([a-fA-F0-9]{64})\/remove$/);
+
+    if (guiyeondoConnection && req.method === 'POST') {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.guiyeondo.removeConnection(
+          guiyeondoConnection[1],
+          user.userId,
+          getClientIp(req)
+        ));
+      } catch (error) {
+        sendGuiyeondoError(res, error);
+      }
+      return;
+    }
+
     if (req.method === 'POST' && isPath(url.pathname, '/report/preflight')) {
       try {
         dependencies.enforceReportRateLimit(req);
@@ -231,11 +327,71 @@ export function createRouter(dependencies: RouterDependencies): RequestListener 
       return;
     }
 
+    /* 쿠폰 — 둘 다 로그인이 필요하다. 코드를 아는 것만으로 할인이 되면 코드가 새는
+       순간 전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
+    /* 상담 채팅. 로그인한 사람만 — 대화가 이 사람의 명식을 근거로 돌고,
+       모델 호출이라 비용이 붙는다. 요청 제한은 리포트와 같은 것을 쓴다. */
+    /* 선물 조회는 공개다 — 링크를 받은 사람은 아직 로그인하지 않았다. 대신 응답에
+       주문번호·권한 ID·산 사람의 사용자 ID 는 넣지 않는다(giftService.describe). */
+    const giftPath = url.pathname.match(/^(?:\/api)?\/gifts\/([A-Z0-9]{4,32})(\/redeem)?$/iu);
+
+    if (giftPath && req.method === 'GET' && !giftPath[2]) {
+      try {
+        sendJson(res, 200, await dependencies.gifts.describe(giftPath[1]));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
+    if (giftPath && req.method === 'POST' && giftPath[2]) {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.gifts.redeem(user.userId, giftPath[1]));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && isPath(url.pathname, '/chat')) {
+      try {
+        dependencies.auth.verifyUserAccess(req);
+        dependencies.enforceReportRateLimit(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 200, await dependencies.chat.reply(body));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'GET' && isPath(url.pathname, '/coupons')) {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        sendJson(res, 200, await dependencies.coupons.listWallet(user.userId));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && isPath(url.pathname, '/coupons/claim')) {
+      try {
+        const user = dependencies.auth.verifyUserAccess(req);
+        const body = await readJsonBody(req);
+        sendJson(res, 200, await dependencies.coupons.claim(user.userId, body.code));
+      } catch (error) {
+        sendPaymentError(res, error);
+      }
+      return;
+    }
+
     if (req.method === 'POST' && isPath(url.pathname, '/payments/portone/order')) {
       try {
         const user = dependencies.auth.verifyUserAccess(req);
         const body = (await readJsonBody(req)) as Record<string, unknown>;
-        sendJson(res, 200, dependencies.payments.createOrder(user, body));
+        sendJson(res, 200, await dependencies.payments.createOrder(user, body));
       } catch (error) {
         const status = error instanceof PaymentRequestError || error instanceof ReportRequestError ? error.status : 500;
         sendJson(res, status, { message: errorMessage(error, '결제 주문 인증 정보 발급 중 오류가 발생했습니다.') });

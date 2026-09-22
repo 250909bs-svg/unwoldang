@@ -1,5 +1,6 @@
 import type { SajuReportData } from '../saju/report';
 import type { CompatibilityAnalysisResult, CompatibilityTendency } from '../saju/v2/compatibility';
+import { parseCompatibilityBadge } from './compatibilityAxes';
 import {
   REUNION_VIEW_MODEL_VERSION,
   type ReunionConfidence,
@@ -48,6 +49,34 @@ function toTendency(value: CompatibilityTendency): ReunionEvidenceTendency {
   return value === 'insufficient' ? 'unknown' : value;
 }
 
+/**
+ * `reportBuilder.ts:3069-3073` 이 만드는 카드 배지는 `"${tendency} · ${confidenceLabel}"` 형태지만,
+ * 고객에게 도달하기 전 `finalizeCustomerReport` → `customerTendency` 가 영문 식별자를 한국어로
+ * 바꾸고 `· 근거 강함/보통/제한` 꼬리를 떼어 낸다. 실제로 오는 값은 `"조정이 필요한 흐름"` 한 덩어리다.
+ *
+ * 그래서 파서는 **한 벌만** 둔다 — `compatibilityAxes.parseCompatibilityBadge` 가 두 형태를 모두 받는다.
+ * 여기에 영문 전용 파서를 따로 두면 실제 리포트에서 네 축이 전부 '근거부족'으로 착지하고,
+ * 그 사실이 두 파서가 갈라져 있는 동안에는 테스트에도 잡히지 않는다.
+ */
+function parseCardBadge(badge: string | undefined): { tendency: ReunionEvidenceTendency; limited: boolean } {
+  if (typeof badge !== 'string') return { tendency: 'neutral', limited: true };
+  const { direction, confidenceLabel } = parseCompatibilityBadge(badge);
+  const limited = !confidenceLabel || confidenceLabel.includes('유보') || confidenceLabel.includes('제한');
+
+  if (direction === 'insufficient') return { tendency: 'unknown', limited: true };
+  return { tendency: direction, limited };
+}
+
+/** `details[].content` 에는 `근거 ID: …` / `유보: …` 블록이 붙어 있다. 본문만 떼어낸다. */
+function splitDetailContent(content: string): { statement: string; uncertainty: string[] } {
+  const [body, ...blocks] = content.split('\n\n');
+  const uncertainty = blocks
+    .filter((block) => block.startsWith('유보:'))
+    .map((block) => block.replace(/^유보:\s*/u, '').trim())
+    .filter(Boolean);
+  return { statement: (body || '').trim(), uncertainty };
+}
+
 function qualitativeConfidence(args: { hasEvidence: boolean; hasUncertainty: boolean; explicitlyInsufficient?: boolean }): ReunionConfidence {
   if (!args.hasEvidence || args.explicitlyInsufficient) return 'unknown';
   return args.hasUncertainty ? 'limited' : 'supported';
@@ -72,6 +101,8 @@ export function adaptReunionDeterministicEvidence(input: ReunionEvidenceInput): 
         : null;
     if (!source) return;
 
+    const sectionLimited = reportLimited || report?.engineMeta?.releaseDecision !== 'eligible';
+
     uniqueNonEmpty(section.paragraphs || []).forEach((statement, paragraphIndex) => {
       evidence.push({
         id: `report:${section.id}:${paragraphIndex}`,
@@ -82,9 +113,52 @@ export function adaptReunionDeterministicEvidence(input: ReunionEvidenceInput): 
         tendency: 'neutral',
         confidence: qualitativeConfidence({
           hasEvidence: true,
-          hasUncertainty: reportLimited || report?.engineMeta?.releaseDecision !== 'eligible'
+          hasUncertainty: sectionLimited
         }),
         uncertainty: uniqueNonEmpty(reportUncertainty)
+      });
+    });
+
+    /*
+     * `cards` 는 궁합 4축(dimension)이다. 여기까지 읽지 않으면 CH02·CH05 가 쓸 근거가 없다.
+     * 배지에서 tendency 와 근거 신뢰도를 분리해 담고, 영문 식별자는 화면으로 넘기지 않는다.
+     */
+    (section.cards || []).forEach((card, cardIndex) => {
+      const statement = (card.body || '').trim();
+      if (!statement) return;
+      const { tendency, limited } = parseCardBadge(card.badge);
+      evidence.push({
+        id: `report:${section.id}:card:${cardIndex}`,
+        source,
+        sourcePath: `sections.${sectionIndex}.cards.${cardIndex}`,
+        label: (card.title || section.title).trim(),
+        statement,
+        tendency,
+        confidence: qualitativeConfidence({
+          hasEvidence: true,
+          hasUncertainty: sectionLimited || limited,
+          explicitlyInsufficient: tendency === 'unknown'
+        }),
+        uncertainty: uniqueNonEmpty(reportUncertainty)
+      });
+    });
+
+    /* `details` 는 fact 목록이다. 지금까지 통째로 버려지던 자료다. */
+    (section.details || []).forEach((detail, detailIndex) => {
+      const { statement, uncertainty } = splitDetailContent(detail.content || '');
+      if (!statement) return;
+      evidence.push({
+        id: `report:${section.id}:detail:${detailIndex}`,
+        source,
+        sourcePath: `sections.${sectionIndex}.details.${detailIndex}`,
+        label: (detail.summary || section.title).trim(),
+        statement,
+        tendency: 'neutral',
+        confidence: qualitativeConfidence({
+          hasEvidence: true,
+          hasUncertainty: sectionLimited || uncertainty.length > 0
+        }),
+        uncertainty: uniqueNonEmpty([...reportUncertainty, ...uncertainty])
       });
     });
   });

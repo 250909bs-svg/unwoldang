@@ -157,6 +157,22 @@ function collectVisibleStrings(value: unknown): string[] {
   return [];
 }
 
+/**
+ * 문장 하나에 대한 고객 문장 금지 패턴 검사.
+ *
+ * 리포트 전체를 받는 `findCustomerReportTextViolations` 와 **같은 패턴표**를 쓴다.
+ * 제미나이 draft 를 병합 전에 문장 단위로 걸기 위해 분리했다(명세 §4-1 a-③).
+ * 리포트 전체 문맥이 필요한 검사(직업 자기투영·정확 시각·중복 질문)는 아래 함수에 남는다.
+ */
+export function findCustomerTextPatternViolations(text: string) {
+  if (typeof text !== 'string' || !text) return [];
+  return [...new Set(
+    [...CUSTOMER_FORBIDDEN_PATTERNS, ...CUSTOMER_ADDITIONAL_FORBIDDEN_PATTERNS]
+      .filter(([pattern]) => pattern.test(text))
+      .map(([, label]) => label)
+  )];
+}
+
 export function findCustomerReportTextViolations(report: SajuReportData) {
   const text = collectVisibleStrings(visibleReportPayload(report)).join('\n');
   const violations = [...CUSTOMER_FORBIDDEN_PATTERNS, ...CUSTOMER_ADDITIONAL_FORBIDDEN_PATTERNS]

@@ -77,3 +77,44 @@ describe('commercial release audit', () => {
     expect(audit.infoFlags).toContain(audit.externalCalendar.message);
   });
 });
+
+describe('yongsin school divergence policy', () => {
+  it('keeps an unresolved yongsin consensus eligible and discloses it as INFO', () => {
+    const audit = buildCommercialReleaseAudit(makeInput({
+      interpretationResolved: false,
+      helpfulElementSource: 'legacy-fallback'
+    }));
+
+    // School-level divergence is normal myeongri, not a calculation defect, so it
+    // must not hold back release. It still has to reach the customer as a caveat.
+    expect(audit.decision).toBe('eligible');
+    expect(audit.reviewFlags).toEqual([]);
+    expect(audit.infoFlags.join(' ')).toContain('단일 확정 용신으로 승격하지 않았습니다');
+    expect(audit.infoFlags.join(' ')).toContain('억부');
+  });
+
+  it('still reports the failed checks in evidence coverage', () => {
+    const audit = buildCommercialReleaseAudit(makeInput({
+      interpretationResolved: false,
+      helpfulElementSource: 'legacy-fallback'
+    }));
+
+    expect(audit.evidenceCoverage.passed).toBe(6);
+    expect(audit.evidenceCoverage.total).toBe(8);
+  });
+
+  it('keeps genuine calculation problems blocking', () => {
+    expect(buildCommercialReleaseAudit(makeInput({ stableSelection: 'unstable-day' })).decision)
+      .toBe('blocked');
+    expect(buildCommercialReleaseAudit(makeInput({ evidenceCount: 0 })).decision)
+      .toBe('blocked');
+  });
+
+  it('keeps an unapplied true-solar-time request in manual review', () => {
+    const audit = buildCommercialReleaseAudit(makeInput({
+      trueSolarTime: { requested: true, applied: false }
+    }));
+
+    expect(audit.decision).toBe('manual-review-required');
+  });
+});

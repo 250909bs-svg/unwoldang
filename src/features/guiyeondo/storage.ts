@@ -31,9 +31,25 @@ export function guiyeondoPreviewOwnerPath(ownerId: string) {
   return `/guiyeondo?owner=${encodeURIComponent(normalized)}`;
 }
 
+/**
+ * 지도에 남겨 둘 사람인지.
+ *
+ * 규칙이 셋으로 갈린다.
+ *
+ *   - 직접 넣은 사람은 만료가 없다. 예전부터 그랬다.
+ *   - **초대로 들어왔지만 `expiresAt` 이 없는 사람은 남긴다.** 계정의 인연 문서로 넘어온
+ *     사람이다. 초대 링크는 14일에 닫혀도 맺어진 인연까지 닫힐 이유는 없다.
+ *   - `expiresAt` 이 붙어 있는 사람만 그 시각에 지운다. 예전 동의(`guiyeondo-share-v1`,
+ *     "초대 만료일까지 보관")로 들어온 사람이라, 그때 받은 동의대로 사라져야 한다.
+ *
+ * 세 번째가 남아 있는 이유가 중요하다. 나중에 정책을 바꿨다고 해서 이미 받은 동의의
+ * 범위가 넓어지지는 않는다.
+ */
 function isUnexpiredInvitePerson(person: GuiyeondoPerson, now = Date.now()) {
-  const expiresAt = typeof person.expiresAt === 'string' ? Date.parse(person.expiresAt) : Number.NaN;
-  return person.source !== 'invite' || (Number.isFinite(expiresAt) && expiresAt > now);
+  if (person.source !== 'invite') return true;
+  if (typeof person.expiresAt !== 'string' || !person.expiresAt) return true;
+  const expiresAt = Date.parse(person.expiresAt);
+  return Number.isFinite(expiresAt) && expiresAt > now;
 }
 
 export function createGuiyeondoMap(owner: GuiyeondoBirthProfile): GuiyeondoMapState {
@@ -115,17 +131,33 @@ export function mergeGuiyeondoInvitePeople(
   for (const person of people) {
     if (person.source !== 'invite' || person.privateBirthProfile || hidden.has(person.id)
       || !isUnexpiredInvitePerson(person, now)) continue;
-    merged.set(person.id, person);
+    /*
+     * 같은 사람이 두 경로로 들어온다. 초대 응답 목록은 초대의 만료 시각을 달고 오고,
+     * 인연 목록은 만료 없이 온다. 응답 목록이 나중에 도착했다고 해서 이미 계정에
+     * 남은 사람에게 만료를 도로 붙이면, 14일 뒤 지도에서 사라지던 옛 동작으로 돌아간다.
+     */
+    const known = merged.get(person.id);
+    merged.set(person.id, known?.connectionId
+      ? { ...person, connectionId: known.connectionId, expiresAt: undefined }
+      : person);
   }
   return saveGuiyeondoMap({ ...state, people: [...merged.values()].slice(-100) }, ownerId);
 }
 
 export function removeGuiyeondoPerson(state: GuiyeondoMapState, personId: string, ownerId?: string) {
   const person = state.people.find((item) => item.id === personId);
+  /*
+   * 서버에서 다시 내려올 수 있는 사람은 지웠다는 사실을 기록해 둔다.
+   *
+   * 초대 응답이 그랬고, 이제는 **계정에 남은 사람(`connectionId`)도** 그렇다. 서버 쪽
+   * 삭제가 실패하거나 늦으면 다음 동기화가 그 사람을 다시 얹는데, 치운 것이 돌아오면
+   * 치운 적이 없는 것과 같다.
+   */
+  const resurrectable = person?.source === 'invite' || Boolean(person?.connectionId);
   return saveGuiyeondoMap({
     ...state,
     people: state.people.filter((item) => item.id !== personId),
-    hiddenInvitePersonIds: person?.source === 'invite'
+    hiddenInvitePersonIds: resurrectable
       ? [...new Set([...(state.hiddenInvitePersonIds || []), personId])].slice(-100)
       : state.hiddenInvitePersonIds || []
   }, ownerId);

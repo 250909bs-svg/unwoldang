@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { getRouteShellPolicy, getShellContainerClassName } from '../../app/shell';
 
 const readSource = (relativePath: string) => readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 const landingSource = readSource('../../pages/GeneralSajuLanding.tsx');
@@ -26,8 +27,11 @@ describe('general-signature video entry and immersive intake contract', () => {
 
   it('routes only general-signature to the dedicated intake', () => {
     expect(formSource).toContain("id === 'general-signature' ? <GeneralSignatureIntake /> : <LegacyForm />");
-    expect(appSource).toContain("location.pathname === '/form/general-signature'");
-    expect(appSource).toContain('general-saju-intake-app-container');
+    // The shell decision moved out of App.tsx into the declarative route table.
+    expect(appSource).toContain('getRouteShellPolicy');
+    expect(getShellContainerClassName(getRouteShellPolicy('/form/general-signature'))).toBe(
+      'app-container general-saju-intake-app-container'
+    );
   });
 
   it('keeps the intake background video muted and looping', () => {

@@ -104,6 +104,10 @@ export function loadConfig(env: RuntimeEnv = process.env) {
         trimmed(env, 'GCP_PROJECT'),
       databaseId: trimmed(env, 'FIRESTORE_DATABASE_ID') || '(default)',
       archiveCollection: trimmed(env, 'FIRESTORE_ARCHIVE_COLLECTION') || 'reportArchives',
+      /* 쿠폰 보유·사용 기록. 쿠폰 정의는 코드에 있고 여기에는 이력만 쌓인다. */
+      couponCollection: trimmed(env, 'FIRESTORE_COUPON_COLLECTION') || 'couponGrants',
+      /* 선물 한 장이 한 번만 쓰이는 것을 이 컬렉션이 기록으로 지킨다. */
+      giftCollection: trimmed(env, 'FIRESTORE_GIFT_COLLECTION') || 'giftCodes',
       accessToken: trimmed(env, 'FIRESTORE_ACCESS_TOKEN')
     },
     guiyeondo: {
@@ -111,6 +115,7 @@ export function loadConfig(env: RuntimeEnv = process.env) {
       inviteCollection: trimmed(env, 'GUIYEONDO_INVITE_COLLECTION') || 'guiyeondoInvites',
       responseCollection: trimmed(env, 'GUIYEONDO_RESPONSE_COLLECTION') || 'guiyeondoResponses',
       rateLimitCollection: trimmed(env, 'GUIYEONDO_RATE_LIMIT_COLLECTION') || 'guiyeondoRateLimits',
+      connectionCollection: trimmed(env, 'GUIYEONDO_CONNECTION_COLLECTION') || 'guiyeondoConnections',
       inviteTtlMs: Number.isFinite(configuredGuiyeondoTtl)
         ? Math.min(14 * 24 * 60 * 60 * 1000, Math.max(60 * 60 * 1000, configuredGuiyeondoTtl))
         : 14 * 24 * 60 * 60 * 1000,

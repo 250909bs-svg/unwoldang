@@ -69,6 +69,21 @@
 
 /* Intro */
 .gy-intro { position: relative; min-height: 100svh; isolation: isolate; }
+/* Overlay so the cinematic intro keeps its full 100svh while still offering the
+   same escape hatch as the other two stages. Height comes from appShell.css. */
+.gy-topbar.gy-intro-topbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 6;
+  border-bottom: 0;
+  background: linear-gradient(180deg, rgba(4, 3, 5, .72), transparent);
+  backdrop-filter: none;
+}
+/* The bar now owns the top 64px, so the sound toggle moves under it instead of
+   being covered by the title. */
+.gy-intro .gy-sound-button { top: calc(var(--app-topbar-h) + 10px); }
 .gy-intro-media,
 .gy-intro-media video,
 .gy-intro-media img,
@@ -109,7 +124,7 @@
   animation: gy-intro-rise .8s cubic-bezier(.16, 1, .3, 1) both;
 }
 .gy-intro-copy h1 {
-  margin-top: 13px;
+  /* 위에 있던 한자 아이브로우가 없어져 이 여백은 딸려 올라갈 것이 없다. */
   font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
   font-size: clamp(31px, 9vw, 44px);
   font-weight: 400;
@@ -119,7 +134,6 @@
 .gy-intro-copy > p { margin-top: 14px; color: rgba(246, 237, 233, .74); font-size: 13px; line-height: 1.8; }
 .gy-intro-enter { width: min(100%, 340px); margin-top: 26px; }
 .gy-intro-enter svg { animation: gy-hand-glint 1.8s ease-in-out infinite; }
-.gy-intro-note { margin-top: 10px; color: rgba(246, 237, 233, .7); font-size: 11px; letter-spacing: .03em; }
 
 /* Shared top bar */
 .gy-topbar {
@@ -163,6 +177,36 @@
 .gy-owner-recovery p { margin-top: 16px; color: #b8adb0; font-size: 13px; line-height: 1.8; }
 .gy-owner-recovery .gy-primary-button { width: 100%; margin-top: 28px; }
 .gy-owner-recovery .gy-text-button { margin-top: 8px; }
+
+/* Storage cleared, invites still alive ────────────────────────────────────────
+   Sits above whichever setup branch renders. The sibling rule drops the panel's
+   full-height centring, which would otherwise push this banner off the top. */
+.gy-setup-restore {
+  position: relative;
+  z-index: 3;
+  /* `.gy-form-card` 와 같은 폭·여백. 바로 아래 붙는 입력 카드와 좌우선이 맞아야 한다.
+     다른 분기인 `.gy-owner-recovery` 는 테두리 없는 중앙 정렬 텍스트라 맞출 선이 없다. */
+  width: min(100% - 28px, 470px);
+  margin: 24px auto 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(235, 211, 202, .17);
+  border-left: 2px solid rgba(214, 168, 108, .62);
+  border-radius: 16px;
+  background: linear-gradient(140deg, rgba(43, 31, 27, .92), rgba(15, 12, 14, .95));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .42);
+  color: #b8adb0;
+  font-size: 12.5px;
+  line-height: 1.75;
+  text-align: left;
+}
+.gy-setup-restore strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #f0e4dc;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.gy-setup-restore + .gy-owner-recovery { min-height: 0; padding: 26px 0 10px; }
 
 /* Compact form */
 .gy-form-card {
@@ -328,8 +372,9 @@
 .gy-section-title span { color: #a36f70; font: 9px Georgia, serif; letter-spacing: .18em; }
 .gy-section-title h3 { margin-top: 5px; font: 400 20px 'Noto Serif KR', 'Nanum Myeongjo', serif; }
 .gy-vector-list { display: grid; gap: 1px; margin-top: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .08); border-radius: 16px; background: rgba(255, 255, 255, .08); }
-.gy-vector { display: grid; min-height: 58px; grid-template-columns: 1fr auto; align-items: center; padding: 9px 13px; background: #100e11; }
-.gy-vector > div:first-child { display: flex; flex-direction: column; gap: 3px; }
+/* 한 줄에 이름 하나, 알약 하나. 예전에는 왼쪽에도 같은 경향 문구를 적어 두 줄이었고,
+   그래서 "조건을 살필 신호" 가 한 행에 두 번 보였다. */
+.gy-vector { display: grid; min-height: 46px; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 9px 13px; background: #100e11; }
 .gy-vector strong { font-size: 12px; }
 .gy-vector span { color: #a49b9e; font-size: 10px; }
 .gy-vector-track { display: flex; gap: 4px; }
@@ -337,6 +382,17 @@
 .gy-vector-track i.on { background: linear-gradient(90deg, #8e2834, #dc737b); }
 .gy-vector-track i.warn { background: #b88a55; }
 .gy-vector-note { margin-top: 9px !important; color: #a49b9e; font-size: 11px; line-height: 1.55; }
+/* 읽지 못한 신호를 알리는 한 줄. 줄로 세우지 않는 대신 여기서 이름을 대고 이유를 적는다. */
+.gy-vector-unread {
+  margin-top: 8px !important;
+  padding: 9px 12px;
+  border-left: 2px solid rgba(214, 168, 108, .5);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 255, 255, .035);
+  color: #a49b9e;
+  font-size: 11px;
+  line-height: 1.6;
+}
 .gy-evidence { margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, .09); border-bottom: 1px solid rgba(255, 255, 255, .09); }
 .gy-evidence summary { display: flex; min-height: 56px; align-items: center; justify-content: space-between; cursor: pointer; color: #d8cecb; font-size: 12px; list-style: none; }
 .gy-evidence summary::-webkit-details-marker { display: none; }
@@ -425,6 +481,19 @@
 .gy-result-vectors small { color: #a49b9e; font-size: 10px; }
 .gy-result-vectors b { margin-top: 5px; color: #e1cac6; font-size: 11px; }
 .gy-result-disclaimer { margin-top: 14px !important; color: #aaa0a3 !important; font-size: 11px !important; line-height: 1.55; }
+/* "로그인하면 남는다" 한 줄. 버튼 바로 아래에 붙어 그 버튼이 무엇을 하는지 말한다 —
+   버튼 글자만으로는 계정이 생긴다는 사실이 전해지지 않는다. */
+.gy-result-keep-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(214, 168, 108, .62);
+  border-radius: 0 10px 10px 0;
+  background: rgba(43, 31, 27, .55);
+  color: #c4b8ba;
+  font-size: 11.5px;
+  line-height: 1.65;
+  text-align: left;
+}
 .gy-partial-note { margin-top: 10px !important; padding: 9px 11px; border: 1px solid rgba(216, 165, 110, .22); border-radius: 10px; background: rgba(160, 109, 62, .08); color: #d7bea3; font-size: 11px; line-height: 1.5; }
 .gy-result-card .gy-primary-button { width: 100%; margin-top: 20px; }
 .gy-result-no-classification { display: grid; height: 52svh; place-items: center; color: #c65d68; }
@@ -440,9 +509,9 @@
 @keyframes gy-sigil-pulse { 0%, 100% { transform: scale(.98); } 50% { transform: scale(1.025); } }
 @keyframes gy-reveal-pulse { 0%, 100% { transform: scale(.94); box-shadow: 0 0 0 rgba(207, 73, 85, 0); } 50% { transform: scale(1.06); box-shadow: 0 0 34px rgba(207, 73, 85, .32); } }
 
-@media (min-width: 960px) {
-  .app-container.guiyeondo-app-container { width: 100%; max-width: 1440px; min-height: 100vh; }
-  body.home-all-black .app-container.guiyeondo-app-container { max-width: 1440px; }
+@container app (min-width: 960px) {
+  /* 1440px at >=960px is declared by the shell width token `wide`
+     (src/app/shell/appShell.css). */
   .gy-intro-copy { right: auto; bottom: 70px; left: clamp(50px, 8vw, 130px); align-items: flex-start; text-align: left; }
   .gy-intro-copy h1 { font-size: 48px; }
   .gy-intro-enter { width: 300px; }
@@ -461,7 +530,7 @@
   .gy-guest-result .gy-character-hero { width: min(100% - 40px, 720px); height: 66vh; margin: 24px auto 0; border-radius: 28px; }
 }
 
-@media (max-width: 959px) {
+@container app (max-width: 959px) {
   .gy-detail-panel { display: none; }
   .gy-detail-panel.has-person,
   .gy-detail-panel.is-empty {
@@ -484,7 +553,7 @@
   .gy-detail-panel.is-empty .gy-character-hero { height: 34svh; min-height: 240px; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-map-stage { height: clamp(480px, 64svh, 610px); }
   .gy-relation-node { width: 94px; min-height: 50px; padding: 5px 6px 5px 5px; }
   .gy-node-glyph { width: 31px; height: 31px; flex-basis: 31px; }
@@ -494,7 +563,7 @@
   .gy-map-question { font-size: 9px; }
 }
 
-@media (max-width: 370px) {
+@container app (max-width: 370px) {
   .gy-map-lead { padding-right: 15px; padding-left: 15px; }
   .gy-map-stage { min-height: 470px; }
   .gy-relation-node { width: 90px; min-height: 48px; }
@@ -538,11 +607,11 @@
 .gy-evidence-version,
 .gy-preview-limit { font-size: 10px; }
 
-@media (min-width: 960px) {
+@container app (min-width: 960px) {
   .gy-intro-copy { bottom: 104px; }
 }
 
-@media (max-width: 959px) {
+@container app (max-width: 959px) {
   .gy-sheet .gy-detail-panel.has-person,
   .gy-sheet .gy-detail-panel.is-empty {
     position: relative;
@@ -562,7 +631,7 @@
   .gy-sheet .gy-detail-panel .gy-character-hero { height: 36svh; min-height: 240px; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-map-actions { grid-template-columns: 1fr; }
   .gy-map-actions .gy-primary-button,
   .gy-map-actions .gy-secondary-button { width: 100%; }
@@ -650,11 +719,11 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
 @keyframes gy-world-image { from { opacity: .55; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
 @keyframes gy-recommend-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-@media (min-width: 960px) {
+@container app (min-width: 960px) {
   .gy-purpose-grid { grid-template-columns: 1fr 1fr; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-detail-body { padding-right: 18px; padding-left: 18px; }
   .gy-recommendation-card { min-height: 178px; }
   .gy-recommendation-card > div { width: 84%; padding: 16px; }
@@ -751,7 +820,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   line-height: 1.55;
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-guest-deep-reading {
     border-radius: 17px;
   }
@@ -945,7 +1014,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   }
 }
 
-@media (min-width: 600px) and (max-width: 959px) {
+@container app (min-width: 600px) and (max-width: 959px) {
   .gy-sheet { width: min(calc(100% - 32px), 640px); border-radius: 30px 30px 0 0; }
   .gy-detail-body { padding-right: 28px; padding-bottom: 52px; padding-left: 28px; }
   .gy-purpose-grid,
@@ -953,8 +1022,11 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   .gy-map-actions { width: min(calc(100% - 48px), 620px); margin-right: auto; margin-left: auto; }
 }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-form-card { width: min(calc(100% - 20px), 470px); padding-right: 15px; padding-left: 15px; }
+  /* 좁은 프레임에서 입력 카드가 넓어지므로 복구 안내도 같이 넓힌다. 안 따라가면
+     바로 아래 카드와 좌우선이 4px 씩 어긋난다. */
+  .gy-setup-restore { width: min(calc(100% - 20px), 470px); }
   .gy-form-card h2 { font-size: clamp(24px, 7vw, 27px); }
   .gy-map-lead h1,
   .gy-pair-heading h2 { line-height: 1.35; }
@@ -975,7 +1047,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
   .gy-recommendation-card p { font-size: 12px; }
 }
 
-@media (max-width: 370px) {
+@container app (max-width: 370px) {
   .gy-share-actions { grid-template-columns: 1fr; }
   .gy-result-card,
   .gy-detail-body { padding-right: 14px; padding-left: 14px; }
@@ -1129,7 +1201,7 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
 
 @keyframes gySyncSpin { to { transform: rotate(360deg); } }
 
-@media (max-width: 430px) {
+@container app (max-width: 430px) {
   .gy-result-actions { grid-template-columns: 1fr; }
   .gy-result-actions .gy-secondary-button { order: 1; }
   .gy-result-actions .gy-primary-button { order: 2; }
@@ -1138,4 +1210,134 @@ button.gy-recommendation-card { width: 100%; padding: 0; background: #100e11; fo
 
 @media (prefers-reduced-motion: reduce) {
   .gy-sync-button .is-spinning { animation: none !important; }
+}
+
+/* ── 인연 순위 목록 ──────────────────────────────────────────────────────
+   지도 아래에서 같은 사람들을 한 줄로 세운다. 0~100 궁합점수는 만들지 않으므로
+   숫자 자리에는 순번과 실제로 센 신호 개수만 온다. */
+
+.gy-rank {
+  margin: 26px 0 0;
+  padding: 20px 16px 18px;
+  border: 1px solid var(--gy-line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(241, 221, 213, .05), rgba(7, 6, 8, .4));
+}
+
+.gy-rank-head h2 {
+  margin: 6px 0 6px;
+  color: #f7f1ed;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.gy-rank-head p {
+  margin: 0;
+  color: var(--gy-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.gy-rank-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.gy-rank-row {
+  display: grid;
+  grid-template-columns: 26px 1fr 17px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 12px 12px 10px;
+  border: 1px solid var(--gy-line);
+  border-radius: 14px;
+  background: rgba(241, 221, 213, .035);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+.gy-rank-row:hover { border-color: rgba(216, 108, 118, .42); background: rgba(241, 221, 213, .07); }
+.gy-rank-row:active { transform: scale(.995); }
+.gy-rank-row.is-selected { border-color: var(--gy-rose); background: rgba(169, 39, 54, .16); }
+.gy-rank-row.is-pending { opacity: .74; }
+
+.gy-rank-ordinal {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(241, 221, 213, .08);
+  color: var(--gy-muted);
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 상위 세 자리만 표식을 준다. 그 아래까지 물들이면 순위가 아니라 장식이 된다. */
+.gy-rank-row:not(.is-pending):nth-child(-n + 3) .gy-rank-ordinal {
+  background: linear-gradient(160deg, rgba(216, 108, 118, .9), rgba(169, 39, 54, .9));
+  color: #fff6f2;
+}
+
+.gy-rank-body { display: grid; gap: 4px; min-width: 0; }
+
+.gy-rank-name {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  color: #f7f1ed;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.gy-rank-source {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(241, 221, 213, .1);
+  color: var(--gy-muted);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.gy-rank-type {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  width: fit-content;
+  color: var(--gy-rose);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gy-rank-type i { color: var(--gy-muted); font-size: 10.5px; font-style: normal; }
+.gy-rank-type.is-pending { color: var(--gy-muted); font-weight: 600; }
+
+.gy-rank-tally {
+  color: var(--gy-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gy-rank-tally em { font-style: normal; opacity: .85; }
+.gy-rank-arrow { color: var(--gy-muted); flex-shrink: 0; }
+
+.gy-rank-footnote {
+  margin: 14px 0 0;
+  color: var(--gy-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gy-rank-row { transition: none; }
+  .gy-rank-row:active { transform: none; }
 }

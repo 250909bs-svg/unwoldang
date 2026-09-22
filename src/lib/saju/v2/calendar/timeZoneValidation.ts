@@ -182,6 +182,25 @@ export function resolveLocalDateTime(
 }
 
 /**
+ * Returns the UTC offset the zone actually observed at that wall clock, or null
+ * when the clock is a DST gap or fold and no single offset can be chosen.
+ *
+ * Callers must not substitute a present-day offset for a historical birth. Korea
+ * ran UTC+08:30 and +09:30 between 1954 and 1961 and UTC+10:00 during the 1987
+ * and 1988 summer-time periods, so a hard-coded +09:00 makes those births fail
+ * `assertResolvableLocalDateTime` with an error the customer cannot act on.
+ */
+export function resolveHistoricalUtcOffsetMinutes(
+  localDateTime: CivilDateTime,
+  timeZone: string
+): number | null {
+  const resolution = resolveLocalDateTime(localDateTime, timeZone);
+  return resolution.status === 'valid-unique'
+    ? resolution.candidates[0].utcOffsetMinutes
+    : null;
+}
+
+/**
  * Enforces that an exact birth clock maps to one physical instant. Ambiguous
  * clocks are allowed only when the caller supplies one of the observed offsets.
  */

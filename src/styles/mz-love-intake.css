@@ -26,7 +26,7 @@
   z-index: -2;
   top: 0;
   left: 50%;
-  width: min(100vw, 520px);
+  width: min(var(--app-shell-width-px, 100vw), 520px);
   height: 100svh;
   overflow: hidden;
   transform: translateX(-50%);
@@ -1639,7 +1639,7 @@
   }
 }
 
-@media (max-width: 380px) {
+@container app (max-width: 380px) {
   .mz-love-intake-content {
     padding-right: 20px;
     padding-left: 20px;
@@ -1672,12 +1672,7 @@
   }
 }
 
-html:has(.mz-love-intake-page),
-body:has(.mz-love-intake-page),
-html:has(.mz-love-preview-page),
-body:has(.mz-love-preview-page) {
-  background: #090608;
-}
+/* The page background is owned by the shell rail token (`--app-rail-bg`). */
 /* MZ love preview: vertical webtoon experience */
 .mz-love-preview-page {
   width: 100%;
@@ -2332,7 +2327,7 @@ body:has(.mz-love-preview-page) {
   font-size: 10px;
 }
 
-@media (min-width: 700px) {
+@container app (min-width: 700px) {
   .mz-love-preview-page {
     border-right: 1px solid rgba(255, 255, 255, 0.06);
     border-left: 1px solid rgba(255, 255, 255, 0.06);

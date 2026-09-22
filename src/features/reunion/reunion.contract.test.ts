@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { IntakeFormData } from '../../api/mockData';
 import {
   REUNION_CONTEXT_VERSION,
+  allowReunionPurchaseCta,
+  buildReunionGate,
+  buildReunionReportPayload,
   type ReunionContext
 } from '../../lib/reunion';
 import type { SajuReportData } from '../../lib/saju/report';
 import { getReunionImage, reunionImages } from './assets';
 import { getReunionDraftStorageKey } from './intakeStorage';
-import { buildReunionActionGuide, buildReunionReportPresentation } from './reportPresentation';
 import {
   REUNION_PATHS,
   REUNION_PRICE,
@@ -157,31 +159,88 @@ describe('reunion frontend contract', () => {
     expect(getReunionDraftStorageKey('kakao/user:123')).toContain('kakaouser123');
   });
 
-  it('withholds contact guidance when the other person has blocked contact', () => {
-    const guide = buildReunionActionGuide({ ...context, contactStatus: 'blocked' });
-    expect(guide.contact.status).toBe('withheld');
-    expect(guide.contact.prohibitedActions.join(' ')).toContain('우회 연락');
-    expect(guide.today.join(' ')).toContain('연락 수단');
+  /* ── 안전 계약: 화면이 실제로 타는 경로에서 검사한다 ─────────
+     `buildReunionReportPresentation` / `buildReunionActionGuide` 는 뷰 재작성 뒤
+     프로덕션 소비자가 0개다. 그쪽만 검사하면 세 보증이 **사용자가 도달할 수 없는 코드** 위에서
+     green 으로 남는다. 아래 세 건은 전부 `buildReunionGate` / `buildReunionReportPayload`
+     — 즉 `/report/love-reunion` 이 실제로 부르는 함수 — 를 겨눈다. */
+
+  it('withholds contact guidance and the purchase CTA when the other person has blocked contact', () => {
+    const blocked: ReunionContext = { ...context, contactStatus: 'blocked' };
+    const gate = buildReunionGate({ context: blocked });
+
+    expect(gate.state).toBe('deferred');
+    expect(allowReunionPurchaseCta(gate)).toBe(false);
+
+    const payload = buildReunionReportPayload({
+      report,
+      context: blocked,
+      name: '지윤',
+      birthDate: formData.birthDate
+    });
+    const prohibited = payload.chapters
+      .flatMap((chapter) => chapter.cuts)
+      .find((cut) => cut.payload?.kind === 'prohibited');
+    const items = prohibited?.payload?.kind === 'prohibited' ? prohibited.payload.items : [];
+
+    expect(items.join(' ')).toContain('우회 연락');
+    expect(payload.allowPurchaseCta).toBe(false);
+
+    // 이 판정은 어떤 명리 근거로도 뒤집히지 않는다.
+    const readiness = payload.chapters
+      .flatMap((chapter) => chapter.cuts)
+      .find((cut) => cut.payload?.kind === 'readiness');
+    expect(readiness?.payload?.kind === 'readiness' ? readiness.payload.readiness.withheld : false).toBe(true);
   });
 
-  it('keeps calculated evidence separate from user-provided context', () => {
-    const presentation = buildReunionReportPresentation(report, formData, context);
-    expect(presentation.viewModel.deterministicEvidence[0]).toMatchObject({
-      source: 'saju',
-      statement: '대화의 속도를 조절하는 흐름으로 읽습니다.'
+  it('keeps calculated conditions separate from user-provided context', () => {
+    const payload = buildReunionReportPayload({
+      report,
+      context,
+      name: '지윤',
+      birthDate: formData.birthDate
     });
-    expect(presentation.viewModel.userContext).toContainEqual(expect.objectContaining({
-      id: 'breakupReason',
-      source: 'user-provided',
-      verification: 'unverified'
-    }));
-    expect(presentation.viewModel.deterministicEvidence.map((item) => item.statement).join(' '))
-      .not.toContain(context.breakupReason);
+    const readinessCut = payload.chapters
+      .flatMap((chapter) => chapter.cuts)
+      .find((cut) => cut.payload?.kind === 'readiness');
+    const readiness =
+      readinessCut?.payload?.kind === 'readiness' ? readinessCut.payload.readiness : null;
+
+    expect(readiness).toBeTruthy();
+    // 다섯 칸 모두 출처가 붙어 있고, 두 종류가 다 존재한다.
+    expect(readiness?.items.every((item) => item.basis === 'input' || item.basis === 'calculated')).toBe(true);
+    expect(readiness?.items.some((item) => item.basis === 'calculated')).toBe(true);
+    expect(readiness?.items.some((item) => item.basis === 'input')).toBe(true);
+
+    // 독자가 쓴 이별 사유가 계산 칸의 문장으로 흘러들지 않는다.
+    const calculated = (readiness?.items || [])
+      .filter((item) => item.basis === 'calculated')
+      .map((item) => `${item.label} ${item.reason}`)
+      .join(' ');
+    expect(calculated).not.toContain(context.breakupReason);
   });
 
   it('uses month luck only as a non-guaranteed reference window', () => {
-    const presentation = buildReunionReportPresentation(report, formData, context);
-    expect(presentation.timingReference.label).toBe('2026년 10월 · 갑자');
-    expect(presentation.timingReference.note).toContain('보장하는 날짜가 아닙니다');
+    const payload = buildReunionReportPayload({
+      report,
+      context,
+      name: '지윤',
+      birthDate: formData.birthDate
+    });
+    const chart = payload.chapters
+      .flatMap((chapter) => chapter.cuts)
+      .find((cut) => cut.payload?.kind === 'timeline12');
+
+    // 삭제 불가 캡션이 차트에 붙어 있고, 축 라벨에 '재회'·'연락'이 없다.
+    expect(chart?.undeletableCopyId).toBe('timeline-not-probability');
+    expect(chart?.caption).toContain('상대의 행동을 예측한 값이 아니에요');
+    const cells = chart?.payload?.kind === 'timeline12' ? chart.payload.cells : [];
+    expect(JSON.stringify(cells.map((cell) => cell.conditions))).not.toContain('재회');
+
+    // 날짜를 약속하는 표가 아니라는 선언도 같은 장에 남아 있다.
+    const promise = payload.chapters
+      .flatMap((chapter) => chapter.cuts)
+      .find((cut) => cut.undeletableCopyId === 'timeline-not-promise');
+    expect(promise?.mask).toBe('none');
   });
 });

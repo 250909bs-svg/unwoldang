@@ -1,6 +1,7 @@
 import { ArrowRight, LockKeyhole, Plus, Trash2, X } from 'lucide-react';
 import GuiyeondoCharacterHero from './GuiyeondoCharacterHero';
 import GuiyeondoRecommendations from './GuiyeondoRecommendations';
+import { withTopicParticle } from '../../lib/korean/particles';
 import { GUIYEONDO_RELATIONSHIP_VISUALS } from './relationshipVisuals';
 import type { GuiyeondoPerson, GuiyeondoRelationshipType } from './types';
 
@@ -18,10 +19,23 @@ const PURPOSE_LABELS = {
   family: '정서적 안전'
 } as const;
 
-function personalizeStatement(statement: string, ownerName: string, personName: string) {
+/**
+ * 문장의 `personA` · `personB` 를 두 사람의 이름으로 바꾼다.
+ *
+ * 보통 `personA` 는 지도 주인이다. 그런데 **남의 초대에 응답해서 가져온 인연**은 초대한
+ * 쪽을 앞에 놓고 계산됐다. 그대로 풀면 "personA 가 personB 를 이끈다" 같은 문장에서 두
+ * 사람이 뒤바뀌어, 방향이 있는 관계 서술이 정반대가 된다. `reversed` 가 그 경우다.
+ */
+function personalizeStatement(
+  statement: string,
+  ownerName: string,
+  personName: string,
+  reversed = false
+) {
+  const [first, second] = reversed ? [personName, ownerName] : [ownerName, personName];
   return statement
-    .replace(/personA/g, ownerName)
-    .replace(/personB/g, personName);
+    .replace(/personA/g, first)
+    .replace(/personB/g, second);
 }
 
 export default function GuiyeondoDetailPanel({
@@ -59,17 +73,18 @@ export default function GuiyeondoDetailPanel({
   }
 
   const visual = GUIYEONDO_RELATIONSHIP_VISUALS[type];
+  /* 실제로 읽힌 신호와 그러지 못한 신호를 가른다. 뒤의 것은 줄로 세우지 않는다. */
+  const readSignals = person ? person.analysis.vectors.filter((vector) => vector.supported) : [];
+  const unreadSignals = person ? person.analysis.vectors.filter((vector) => !vector.supported) : [];
   const classifiedSignals = person
-    ? person.analysis.vectors.filter((vector) =>
-        vector.supported && vector.evidenceIds.some((id) => person.analysis.classification.evidenceIds.includes(id)))
+    ? readSignals.filter((vector) =>
+        vector.evidenceIds.some((id) => person.analysis.classification.evidenceIds.includes(id)))
     : [];
   const focusSignals = classifiedSignals.length > 0
     ? classifiedSignals
-    : person
-      ? visual.focusVectors
-        .map((id) => person.analysis.vectors.find((vector) => vector.id === id))
-        .filter((vector): vector is NonNullable<typeof vector> => Boolean(vector))
-      : [];
+    /* 대표 신호가 없을 때의 대비책도 **읽힌 것 중에서** 고른다. 그러지 않으면 유형에 따라
+       카드 세 장이 모두 "근거 확인 중" 으로 채워진다. */
+    : readSignals.filter((vector) => visual.focusVectors.includes(vector.id));
   const purposeEntries = person
     ? (Object.entries(person.analysis.purposes) as Array<[
         keyof typeof PURPOSE_LABELS,
@@ -78,7 +93,7 @@ export default function GuiyeondoDetailPanel({
     : [];
   const seenFacts = new Set<string>();
   const evidenceFacts = purposeEntries.flatMap(([, result]) => result.facts).filter((fact) => {
-    const key = personalizeStatement(fact.statement, ownerName, person?.name || '상대');
+    const key = personalizeStatement(fact.statement, ownerName, person?.name || '상대', person?.reversed);
     if (seenFacts.has(key)) return false;
     seenFacts.add(key);
     return true;
@@ -88,7 +103,7 @@ export default function GuiyeondoDetailPanel({
   return (
     <aside className={`gy-detail-panel ${person ? 'has-person' : 'is-empty'}`} aria-label={`${visual.label} 상세`}>
       <button type="button" className="gy-detail-close" onClick={onClose} aria-label="상세 닫기"><X size={19} /></button>
-      <GuiyeondoCharacterHero key={`${type}-${person?.id || 'empty'}`} type={type} />
+      <GuiyeondoCharacterHero key={`${type}-${person?.id || 'empty'}`} type={type} priority />
       <div className="gy-detail-body">
         {person ? (
           <>
@@ -119,7 +134,7 @@ export default function GuiyeondoDetailPanel({
                 {focusSignals.map((vector) => (
                   <article className={`gy-focus-signal gy-focus-${vector.tendency}`} key={vector.id}>
                     <div><strong>{vector.label}</strong><span>{TENDENCY_LABEL[vector.tendency]}</span></div>
-                    <p>{personalizeStatement(vector.statement || '이 신호의 세부 문장은 관계를 다시 계산하면 확인할 수 있습니다.', ownerName, person.name)}</p>
+                    <p>{personalizeStatement(vector.statement || '이 신호의 세부 문장은 관계를 다시 계산하면 확인할 수 있습니다.', ownerName, person.name, person.reversed)}</p>
                   </article>
                 ))}
               </div>
@@ -148,7 +163,7 @@ export default function GuiyeondoDetailPanel({
                   <article key={purpose} className={`gy-purpose-card gy-purpose-${result.overview.tendency}`}>
                     <span>{PURPOSE_LABELS[purpose]}</span>
                     <strong>{TENDENCY_LABEL[result.overview.tendency]}</strong>
-                    <p>{personalizeStatement(result.overview.statement, ownerName, person.name)}</p>
+                    <p>{personalizeStatement(result.overview.statement, ownerName, person.name, person.reversed)}</p>
                   </article>
                 ))}
               </div>
@@ -160,14 +175,32 @@ export default function GuiyeondoDetailPanel({
                 <h3 id="gy-vector-title">두 사람 사이의 신호</h3>
               </div>
               <div className="gy-vector-list">
-                {person.analysis.vectors.map((vector) => (
+                {readSignals.map((vector) => (
                   <div className={`gy-vector gy-vector-${vector.tendency}`} key={vector.id}>
-                    <div><strong>{vector.label}</strong><span>{TENDENCY_LABEL[vector.tendency]}</span></div>
+                    {/* 경향은 오른쪽 알약 하나로만 적는다. 예전에는 같은 문장을 라벨 아래에도
+                        한 번 더 써서 "조건을 살필 신호 / 조건을 살필 신호" 로 읽혔다. */}
+                    <strong>{vector.label}</strong>
                     <span className={`gy-vector-status gy-status-${vector.tendency}`}>{TENDENCY_LABEL[vector.tendency]}</span>
                   </div>
                 ))}
               </div>
-              <p className="gy-vector-note">숫자 확률 대신 검증된 정성 경향을 표시합니다. ‘근거 확인 중’은 임의 값을 만들지 않은 항목입니다.</p>
+              <p className="gy-vector-note">숫자 확률 대신 검증된 정성 경향을 표시합니다.</p>
+              {unreadSignals.length ? (
+                /*
+                 * 읽지 못한 항목은 줄로 세우지 않는다.
+                 *
+                 * `지원`·`성장` 은 이 관계에서만 근거가 부족한 것이 아니라 **엔진에 독립
+                 * 계산 기준 자체가 없다**(`relationshipAnalysis.ts` 의 `unsupportedVector`).
+                 * 그래서 누가 보든, 몇 번을 보든 늘 "근거 확인 중" 이었다. 값이 생길 일이
+                 * 없는 줄을 목록에 세워 두면 그건 투명함이 아니라 고장 난 표로 읽힌다.
+                 *
+                 * 임의 값을 만들지 않는다는 원칙은 그대로 두고, 그 사실을 한 줄로 옮긴다.
+                 */
+                <p className="gy-vector-unread">
+                  {withTopicParticle(unreadSignals.map((vector) => vector.label).join(' · '))} 아직 운월당이
+                  독립 계산 기준을 확정하지 못해 읽지 않았습니다. 없는 근거로 값을 지어내지 않으려고 비워 둡니다.
+                </p>
+              ) : null}
             </section>
 
             <details className="gy-evidence">
@@ -179,7 +212,7 @@ export default function GuiyeondoDetailPanel({
                     {result.dimensions.map((dimension) => (
                       <article key={`${purpose}-${dimension.id}`}>
                         <strong>{dimension.label}</strong>
-                        <p>{personalizeStatement(dimension.statement, ownerName, person.name)}</p>
+                        <p>{personalizeStatement(dimension.statement, ownerName, person.name, person.reversed)}</p>
                       </article>
                     ))}
                   </section>
@@ -189,7 +222,7 @@ export default function GuiyeondoDetailPanel({
                   {evidenceFacts.map((fact) => (
                     <article key={fact.id}>
                       <strong>{fact.category === 'day-master' ? '일간 관계' : fact.category === 'spouse-palace' ? '배우자궁 관계' : fact.category === 'element-exchange' ? '오행 상호 보완' : '합·충·형·파·해 관계'}</strong>
-                      <p>{personalizeStatement(fact.statement, ownerName, person.name)}</p>
+                      <p>{personalizeStatement(fact.statement, ownerName, person.name, person.reversed)}</p>
                     </article>
                   ))}
                 </section>

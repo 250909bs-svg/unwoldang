@@ -27,6 +27,11 @@ import { createCorsMiddleware } from './middleware/cors.ts';
 import { createReportRateLimit } from './middleware/rateLimit.ts';
 import { createAdminLoginRateLimit } from './middleware/adminLoginRateLimit.ts';
 import { FirestoreRepository } from './repositories/firestoreRepository.ts';
+import { CouponRepository } from './repositories/couponRepository.ts';
+import { CouponService } from './domains/coupons/couponService.ts';
+import { ChatService } from './domains/chat/chatService.ts';
+import { GiftRepository } from './repositories/giftRepository.ts';
+import { GiftService } from './domains/gifts/giftService.ts';
 import { PaymentLedgerRepository } from './repositories/paymentLedgerRepository.ts';
 import { ReportArchiveRepository } from './repositories/reportArchiveRepository.ts';
 import { GuiyeondoFirestoreRepository } from './repositories/guiyeondoRepository.ts';
@@ -59,11 +64,28 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     firestoreRepository,
     config.firestore.archiveCollection
   );
+  /* Firestore 가 꺼져 있으면 쿠폰도 꺼진다. 사용 이력을 저장할 곳 없이 할인을 내주면
+     같은 쿠폰을 무한히 쓸 수 있다. */
+  const couponService = new CouponService({
+    repository: config.firestore.enabled
+      ? new CouponRepository(firestoreRepository, config.firestore.couponCollection)
+      : null
+  });
+  /* Firestore 가 꺼져 있으면 선물도 꺼진다. 선물 한 장이 한 번만 쓰이는 것을
+     기록으로 지켜야 하는데, 기록할 곳이 없으면 그 보장이 사라진다. */
+  const giftService = new GiftService({
+    repository: config.firestore.enabled
+      ? new GiftRepository(firestoreRepository, config.firestore.giftCollection)
+      : null,
+    tokenService,
+    reportAccessTokenTtlMs: config.report.accessTokenTtlMs
+  });
   const guiyeondoRepository = new GuiyeondoFirestoreRepository(
     firestoreRepository,
     config.guiyeondo.inviteCollection,
     config.guiyeondo.responseCollection,
-    config.guiyeondo.rateLimitCollection
+    config.guiyeondo.rateLimitCollection,
+    config.guiyeondo.connectionCollection
   );
   const guiyeondoService = options.guiyeondoService || new GuiyeondoService({
     repository: guiyeondoRepository,
@@ -102,6 +124,8 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     },
     paymentProvider,
     ledgerRepository: paymentLedgerAdapter,
+    couponService,
+    giftService,
     tokenService
   });
   const reportService = new ReportService(
@@ -115,6 +139,10 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     tokenService
   );
   const adminService = new AdminService(config, tokenService);
+  const chatService = new ChatService({
+    config: { model: config.gemini.model, requestTimeoutMs: 20_000 },
+    fetchImplementation
+  });
   const healthService = new HealthService(config);
   const applyCors = createCorsMiddleware(config);
   const enforceReportRateLimit = createReportRateLimit(config);
@@ -139,6 +167,9 @@ export function createApp(options: CreateAppOptions = {}): RequestListener {
     kakao: kakaoService,
     archives: archiveService,
     admin: adminService,
-    guiyeondo: guiyeondoService
+    guiyeondo: guiyeondoService,
+    chat: chatService,
+    gifts: giftService,
+    coupons: couponService
   });
 }

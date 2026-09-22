@@ -79,6 +79,22 @@ function hasRecoverableProductContract(productId: unknown, amount: unknown): pro
   );
 }
 
+/**
+ * 서버가 돌려준 청구액이 쓸 수 있는 값인지 본다.
+ *
+ * 정가보다 크면 더 받겠다는 뜻이고, 0 이하면 결제창이 열리지 않는다. 둘 다 계약 위반이라
+ * 결제창을 띄우기 전에 멈춘다. 쿠폰 도입 전 서버는 이 필드를 보내지 않으므로 없으면 통과.
+ */
+function isUsablePayableAmount(value: PaymentOrderIntent, catalogAmount: number) {
+  if (value.payableAmount === undefined) return true;
+
+  return (
+    Number.isSafeInteger(value.payableAmount) &&
+    value.payableAmount > 0 &&
+    value.payableAmount <= catalogAmount
+  );
+}
+
 function assertPaymentOrderIntentShape(
   value: PaymentOrderIntent,
   expected: { orderId?: string; productId: ProductId; amount: number }
@@ -88,6 +104,7 @@ function assertPaymentOrderIntentShape(
     (expected.orderId && value.orderId !== expected.orderId) ||
     value.productId !== expected.productId ||
     value.amount !== expected.amount ||
+    !isUsablePayableAmount(value, expected.amount) ||
     value.currency !== 'KRW' ||
     typeof value.orderClaim !== 'string' ||
     value.orderClaim.length < 40 ||
@@ -122,7 +139,11 @@ export async function requestPaymentOrderIntent(options: {
   authToken: string;
   orderId?: string;
   productId: ProductId;
+  /** 상품 정가. 할인 금액은 보내지 않는다 — 서버가 쿠폰을 보고 직접 정한다. */
   amount: number;
+  couponCode?: string;
+  /** 선물 주문. 서버가 확정 시 리포트 대신 선물 코드를 만든다. */
+  gift?: boolean;
 }) {
   const response = await fetchPaymentApi(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'order'), {
     method: 'POST',
@@ -133,7 +154,9 @@ export async function requestPaymentOrderIntent(options: {
     body: JSON.stringify({
       orderId: options.orderId,
       productId: options.productId,
-      amount: options.amount
+      amount: options.amount,
+      couponCode: options.couponCode,
+      gift: options.gift
     })
   });
 
@@ -151,6 +174,8 @@ export async function confirmAuthenticatedPortOnePayment(options: {
   productId: ProductId;
   amount: number;
   orderClaim: string;
+  /** 선물 주문의 한마디. 서버가 선물 문서에 담는다. */
+  giftMessage?: string;
 }) {
   const response = await fetchPaymentApi(getPortOnePaymentApiEndpoint(options.confirmEndpoint, 'confirm'), {
     method: 'POST',
@@ -164,7 +189,8 @@ export async function confirmAuthenticatedPortOnePayment(options: {
       orderId: options.orderId,
       productId: options.productId,
       amount: options.amount,
-      orderClaim: options.orderClaim
+      orderClaim: options.orderClaim,
+      giftMessage: options.giftMessage
     })
   });
 

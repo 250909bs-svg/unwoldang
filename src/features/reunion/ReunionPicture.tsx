@@ -24,7 +24,7 @@ export default function ReunionPicture({
         sizes={source.sizes}
         alt={alt}
         loading={eager ? 'eager' : 'lazy'}
-        fetchPriority={eager ? 'high' : 'auto'}
+        fetchpriority={eager ? 'high' : 'auto'}
         decoding="async"
       />
     </picture>

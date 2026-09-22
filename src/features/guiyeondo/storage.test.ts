@@ -143,6 +143,77 @@ describe('귀연도 로컬 지도와 초대 개인정보 계약', () => {
     expect(mergeGuiyeondoInvitePeople(state, [], 'owner').people.map((item) => item.id)).toEqual(['direct']);
   });
 
+  it('계정에 남은 초대 응답은 만료 없이 지도에 남는다', () => {
+    /*
+     * 예전에는 초대로 들어온 사람이면 무조건 `expiresAt` 을 검사해서 지웠다. 그래서
+     * 브라우저를 그대로 둬도 14일이면 인연이 지도에서 빠졌다 — 초대 링크의 수명이 곧
+     * 인연의 수명이었던 셈이다. 이제 만료 시각이 **붙어 있는 사람만** 만료된다.
+     */
+    const guestProfile: GuiyeondoBirthProfile = { ...owner, name: '계정 인연', gender: 'female', birthDate: '2000-01-01' };
+    const kept = {
+      id: 'kept',
+      name: guestProfile.name,
+      source: 'invite',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      connectionId: 'a'.repeat(64),
+      analysis: analyzeGuiyeondoRelationship(owner, guestProfile)
+    } satisfies GuiyeondoPerson;
+    saveGuiyeondoMap({ ...createGuiyeondoMap(owner), people: [kept] }, 'owner');
+
+    expect(readGuiyeondoMap('owner')?.people.map((item) => item.id)).toEqual(['kept']);
+  });
+
+  it('응답 목록이 나중에 도착해도 계정에 남은 사람에게 만료를 도로 붙이지 않는다', () => {
+    /*
+     * 같은 사람이 두 경로로 들어온다. 인연 목록은 만료 없이, 초대 응답 목록은 초대의
+     * 만료 시각을 달고 온다. 응답 목록이 나중에 도착했다고 만료를 붙이면 14일 뒤
+     * 사라지던 옛 동작으로 조용히 되돌아간다.
+     */
+    const guestProfile: GuiyeondoBirthProfile = { ...owner, name: '두 경로', gender: 'female', birthDate: '2000-01-01' };
+    const analysis = analyzeGuiyeondoRelationship(owner, guestProfile);
+    const fromConnection = {
+      id: 'both',
+      name: guestProfile.name,
+      source: 'invite',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      connectionId: 'b'.repeat(64),
+      analysis
+    } satisfies GuiyeondoPerson;
+    const fromResponses = {
+      id: 'both',
+      name: guestProfile.name,
+      source: 'invite',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      expiresAt: '2099-09-29T00:00:00.000Z',
+      analysis
+    } satisfies GuiyeondoPerson;
+
+    const state = { ...createGuiyeondoMap(owner), people: [fromConnection] };
+    const merged = mergeGuiyeondoInvitePeople(state, [fromResponses], 'owner');
+
+    expect(merged.people).toHaveLength(1);
+    expect(merged.people[0].expiresAt).toBeUndefined();
+    expect(merged.people[0].connectionId).toBe('b'.repeat(64));
+  });
+
+  it('계정에 남은 사람을 지우면 동기화가 되살리지 못하게 표시해 둔다', () => {
+    /* 서버 삭제가 늦거나 실패해도 다음 동기화가 그 사람을 다시 얹으면 안 된다. */
+    const guestProfile: GuiyeondoBirthProfile = { ...owner, name: '지운 사람', gender: 'female', birthDate: '2000-01-01' };
+    const direct = {
+      id: 'direct-synced',
+      name: guestProfile.name,
+      source: 'direct',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      connectionId: 'e'.repeat(64),
+      analysis: analyzeGuiyeondoRelationship(owner, guestProfile)
+    } satisfies GuiyeondoPerson;
+    const state = saveGuiyeondoMap({ ...createGuiyeondoMap(owner), people: [direct] }, 'owner');
+
+    const removed = removeGuiyeondoPerson(state, 'direct-synced', 'owner');
+    expect(removed.people).toEqual([]);
+    expect(removed.hiddenInvitePersonIds).toContain('direct-synced');
+  });
+
   it('사용자가 지운 원격 응답은 다음 동기화에서 다시 나타나지 않는다', () => {
     const guestProfile: GuiyeondoBirthProfile = { ...owner, name: '숨긴 상대', gender: 'female', birthDate: '2000-01-01' };
     const person = { id: 'c'.repeat(64), name: guestProfile.name, source: 'invite', createdAt: '2026-09-15T00:00:00.000Z', expiresAt: '2099-09-29T00:00:00.000Z', analysis: analyzeGuiyeondoRelationship(owner, guestProfile) } satisfies GuiyeondoPerson;

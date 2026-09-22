@@ -14,7 +14,7 @@ Cloud Run으로 분리할 때는 아래처럼 바꿉니다.
 VITE_REPORT_ENDPOINT=https://YOUR_CLOUD_RUN_URL/api/report
 ```
 
-프론트 요청 코드는 [aiReport.ts](C:/Users/1/Documents/unwoldang/src/lib/aiReport.ts)에서 처리합니다.
+프론트 요청 코드는 [aiReport.ts](../src/lib/aiReport.ts)에서 처리합니다.
 
 ## 2. 서버 환경변수
 
@@ -36,24 +36,32 @@ ALLOWED_ORIGINS=https://unwoldang.com,https://www.unwoldang.com
 운월당의 사주 리포트는 아래 순서로 생성됩니다.
 
 1. 입력값을 `IntakeFormData` 형태로 정리
-2. [deterministicBasis.ts](C:/Users/1/Documents/unwoldang/src/lib/saju/deterministicBasis.ts)에서 결정론적 계산 basis 생성
-3. [report.ts](C:/Users/1/Documents/unwoldang/src/lib/saju/report.ts)에서 기본 리포트 생성
-4. [premiumReportPrompt.ts](C:/Users/1/Documents/unwoldang/src/lib/saju/premiumReportPrompt.ts) 기반으로 Gemini draft 요청
-5. Gemini가 돌려준 문장/설명 블록만 merge
-6. 최종 `SajuReportData`를 프론트 결과 페이지로 전달
+2. [deterministicBasis.ts](../src/lib/saju/deterministicBasis.ts)에서 결정론적 계산 basis 생성
+3. [reportBuilder.ts](../src/lib/saju/reportBuilder.ts)에서 결정론 리포트(`baseReport`) 전문 생성
+4. [premiumReportPrompt.ts](../src/lib/saju/premiumReportPrompt.ts) 기반으로 Gemini draft 요청
+5. 돌려받은 draft를 **필드 단위로 검증**해 채택/거부를 정한다
+   ([geminiProseGuard.ts](../src/lib/server/geminiProseGuard.ts), `reviewGeminiDraft`)
+6. 채택된 필드만 merge → `lockCommercialReportFacts`가 계산값을 base로 복원
+7. 최종 `SajuReportData`를 프론트 결과 페이지로 전달
 
 핵심 원칙은 이겁니다.
 
-- 계산: 코드
-- 해석: Gemini
-- 렌더링: 프론트 결과 UI
+- **계산과 사실 주장: 코드.** 원국·오행·십성·대운·세운·월운·판정·집계·날짜는 전부 결정론이고,
+  제미나이가 바꿀 수 없다. 바꾸려고 하면 그 필드가 결정론 값으로 되돌아간다.
+- **문체·구성·컷 나누기: Gemini.** 그것도 현재는 재회운(`love-reunion`)만이다.
+  다른 상품은 결정론 문장을 그대로 복사하는 echo 모드다.
+- **렌더링: 프론트 결과 UI.**
+
+> 이 문서는 한동안 "계산: 코드 / 해석: Gemini"라고만 적혀 있었는데, 실제 코드는 정반대로
+> 해석 문장까지 전부 결정론이 만들고 제미나이는 복사만 하고 있었다. 무엇이 열려 있고
+> 무엇이 잠겨 있는지는 [ai-prose-unlock-decision.md](./ai-prose-unlock-decision.md)에 있다.
 
 ## 4. 공용 서버 엔진
 
 이제 Gemini 리포트 생성 로직은 공용 서비스로 분리되어 있습니다.
 
-- 공용 엔진: [geminiReportService.ts](C:/Users/1/Documents/unwoldang/src/lib/server/geminiReportService.ts)
-- Cloud Run 서버: [index.ts](C:/Users/1/Documents/unwoldang/cloudrun-api/src/index.ts)
+- 공용 엔진: [geminiReportService.ts](../src/lib/server/geminiReportService.ts)
+- Cloud Run 서버: [index.ts](../cloudrun-api/src/index.ts)
 
 즉, 리포트 생성 로직을 한 번만 수정하면 Vercel과 Cloud Run 양쪽에 같이 반영됩니다.
 
@@ -61,9 +69,9 @@ ALLOWED_ORIGINS=https://unwoldang.com,https://www.unwoldang.com
 
 Cloud Run용 백엔드 패키지는 아래 경로에 있습니다.
 
-- 폴더: [cloudrun-api](C:/Users/1/Documents/unwoldang/cloudrun-api)
-- 설명 문서: [README.md](C:/Users/1/Documents/unwoldang/cloudrun-api/README.md)
-- Dockerfile: [Dockerfile](C:/Users/1/Documents/unwoldang/cloudrun-api/Dockerfile)
+- 폴더: [cloudrun-api](../cloudrun-api)
+- 설명 문서: [README.md](../cloudrun-api/README.md)
+- Dockerfile: [Dockerfile](../cloudrun-api/Dockerfile)
 
 제공 경로:
 
@@ -81,7 +89,7 @@ Cloud Run용 백엔드 패키지는 아래 경로에 있습니다.
 ### Cloud Run 백엔드 로컬 번들 확인
 
 ```powershell
-cd C:\Users\1\Documents\unwoldang\cloudrun-api
+cd <repo>\cloudrun-api
 npm.cmd run build
 node dist/index.js
 ```
@@ -114,3 +122,5 @@ Gemini 키가 없으면 fallback 리포트로 응답하고, 키가 있으면 Gem
 4. 프론트의 `VITE_REPORT_ENDPOINT`를 Cloud Run URL로 변경
 5. 종합사주 1건 실제 테스트
 > Launch note: the Vercel `/api/report` route is disabled with 410. Use Cloud Run only. The report API now requires the short-lived `reportAccessToken` returned after PortOne payment verification.
+
+

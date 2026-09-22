@@ -1,5 +1,10 @@
-import { lazy, Suspense, useLayoutEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import {
+  getRouteShellPolicy,
+  getShellContainerClassName,
+  useShellDocumentAttributes
+} from './app/shell';
 import { buildHashCallbackLocation } from './lib/auth';
 import BottomTabBar from './components/BottomTabBar';
 import Footer from './components/Footer';
@@ -27,6 +32,14 @@ const Login = lazy(() => import('./pages/Login'));
 const KakaoCallback = lazy(() => import('./pages/KakaoCallback'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback'));
 const My = lazy(() => import('./pages/My'));
+const MyReports = lazy(() => import('./pages/MyReports'));
+const MyManseryeok = lazy(() => import('./pages/MyManseryeok'));
+const DailyFortune = lazy(() => import('./pages/DailyFortune'));
+const MyCoupons = lazy(() => import('./pages/MyCoupons'));
+const Chat = lazy(() => import('./pages/Chat'));
+const GiftSend = lazy(() => import('./pages/GiftSend'));
+const GiftReceive = lazy(() => import('./pages/GiftReceive'));
+const GiftSent = lazy(() => import('./pages/GiftSent'));
 const Admin = lazy(() => import('./pages/Admin'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const GeneralSajuLanding = lazy(() => import('./pages/GeneralSajuLanding'));
@@ -57,11 +70,11 @@ function RouteLoadingFallback() {
 }
 
 function AppRoutes({
-  hideGlobalChrome = false,
-  hideFooter = false
+  showFooter,
+  showBottomTab
 }: {
-  hideGlobalChrome?: boolean;
-  hideFooter?: boolean;
+  showFooter: boolean;
+  showBottomTab: boolean;
 }) {
   return (
     <>
@@ -77,6 +90,14 @@ function AppRoutes({
           <Route path="/g/:publicId" element={<GuiyeondoGuestPage />} />
           <Route path="/tarot" element={<Navigate to="/" replace />} />
           <Route path="/my" element={<My />} />
+          <Route path="/my/reports" element={<MyReports />} />
+          <Route path="/my/manseryeok" element={<MyManseryeok />} />
+          <Route path="/today" element={<DailyFortune />} />
+          <Route path="/my/coupons" element={<MyCoupons />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/gift" element={<GiftSend />} />
+          <Route path="/gift/sent" element={<GiftSent />} />
+          <Route path="/gift/:code" element={<GiftReceive />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
@@ -201,96 +222,21 @@ function AppRoutes({
         </Routes>
       </Suspense>
 
-      {!hideGlobalChrome && !hideFooter ? <Footer /> : null}
-      {!hideGlobalChrome ? <BottomTabBar /> : null}
+      {showFooter ? <Footer /> : null}
+      {showBottomTab ? <BottomTabBar /> : null}
     </>
   );
 }
 
 function AppShell() {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-  const isPastLifeLandingRoute = location.pathname.startsWith('/detail/past-life-goblin');
-  const isPastLifeReportRoute = location.pathname === '/report/past-life-goblin';
-  const isGeneralDetailRoute = location.pathname === '/detail/general-saju';
-  const isGeneralFormRoute = location.pathname === '/form/general-signature';
-  const isGeneralReportRoute = location.pathname === '/report/general-signature';
-  const isLoveDetailRoute = location.pathname === '/detail/love-reading';
-  const isLoveFormRoute = location.pathname === '/form/love-reading';
-  const isLovePreviewRoute = location.pathname === '/preview/love-reading';
-  const isLoveReportRoute = location.pathname === '/report/love-reading';
-  const isGuiyeondoRoute = location.pathname === '/guiyeondo';
-  const isGuiyeondoGuestRoute = location.pathname.startsWith('/g/');
-  const isImmersiveLoveRoute = isLoveDetailRoute || isLoveFormRoute || isLovePreviewRoute || isLoveReportRoute;
-  const isLegalRoute = ['/terms', '/privacy', '/refund'].includes(location.pathname);
-  const isReunionDetailRoute = location.pathname === '/detail/love-reunion';
-  const isReunionFormRoute = location.pathname === '/form/love-reunion';
-  const isReunionPreviewRoute = location.pathname === '/preview/love-reunion';
-  const isReunionReportRoute = location.pathname === '/report/love-reunion';
-  const isImmersiveReunionRoute = isReunionDetailRoute || isReunionFormRoute || isReunionPreviewRoute || isReunionReportRoute;
-  const usesDarkAppShell =
-    location.pathname === '/' ||
-    location.pathname.startsWith('/test') ||
-    location.pathname.startsWith('/search') ||
-    location.pathname.startsWith('/my') ||
-    location.pathname.startsWith('/login') ||
-    isGuiyeondoRoute ||
-    isGuiyeondoGuestRoute ||
-    isPastLifeLandingRoute ||
-    isGeneralDetailRoute ||
-    isGeneralFormRoute ||
-    isImmersiveLoveRoute ||
-    isImmersiveReunionRoute ||
-    isLegalRoute;
+  const policy = getRouteShellPolicy(location.pathname);
 
-  useLayoutEffect(() => {
-    document.body.classList.toggle('home-all-black', usesDarkAppShell);
-
-    return () => {
-      document.body.classList.remove('home-all-black');
-    };
-  }, [usesDarkAppShell]);
+  useShellDocumentAttributes(policy);
 
   return (
-    <div
-      className={
-        isAdminRoute
-          ? 'app-container admin-app-container'
-          : isGeneralDetailRoute
-            ? 'app-container general-saju-app-container'
-          : isGeneralFormRoute
-            ? 'app-container general-saju-intake-app-container'
-          : isGeneralReportRoute
-            ? 'app-container general-signature-report-app-container'
-          : isGuiyeondoRoute || isGuiyeondoGuestRoute
-            ? 'app-container guiyeondo-app-container'
-          : isLoveDetailRoute
-            ? 'app-container mz-love-app-container'
-            : isLoveFormRoute || isLovePreviewRoute
-              ? 'app-container mz-love-intake-app-container'
-              : isLoveReportRoute
-                ? 'app-container mz-love-report-app-container'
-                : isImmersiveReunionRoute
-                  ? 'app-container reunion-app-container'
-          : isPastLifeLandingRoute
-            ? 'app-container past-life-app-container'
-            : isPastLifeReportRoute
-              ? 'app-container past-life-report-app-container'
-            : 'app-container'
-      }
-    >
-      <AppRoutes
-        hideFooter={isGuiyeondoRoute}
-        hideGlobalChrome={
-          isPastLifeLandingRoute ||
-          isImmersiveLoveRoute ||
-          isGeneralDetailRoute ||
-          isGeneralFormRoute ||
-          isGeneralReportRoute ||
-          isImmersiveReunionRoute ||
-          isGuiyeondoGuestRoute
-        }
-      />
+    <div className={getShellContainerClassName(policy)} data-shell-surface={policy.surface}>
+      <AppRoutes showFooter={policy.footer} showBottomTab={policy.bottomTab === 'visible'} />
     </div>
   );
 }

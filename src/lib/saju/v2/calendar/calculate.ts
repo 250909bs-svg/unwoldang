@@ -10,7 +10,10 @@ import {
   renderInstantInKst
 } from './solarTime';
 import { buildBirthTimeScenarios } from './timeParser';
-import { assertResolvableLocalDateTime } from './timeZoneValidation';
+import {
+  assertResolvableLocalDateTime,
+  resolveHistoricalUtcOffsetMinutes
+} from './timeZoneValidation';
 import type {
   BirthContext,
   BirthContextOptions,
@@ -141,9 +144,43 @@ function calculateScenario(
   };
 }
 
+/**
+ * A lunar date can convert to a solar date weeks away, which may land on the
+ * other side of a daylight-saving boundary. When the offset was derived rather
+ * than pinned by the caller, re-read it on the converted solar date so the
+ * clock check compares against the offset actually in force at birth.
+ */
+function realignDerivedOffsetToSolarDate(
+  context: BirthContext,
+  solarDate: CivilDate
+): BirthContext {
+  if (context.calendar !== 'lunar' || context.timezone.source === 'explicit') {
+    return context;
+  }
+
+  const realigned = resolveHistoricalUtcOffsetMinutes(
+    {
+      ...solarDate,
+      hour: context.time.hour ?? 12,
+      minute: context.time.minute ?? 0
+    },
+    context.timezone.id
+  );
+
+  if (realigned === null || realigned === context.timezone.utcOffsetMinutes) {
+    return context;
+  }
+
+  return {
+    ...context,
+    timezone: { ...context.timezone, utcOffsetMinutes: realigned, source: 'tzdata-historical' }
+  };
+}
+
 /** Calculates a normalized context and preserves every time-uncertainty branch. */
-export function calculateBirthContext(context: BirthContext): BirthCalculationResult {
-  const { solarDate, lunarInput } = normalizeInputDateToSolar(context);
+export function calculateBirthContext(inputContext: BirthContext): BirthCalculationResult {
+  const { solarDate, lunarInput } = normalizeInputDateToSolar(inputContext);
+  const context = realignDerivedOffsetToSolarDate(inputContext, solarDate);
 
   if (
     context.calendar === 'lunar'

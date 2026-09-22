@@ -178,15 +178,15 @@ function archivedConfirmationBody(orderClaim: string) {
 }
 
 async function confirmOnce(harness: ReturnType<typeof createHarness>) {
-  const order = createOrder(harness);
+  const order = await createOrder(harness);
   setPaidPayment(harness, order.orderClaim);
   return harness.paymentService.confirmPayment(USER, confirmationBody(order.orderClaim));
 }
 
 describe('Cloud Run payment contracts', () => {
-  it('uses the server catalog price and binds the signed order claim to the user and order', () => {
+  it('uses the server catalog price and binds the signed order claim to the user and order', async () => {
     const harness = createHarness();
-    const order = createOrder(harness);
+    const order = await createOrder(harness);
     const claims = harness.tokenService.verifyPaymentOrderClaim(order.orderClaim, USER.userId);
 
     expect(order).toMatchObject({
@@ -205,18 +205,18 @@ describe('Cloud Run payment contracts', () => {
       version: 1,
       userBinding: harness.tokenService.createUserBinding(USER.userId)
     });
-    expect(() =>
+    await expect(
       harness.paymentService.createOrderIntent(USER, {
         orderId: ORDER_ID,
         productId: PRODUCT_ID,
         amount: PRODUCT_PRICE - 1
       })
-    ).toThrow('주문 금액이 서버 상품 가격과 일치하지 않습니다.');
+    ).rejects.toThrow('주문 금액이 서버 상품 가격과 일치하지 않습니다.');
   });
 
   it('confirms a matching PAID/KRW/store/product/orderClaim/transaction payment', async () => {
     const harness = createHarness();
-    const order = createOrder(harness);
+    const order = await createOrder(harness);
     setPaidPayment(harness, order.orderClaim);
 
     const confirmed = await harness.paymentService.confirmPayment(
@@ -317,7 +317,7 @@ describe('Cloud Run payment contracts', () => {
     }]
   ])('rejects a mismatched PortOne %s contract', async (_label, mutate) => {
     const harness = createHarness();
-    const order = createOrder(harness);
+    const order = await createOrder(harness);
     setPaidPayment(harness, order.orderClaim);
     const body: Record<string, unknown> = confirmationBody(order.orderClaim);
     mutate(harness.portOneClient.payment, body);
@@ -329,7 +329,7 @@ describe('Cloud Run payment contracts', () => {
 
   it('accepts an identical duplicate ledger and issues a fresh report token', async () => {
     const harness = createHarness();
-    const order = createOrder(harness);
+    const order = await createOrder(harness);
     setPaidPayment(harness, order.orderClaim);
     const body = confirmationBody(order.orderClaim);
 

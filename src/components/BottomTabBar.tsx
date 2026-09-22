@@ -1,5 +1,6 @@
-import { Archive, FlaskConical, Home } from 'lucide-react';
+import { FlaskConical, Home, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { getRouteShellPolicy } from '../app/shell';
 
 function GuiyeondoIcon({ size = 18, strokeWidth = 2.1 }: { size?: number; strokeWidth?: number }) {
   return (
@@ -21,7 +22,8 @@ const discoveryItem = {
   icon: GuiyeondoIcon
 };
 
-const navItems = [
+/** Exported so a contract test can prove every tab-bar route lights one tab. */
+export const BOTTOM_TAB_ITEMS = [
   {
     to: '/',
     label: '홈',
@@ -36,49 +38,41 @@ const navItems = [
   },
   discoveryItem,
   {
+    /* 예전 이름은 '보관함' 이었다. 보관함은 이제 이 탭 아래 '리포트' 항목 하나이고,
+       탭 자체는 계정·기능 입구를 모으는 '마이' 다. */
     to: '/my',
-    label: '보관함',
+    label: '마이',
     match: (pathname: string) => pathname.startsWith('/my') || pathname.startsWith('/login'),
-    icon: Archive
+    icon: UserRound
   }
 ] as const;
 
 export default function BottomTabBar() {
   const location = useLocation();
-  const locationState = (location.state as { tabOrigin?: string; product?: string } | null) ?? null;
-  const inFlowPage = [
-    '/detail/',
-    '/form/',
-    '/checkout',
-    '/loading',
-    '/report/',
-    '/admin',
-    '/terms',
-    '/privacy',
-    '/refund'
-  ].some((routePath) => location.pathname.startsWith(routePath));
-
-  const isPastLifeExperience =
-    location.pathname.startsWith('/detail/past-life-goblin') ||
-    location.pathname === '/form/past-life-goblin' ||
-    location.pathname === '/report/past-life-goblin' ||
-    locationState?.product === 'past-life-goblin';
-
-  if (location.pathname.startsWith('/admin') || isPastLifeExperience) {
-    return null;
-  }
-
-  const effectivePathname = inFlowPage ? locationState?.tabOrigin || '/' : location.pathname;
+  const locationState = (location.state as { tabOrigin?: string } | null) ?? null;
+  /* Whether this bar renders at all is decided once, by the route shell policy
+     in App.tsx. This component only decides which tab reads as current. */
+  const { tabAnchor } = getRouteShellPolicy(location.pathname);
+  const effectivePathname =
+    tabAnchor === 'origin' ? locationState?.tabOrigin || '/' : location.pathname;
 
   return (
     <nav className="bottom-tabbar" aria-label="하단 탭 메뉴">
       <div className="bottom-tabbar-inner">
-        {navItems.map((item) => {
+        {BOTTOM_TAB_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.match(effectivePathname);
 
           return (
-            <Link key={item.to} to={item.to} className={active ? 'bottom-tab active' : 'bottom-tab'}>
+            <Link
+              key={item.to}
+              to={item.to}
+              className={active ? 'bottom-tab active' : 'bottom-tab'}
+              /* The only visual difference between tabs is the pill fill, and
+                 the label is visually hidden, so this is the sole cue a screen
+                 reader gets for "you are here". */
+              aria-current={active ? 'page' : undefined}
+            >
               <Icon size={18} strokeWidth={2.1} />
               <span>{item.label}</span>
             </Link>

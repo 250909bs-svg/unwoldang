@@ -19,6 +19,7 @@ import {
   requestPaymentOrderIntent,
   savePendingPayment
 } from '../lib/auth';
+import { fetchCouponWallet, type WalletCoupon } from '../features/coupons/api';
 import { requestPortOnePayment } from '../lib/portonePayments';
 import {
   getPaymentMode,
@@ -35,6 +36,9 @@ type CheckoutState = {
   tabOrigin?: string;
   draftOwnerId?: string;
   reunionContext?: ReunionContext;
+  /* 선물 주문. 내 출생정보를 넣지 않으므로 아래 검증이 달라진다. */
+  gift?: boolean;
+  giftMessage?: string;
 };
 
 export default function Checkout() {
@@ -75,7 +79,39 @@ export default function Checkout() {
 
   const orderId = useMemo(() => createOrderId(), []);
   const amount = product.price;
+  /*
+   * 선물 주문에는 내 출생정보가 없다. 받는 사람이 자기 정보로 리포트를 만들기 때문이다.
+   * 그래서 생년월일시·질문 검증을 걸지 않는다 — 걸면 선물은 영원히 결제되지 않는다.
+   */
+  const isGiftOrder = locationState?.gift === true;
+  const giftMessage = locationState?.giftMessage || '';
+  /*
+   * 쿠폰은 코드만 고른다. 깎인 금액은 서버가 정한다.
+   *
+   * 화면이 계산한 금액으로 결제하면 그 값이 곧 청구 금액 제안이 되어, 1원 결제로 리포트를
+   * 받을 수 있는 구멍이 된다. 그래서 여기서는 미리보기 숫자만 보여 주고, 실제 결제 금액은
+   * 주문 생성 응답의 payableAmount 를 그대로 쓴다.
+   */
+  const [couponWallet, setCouponWallet] = useState<WalletCoupon[]>([]);
+  const [couponCode, setCouponCode] = useState('');
   const customerKey = createCustomerKey(user?.id);
+
+  useEffect(() => {
+    if (!user?.authToken) return;
+    let cancelled = false;
+
+    void fetchCouponWallet(user.authToken)
+      .then((wallet) => {
+        if (!cancelled) setCouponWallet(wallet.wallet.filter((item) => item.state === 'usable'));
+      })
+      .catch(() => {
+        /* 쿠폰을 못 불러와도 정가 결제까지 막지는 않는다. */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.authToken]);
   const analysisPayload = useMemo(
     () => buildAnalysisRequestPayload(product.id, checkoutFormData),
     [checkoutFormData, product.id]
@@ -112,14 +148,15 @@ export default function Checkout() {
       !isSubmitting &&
       service &&
       amount > 0 &&
-      hasRequiredBirthInfo &&
-      hasRequiredPartnerBirth &&
-      hasRequiredReunionContext &&
-      hasTwoQuestions &&
+      (isGiftOrder || hasRequiredBirthInfo) &&
+      (isGiftOrder || hasRequiredPartnerBirth) &&
+      (isGiftOrder || hasRequiredReunionContext) &&
+      (isGiftOrder || hasTwoQuestions) &&
       reportReady &&
       paymentReady
   );
   const formattedAmount = amount.toLocaleString('ko-KR');
+  const selectedCoupon = couponWallet.find((coupon) => coupon.code === couponCode) || null;
   const selectedTime = formData?.isUnknownTime ? '시간 미상' : formData?.birthTime || '시간 미입력';
   const birthSummary = `${formData?.birthDate || '생년월일 미입력'} · ${selectedTime}`;
   const calendarSummary =
@@ -198,12 +235,20 @@ export default function Checkout() {
         authToken: user.authToken,
         orderId,
         productId: service.id,
-        amount
+        amount,
+        couponCode: couponCode || undefined,
+        gift: isGiftOrder
       });
+      /* 결제창에 넣을 금액은 서버가 서명해 준 값이다. 화면이 계산한 값을 쓰지 않는다. */
+      const chargeAmount = orderIntent.payableAmount ?? orderIntent.amount;
       const authenticatedPendingPayment = {
         ...pendingPayment,
         orderId: orderIntent.orderId,
-        orderClaim: orderIntent.orderClaim
+        orderClaim: orderIntent.orderClaim,
+        amount: chargeAmount,
+        couponCode: orderIntent.couponCode || '',
+        gift: isGiftOrder,
+        giftMessage
       };
       savePendingPayment(authenticatedPendingPayment);
 
@@ -212,7 +257,7 @@ export default function Checkout() {
         channelKey: portOneChannelKey,
         paymentId: orderIntent.orderId,
         orderName: service.label,
-        totalAmount: amount,
+        totalAmount: chargeAmount,
         customerId: customerKey,
         customerName: formData?.name || user?.nickname || '운월당 고객',
         customerEmail,
@@ -417,10 +462,40 @@ export default function Checkout() {
               <span>{isPastLifeProduct ? '다섯 권 26개 맞춤 해석' : isLoveReadingProduct ? '13개 맞춤 연애 챕터' : isReunionProduct ? '7개 재회 흐름 분석' : '질문 맞춤 분석'}</span>
               <strong>포함</strong>
             </div>
+            {couponWallet.length ? (
+              <div className="checkout-coupon-row">
+                <span>쿠폰</span>
+                <select
+                  value={couponCode}
+                  onChange={(event) => setCouponCode(event.target.value)}
+                  aria-label="사용할 쿠폰"
+                >
+                  <option value="">쿠폰 사용 안 함</option>
+                  {couponWallet
+                    .filter((coupon) => amount >= coupon.minOrderAmount)
+                    .map((coupon) => (
+                      <option key={coupon.code} value={coupon.code}>
+                        {coupon.label} (-{coupon.discount.toLocaleString('ko-KR')}원)
+                      </option>
+                    ))}
+                </select>
+              </div>
+            ) : null}
             <div className="total">
               <span>최종 구매가</span>
-              <strong>{formattedAmount}원</strong>
+              {/* 쿠폰을 골랐을 때의 숫자는 **미리보기**다. 실제 청구액은 결제 직전에
+                  서버가 정하며, 최소 결제액 때문에 여기 적힌 것보다 덜 깎일 수 있다. */}
+              <strong>
+                {selectedCoupon
+                  ? `${Math.max(100, amount - selectedCoupon.discount).toLocaleString('ko-KR')}원`
+                  : `${formattedAmount}원`}
+              </strong>
             </div>
+            {selectedCoupon ? (
+              <p className="checkout-coupon-note">
+                쿠폰 적용 금액은 결제 직전 서버가 확정합니다.
+              </p>
+            ) : null}
           </div>
 
           <div className="checkout-luxe-payments">

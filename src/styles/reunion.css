@@ -142,7 +142,6 @@
 
 .reunion-eyebrow,
 .reunion-section-heading > span,
-.reunion-intake-heading > span,
 .reunion-report-heading > span,
 .reunion-sustain-copy > span {
   margin: 0 0 13px;
@@ -160,7 +159,7 @@
 .reunion-hero h1 {
   max-width: 640px;
   margin: 0;
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: var(--ud-serif);
   font-size: clamp(2.15rem, 10vw, 4.7rem);
   font-weight: 600;
   line-height: 1.1;
@@ -178,8 +177,7 @@
 }
 
 .reunion-primary-cta,
-.reunion-primary-button,
-.reunion-secondary-button {
+.reunion-primary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -235,12 +233,11 @@
 .reunion-section-heading h2,
 .reunion-path-copy h2,
 .reunion-final-cta h2,
-.reunion-intake-heading h1,
 .reunion-report-heading h2,
 .reunion-sustain-copy h2 {
   margin: 0;
   color: var(--reunion-ink);
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: var(--ud-serif);
   font-size: clamp(1.75rem, 7vw, 3rem);
   font-weight: 600;
   line-height: 1.25;
@@ -250,7 +247,6 @@
 
 .reunion-section-heading > p,
 .reunion-path-copy > p,
-.reunion-intake-heading > p,
 .reunion-report-heading > p {
   margin: 17px 0 0;
   color: var(--reunion-muted);
@@ -304,7 +300,7 @@
 
 .reunion-report-list li > span {
   color: var(--reunion-rose);
-  font-family: Georgia, serif;
+  font-family: var(--ud-serif);
   font-size: 13px;
 }
 
@@ -451,12 +447,6 @@
   line-height: 1.6;
 }
 
-/* Intake */
-.reunion-intake-page {
-  padding-bottom: calc(92px + env(safe-area-inset-bottom));
-  background: #f7efea;
-}
-
 .reunion-intake-header {
   position: sticky;
   top: 0;
@@ -482,21 +472,6 @@
   white-space: nowrap;
 }
 
-.reunion-progress {
-  display: grid;
-  gap: 7px;
-  width: min(680px, calc(100% - 36px));
-  margin: 18px auto 0;
-}
-
-.reunion-progress > span {
-  color: var(--reunion-muted);
-  font-size: 11px;
-  font-weight: 800;
-  text-align: right;
-}
-
-.reunion-progress progress,
 .reunion-loading-meter progress {
   width: 100%;
   height: 5px;
@@ -507,270 +482,19 @@
   border-radius: 99px;
 }
 
-.reunion-progress progress::-webkit-progress-bar,
 .reunion-loading-meter progress::-webkit-progress-bar {
   background: #dfd2d0;
 }
 
-.reunion-progress progress::-webkit-progress-value,
 .reunion-loading-meter progress::-webkit-progress-value {
   background: var(--reunion-wine);
   border-radius: 99px;
   transition: width 0.25s ease;
 }
 
-.reunion-progress progress::-moz-progress-bar,
 .reunion-loading-meter progress::-moz-progress-bar {
   background: var(--reunion-wine);
   border-radius: 99px;
-}
-
-.reunion-intake-card {
-  width: min(680px, calc(100% - 28px));
-  margin: 20px auto;
-  padding: 26px 18px 32px;
-  background: var(--reunion-paper);
-  border: 1px solid var(--reunion-line);
-  border-radius: 22px;
-  box-shadow: 0 16px 50px rgba(67, 19, 34, 0.06);
-}
-
-.reunion-intake-heading {
-  margin-bottom: 29px;
-}
-
-.reunion-intake-heading h1 {
-  font-size: clamp(1.65rem, 7.3vw, 2.45rem);
-}
-
-.reunion-person-fields,
-.reunion-choice-field {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.reunion-person-fields,
-.reunion-context-fields,
-.reunion-question-fields {
-  display: grid;
-  gap: 23px;
-}
-
-.reunion-field {
-  display: grid;
-  position: relative;
-  gap: 9px;
-  min-width: 0;
-  color: var(--reunion-ink);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.reunion-field > span,
-.reunion-choice-field > legend {
-  color: var(--reunion-ink);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.reunion-field > span small {
-  color: var(--reunion-muted);
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.reunion-field input,
-.reunion-field textarea {
-  min-width: 0;
-  min-height: 50px;
-  padding: 13px 14px;
-  color: var(--reunion-ink);
-  background: #fff;
-  border: 1px solid #ddcfcc;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.reunion-field textarea {
-  min-height: 104px;
-  line-height: 1.65;
-  resize: vertical;
-}
-
-.reunion-field input:focus,
-.reunion-field textarea:focus {
-  border-color: var(--reunion-rose);
-  box-shadow: 0 0 0 3px rgba(185, 99, 121, 0.12);
-  outline: none;
-}
-
-.reunion-field input:disabled {
-  color: var(--reunion-muted);
-  background: #eee8e4;
-}
-
-.reunion-birth-grid {
-  display: grid;
-  gap: 15px;
-}
-
-.reunion-choice-field > legend {
-  margin-bottom: 10px;
-}
-
-.reunion-segmented {
-  display: grid;
-  gap: 8px;
-}
-
-.reunion-segmented.is-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.reunion-segmented label,
-.reunion-option-list label {
-  display: flex;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  min-height: 48px;
-  padding: 11px 12px;
-  color: var(--reunion-muted);
-  background: #fff;
-  border: 1px solid #ded2cf;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 800;
-  text-align: center;
-  word-break: keep-all;
-}
-
-.reunion-segmented label.is-selected,
-.reunion-option-list label.is-selected {
-  color: var(--reunion-wine);
-  background: #fbefef;
-  border-color: var(--reunion-rose);
-}
-
-.reunion-segmented input,
-.reunion-option-list input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.reunion-checkbox {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  padding: 15px;
-  color: var(--reunion-ink);
-  background: #f8f1ed;
-  border-radius: 13px;
-  cursor: pointer;
-}
-
-.reunion-checkbox input {
-  flex: 0 0 20px;
-  width: 20px;
-  height: 20px;
-  margin: 1px 0 0;
-  accent-color: var(--reunion-wine);
-}
-
-.reunion-checkbox > span {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.reunion-checkbox strong {
-  font-size: 12px;
-  line-height: 1.45;
-  word-break: keep-all;
-}
-
-.reunion-checkbox small {
-  color: var(--reunion-muted);
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.5;
-  word-break: keep-all;
-}
-
-.reunion-checkbox.is-compact {
-  margin-top: 9px;
-  padding: 10px 12px;
-}
-
-.reunion-option-list {
-  display: grid;
-  gap: 8px;
-}
-
-.reunion-option-list label {
-  justify-content: space-between;
-  padding-right: 14px;
-  padding-left: 15px;
-  text-align: left;
-}
-
-.reunion-option-list label svg {
-  flex: 0 0 auto;
-  opacity: 0;
-}
-
-.reunion-option-list label.is-selected svg {
-  opacity: 1;
-}
-
-.reunion-option-list.is-compact {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.reunion-option-list.is-compact label:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-}
-
-.reunion-privacy-note {
-  display: flex;
-  gap: 10px;
-  padding: 14px;
-  color: #4b6156;
-  background: #edf3ee;
-  border-radius: 12px;
-}
-
-.reunion-privacy-note svg {
-  flex: 0 0 auto;
-}
-
-.reunion-privacy-note p {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.6;
-  word-break: keep-all;
-}
-
-.reunion-character-count {
-  color: var(--reunion-muted);
-  font-size: 10px;
-  font-weight: 600;
-  text-align: right;
-}
-
-.reunion-inline-error {
-  min-height: 20px;
-  margin: 16px 0 -15px;
-  color: #a2283e;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.5;
 }
 
 .reunion-intake-actions {
@@ -788,14 +512,10 @@
   backdrop-filter: blur(14px);
 }
 
-.reunion-primary-button,
-.reunion-secondary-button {
-  min-width: 0;
-  padding: 0 16px;
-}
-
 .reunion-primary-button {
   gap: 7px;
+  min-width: 0;
+  padding: 0 16px;
   color: #fff;
   background: var(--reunion-wine);
 }
@@ -804,12 +524,6 @@
   color: #9d9093;
   background: #ddd5d3;
   cursor: not-allowed;
-}
-
-.reunion-secondary-button {
-  color: var(--reunion-muted);
-  background: #fff;
-  border: 1px solid var(--reunion-line);
 }
 
 /* Preview */
@@ -856,7 +570,7 @@
 .reunion-preview-heading h1 {
   margin: 0;
   color: #fff8f5;
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: var(--ud-serif);
   font-size: clamp(2rem, 9vw, 3.8rem);
   font-weight: 600;
   line-height: 1.16;
@@ -895,7 +609,7 @@
 .reunion-teaser-readable h2,
 .reunion-unlock-card h2 {
   margin: 8px 0 18px;
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: var(--ud-serif);
   font-size: 22px;
   line-height: 1.35;
   letter-spacing: -0.035em;
@@ -1022,6 +736,43 @@
   color: var(--reunion-safe);
 }
 
+/* 판단 게이트가 보류로 나왔을 때 가격 CTA 자리에 들어가는 카드 (§6-C-2).
+   길을 막지 않되 가격과 화살표로 밀지 않는다. */
+.reunion-preview-hold {
+  margin-top: 24px;
+  padding: 18px 16px;
+  background: var(--reunion-blush);
+  border: 1px solid var(--reunion-line);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.reunion-preview-hold > strong {
+  display: block;
+  color: var(--reunion-ink);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.reunion-preview-hold ul {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reunion-preview-hold li,
+.reunion-preview-hold > p {
+  color: #57474c;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.reunion-preview-hold > p {
+  margin-top: 12px;
+}
+
 .reunion-text-button {
   display: block;
   min-height: 44px;
@@ -1121,7 +872,7 @@
 
 .reunion-loading-copy h1 {
   margin: 11px 0 15px;
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: var(--ud-serif);
   font-size: clamp(1.85rem, 8vw, 3rem);
   font-weight: 600;
   line-height: 1.25;
@@ -1238,7 +989,7 @@
 .reunion-report-hero-copy h1 {
   max-width: 650px;
   margin: 11px 0 14px;
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: var(--ud-serif);
   font-size: clamp(2rem, 9vw, 4.6rem);
   font-weight: 600;
   line-height: 1.13;
@@ -1710,8 +1461,7 @@
   50% { transform: scale(1.2); opacity: 1; }
 }
 
-@media (min-width: 560px) {
-  .reunion-intake-card,
+@container app (min-width: 560px) {
   .reunion-report-principle,
   .reunion-report-section,
   .reunion-report-share,
@@ -1722,7 +1472,6 @@
     padding-left: 28px;
   }
 
-  .reunion-birth-grid,
   .reunion-condition-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1733,7 +1482,7 @@
   }
 }
 
-@media (min-width: 768px) {
+@container app (min-width: 768px) {
   .reunion-topbar {
     padding-right: max(32px, calc((100% - 1080px) / 2));
     padding-left: max(32px, calc((100% - 1080px) / 2));
@@ -1860,7 +1609,7 @@
   }
 }
 
-@media (min-width: 1100px) {
+@container app (min-width: 1100px) {
   .reunion-recommendation-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1872,7 +1621,7 @@
   }
 }
 
-@media (max-width: 374px) {
+@container app (max-width: 374px) {
   .reunion-hero-copy,
   .reunion-preview-heading,
   .reunion-report-hero-copy {
@@ -1889,18 +1638,9 @@
     font-size: 14px;
   }
 
-  .reunion-intake-card,
   .reunion-preview-body,
   .reunion-report-shell {
     width: calc(100% - 20px);
-  }
-
-  .reunion-option-list.is-compact {
-    grid-template-columns: 1fr;
-  }
-
-  .reunion-option-list.is-compact label:last-child:nth-child(odd) {
-    grid-column: auto;
   }
 
   .reunion-saju-fact-grid {

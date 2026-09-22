@@ -1,18 +1,69 @@
 import type { IntakeFormData } from '../../../../api/mockData';
 import { parseCivilDate } from './dateMath';
 import { parseBirthTime } from './timeParser';
-import { assertResolvableLocalDateTime, assertValidIanaTimeZone } from './timeZoneValidation';
+import {
+  assertResolvableLocalDateTime,
+  assertValidIanaTimeZone,
+  resolveHistoricalUtcOffsetMinutes
+} from './timeZoneValidation';
 import type { BirthContext, BirthContextOptions, BirthLocation } from './types';
 
 const KOREA_TIMEZONE = 'Asia/Seoul';
 const KST_OFFSET_MINUTES = 9 * 60;
 
-function resolveUtcOffsetMinutes(options: BirthContextOptions, birthYear: number) {
-  const timezoneId = options.timezoneId || KOREA_TIMEZONE;
-  assertValidIanaTimeZone(timezoneId);
+type ResolvedUtcOffset = {
+  utcOffsetMinutes: number;
+  source: BirthContext['timezone']['source'];
+};
 
+/**
+ * Offset to validate the birth clock against, before any fallback rule applies.
+ *
+ * A caller-pinned offset always wins, because only the caller can settle a DST
+ * fold. Otherwise the offset is read from Korea's own zone history instead of
+ * being assumed: Korea ran UTC+08:30/+09:30 from 1954 to 1961 and UTC+10:00
+ * during the 1987 and 1988 summer-time periods, and substituting a present-day
+ * +09:00 for those births makes the clock check reject a perfectly valid birth
+ * with an error no customer can act on.
+ *
+ * Overseas zones are deliberately excluded. A foreign birthplace reaches us as a
+ * free-text city whose IANA mapping is not verified, so the caller must state the
+ * offset rather than have one inferred from a zone we are not sure of.
+ */
+function resolveCandidateUtcOffsetMinutes(
+  options: BirthContextOptions,
+  timezoneId: string,
+  date: BirthContext['date'],
+  time: BirthContext['time']
+): ResolvedUtcOffset | null {
   if (options.utcOffsetMinutes !== undefined) {
-    return options.utcOffsetMinutes;
+    return { utcOffsetMinutes: options.utcOffsetMinutes, source: 'explicit' };
+  }
+
+  if (timezoneId !== KOREA_TIMEZONE) {
+    return null;
+  }
+
+  // Noon never falls inside a DST transition, so an unknown birth time still
+  // resolves the correct calendar-day offset.
+  const historical = resolveHistoricalUtcOffsetMinutes(
+    { ...date, hour: time.hour ?? 12, minute: time.minute ?? 0 },
+    timezoneId
+  );
+
+  return historical === null
+    ? null
+    : { utcOffsetMinutes: historical, source: 'tzdata-historical' };
+}
+
+/** Applies the fail-closed fallbacks once the clock itself has been validated. */
+function resolveUtcOffsetMinutes(
+  candidate: ResolvedUtcOffset | null,
+  timezoneId: string,
+  birthYear: number
+): ResolvedUtcOffset {
+  if (candidate) {
+    return candidate;
   }
 
   if (timezoneId === KOREA_TIMEZONE) {
@@ -21,7 +72,7 @@ function resolveUtcOffsetMinutes(options: BirthContextOptions, birthYear: number
         '1962년 이전 한국 출생은 역사적 표준시·서머타임 확인을 위해 출생 당시 UTC 오프셋을 반드시 입력해야 합니다.'
       );
     }
-    return KST_OFFSET_MINUTES;
+    return { utcOffsetMinutes: KST_OFFSET_MINUTES, source: 'korea-default' };
   }
 
   throw new Error(
@@ -66,8 +117,13 @@ export function normalizeIntakeFormToBirthContext(
   const date = parseCivilDate(formData.birthDate, calendar);
   const time = parseBirthTime(formData.birthTime, Boolean(formData.isUnknownTime));
   const location = buildLocation(formData, options);
-  const hasExplicitTimezone = options.timezoneId !== undefined || options.utcOffsetMinutes !== undefined;
   const timezoneId = options.timezoneId || KOREA_TIMEZONE;
+  assertValidIanaTimeZone(timezoneId);
+
+  // The candidate is computed first so the clock check compares against the
+  // offset really in force at birth, but the fail-closed fallbacks run after it
+  // so a DST gap or fold is still reported as such rather than as a missing offset.
+  const candidate = resolveCandidateUtcOffsetMinutes(options, timezoneId, date, time);
 
   // A lunar input first needs canonical solar conversion. That path is checked
   // in calculateBirthContext before any true-solar or pillar calculation.
@@ -80,11 +136,11 @@ export function normalizeIntakeFormToBirthContext(
     assertResolvableLocalDateTime(
       { ...date, hour: time.hour, minute: time.minute },
       timezoneId,
-      options.utcOffsetMinutes
+      candidate?.utcOffsetMinutes
     );
   }
 
-  const utcOffsetMinutes = resolveUtcOffsetMinutes(options, date.year);
+  const { utcOffsetMinutes, source } = resolveUtcOffsetMinutes(candidate, timezoneId, date.year);
   if (!Number.isFinite(utcOffsetMinutes) || utcOffsetMinutes < -14 * 60 || utcOffsetMinutes > 14 * 60) {
     throw new Error('UTC 오프셋은 -14:00부터 +14:00 사이여야 합니다.');
   }
@@ -102,7 +158,7 @@ export function normalizeIntakeFormToBirthContext(
     timezone: {
       id: timezoneId,
       utcOffsetMinutes,
-      source: hasExplicitTimezone ? 'explicit' : 'korea-default'
+      source
     },
     trueSolarTime: {
       enabled: applyTrueSolarTime,

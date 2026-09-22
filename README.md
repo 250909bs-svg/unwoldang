@@ -58,6 +58,7 @@ VITE_KAKAO_TOKEN_EXCHANGE_ENDPOINT=
 VITE_KAKAO_REDIRECT_ORIGIN=
 VITE_KAKAO_SCOPES=
 VITE_PUBLIC_SITE_URL=
+VITE_PAYMENT_PROVIDER=
 VITE_PAYMENT_MODE=
 VITE_PORTONE_STORE_ID=
 VITE_PORTONE_CHANNEL_KEY=
@@ -66,6 +67,39 @@ VITE_PORTONE_DEFAULT_PHONE_NUMBER=
 VITE_PORTONE_DEFAULT_EMAIL=
 VITE_ENABLE_CLIENT_ADMIN=false
 ```
+
+### 결제 provider 현황
+
+`PAYMENT_PROVIDER` / `VITE_PAYMENT_PROVIDER`가 받는 값은 세 가지이지만, 실제로 결제가 되는 것은 `legacy-portone` 하나입니다.
+
+| 값 | 상태 | 동작 |
+| --- | --- | --- |
+| `legacy-portone` | 구현 완료 | PortOne(KG이니시스) 결제창과 서버 승인 검증이 동작합니다 |
+| `hyphen` | **이름만 존재** | `HyphenPaymentProvider`는 모든 호출이 503을 던지는 placeholder입니다. 결제창, 승인 검증, 웹훅 어느 것도 구현돼 있지 않습니다 |
+| `disabled` | 기본값 | 결제와 유료 리포트 발행을 모두 막습니다 |
+
+`hyphen`을 설정하면 프론트는 결제 버튼을 잠그고(`현재 결제 시스템을 준비 중입니다` 대신 `하이픈 결제 연동이 아직 구성되지 않았습니다`), 서버는 `/api/report`에서 503을 반환합니다. 이는 의도된 fail-closed 동작이며, 하이픈 연동 명세를 받기 전까지 API 형태를 추측하지 않기 위한 것입니다.
+
+하이픈을 구현할 때는 `cloudrun-api/src/domains/payments/paymentProvider.ts`의 `HyphenPaymentProvider`, 전용 HTTP 클라이언트(`portoneClient.ts`와 같은 위치), `config/env.ts`의 `payment.configured` 판정, `middleware/auth.ts`의 `paymentUnavailable` 조건, 그리고 프론트 `Checkout.tsx`·`PaymentCallback.tsx`의 provider 분기를 함께 손봐야 합니다.
+
+### 결제를 실제로 여는 데 반드시 필요한 값
+
+결제는 프론트와 백엔드 양쪽 모두에서 명시적으로 켜야 합니다. 둘 중 하나라도 빠지면 결제 버튼이 보이지 않거나 리포트 API가 503을 반환합니다.
+
+| 위치 | 값 | 빠뜨렸을 때 |
+| --- | --- | --- |
+| Vercel | `VITE_PAYMENT_PROVIDER=legacy-portone` | 프로덕션 빌드가 `disabled`로 판정해 결제 버튼이 잠깁니다 |
+| Vercel | `VITE_PAYMENT_MODE=live` | `live`가 아니면 프로덕션에서 `disabled`로 처리됩니다 |
+| Cloud Run | `PAYMENT_PROVIDER=legacy-portone` | `/api/report`가 `503 결제 시스템이 준비되지 않아…`를 반환합니다 |
+| Cloud Run | `PORTONE_API_SECRET`, `PORTONE_STORE_ID` | 결제 검증이 구성되지 않은 것으로 판정됩니다 |
+
+`cloudrun-api/deploy-cloudrun.ps1`의 `-PaymentProvider` 기본값은 안전을 위해 `disabled`입니다. 실제 판매 배포에서는 반드시 `-PaymentProvider legacy-portone`을 직접 넘겨야 합니다.
+
+#### provider 병행 운영은 아직 불가능합니다
+
+`createPaymentProvider`는 설정값 하나로 provider **한 개**를 만들고, 결제 원장(`PaymentLedger`)에는 어떤 provider로 승인됐는지 기록하는 필드가 없습니다. `confirmPayment`도 PortOne의 `storeId`와 응답 형태를 전제로 작성돼 있습니다.
+
+따라서 지금은 환경변수로 **전환**만 가능하고 동시 운영은 안 됩니다. 전환 직후에는 이전 provider로 결제된 건의 승인 조회·취소가 새 provider로 잘못 라우팅될 수 있으므로, 병행이 필요해지면 원장에 provider 필드를 먼저 추가해야 합니다.
 
 서버 전용 값은 Cloud Run Secret Manager 또는 Cloud Run 환경변수에만 둡니다.
 

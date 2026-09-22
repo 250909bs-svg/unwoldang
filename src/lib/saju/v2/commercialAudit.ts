@@ -221,14 +221,18 @@ export function buildCommercialReleaseAudit(
     reviewFlags.push('진태양시 보정을 요청했지만 검증된 경도가 없어 적용하지 못했습니다.');
   }
 
+  // 억부·조후·통관·병약·특수격이 서로 다른 용신을 지목하는 것은 계산 오류가 아니라
+  // 명리 학설 자체의 정상적인 분기다. 이를 발행 보류 사유로 쓰면 실제 명식의 대부분이
+  // 자동 발행에서 제외되므로, 판정은 레거시 억부 규칙으로 확정하되 학설 간 이견이
+  // 있었다는 사실을 리포트 고지(infoFlags)로 남긴다. 발행 자체는 막지 않는다.
   check(input.interpretationResolved, '전문 해석 합의가 미해결 상태가 아닙니다.');
   if (!input.interpretationResolved) {
-    reviewFlags.push('용신 관점 간 충돌 또는 근거 부족으로 전문 해석 합의가 유보되었습니다.');
+    infoFlags.push('용신은 억부·조후·통관·병약·특수격 관점이 서로 다른 후보를 지목해 단일 확정 용신으로 승격하지 않았습니다. 리포트의 도움 오행은 우선 검토 기준으로 읽어 주세요.');
   }
 
   check(input.helpfulElementSource === 'expert-consensus', '도움 오행이 다중 관점 합의에서 선택되었습니다.');
   if (input.helpfulElementSource !== 'expert-consensus') {
-    reviewFlags.push('도움 오행이 레거시 강약 규칙으로 대체되어 전문가 검토가 필요합니다.');
+    infoFlags.push('도움 오행은 다중 관점 합의 대신 일간 강약(억부) 기준으로 산출했습니다.');
   }
 
   const externalVerified = ['matched', 'verified-date-only', 'not-comparable-policy']

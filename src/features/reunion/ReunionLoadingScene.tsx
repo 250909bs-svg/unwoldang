@@ -1,5 +1,6 @@
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import ReunionPicture from './ReunionPicture';
+import '../../styles/reunion-premium.css';
 import '../../styles/reunion.css';
 
 type ReunionLoadingSceneProps = {

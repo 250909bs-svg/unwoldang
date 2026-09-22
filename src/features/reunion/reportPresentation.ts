@@ -1,3 +1,17 @@
+/**
+ * ⚠ **프로덕션 소비자 0개.** `/report/love-reunion` 은 더 이상 이 파일을 타지 않는다.
+ *
+ * 리포트 뷰가 `src/lib/reunion/chapters.ts` 의 `buildReunionReportPayload` 로 옮겨 가면서
+ * `buildReunionReportPresentation` / `buildReunionActionGuide` 는 호출자가 사라졌다.
+ * 여기 있는 안전 분기(차단 시 보류 판정, 금지 행동 4줄, 우회 연락 금지)는
+ * **`src/lib/reunion/gate.ts` 와 `src/lib/reunion/chapters.ts` 에 다시 구현돼 있고,
+ * 계약 테스트도 그쪽을 겨눈다**(`reunion.contract.test.ts`, `reportPayload.test.ts`).
+ *
+ * 이 파일을 고쳐도 화면은 바뀌지 않는다. 안전 규칙을 바꿔야 한다면 위 두 파일을 고쳐라.
+ * 남겨 둔 이유는 승계 원문의 출처를 보존하기 위해서다(여러 주석이 줄 번호로 이 파일을 가리킨다).
+ * 그 참조가 정리되면 이 파일은 삭제해도 된다.
+ */
+
 import type { IntakeFormData } from '../../api/mockData';
 import {
   buildReunionViewModel,

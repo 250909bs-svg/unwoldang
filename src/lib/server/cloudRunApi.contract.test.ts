@@ -13,6 +13,7 @@ import {
 } from '../../../cloudrun-api/src/contracts/products.ts';
 import { TokenService } from '../../../cloudrun-api/src/domains/auth/tokenService.ts';
 import { PUBLIC_ROUTES } from '../../../cloudrun-api/src/http/router.ts';
+import { PREMIUM_SAJU_PROMPT_VERSION, PREMIUM_SAJU_REPORT_MODE } from '../saju/promptRelease';
 
 const ALLOWED_ORIGIN = 'https://contract.example';
 
@@ -22,6 +23,18 @@ const EXPECTED_PUBLIC_ROUTES = [
   'POST /report/preflight',
   'POST /api/report',
   'POST /report',
+  /* 선물 조회는 공개다 — 링크를 받은 사람은 아직 로그인하지 않았다. 대신 응답에
+     주문번호·권한 ID·산 사람의 사용자 ID 를 넣지 않는다(giftService.describe).
+     받는 것은 로그인이 필요하다: 누가 받았는지 남아야 분쟁이 정리된다. */
+  'GET /api/gifts/:code',
+  'POST /api/gifts/:code/redeem',
+  /* 상담 채팅. 로그인한 사람만 — 대화가 이 사람의 명식을 근거로 돌고 모델 호출에 비용이
+     붙는다. 요청 제한은 리포트와 같은 것을 쓴다. */
+  'POST /api/chat',
+  /* 쿠폰은 둘 다 로그인이 필요하다. 코드를 아는 것만으로 할인이 되면 코드가 새는 순간
+     전원이 할인을 받으므로, 지갑에 든 쿠폰만 결제에 쓸 수 있다. */
+  'GET /api/coupons',
+  'POST /api/coupons/claim',
   'POST /api/payments/portone/order',
   'POST /api/payments/portone/confirm',
   'GET /api/payments/portone/entitlements',
@@ -36,7 +49,12 @@ const EXPECTED_PUBLIC_ROUTES = [
   'GET /api/guiyeondo/invites/:publicId',
   'POST /api/guiyeondo/invites/:publicId/responses',
   'GET /api/guiyeondo/invites/:publicId/responses',
-  'POST /api/guiyeondo/invites/:publicId/revoke'
+  'POST /api/guiyeondo/invites/:publicId/revoke',
+  /* 인연은 초대와 다른 자원이다 — 초대는 14일에 닫히고 인연은 계정에 남는다. */
+  'GET /api/guiyeondo/connections',
+  'POST /api/guiyeondo/connections/claim',
+  'POST /api/guiyeondo/connections/direct',
+  'POST /api/guiyeondo/connections/:connectionId/remove'
 ] as const;
 
 const productionConfig = loadConfig({
@@ -151,6 +169,15 @@ describe('Cloud Run API HTTP contracts', () => {
       readyForLunarReportGeneration: true,
       readyForSolarTermDateVerification: true,
       model: 'fixture-gemini-model',
+      /*
+       * 배포 지문. 배포 후 로그를 보는 절차의 첫 단계는 "새 코드가 실제로 떠 있는가" 인데
+       * 그것을 요청 없이 확인할 지점이 없었다. 롤백을 실행했을 때 그것이 배포됐는지
+       * 확인할 유일한 저비용 지점이기도 하다.
+       */
+      promptVersion: PREMIUM_SAJU_PROMPT_VERSION,
+      reportMode: PREMIUM_SAJU_REPORT_MODE,
+      proseMode: { 'love-reunion': 'authored', default: 'strict-echo' },
+      proseTemperature: { 'love-reunion': 0.75, default: 0 },
       timestamp: expect.any(String)
     });
     expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);
@@ -643,6 +670,11 @@ describe('Cloud Run API HTTP contracts', () => {
       orderId: expect.stringMatching(/^UW-[A-Za-z0-9._-]{12,116}$/),
       productId: 'general-signature',
       amount: 990,
+      /* 쿠폰 없이 주문하면 청구액은 정가와 같고 할인은 0 이다. 이 셋이 응답에 항상
+         있어야 결제창이 무엇을 청구할지 화면이 추측하지 않는다. */
+      payableAmount: 990,
+      discount: 0,
+      couponCode: '',
       currency: 'KRW',
       orderClaim: expect.any(String),
       orderClaimExpiresAt: expect.any(String)

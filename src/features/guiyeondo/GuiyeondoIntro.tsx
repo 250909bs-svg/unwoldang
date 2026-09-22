@@ -1,4 +1,4 @@
-import { Hand, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Hand, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { storylinePoster, storylineVideo } from './media';
@@ -27,6 +27,16 @@ export default function GuiyeondoIntro({ onEnter }: { onEnter: () => void }) {
 
   return (
     <section className="gy-intro" aria-labelledby="gy-intro-title">
+      {/* The other two guiyeondo stages render `.gy-topbar`; the intro did not,
+          which left /guiyeondo with no top bar on first load. */}
+      <header className="gy-topbar gy-intro-topbar">
+        <Link to="/" aria-label="홈으로">
+          <ArrowLeft size={20} />
+        </Link>
+        <strong>귀연도 <span>貴緣圖</span></strong>
+        <span />
+      </header>
+
       <div className="gy-intro-media" aria-hidden="true">
         {reducedMotion ? (
           <img src={storylinePoster} alt="" />
@@ -41,16 +51,17 @@ export default function GuiyeondoIntro({ onEnter }: { onEnter: () => void }) {
         {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
         <span>{muted ? '소리 켜기' : '소리 끄기'}</span>
       </button>
+      {/* 아이브로우로 있던 한자(貴緣圖)는 상단바 이름표와 같은 글자라, 한 화면에 같은
+          글자가 두 번 있었다. 버튼 밑의 "손 모양 버튼을 누르면…" 은 버튼이 이미 손
+          모양이라 하는 일을 두 번 말했다. 약관 링크는 이 영상 화면에서만 빼고
+          지도·입력·게스트 화면에는 그대로 둔다 — 들어가는 길에 항상 한 번은 나온다. */}
       <div className="gy-intro-copy">
-        <span className="gy-eyebrow">貴緣圖</span>
         <h1 id="gy-intro-title">내 인생에 들어온<br />귀한 인연을 그리다</h1>
         <p>누가 나의 귀인이고, 어떤 사람이 오래 남는지<br />두 사람의 명리 구조로 이어봅니다.</p>
         <button type="button" className="gy-primary-button gy-intro-enter" onClick={onEnter}>
           <Hand size={21} aria-hidden="true" />
           귀연도 열기
         </button>
-        <span className="gy-intro-note">손 모양 버튼을 누르면 인연의 지도가 열립니다</span>
-        <p className="gy-legal-links"><Link to="/privacy">개인정보처리방침</Link><span> · </span><Link to="/terms">이용약관</Link></p>
       </div>
     </section>
   );

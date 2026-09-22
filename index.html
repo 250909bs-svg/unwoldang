@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f3ede3" />
+    <meta name="theme-color" content="#18191a" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="google-site-verification" content="UDQ6oxHVTcMcRK5lehd6qpR6cu9VQzEqLWKyo20n3zU" />
 
@@ -12,13 +12,13 @@
       html.app-booting body,
       html.app-booting #root {
         min-height: 100%;
-        background: #f3ede3;
+        background: #18191a;
       }
 
-      html.app-booting.app-booting-dark,
-      html.app-booting.app-booting-dark body,
-      html.app-booting.app-booting-dark #root {
-        background: #000000;
+      html.app-booting.app-booting-light,
+      html.app-booting.app-booting-light body,
+      html.app-booting.app-booting-light #root {
+        background: #ffffff;
       }
 
       html.app-booting #root > .seo-static-fallback {
@@ -27,28 +27,25 @@
     </style>
     <script>
       (() => {
-        const pathname = window.location.pathname;
-        const darkPrefixes = ['/test', '/search', '/my', '/login'];
-        const usesDarkShell =
-          pathname === '/' ||
-          darkPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)) ||
-          pathname === '/guiyeondo' ||
-          pathname.startsWith('/g/') ||
-          pathname === '/detail/past-life-goblin' ||
-          pathname === '/detail/general-saju' ||
-          pathname === '/detail/love-reading' ||
-          pathname === '/detail/love-reunion' ||
-          pathname === '/terms' ||
-          pathname === '/privacy' ||
-          pathname === '/refund';
+        /* No hand-maintained route list. src/app/shell/routeShellPolicy.ts holds
+           the invariant "light theme is /admin only", and
+           src/app/shell/shellBootContract.test.ts keeps this heuristic in sync
+           with the table. Every other route boots on the dark rail colour, so
+           the cream flash on /form/*, /preview/*, /report/*, /checkout,
+           /loading, /detail/:id and NotFound is gone. */
+        var pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+        var isLightShell = pathname === '/admin';
+        var root = document.documentElement;
 
-        document.documentElement.classList.add('app-booting');
-        if (usesDarkShell) {
-          document.documentElement.classList.add('app-booting-dark');
+        root.dataset.shellTheme = isLightShell ? 'light' : 'dark';
+        root.dataset.shellWidth = isLightShell ? 'full' : 'phone';
+        root.classList.add('app-booting');
+        if (isLightShell) {
+          root.classList.add('app-booting-light');
         }
 
-        window.setTimeout(() => {
-          document.documentElement.classList.remove('app-booting', 'app-booting-dark');
+        window.setTimeout(function () {
+          root.classList.remove('app-booting', 'app-booting-light');
         }, 8000);
       })();
     </script>

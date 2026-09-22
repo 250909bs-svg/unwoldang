@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { getRouteShellPolicy, getShellContainerClassName } from '../../app/shell';
 
 const readSource = (relativePath: string) =>
   readFileSync(new URL(relativePath, import.meta.url), 'utf8');
@@ -30,12 +31,18 @@ describe('general signature premium report UI contract', () => {
     expect(reportSource).toContain("qa.title.replace(/^\\d+\\.\\s*/, '')");
   });
 
-  it('uses the report-specific full-width shell and avoids loading character video', () => {
-    expect(appSource).toContain("location.pathname === '/report/general-signature'");
-    expect(appSource).toContain("'app-container general-signature-report-app-container'");
+  it('uses the report-specific shell and avoids loading character video', () => {
+    // The shell decision moved out of App.tsx into the declarative route table.
+    expect(appSource).toContain('getRouteShellPolicy');
+    expect(getShellContainerClassName(getRouteShellPolicy('/report/general-signature'))).toBe(
+      'app-container general-signature-report-app-container'
+    );
     expect(reportSource).toContain('!isGeneralSignature && reportCharacterVideo');
     expect(cssSource).toContain('max-width: 980px');
-    expect(cssSource).toContain('@media (max-width: 767px)');
+    // 프레임 폭을 묻는다. @media 로 두면 1440px 창 안의 400px 프레임에서 데스크톱
+    // 레이아웃이 돌아 .gs-important 의 고정 190px 컬럼이 본문을 레일 밖으로 민다.
+    expect(cssSource).toContain('@container app (max-width: 767px)');
+    expect(cssSource).not.toContain('@media (max-width: 767px)');
   });
 
   it('keeps customer questions closed and internal audit sections out of the customer renderer', () => {

@@ -39,6 +39,11 @@ export type PaymentOrderClaimInput = {
   orderId: string;
   productId: string;
   amount: number;
+  /** 선물 주문 표시. 받는 사람이 리포트를 만들 코드가 발급된다. */
+  gift?: boolean;
+  /** 쿠폰 적용 후 청구액. 없으면 정가와 같다. */
+  payableAmount?: number;
+  couponCode?: string;
 };
 
 export type UserAccessTokenInput = {
@@ -277,6 +282,10 @@ export class TokenService {
         orderId: input.orderId,
         productId: input.productId,
         amount: input.amount,
+        /* 쿠폰이 없으면 정가와 같다. 결제 확인은 이 값과 실제 결제 금액을 대조한다. */
+        payableAmount: input.payableAmount ?? input.amount,
+        couponCode: input.couponCode || '',
+        gift: Boolean(input.gift),
         userBinding,
         version: 1
       },

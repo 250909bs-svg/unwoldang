@@ -1,6 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { IntakeFormData, RelationshipStatus } from '../../api/mockData';
 import { findServiceById } from '../../api/mockData';
 import { useAuth } from '../../context/AuthContext';
@@ -266,7 +266,9 @@ export default function GeneralSignatureIntake() {
               latitude: selected.latitude,
               longitude: selected.longitude,
               timezone: 'Asia/Seoul',
-              utcOffsetMinutes: 540,
+              // No utcOffsetMinutes: the form cannot know which offset Korea used
+              // at the customer's birth, and +09:00 is wrong for 1954-1961 and for
+              // the 1987-1988 summer time. The calendar engine resolves it instead.
               applySolarTimeCorrection: true
             }
     }));
@@ -405,6 +407,14 @@ export default function GeneralSignatureIntake() {
 
   return (
     <main className={`gs-intake-page ${isQuestionStep ? 'is-question-step' : 'is-profile-step'}`}>
+      {/* The shell policy declares `topBar: 'product'` for /form/general-signature.
+          Without this bar the funnel had no way back out of the flow at all. */}
+      <header className="gs-intake-topbar">
+        <Link to="/" className="gs-intake-brand" aria-label="운월당 홈">
+          운월당
+        </Link>
+      </header>
+
       <video
         className="gs-intake-video"
         src={VIDEO_SOURCE}

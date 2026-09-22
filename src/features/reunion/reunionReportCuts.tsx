@@ -1,0 +1,1105 @@
+/**
+ * 재회운 리포트 · 컷 렌더러 (명세 §3, §5).
+ *
+ * 판정·집계·날짜·차트는 전부 `src/lib/reunion` 이 결정론으로 만들어 넘겨준다.
+ * 이 파일은 **그린다.** 여기서 문장을 만들거나 숫자를 계산하지 않는다 —
+ * 화면에서 값을 지어내는 순간 근거 추적성이 끊긴다.
+ *
+ * 렌더러 계약(§5):
+ *   - `beat` 컷은 `beatSize` 만 보고 높이를 정한다. 내용 없음, 순검정.
+ *   - `undeletable` 컷의 문구는 어떤 상태에서도 가리거나 빼지 않는다.
+ *     (예외는 `deadline-owner` 하나다 — §6-F 가 '독자 입력 후에만'으로 못박았고,
+ *      입력 전에는 서버 제안 구간을 독자가 정한 것처럼 귀속시키게 되기 때문이다.)
+ *   - 줄바꿈은 데이터의 `\n` 이 정한다. 자동 wrap 에 맡기지 않는다(`white-space: pre-line`).
+ *   - 장식 요소는 `aria-hidden`.
+ *
+ * `cut.mask` 는 이 라우트에서 해석하지 않는다. `/report/love-reunion` 은 결제·접근 게이트를
+ * 통과한 뒤에만 렌더되므로 전량 공개이고, 무료 구간 마스킹은 `ReunionPreview.tsx` 소관이다.
+ */
+
+import { Check, Lock, Minus, X } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import {
+  REUNION_OBSERVABLE_SIGNALS,
+  formatReadinessBasisSplit,
+  formatReadinessTally,
+  type ReunionCut,
+  type ReunionCutLayout,
+  type ReunionSelfCheck,
+  type ReunionSelfCheckAnswer
+} from '../../lib/reunion';
+import ReunionPanelPicture from './ReunionPanelPicture';
+import {
+  ReunionMeterBand,
+  ReunionMeterGauge,
+  ReunionMeterTally,
+  ReunionMeterTimeline,
+  type ReunionElement,
+  type ReunionMeterState
+} from './reunionMeters';
+import { UdCorners, UdQuoteMarks } from './reunionOrnaments';
+
+/** 스태거 인덱스를 `--ud-i` 로 내린다. `ud-tick` / `ud-ink` 가 이 값에 지연을 곱한다. */
+const stagger = (index: number) => ({ '--ud-i': index }) as CSSProperties;
+
+/**
+ * 천간·지지의 오행.
+ *
+ * 이것은 **계산이 아니라 용어 표기**다. 甲 이 木 에 속한다는 것은 이 독자의
+ * 사주에서 도출된 값이 아니라 글자 자체의 뜻이고, 어떤 입력에서도 변하지 않는다.
+ * (같은 이유로 상세페이지가 오행 칸에 `木火土金水` 한자를 병기한다.)
+ * 그래서 화면 층에서 정해도 사실 정합성 규격에 걸리지 않는다 — 여기서 만드는 것은
+ * 색과 이름일 뿐, 표에 찍히는 글자는 전부 엔진이 넘긴 `cell` 값 그대로다.
+ *
+ * 한자와 한글을 모두 받는다. `cell.stemHanja` 가 비면 렌더러가 `cell.stem`(한글)로
+ * 떨어지므로, 그 경로에서도 오행이 사라지지 않아야 한다.
+ */
+const ELEMENT_BY_GLYPH: Readonly<Record<string, ReunionElement>> = {
+  /* 천간 */
+  甲: 'wood', 乙: 'wood', 丙: 'fire', 丁: 'fire', 戊: 'earth',
+  己: 'earth', 庚: 'metal', 辛: 'metal', 壬: 'water', 癸: 'water',
+  갑: 'wood', 을: 'wood', 병: 'fire', 정: 'fire', 무: 'earth',
+  기: 'earth', 경: 'metal', 신: 'metal', 임: 'water', 계: 'water',
+  /* 지지 */
+  寅: 'wood', 卯: 'wood', 巳: 'fire', 午: 'fire', 申: 'metal',
+  酉: 'metal', 亥: 'water', 子: 'water',
+  辰: 'earth', 戌: 'earth', 丑: 'earth', 未: 'earth',
+  인: 'wood', 묘: 'wood', 사: 'fire', 오: 'fire',
+  유: 'metal', 해: 'water', 자: 'water',
+  진: 'earth', 술: 'earth', 축: 'earth', 미: 'earth'
+};
+
+/** 글리프 한 자의 오행. 모르는 글자면 undefined — 색을 입히지 않고 중성 잉크로 둔다. */
+const elementOf = (glyph: string): ReunionElement | undefined =>
+  ELEMENT_BY_GLYPH[glyph.trim().slice(0, 1)];
+
+/**
+ * 짝으로 읽어야 하는 `이름 값` 사이의 공백을 줄바꿈 없는 공백으로 바꾼다.
+ *
+ * `목 0 · 화 2 · 토 2 · 금 2 · 수 2` 같은 집계 문자열이 좁은 칸(171px)에서
+ * **값 한가운데서** 끊겨 마지막 `2` 만 다음 줄로 넘어갔다(실측). 유료 리포트의
+ * 명식 근거 영역에서 오탈자급 인상을 준다.
+ *
+ * 바꾸는 것은 공백 문자 하나뿐이다 — 단어도, 숫자도, 순서도 건드리지 않는다.
+ * 그래서 데이터 계층을 손대지 않고 표시 층에서만 붙일 수 있다.
+ */
+const bindPairs = (value: string) => value.replace(/([^\s·])\s+(\d)/gu, '$1 $2');
+
+/* ── 독자 입력 상태 ──────────────────────────────────────────── */
+
+export interface ReunionCutInteractions {
+  selfCheck: ReunionSelfCheck;
+  onSelfCheck: (id: keyof ReunionSelfCheck, answer: ReunionSelfCheckAnswer) => void;
+  checked: Readonly<Record<string, boolean>>;
+  onToggle: (id: string) => void;
+  deadline: string;
+  onDeadline: (value: string) => void;
+  decision: string;
+  onDecision: (value: string) => void;
+  onSaveDecision: () => void;
+  saveNote: string;
+  activeMonth: number | null;
+  onSelectMonth: (index: number | null) => void;
+}
+
+export interface ReunionCutViewProps {
+  cut: ReunionCut;
+  name: string;
+  /** `乙巳 대운 · 2024 ~ 2033`. 나이 표기를 연도 구간으로 바꾼 값(§2-4). */
+  dayunLabel: string;
+  interactions: ReunionCutInteractions;
+}
+
+/* ── 작은 조각 ───────────────────────────────────────────────── */
+
+/**
+ * 컷 레이아웃별 지면 · 깊이 스킨.
+ *
+ * 면을 컷마다 손으로 칠하지 않는다 — 지면 사다리(`ud-surface-*`)와 금속 인레이는
+ * 디자인 시스템이 소유하고, 여기서는 **어떤 컷이 판이고 어떤 컷이 침묵인지**만 정한다.
+ *   - `cinematic`  아트가 면이다. 카드를 두르지 않는다.
+ *   - `letter`     크림 종이 한 장. 편지지는 이 한 곳에서만 쓴다.
+ *   - `beat`/장 여는 컷  순검정. 아래 목록에 없다(클래스 없음).
+ *   - 그 밖의 전부  자료 판 = surface-2 + 금테 인레이 + 1단 리프트.
+ */
+const CUT_SKIN: Partial<Record<ReunionCutLayout, string>> = {
+  /* cinematic 은 아트가 면이다. `.rr-fig-fade` 가 이미 상하 이음매를 녹이고 있으므로
+     `ud-fade-band` 를 겹치지 않는다 — 두 층이 겹치면 그림이 두 번 어두워진다. */
+  letter: 'ud-paper ud-lift-2',
+  mirror: 'ud-surface-1',
+  panel: 'ud-surface-2 ud-inlay--thin',
+  timeline: 'ud-surface-1',
+  chart: 'ud-surface-2 ud-inlay--thin',
+  checklist: 'ud-surface-1',
+  comparison: 'ud-surface-1',
+  verdict: 'ud-surface-3 ud-inlay',
+  input: 'ud-surface-2'
+};
+
+/**
+ * 금테 네 귀퉁이를 붙이는 컷. 판정 카드 하나뿐이다 —
+ * 백 개가 넘는 컷에 전부 붙이면 장식이 소음이 되고, 그러면 아무것도 강조되지 않는다.
+ * 원국표는 자기 종이판 안에서 별도의 스팬드럴을 갖는다.
+ */
+const CORNERED_LAYOUTS = new Set<ReunionCutLayout>(['verdict']);
+
+/** ◇ 알려주신 것 / ◆ 제가 계산한 것. 기호는 장식이라 스크린리더에는 말로 읽힌다. */
+function BasisMark({ basis }: { basis: 'input' | 'calculated' }) {
+  return (
+    <>
+      <span className={`rr-mark is-${basis}`} aria-hidden="true">
+        {basis === 'input' ? '◇' : '◆'}
+      </span>
+      <span className="reunion-visually-hidden">
+        {basis === 'input' ? '알려주신 것' : '제가 계산한 것'}
+      </span>
+    </>
+  );
+}
+
+const STATE_ICON = {
+  met: Check,
+  unmet: X,
+  unknown: Minus
+} as const;
+
+function StateIcon({ state }: { state: 'met' | 'unmet' | 'unknown' }) {
+  const Icon = STATE_ICON[state];
+  return <Icon size={15} aria-hidden="true" />;
+}
+
+/**
+ * 캡션이 패널의 **라벨**로 읽혀야 하는 payload 종류.
+ * 여기 없는 종류에서는 캡션이 그림 아래 설명으로 들어간다.
+ * (`readiness` 의 `확률이 아니라 조건 개수예요.` 와 `timeline12` 의 삭제 불가 캡션은
+ *  명세가 '바로 아래'·'하단'으로 못박았으므로 반드시 아래에 남는다.)
+ */
+const CAPTION_ABOVE = new Set([
+  'input-echo',
+  'gate-check',
+  'pillars',
+  'signal-table',
+  'checklist',
+  'condition-cards',
+  'prohibited',
+  'legal'
+]);
+
+const READINESS_STATE_WORD: Record<'met' | 'unmet' | 'unknown', string> = {
+  met: '확인됨',
+  unmet: '아직 확인 안 됨',
+  unknown: '판단 보류'
+};
+
+/** 점 색만으로는 상태가 전달되지 않는다. `readiness` 와 같은 규칙으로 말도 함께 내보낸다. */
+const CHECKPOINT_STATE_WORD: Record<'confirmed' | 'unconfirmed' | 'deferred', string> = {
+  confirmed: '확인됨',
+  unconfirmed: '아직 확인 못 함',
+  deferred: '오늘은 보류'
+};
+
+function toBandState(label: 'open' | 'normal' | 'hold'): ReunionMeterState {
+  return label;
+}
+
+/* ── payload 별 블록 ─────────────────────────────────────────── */
+
+function CutPayload({ cut, name, dayunLabel, interactions }: ReunionCutViewProps) {
+  const payload = cut.payload;
+  if (!payload) return null;
+
+  switch (payload.kind) {
+    /* CH00 0-1 입력 되인용. 라벨은 '{이름}님이 알려주신 것'. 미확인 스탬프는 쓰지 않는다. */
+    case 'input-echo':
+      return (
+        <dl className="rr-echo">
+          {payload.rows.map((row, index) => (
+            <div className="rr-echo-row ud-tick" key={row.label} style={stagger(index)}>
+              <dt className="ud-label">
+                <BasisMark basis="input" />
+                {row.label}
+              </dt>
+              <dd>
+                <q>{row.value}</q>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      );
+
+    /* CH00 0-4 판단 게이트. 전부 사실 확인형 문장이고 감정을 묻지 않는다. */
+    case 'gate-check':
+      return (
+        <ul className="rr-gate-check" role="list">
+          {payload.questions.map((question, index) => {
+            const id = question.id as keyof ReunionSelfCheck;
+            const answer = interactions.selfCheck[id];
+            return (
+              <li className="rr-gate-question ud-tick" key={question.id} style={stagger(index)}>
+                <p id={`gate-${question.id}`}>{question.label}</p>
+                <div className="rr-gate-answers" role="group" aria-labelledby={`gate-${question.id}`}>
+                  {(
+                    [
+                      ['ok', '평소대로였어요'],
+                      ['unstable', '흔들렸어요']
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      type="button"
+                      key={value}
+                      className={
+                        answer === value
+                          ? 'rr-choice ud-pressable ud-selectable is-selected is-on'
+                          : 'rr-choice ud-pressable ud-selectable'
+                      }
+                      aria-pressed={answer === value}
+                      onClick={() => interactions.onSelfCheck(id, answer === value ? 'unknown' : value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      );
+
+    /* CH00 0-2 · 0-4 판정 카드. ok 면 여섯 질문 목차, deferred 면 사유. */
+    case 'gate-verdict':
+      return (
+        <div className={`rr-verdict is-${payload.state}`}>
+          <p className="rr-verdict-state ud-subtitle">
+            {payload.state === 'ok' ? '지금 읽으셔도 괜찮아요' : '오늘은 읽기만 하셔도 돼요'}
+          </p>
+          {payload.state === 'deferred' ? (
+            <ul className="rr-verdict-reasons" role="list">
+              {payload.reasons.map((reason, index) => (
+                <li className="ud-tick" key={reason} style={stagger(index)}>
+                  {reason}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ol className="rr-toc" role="list">
+              {payload.toc.map((question, index) => (
+                <li className="ud-tick" key={question} style={stagger(index)}>
+                  <span className="rr-toc-dot" aria-hidden="true" />
+                  {question}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      );
+
+    /**
+     * CH01 1-2 사주 원국 패널. 값은 전부 엔진이 계산한 것이라 ◆ 쪽이다.
+     *
+     * 이 표는 리포트에서 **유일한 종이 면**(`ud-paper-hi`, 잉크 대비 12.16:1)이다.
+     * 근검정 지면 한가운데 문서 한 장이 놓이는 것이 이 장의 시각적 중심이고,
+     * 그래서 다른 컷에는 종이를 쓰지 않는다 — 두 장이 되면 중심이 사라진다.
+     *
+     * 시맨틱 `<table>` 을 그대로 유지한다. 격자를 div 로 바꾸면 행·열 머리글 연결이
+     * `role` 속성 손질에 의존하게 되고, 한자를 래스터로 굽는 방식은 선택 불가 ·
+     * 확대 시 깨짐 · 다크 대응 불가다(참고 페이지가 그렇게 하고 있다).
+     */
+    case 'pillars': {
+      /** 행 라벨의 한자 병기. 값이 아니라 용어 표기이므로 여기서 정해도 된다. */
+      const glyphRows = [
+        {
+          id: 'stem',
+          label: '천간',
+          hanja: '天干',
+          read: (cell: (typeof payload.cells)[number]) => ({
+            glyph: cell.stemHanja || cell.stem,
+            ko: cell.stem
+          })
+        },
+        {
+          id: 'branch',
+          label: '지지',
+          hanja: '地支',
+          read: (cell: (typeof payload.cells)[number]) => ({
+            glyph: cell.branchHanja || cell.branch,
+            ko: cell.branch
+          })
+        }
+      ] as const;
+
+      const textRows = [
+        { id: 'tenGod', label: '십성', hanja: '十星', read: (cell: (typeof payload.cells)[number]) => cell.stemTenGod },
+        {
+          id: 'hidden',
+          label: '지장간',
+          hanja: '地藏干',
+          read: (cell: (typeof payload.cells)[number]) => cell.branchMainStem
+        }
+      ] as const;
+
+      return (
+        <div className="rr-pillars">
+          <div className="rr-pillars-plate ud-paper-hi ud-lift-2">
+            <UdCorners className="rr-pillars-corners" kind="spandrel" size={18} />
+            <table className="rr-pillars-table">
+              <caption className="reunion-visually-hidden">
+                시주 · 일주 · 월주 · 년주 네 기둥의 천간, 지지, 십성, 지장간
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span className="reunion-visually-hidden">항목</span>
+                  </th>
+                  {payload.cells.map((cell) => (
+                    <th scope="col" key={cell.pillar} className={cell.isDayMaster ? 'is-day' : undefined}>
+                      {cell.pillar}
+                      {cell.isDayMaster ? <span className="rr-pillars-badge">나</span> : null}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {glyphRows.map((row, rowIndex) => (
+                  <tr key={row.id}>
+                    <th scope="row">
+                      <span className="rr-pillars-rowhanja">{row.hanja}</span>
+                      <span className="rr-pillars-rowko">{row.label}</span>
+                    </th>
+                    {payload.cells.map((cell, index) => {
+                      const read = row.read(cell);
+                      return (
+                        <td
+                          className={[cell.isDayMaster ? 'is-day' : '', 'ud-tick']
+                            .filter(Boolean)
+                            .join(' ')}
+                          /* 오행은 글자의 뜻이지 계산값이 아니다(위 ELEMENT_BY_GLYPH 주석).
+                             색만 얹고 글자는 엔진 값 그대로 그린다. */
+                          data-el={elementOf(read.glyph)}
+                          key={cell.pillar}
+                          style={stagger(rowIndex * payload.cells.length + index)}
+                        >
+                          <strong className="rr-pillars-glyph">{read.glyph}</strong>
+                          <span className="rr-pillars-ko ud-gloss">{read.ko}</span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                {textRows.map((row) => (
+                  <tr key={row.id}>
+                    <th scope="row">
+                      <span className="rr-pillars-rowhanja">{row.hanja}</span>
+                      <span className="rr-pillars-rowko">{row.label}</span>
+                    </th>
+                    {payload.cells.map((cell) => (
+                      <td className="rr-pillars-text" key={cell.pillar}>
+                        {row.read(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {payload.tenGodBasisNote ? (
+            <p className="rr-pillars-note">{payload.tenGodBasisNote}</p>
+          ) : null}
+        </div>
+      );
+    }
+
+    /* CH01 1-3 네 칸 요약.
+       대운은 나이가 아니라 **연도 구간**으로 표기한다(§2-4). `currentDayun.range` 는
+       `30세 ~ 39세` 문자열이라 그대로 흘리면 밴드 금지 규칙과 정면 충돌한다. */
+    case 'facts4':
+      return (
+        <dl className="rr-facts">
+          {payload.rows.map((row, index) => (
+            <div className="ud-tick" key={row.label} style={stagger(index)}>
+              <dt className="ud-label">
+                <BasisMark basis={row.basis} />
+                {row.label}
+              </dt>
+              <dd className="ud-hanja">
+                {row.label === '현재 흐름' ? dayunLabel : bindPairs(row.value)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      );
+
+    case 'elements':
+      return (
+        <ul className="rr-elements" role="list">
+          {payload.items.map((item, index) => (
+            <li className="ud-tick" key={item.label} style={stagger(index)}>
+              <span className="rr-elements-name ud-hanja">{item.label}</span>
+              <span className="rr-elements-count ud-num">{item.value}</span>
+            </li>
+          ))}
+        </ul>
+      );
+
+    /* CH02 2-2 궁합 4축. %가 아니라 방향 3단계 + 근거부족.
+       '근거 신뢰도'는 관계 점수와 색·크기를 완전히 분리해 그린다. */
+    case 'axes':
+      return (
+        <>
+          <ul className="rr-axes" role="list">
+            {payload.axes.map((axis, index) => (
+              <li className={`rr-axis ud-tick is-${axis.direction}`} key={axis.id} style={stagger(index)}>
+                <p className="rr-axis-head">
+                  <span className="rr-axis-icon" aria-hidden="true">
+                    {axis.directionIcon}
+                  </span>
+                  <span className="rr-axis-label">{axis.label}</span>
+                </p>
+                <p className="rr-axis-direction">{axis.directionLabel}</p>
+                <p className="rr-axis-statement">{axis.withheldReason || axis.statement}</p>
+                {/* 신뢰도 꼬리가 없는 배지에 라벨을 지어 붙이지 않는다.
+                    관계 점수와 색·크기를 완전히 분리해 그리는 것이 이 줄의 전부다. */}
+                {axis.evidenceConfidenceLabel ? (
+                  <p className="rr-axis-confidence">근거 신뢰도 · {axis.evidenceConfidenceLabel}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {payload.axes.length === 0 ? (
+            <p className="rr-empty">두 사람의 맞물림을 계산할 근거가 아직 확정되지 않았어요.</p>
+          ) : null}
+          {payload.precisionNote ? <p className="rr-footnote">{payload.precisionNote}</p> : null}
+        </>
+      );
+
+    /* CH02 2-3 신호 판독표. 항목은 이미 일어난 대화의 속성만이다.
+       체크는 저장되지 않는다 — 저장되는 순간 상대 관찰 트래커가 된다(§6-B). */
+    case 'signal-table':
+      return (
+        <div className="rr-signals">
+          <p className="rr-signals-head" aria-hidden="true">
+            <span>내가 본 것</span>
+            <span>이건 사실</span>
+            <span>이건 추측</span>
+          </p>
+          <ul role="list">
+            {payload.items.map((item, index) => {
+              const on = Boolean(interactions.checked[item.id]);
+              const note = REUNION_OBSERVABLE_SIGNALS.find((signal) => signal.id === item.id)?.guessNote;
+              return (
+                <li
+                  className={on ? 'rr-signal ud-tick is-on' : 'rr-signal ud-tick'}
+                  key={item.id}
+                  style={stagger(index)}
+                >
+                  <button
+                    type="button"
+                    className={
+                      on
+                        ? 'rr-signal-toggle ud-pressable ud-selectable is-selected'
+                        : 'rr-signal-toggle ud-pressable ud-selectable'
+                    }
+                    aria-pressed={on}
+                    onClick={() => interactions.onToggle(item.id)}
+                  >
+                    <span className="rr-signal-box" aria-hidden="true">
+                      {on ? <Check size={13} /> : null}
+                    </span>
+                    {item.label}
+                  </button>
+                  {/* 열 머리글(`.rr-signals-head`)은 560px 미만에서 display:none 이고
+                      장식이라 aria-hidden 이다. 사실 칸과 추측 칸을 가르는 것이 이 컷의
+                      존재 이유이므로, 구분은 행 안의 라벨이 직접 들고 있어야 한다. */}
+                  <p className="rr-signal-fact">
+                    <span className="rr-signal-tag">이건 사실 · </span>
+                    {on ? '사실 칸' : '아직 비어 있음'}
+                  </p>
+                  <p className="rr-signal-guess">
+                    <span className="rr-signal-tag">이건 추측 · </span>
+                    {on && note ? note : '아직 없음'}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      );
+
+    /* CH03 3-1 판정 게이지. 확률이 아니라 조건 개수다. */
+    case 'readiness': {
+      const readiness = payload.readiness;
+      if (readiness.withheld) {
+        return (
+          <div className="rr-verdict is-deferred">
+            <p className="rr-verdict-state">
+              <Lock size={16} aria-hidden="true" /> 판정 보류
+            </p>
+            <p>{readiness.withheldReason}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="rr-readiness">
+          <ReunionMeterGauge
+            ns="rr"
+            ariaLabel={formatReadinessTally(readiness)}
+            cells={readiness.items.map((item) => ({ id: item.id, state: item.state }))}
+          />
+          <ReunionMeterTally
+            ns="rr"
+            items={[
+              { id: 'met', num: String(readiness.met), unit: '개', label: '확인된 조건', state: 'met' },
+              { id: 'unmet', num: String(readiness.unmet), unit: '개', label: '아직 확인 안 됨', state: 'unmet' },
+              {
+                id: 'unknown',
+                num: String(readiness.unknown),
+                unit: '개',
+                label: '판단 보류',
+                state: 'unknown'
+              }
+            ]}
+          />
+          {/* 다섯 칸은 출처가 섞여 있다. 한 숫자로 합산하면서 ◇/◆ 구분을 지우면
+              프롤로그에서 선언한 '계산한 것과 알려주신 것을 섞지 않는다'가 같은 리포트 안에서 깨진다. */}
+          <p className="rr-readiness-basis">{formatReadinessBasisSplit(readiness)}</p>
+          <ul className="rr-readiness-list" role="list">
+            {readiness.items.map((item, index) => (
+              <li
+                className={`rr-readiness-item ud-tick is-${item.state}`}
+                key={item.id}
+                style={stagger(index)}
+              >
+                <p className="rr-readiness-label">
+                  <span className="rr-readiness-state" aria-hidden="true">
+                    <StateIcon state={item.state} />
+                  </span>
+                  <span className="reunion-visually-hidden">{READINESS_STATE_WORD[item.state]} · </span>
+                  <BasisMark basis={item.basis} />
+                  {item.label}
+                </p>
+                <p className="rr-readiness-reason">{item.reason}</p>
+                <p className="rr-readiness-fill">{item.howToFill}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    /* CH04 4-1 12개월 지도. 축 라벨에서 '재회'·'연락'을 쓰지 않는다. */
+    case 'timeline12': {
+      const cells = payload.cells;
+      const max = cells.reduce((top, cell) => Math.max(top, cell.score), 0) || 1;
+      const active = interactions.activeMonth === null ? null : cells[interactions.activeMonth];
+      return (
+        <div className="rr-months">
+          <p className="rr-months-title ud-label">앞으로 12개월 · {name}님의 판단 컨디션</p>
+          <ReunionMeterBand
+            ns="rr"
+            ticks={cells.map((cell, index) => ({
+              id: `${cell.year}-${cell.month}`,
+              level: cell.score / max,
+              state: toBandState(cell.label),
+              marked: interactions.activeMonth === index,
+              caption: cell.ganzhi,
+              srLabel: `${cell.year}년 ${cell.month}월 ${cell.ganzhi} · ${payload.labels[cell.label]}`
+            }))}
+          />
+          <ul className="rr-months-picker" role="list">
+            {cells.map((cell, index) => (
+              <li className="ud-tick" key={`${cell.year}-${cell.month}`} style={stagger(index)}>
+                <button
+                  type="button"
+                  className={
+                    interactions.activeMonth === index
+                      ? 'rr-month ud-num ud-pressable ud-selectable is-selected is-on'
+                      : 'rr-month ud-num ud-pressable ud-selectable'
+                  }
+                  aria-pressed={interactions.activeMonth === index}
+                  onClick={() => interactions.onSelectMonth(interactions.activeMonth === index ? null : index)}
+                >
+                  {cell.month}월
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="rr-months-focus" role="status">
+            {active
+              ? `${active.year}년 ${active.month}월 · ${payload.labels[active.label]} — ${active.focus}`
+              : '달을 누르면 그 달에 볼 것이 여기에 뜹니다.'}
+          </p>
+        </div>
+      );
+    }
+
+    /**
+     * CH06 6-2 연운. CH04 의 가로 띠와 시각 문법을 일부러 다르게 한다.
+     *
+     * 노드 문장은 `summary` 가 아니라 `focus` 를 쓴다. 두 가지 이유가 겹친다.
+     *   1) `summary` 는 간지 역학 서술이라 십성 용어가 문장 안에 그대로 섞인다.
+     *      컷 대사에 명리 용어를 두지 않는 2층 분리 규칙(§3-5)과 어긋나고, 용어 해설은
+     *      이 장의 근거 아코디언이 이미 맡고 있다.
+     *   2) 이 컷의 캡션은 '{이름}님 쪽 여력이 바뀌는 지점'이라고 말한다. `focus` 가
+     *      독자 쪽 행동을 적는 필드이고, `summary` 보다 짧아 CH05 와의 분량 대칭도 지켜진다
+     *      — 두 장의 길이 차이 자체가 한쪽을 권유하는 신호가 된다(§1).
+     */
+    case 'timelineYears':
+      return payload.cells.length > 0 ? (
+        <ReunionMeterTimeline
+          ns="rr"
+          orientation="vertical"
+          nodes={payload.cells.map((cell) => ({
+            id: String(cell.year),
+            when: `${cell.year}년`,
+            count: payload.labels[cell.label],
+            state: toBandState(cell.label),
+            note: cell.focus || cell.summary
+          }))}
+        />
+      ) : (
+        <p className="rr-empty">앞으로의 연 단위 구간을 그릴 자료가 아직 없어요.</p>
+      );
+
+    /* CH04 4-4 판단 기한. 서버는 범위만 제안하고 날짜를 대신 정하지 않는다. */
+    case 'deadline-input':
+      return (
+        <div className="rr-deadline">
+          {/* 네이티브 날짜 피커를 그대로 둔다. §6-F 가 '독자가 직접 정한 날'을 요구하므로
+              여기서는 OS 의 날짜 선택기가 가장 정확하고 빠른 입력 수단이다.
+              밑줄 필드의 포커스 빛만 디자인 시스템에서 가져온다(`ud-underfield`). */}
+          <label className="rr-deadline-line ud-underfield" htmlFor="rr-deadline-input">
+            <span>나는</span>
+            <input
+              className="ud-num"
+              id="rr-deadline-input"
+              type="date"
+              value={interactions.deadline}
+              onChange={(event) => interactions.onDeadline(event.target.value)}
+            />
+            <span>까지 확인하고, 그때 결정하겠습니다.</span>
+          </label>
+          {/* 입력 전에는 화면의 유일한 날짜가 서버 제안 구간이다.
+              그 위에 '{이름}님이 정한 점검일이에요'를 붙이면 서버가 만든 범위를
+              독자가 정한 것으로 귀속시키게 되므로, 입력 전에는 이 안내가 대신 나간다. */}
+          {interactions.deadline ? null : (
+            <p className="rr-deadline-before">{payload.beforeInputNote}</p>
+          )}
+          {payload.suggestion ? (
+            <p className="rr-deadline-suggest">
+              <BasisMark basis="calculated" />
+              제안 구간 {payload.suggestion.label}
+              <span className="rr-deadline-rationale">{payload.suggestion.rationale}</span>
+            </p>
+          ) : null}
+          {interactions.deadline ? (
+            <p className="rr-deadline-value ud-num">{interactions.deadline.replace(/-/gu, '. ')}</p>
+          ) : null}
+        </div>
+      );
+
+    /* CH07 7-5 판단 기록. CH04 에서 쓴 기한이 이미 채워진 채 나타난다. */
+    case 'decision-input':
+      return (
+        <div className="rr-decision">
+          <p className="rr-decision-deadline ud-num">
+            {interactions.deadline
+              ? `정하신 날 · ${interactions.deadline.replace(/-/gu, '. ')}`
+              : '아직 날짜를 정하지 않으셨어요. 앞 장으로 돌아가 적어 두셔도 돼요.'}
+          </p>
+          <label className="rr-decision-line ud-underfield" htmlFor="rr-decision-input">
+            <span>나는</span>
+            <input
+              id="rr-decision-input"
+              type="text"
+              value={interactions.decision}
+              placeholder="한 줄만 적어 두세요"
+              onChange={(event) => interactions.onDecision(event.target.value)}
+            />
+            <span>하기로 했다.</span>
+          </label>
+          <button type="button" className="rr-save ud-pressable" onClick={interactions.onSaveDecision}>
+            이 기기에 저장
+          </button>
+          <p className="rr-save-note" role="status">
+            {interactions.saveNote}
+          </p>
+        </div>
+      );
+
+    case 'checklist':
+      return payload.items.length > 0 ? (
+        <ul className="rr-checklist" role="list">
+          {payload.items.map((item, index) => {
+            const on = Boolean(interactions.checked[item.id]);
+            return (
+              <li className="ud-tick" key={item.id} style={stagger(index)}>
+                <button
+                  type="button"
+                  className={
+                    on
+                      ? 'rr-check ud-pressable ud-selectable is-selected is-on'
+                      : 'rr-check ud-pressable ud-selectable'
+                  }
+                  aria-pressed={on}
+                  onClick={() => interactions.onToggle(item.id)}
+                >
+                  <span className="rr-check-box" aria-hidden="true">
+                    {on ? <Check size={13} /> : null}
+                  </span>
+                  {item.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="rr-empty">{payload.emptyLabel || '이 칸에 넣을 항목이 아직 확정되지 않았어요.'}</p>
+      );
+
+    /* CH03 3-2 미확인 조건 카드. 캡션이 약속한 `조건 · 지금 상태 · 채우는 방법` 세 줄을
+       그대로 그린다. 체크박스로 두지 않는다 — 토글해도 위의 게이지 집계에 반영되지 않는다. */
+    case 'condition-cards':
+      return payload.items.length > 0 ? (
+        <ul className="rr-conditions" role="list">
+          {payload.items.map((item, index) => (
+            <li className={`rr-condition ud-tick is-${item.state}`} key={item.id} style={stagger(index)}>
+              <p className="rr-condition-label">
+                <span className="rr-readiness-state" aria-hidden="true">
+                  <StateIcon state={item.state} />
+                </span>
+                <span className="reunion-visually-hidden">{READINESS_STATE_WORD[item.state]} · </span>
+                <BasisMark basis={item.basis} />
+                {item.label}
+              </p>
+              <p className="rr-condition-reason">{item.reason}</p>
+              <p className="rr-condition-fill">{item.howToFill}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="rr-empty">{payload.emptyLabel}</p>
+      );
+
+    /* 장 제목이 h2 이므로 열 제목은 h3 이다. 레벨을 건너뛰지 않는다. */
+    case 'compare2':
+      return (
+        <div className="rr-compare2">
+          {[payload.left, payload.right].map((column, columnIndex) => (
+            <section className="rr-compare2-col" key={column.title}>
+              <h3 className="ud-label">{column.title}</h3>
+              <ul role="list">
+                {column.items.map((item, index) => (
+                  <li
+                    className="ud-tick"
+                    key={item}
+                    style={stagger(columnIndex * column.items.length + index)}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      );
+
+    case 'compare3':
+      return (
+        <table className="rr-compare3">
+          <thead>
+            <tr>
+              {payload.headers.map((header) => (
+                <th scope="col" key={header}>
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {payload.rows.map((row, rowIndex) => (
+              <tr key={row.join('|')}>
+                {row.map((cell, index) => (
+                  <td
+                    key={cell}
+                    className={index === 1 ? 'is-now ud-tick' : 'ud-tick'}
+                    style={stagger(rowIndex * row.length + index)}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+
+    /* CH03 3-3 하지 않을 행동. 훈계형이 아니라 계량 서술이고,
+       감시 유도를 **금지하기 위해** 항목 이름을 부른다(§6-B 상위 규칙). */
+    case 'prohibited':
+      return (
+        <ul className="rr-prohibited" role="list">
+          {payload.items.map((item, index) => (
+            <li className="ud-tick" key={item} style={stagger(index)}>
+              <span className="rr-prohibited-mark" aria-hidden="true">
+                <X size={15} />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      );
+
+    /* CH07 7-1 닫는 집계. 이 리포트의 유일한 집계 숫자이고 예측이 아니다. */
+    case 'tally':
+      return (
+        <div className="rr-tally-block">
+          <ReunionMeterGauge
+            ns="rr"
+            ariaLabel={`확인 ${payload.confirmed} · 미확인 ${payload.unconfirmed} · 보류 ${payload.deferred}`}
+            cells={payload.items.map((item) => ({
+              id: item.id,
+              state:
+                item.state === 'confirmed' ? 'met' : item.state === 'unconfirmed' ? 'unmet' : 'unknown'
+            }))}
+          />
+          <ReunionMeterTally
+            ns="rr"
+            items={[
+              { id: 'confirmed', num: String(payload.confirmed), unit: '개', label: '확인된 질문', state: 'met' },
+              {
+                id: 'unconfirmed',
+                num: String(payload.unconfirmed),
+                unit: '개',
+                label: '아직 확인 못 한 질문',
+                state: 'unmet'
+              },
+              { id: 'deferred', num: String(payload.deferred), unit: '개', label: '오늘은 보류', state: 'unknown' }
+            ]}
+          />
+          <ol className="rr-checkpoints" role="list">
+            {payload.items.map((item, index) => (
+              <li className={`rr-checkpoint ud-tick is-${item.state}`} key={item.id} style={stagger(index)}>
+                <span className="rr-checkpoint-dot" aria-hidden="true" />
+                <span className="reunion-visually-hidden">{CHECKPOINT_STATE_WORD[item.state]} · </span>
+                <span className="rr-checkpoint-question">{item.question}</span>
+                {item.why ? <span className="rr-checkpoint-why">{item.why}</span> : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+      );
+
+    /* CH07 7-2 미확인 항목. 모르는 걸 모른다고 말하는 이 컷이 신뢰의 최종 근거다. */
+    case 'unconfirmed':
+      return payload.items.length > 0 ? (
+        <ul className="rr-unconfirmed" role="list">
+          {payload.items.map((item, index) => (
+            <li className="ud-tick" key={item.label} style={stagger(index)}>
+              <strong>{item.label}</strong>
+              <span>{item.why}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="rr-empty">여섯 질문 모두 확인 가능한 자료가 있었어요.</p>
+      );
+
+    case 'quote':
+      return (
+        <figure className="rr-quote ud-quote">
+          <UdQuoteMarks className="rr-quote-marks" />
+          <div className="ud-veil">
+            <blockquote>{payload.text}</blockquote>
+          </div>
+          <figcaption className="ud-caption">{payload.note}</figcaption>
+        </figure>
+      );
+
+    case 'letter':
+      return (
+        <div className="rr-letter">
+          {payload.lines.map((line, index) => (
+            <p className="ud-tick" key={line} style={stagger(index)}>
+              {line}
+            </p>
+          ))}
+          <p className="rr-letter-sign">{payload.signature}</p>
+        </div>
+      );
+
+    case 'legal':
+      return (
+        <div className="rr-legal">
+          {/* §6-A. 차단·미확인 분기는 CH07 에서 한 번 더 확인한다.
+              삭제 불가 법정 고지(`lines`)와 섞지 않고 그 위에 따로 둔다. */}
+          {payload.boundaryNote ? <p className="rr-legal-boundary">{payload.boundaryNote}</p> : null}
+          <ul role="list">
+            {payload.lines.map((line, index) => (
+              <li className="ud-tick" key={line} style={stagger(index)}>
+                {line}
+              </li>
+            ))}
+          </ul>
+          <p className="rr-legal-serial ud-num">
+            {payload.serialNumber}
+            {payload.issuedAt ? ` · ${payload.issuedAt.slice(0, 10)}` : ''}
+          </p>
+        </div>
+      );
+
+    default:
+      return null;
+  }
+}
+
+/* ── 컷 ──────────────────────────────────────────────────────── */
+
+const SCENE_ALT_FALLBACK = '';
+
+/**
+ * 내용이 하나도 없는 컷인가.
+ * 장 여는 컷(`c01-1` 등)이 여기에 해당한다 — 그 자리의 챕터 헤더는 `.rr-chapter-head` 가
+ * 이미 그리고 있으므로, 같은 내용을 두 번 그리는 대신 명판 선 한 줄로 리듬만 남긴다.
+ * 컷을 배열에서 빼지는 않는다(컷 id 는 제미나이 매칭 키이자 테스트가 세는 단위다).
+ */
+function isPlateCut(cut: ReunionCut): boolean {
+  return (
+    !cut.payload &&
+    !cut.narration &&
+    !cut.caption &&
+    !cut.sceneKey &&
+    cut.bubbles.length === 0 &&
+    cut.evidenceBadges.length === 0
+  );
+}
+
+export default function ReunionCutView({ cut, name, dayunLabel, interactions }: ReunionCutViewProps) {
+  /* beat 컷은 높이만 갖는 침묵이다. 안에 아무것도 넣지 않는다. */
+  if (cut.layout === 'beat') {
+    return (
+      <div
+        className="rr-cut rr-cut--beat"
+        data-cut={cut.id}
+        style={{ '--rr-h': `${cut.height}px` } as CSSProperties}
+        aria-hidden="true"
+      />
+    );
+  }
+
+  if (isPlateCut(cut)) {
+    return (
+      <div className="rr-cut rr-cut--plate" data-cut={cut.id} aria-hidden="true">
+        <span className="rr-plate-rule ud-breath" />
+      </div>
+    );
+  }
+
+  const sceneAlt = cut.sceneAlt || SCENE_ALT_FALLBACK;
+  /**
+   * `deadline-owner`(`{이름}님이 정한 점검일이에요.`)는 §6-F 가 '독자 입력 후에만'으로 못박은
+   * 유일한 조건부 삭제 불가 문구다. 날짜를 쓰기 전에는 화면의 유일한 날짜가 서버 제안 구간이라,
+   * 그 위에 이 문장을 붙이면 서버가 만든 범위를 독자가 정한 것처럼 귀속시킨다.
+   * 대신 `payload.beforeInputNote` 가 입력 자리 안에서 안내를 맡는다.
+   */
+  const captionHeldForInput =
+    cut.payload?.kind === 'deadline-input' && !interactions.deadline;
+  const captionLeads = Boolean(cut.caption) && CAPTION_ABOVE.has(cut.payload?.kind ?? '');
+  const caption =
+    cut.caption && !captionHeldForInput ? (
+      <p className={captionLeads ? 'rr-caption is-lead' : 'rr-caption'}>{cut.caption}</p>
+    ) : null;
+
+  /* 컷 하나가 리빌 루트 하나다. 안쪽 `ud-tick` 후손이 이 루트를 기준으로 스태거된다.
+     루트를 장 단위로 잡으면 스무 컷이 한꺼번에 켜져 스크롤 리듬이 사라진다. */
+  return (
+    <div
+      className={['rr-cut', `rr-cut--${cut.layout}`, CUT_SKIN[cut.layout], 'ud-rise']
+        .filter(Boolean)
+        .join(' ')}
+      data-cut={cut.id}
+      data-reveal=""
+      /* 그림 없는 시네마틱 컷은 순검정 침묵 컷이다. 글을 바닥에 붙이지 않고 가운데 세운다. */
+      data-scene={cut.sceneKey ? 'art' : 'none'}
+      /**
+       * 아트 위 본문 스크림을 켤지. **그림 위에 바로 앉는 글자가 하나라도 있으면** 켠다:
+       * 나레이션 · 캡션 · 페이로드 · 근거 배지 · 환경음 풍선(반투명이라 아트가 비친다).
+       *
+       * 끄는 경우는 하나뿐이다 — 본문이 대사 풍선뿐인 컷. 그 풍선은 자기 종이 면
+       * (잉크 대비 8.81:1)을 갖고 있어 스크림이 하는 일이 없고, 그런 컷에까지 깔면
+       * 발주자 아트의 아래 절반이 통째로 검정에 잠긴다.
+       */
+      data-scrim={
+        cut.narration ||
+        caption ||
+        cut.payload ||
+        cut.evidenceBadges.length > 0 ||
+        cut.bubbles.some((bubble) => bubble.kind === 'sfx')
+          ? 'text'
+          : undefined
+      }
+      data-undeletable={cut.undeletableCopyId || undefined}
+      style={{ '--rr-h': `${cut.height}px`, '--rr-scale': cut.sceneScale ?? 1 } as CSSProperties}
+    >
+      {CORNERED_LAYOUTS.has(cut.layout) ? (
+        <UdCorners className="rr-cut-corners" kind="fret" size={20} />
+      ) : null}
+
+      {cut.sceneKey ? (
+        <figure className="rr-fig ud-settle" aria-hidden={sceneAlt ? undefined : true}>
+          {/* ReunionSceneKey 와 ReunionPanelKey 는 같은 집합이다(reportTypes.contract.test.ts 가 잠근다).
+              캐스팅하지 않는 이유: 두 목록이 갈라지면 여기서 타입 오류로 먼저 걸려야 한다. */}
+          <ReunionPanelPicture image={cut.sceneKey} className="rr-fig-pic" alt={sceneAlt} />
+          <span className="rr-fig-fade" aria-hidden="true" />
+        </figure>
+      ) : null}
+
+      <div className="rr-cut-body">
+        {/* 나레이션 · 대사 · 캡션에는 자기 패턴을 붙이지 않는다. 컷 카드의 `ud-rise` 하나로
+            같이 올라온다 — 한 컷에 겹치는 패턴은 두 개까지다(카드 + 아트/리스트). */}
+        {cut.narration ? <p className="rr-narration">{cut.narration}</p> : null}
+
+        {cut.bubbles.map((bubble, index) => (
+          <p
+            className={[
+              'rr-bubble',
+              `is-${bubble.kind}`,
+              `is-${bubble.tone}`,
+              'ud-bubble',
+              /* 꼬리·그림자·종이색은 디자인 시스템이 소유한다.
+                 `sfx` 는 아트가 그대로 비치는 환경음이라 꼬리도 그림자도 없다. */
+              bubble.kind === 'sfx' ? 'ud-bubble--ambient' : 'ud-bubble--dialogue',
+              bubble.kind === 'speech'
+                ? bubble.position.endsWith('right')
+                  ? 'ud-bubble--tail-right'
+                  : 'ud-bubble--tail-left'
+                : ''
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            data-pos={bubble.position}
+            key={bubble.text}
+            style={stagger(index + 1)}
+          >
+            {bubble.text}
+          </p>
+        ))}
+
+        {captionLeads ? caption : null}
+
+        <CutPayload cut={cut} name={name} dayunLabel={dayunLabel} interactions={interactions} />
+
+        {captionLeads ? null : caption}
+
+        {cut.evidenceBadges.length > 0 ? (
+          <ul className="rr-badges" role="list">
+            {cut.evidenceBadges.map((badge, index) => (
+              <li className="ud-tick" key={badge.term} style={stagger(index)}>
+                <span className="rr-badge-term">[{badge.term}]</span>
+                <span className="rr-badge-translation">{badge.translation}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    </div>
+  );
+}

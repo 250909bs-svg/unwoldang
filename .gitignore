@@ -22,3 +22,8 @@ service-account*.json
 
 tsconfig.tsbuildinfo
 tsconfig.node.tsbuildinfo
+
+# tsc -b가 vite.config.ts를 컴파일해 내놓던 산출물.
+# vite는 .ts보다 .js를 먼저 읽기 때문에 이 파일이 있으면 실제 설정이 무시된다.
+/vite.config.js
+/vite.config.d.ts

@@ -1,0 +1,236 @@
+/* 운월 상담 채팅 (/chat).
+ *
+ * `my.css` 와 같은 규칙 — 토큰은 `ud-tokens.css`, 선택자는 `.ud-app-container` 로 시작.
+ *
+ * 이 화면만 다른 점: 입력줄이 바닥에 고정된다. 고정 요소는 뷰포트가 아니라 **폰 프레임**
+ * 에 붙어야 해서, 셸이 내주는 `--app-rail-gutter` 로 좌우를 잡는다. 그것 없이 `left: 0`
+ * 으로 두면 데스크톱에서 입력줄만 화면 끝까지 늘어난다.
+ */
+
+/* 스코프를 두 번 적는 이유 — 명시도
+   ============================================================================
+   index.css 는 계정 화면의 옛 규칙을 `body.home-all-black .my-replay-title span`
+   처럼 적어 두었다. 그 선택자는 (0,2,2) 이고 `.ud-app-container .x` 는 (0,2,1) 이라
+   한 끗 차이로 옛 규칙이 이긴다. 실제로 마이 본화면은 새 색으로 그려지는데 그 아래
+   화면들만 옛 회색으로 남아 있었다.
+
+   그래서 클래스를 한 번 더 적어 (0,3,1) 로 올린다. `!important` 를 쓰지 않는 이유는
+   그것이 다음 사람에게 남길 빚이기 때문이다 — 같은 클래스를 두 번 적는 것은 되돌리기
+   쉽고, 왜 그런지가 여기 적혀 있다.
+   ========================================================================== */
+
+.ud-app-container.ud-app-container .ud-chat-page {
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+}
+
+.ud-app-container.ud-app-container .ud-chat-scroll {
+  display: flex;
+  width: var(--udm-col);
+  margin: 0 auto;
+  padding: var(--ud-s4) var(--ud-s2) calc(var(--ud-s8) + 56px);
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--ud-s3);
+}
+
+/* ── 말풍선 ─────────────────────────────────────────────────────────────── */
+
+.ud-app-container.ud-app-container .ud-chat-bubble {
+  max-width: 86%;
+  padding: var(--ud-s4);
+  border-radius: var(--udm-r-card);
+}
+.ud-app-container.ud-app-container .ud-chat-bubble p {
+  font-size: var(--ud-fs-200);
+  line-height: var(--ud-lh-body);
+}
+.ud-app-container.ud-app-container .ud-chat-bubble p + p {
+  margin-top: var(--ud-s3);
+}
+
+.ud-app-container.ud-app-container .ud-chat-bubble.is-unwol {
+  align-self: flex-start;
+  border: 1px solid var(--ud-metal-9);
+  border-bottom-left-radius: var(--ud-s1);
+  background: var(--ud-surface-1);
+  color: var(--ud-cream-dim);
+}
+.ud-app-container.ud-app-container .ud-chat-bubble.is-user {
+  align-self: flex-end;
+  border-bottom-right-radius: var(--ud-s1);
+  background: var(--ud-surface-3);
+  color: var(--ud-cream);
+}
+/* 규칙으로 답한 차례. 모델이 아니라 운월당이 정해 둔 문장이라는 표시다. */
+.ud-app-container.ud-app-container .ud-chat-bubble.is-guard {
+  border-left: 2px solid var(--ud-crimson-text);
+}
+.ud-app-container.ud-app-container .ud-chat-who {
+  display: block;
+  margin-bottom: var(--ud-s2);
+  color: var(--ud-gold-text-hi);
+  font-size: var(--ud-fs-50);
+  font-weight: var(--ud-w-bold);
+  letter-spacing: var(--ud-ls-kicker);
+}
+.ud-app-container.ud-app-container .ud-chat-bubble b {
+  color: var(--ud-cream);
+  font-family: var(--ud-serif);
+  font-size: var(--ud-fs-300);
+  font-weight: var(--ud-w-body);
+}
+
+/* 생각 중 — 점 세 개. transform 과 opacity 만 움직인다. */
+.ud-app-container.ud-app-container .ud-chat-bubble.is-thinking p {
+  display: flex;
+  gap: 5px;
+}
+.ud-app-container.ud-app-container .ud-chat-bubble.is-thinking i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-metal-5);
+  animation: ud-chat-dot 1.1s var(--ud-ease-soft) infinite;
+}
+.ud-app-container.ud-app-container .ud-chat-bubble.is-thinking i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.ud-app-container.ud-app-container .ud-chat-bubble.is-thinking i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes ud-chat-dot {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* ── 첫 화면의 질문 제안 ────────────────────────────────────────────────── */
+
+.ud-app-container.ud-app-container .ud-chat-suggestions {
+  display: flex;
+  margin-top: var(--ud-s4);
+  flex-direction: column;
+  gap: var(--ud-s2);
+}
+.ud-app-container.ud-app-container .ud-chat-suggestions button {
+  display: flex;
+  align-items: center;
+  gap: var(--ud-s2);
+  padding: var(--ud-s3) var(--ud-s4);
+  border: 1px solid var(--ud-metal-9);
+  border-radius: var(--ud-r-pill);
+  background: transparent;
+  color: var(--ud-cream-dim);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-100);
+  text-align: left;
+  cursor: pointer;
+}
+.ud-app-container.ud-app-container .ud-chat-suggestions button svg {
+  flex: 0 0 auto;
+  color: var(--ud-gold-text);
+}
+
+.ud-app-container.ud-app-container .ud-chat-error {
+  align-self: center;
+  color: var(--ud-crimson-text);
+  font-size: var(--ud-fs-100);
+  line-height: var(--ud-lh-lead);
+  text-align: center;
+}
+
+/* ── 입력줄 ─────────────────────────────────────────────────────────────── */
+
+.ud-app-container.ud-app-container .ud-chat-composer {
+  position: fixed;
+  z-index: 40;
+  /* 뷰포트가 아니라 프레임에 붙인다. `--app-rail-gutter` 가 프레임 바깥 레일의 폭이다. */
+  right: var(--app-rail-gutter, 0px);
+  bottom: calc(var(--app-tabbar-h, 0px) + var(--ud-s3));
+  left: var(--app-rail-gutter, 0px);
+  display: flex;
+  width: var(--udm-col);
+  margin: 0 auto;
+  padding: var(--ud-s2);
+  gap: var(--ud-s2);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-surface-2);
+  box-shadow: var(--ud-lift-2);
+}
+.ud-app-container.ud-app-container .ud-chat-composer input {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0 var(--ud-s3);
+  border: 0;
+  background: transparent;
+  color: var(--ud-cream);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-200);
+}
+.ud-app-container.ud-app-container .ud-chat-composer input::placeholder {
+  color: var(--ud-cream-mute);
+}
+.ud-app-container.ud-app-container .ud-chat-composer input:focus {
+  outline: none;
+}
+.ud-app-container.ud-app-container .ud-chat-composer button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: var(--ud-r-pill);
+  background: var(--ud-gilt);
+  color: var(--ud-metal-10);
+  cursor: pointer;
+}
+.ud-app-container.ud-app-container .ud-chat-composer button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ud-app-container.ud-app-container .ud-chat-reset {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px var(--ud-s3);
+  border: 1px solid var(--ud-metal-8);
+  border-radius: var(--ud-r-pill);
+  background: transparent;
+  color: var(--ud-cream-mute);
+  font-family: var(--ud-sans);
+  font-size: var(--ud-fs-50);
+  cursor: pointer;
+}
+
+/*
+ * 스크롤 영역 안에 있다. 고정 입력줄 뒤에 두면 탭바가 그 위를 덮는다.
+ *
+ * `margin-top: auto` 로 스크롤 영역 바닥까지 밀어 둔다. 대화가 짧을 때 내용이 일찍
+ * 끝나 버려, 이 문단이 고정 입력줄과 같은 높이에 겹쳐 두 줄이 가려졌다. 아래로 밀면
+ * 영역의 `padding-bottom` 이 입력줄 자리를 비워 둔 만큼 위에 선다.
+ */
+.ud-app-container.ud-app-container .ud-chat-disclaimer {
+  margin: 0 0 var(--ud-s2);
+  padding: 0 var(--ud-s2);
+  color: var(--ud-cream-mute);
+  font-size: var(--ud-fs-50);
+  line-height: var(--ud-lh-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ud-app-container.ud-app-container .ud-chat-bubble.is-thinking i {
+    animation: none;
+    opacity: 0.6;
+  }
+}
