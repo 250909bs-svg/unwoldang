@@ -372,8 +372,9 @@
 .gy-section-title span { color: #a36f70; font: 9px Georgia, serif; letter-spacing: .18em; }
 .gy-section-title h3 { margin-top: 5px; font: 400 20px 'Noto Serif KR', 'Nanum Myeongjo', serif; }
 .gy-vector-list { display: grid; gap: 1px; margin-top: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .08); border-radius: 16px; background: rgba(255, 255, 255, .08); }
-.gy-vector { display: grid; min-height: 58px; grid-template-columns: 1fr auto; align-items: center; padding: 9px 13px; background: #100e11; }
-.gy-vector > div:first-child { display: flex; flex-direction: column; gap: 3px; }
+/* 한 줄에 이름 하나, 알약 하나. 예전에는 왼쪽에도 같은 경향 문구를 적어 두 줄이었고,
+   그래서 "조건을 살필 신호" 가 한 행에 두 번 보였다. */
+.gy-vector { display: grid; min-height: 46px; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 9px 13px; background: #100e11; }
 .gy-vector strong { font-size: 12px; }
 .gy-vector span { color: #a49b9e; font-size: 10px; }
 .gy-vector-track { display: flex; gap: 4px; }
@@ -381,6 +382,17 @@
 .gy-vector-track i.on { background: linear-gradient(90deg, #8e2834, #dc737b); }
 .gy-vector-track i.warn { background: #b88a55; }
 .gy-vector-note { margin-top: 9px !important; color: #a49b9e; font-size: 11px; line-height: 1.55; }
+/* 읽지 못한 신호를 알리는 한 줄. 줄로 세우지 않는 대신 여기서 이름을 대고 이유를 적는다. */
+.gy-vector-unread {
+  margin-top: 8px !important;
+  padding: 9px 12px;
+  border-left: 2px solid rgba(214, 168, 108, .5);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 255, 255, .035);
+  color: #a49b9e;
+  font-size: 11px;
+  line-height: 1.6;
+}
 .gy-evidence { margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, .09); border-bottom: 1px solid rgba(255, 255, 255, .09); }
 .gy-evidence summary { display: flex; min-height: 56px; align-items: center; justify-content: space-between; cursor: pointer; color: #d8cecb; font-size: 12px; list-style: none; }
 .gy-evidence summary::-webkit-details-marker { display: none; }

@@ -215,8 +215,19 @@ export default function GuiyeondoGuestPage() {
   if (stage === 'result' && person) {
     const type = person.analysis.classification.type;
     const signalIds = type ? RELATION_SIGNAL_IDS[type] : ['romance', 'attraction', 'comfort', 'stability', 'challenge'] as GuiyeondoVectorId[];
-    const selectedSignals = signalIds.map((id) => person.analysis.vectors.find((vector) => vector.id === id))
-      .filter((vector): vector is NonNullable<typeof vector> => Boolean(vector));
+    /*
+     * 읽히지 않은 신호는 내보내지 않는다.
+     *
+     * `지원`·`성장` 은 엔진에 독립 계산 기준이 아예 없어서 누가 보든 늘 "근거 확인 중"
+     * 이다. 결과 화면 첫 장에 값이 생길 일 없는 칸을 세워 두면 처음 온 사람에게는
+     * 계산이 실패한 것처럼 보인다. 목록이 비면 읽힌 신호로 채운다.
+     */
+    const named = signalIds
+      .map((id) => person.analysis.vectors.find((vector) => vector.id === id))
+      .filter((vector): vector is NonNullable<typeof vector> => Boolean(vector?.supported));
+    const selectedSignals = named.length > 0
+      ? named
+      : person.analysis.vectors.filter((vector) => vector.supported).slice(0, 4);
     return (
       <main className="guiyeondo-page gy-guest-result">
         <header className="gy-topbar"><button type="button" onClick={() => setStage('landing')} aria-label="초대 화면으로"><ArrowLeft size={20} /></button><strong>귀연도 <span>貴緣圖</span></strong><span /></header>

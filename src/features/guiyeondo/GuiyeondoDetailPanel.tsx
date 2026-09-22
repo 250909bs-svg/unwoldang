@@ -1,6 +1,7 @@
 import { ArrowRight, LockKeyhole, Plus, Trash2, X } from 'lucide-react';
 import GuiyeondoCharacterHero from './GuiyeondoCharacterHero';
 import GuiyeondoRecommendations from './GuiyeondoRecommendations';
+import { withTopicParticle } from '../../lib/korean/particles';
 import { GUIYEONDO_RELATIONSHIP_VISUALS } from './relationshipVisuals';
 import type { GuiyeondoPerson, GuiyeondoRelationshipType } from './types';
 
@@ -72,17 +73,18 @@ export default function GuiyeondoDetailPanel({
   }
 
   const visual = GUIYEONDO_RELATIONSHIP_VISUALS[type];
+  /* 실제로 읽힌 신호와 그러지 못한 신호를 가른다. 뒤의 것은 줄로 세우지 않는다. */
+  const readSignals = person ? person.analysis.vectors.filter((vector) => vector.supported) : [];
+  const unreadSignals = person ? person.analysis.vectors.filter((vector) => !vector.supported) : [];
   const classifiedSignals = person
-    ? person.analysis.vectors.filter((vector) =>
-        vector.supported && vector.evidenceIds.some((id) => person.analysis.classification.evidenceIds.includes(id)))
+    ? readSignals.filter((vector) =>
+        vector.evidenceIds.some((id) => person.analysis.classification.evidenceIds.includes(id)))
     : [];
   const focusSignals = classifiedSignals.length > 0
     ? classifiedSignals
-    : person
-      ? visual.focusVectors
-        .map((id) => person.analysis.vectors.find((vector) => vector.id === id))
-        .filter((vector): vector is NonNullable<typeof vector> => Boolean(vector))
-      : [];
+    /* 대표 신호가 없을 때의 대비책도 **읽힌 것 중에서** 고른다. 그러지 않으면 유형에 따라
+       카드 세 장이 모두 "근거 확인 중" 으로 채워진다. */
+    : readSignals.filter((vector) => visual.focusVectors.includes(vector.id));
   const purposeEntries = person
     ? (Object.entries(person.analysis.purposes) as Array<[
         keyof typeof PURPOSE_LABELS,
@@ -101,7 +103,7 @@ export default function GuiyeondoDetailPanel({
   return (
     <aside className={`gy-detail-panel ${person ? 'has-person' : 'is-empty'}`} aria-label={`${visual.label} 상세`}>
       <button type="button" className="gy-detail-close" onClick={onClose} aria-label="상세 닫기"><X size={19} /></button>
-      <GuiyeondoCharacterHero key={`${type}-${person?.id || 'empty'}`} type={type} />
+      <GuiyeondoCharacterHero key={`${type}-${person?.id || 'empty'}`} type={type} priority />
       <div className="gy-detail-body">
         {person ? (
           <>
@@ -173,14 +175,32 @@ export default function GuiyeondoDetailPanel({
                 <h3 id="gy-vector-title">두 사람 사이의 신호</h3>
               </div>
               <div className="gy-vector-list">
-                {person.analysis.vectors.map((vector) => (
+                {readSignals.map((vector) => (
                   <div className={`gy-vector gy-vector-${vector.tendency}`} key={vector.id}>
-                    <div><strong>{vector.label}</strong><span>{TENDENCY_LABEL[vector.tendency]}</span></div>
+                    {/* 경향은 오른쪽 알약 하나로만 적는다. 예전에는 같은 문장을 라벨 아래에도
+                        한 번 더 써서 "조건을 살필 신호 / 조건을 살필 신호" 로 읽혔다. */}
+                    <strong>{vector.label}</strong>
                     <span className={`gy-vector-status gy-status-${vector.tendency}`}>{TENDENCY_LABEL[vector.tendency]}</span>
                   </div>
                 ))}
               </div>
-              <p className="gy-vector-note">숫자 확률 대신 검증된 정성 경향을 표시합니다. ‘근거 확인 중’은 임의 값을 만들지 않은 항목입니다.</p>
+              <p className="gy-vector-note">숫자 확률 대신 검증된 정성 경향을 표시합니다.</p>
+              {unreadSignals.length ? (
+                /*
+                 * 읽지 못한 항목은 줄로 세우지 않는다.
+                 *
+                 * `지원`·`성장` 은 이 관계에서만 근거가 부족한 것이 아니라 **엔진에 독립
+                 * 계산 기준 자체가 없다**(`relationshipAnalysis.ts` 의 `unsupportedVector`).
+                 * 그래서 누가 보든, 몇 번을 보든 늘 "근거 확인 중" 이었다. 값이 생길 일이
+                 * 없는 줄을 목록에 세워 두면 그건 투명함이 아니라 고장 난 표로 읽힌다.
+                 *
+                 * 임의 값을 만들지 않는다는 원칙은 그대로 두고, 그 사실을 한 줄로 옮긴다.
+                 */
+                <p className="gy-vector-unread">
+                  {withTopicParticle(unreadSignals.map((vector) => vector.label).join(' · '))} 아직 운월당이
+                  독립 계산 기준을 확정하지 못해 읽지 않았습니다. 없는 근거로 값을 지어내지 않으려고 비워 둡니다.
+                </p>
+              ) : null}
             </section>
 
             <details className="gy-evidence">
